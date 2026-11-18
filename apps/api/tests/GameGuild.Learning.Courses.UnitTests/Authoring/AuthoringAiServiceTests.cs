@@ -1114,7 +1114,7 @@ public sealed class AuthoringAiServiceTests
         {
             DescribeCalls++;
             LastDescribeRequest = request;
-            return Task.FromResult(Result.Success(new AiResolvedModelDto("OpenAi", "gpt-test", 64)));
+            return Task.FromResult(Result.Success(new AiResolvedModelDto("primary", "OpenAi", "gpt-test", 64)));
         }
 
         public async Task<Result<AiCompletionResponse>> GenerateForActorStreamingAsync(
@@ -1140,7 +1140,7 @@ public sealed class AuthoringAiServiceTests
                 await onDelta(providerOutput, cancellationToken);
             }
             return Result.Success(new AiCompletionResponse(
-                "OpenAi", "gpt-test", providerOutput, "stop", new AiUsageDto(12, 5, 17)));
+                "primary", "OpenAi", "gpt-test", providerOutput, "stop", new AiUsageDto(12, 5, 17)));
         }
 
         public Task<Result<AiCompletionResponse>> GenerateForActorStreamingWithReservedQuotaAsync(

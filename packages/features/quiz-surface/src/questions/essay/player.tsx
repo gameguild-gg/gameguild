@@ -12,6 +12,7 @@ import type { SerializedEditorState } from "lexical"
 import type { EssayEntry } from "@game-guild/quiz"
 import type { EssayLearnerEntry } from "@game-guild/quiz"
 import { EssayLexicalEditor } from "./lexical-adapter"
+import { serializedPlainTextState } from "./serialized-plain-text-state"
 
 interface EssayRendererProps {
   entry: EssayEntry | EssayLearnerEntry
@@ -35,13 +36,15 @@ export function EssayRenderer({
   // object for the editor (we keep `textAnswers` as Record<string,string> since
   // it's shared by other quiz types that genuinely store plain strings).
   const initialState = useMemo<SerializedEditorState | null>(() => {
-    if (!serialized) return null
-    try {
-      return JSON.parse(serialized) as SerializedEditorState
-    } catch {
-      return null
+    if (serialized) {
+      try {
+        return JSON.parse(serialized) as SerializedEditorState
+      } catch {
+        // Fall back to the canonical plain text below.
+      }
     }
-  }, [serialized])
+    return serializedPlainTextState(plainText)
+  }, [plainText, serialized])
 
   // Force full Lexical remount when the quiz resets (disabled → enabled transition)
   const [resetKey, setResetKey] = useState(0)

@@ -9,7 +9,7 @@ namespace GameGuild.Finance.Economy.Payouts;
 
 public interface IPayoutDispatchOutboxWriter
 {
-    Task AddAsync(PayoutDispatchOutboxRow row, CancellationToken cancellationToken = default);
+    Task AddAsync(EconomyOutboxRow row, CancellationToken cancellationToken = default);
 }
 
 public sealed class PostgreSqlPayoutDispatchOutboxWriter : IPayoutDispatchOutboxWriter
@@ -23,9 +23,15 @@ public sealed class PostgreSqlPayoutDispatchOutboxWriter : IPayoutDispatchOutbox
             ?? throw new InvalidOperationException("Payout outbox writing requires a relational DbContext.");
     }
 
-    public async Task AddAsync(PayoutDispatchOutboxRow row, CancellationToken cancellationToken = default)
+    public async Task AddAsync(EconomyOutboxRow row, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(row);
+        if (row.OutboxKind != EconomyOutboxKind.PayoutDispatch)
+        {
+            throw new ArgumentException(
+                "The payout dispatch outbox only accepts PayoutDispatch rows.", nameof(row));
+        }
+
         _db.Add(row);
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -114,7 +120,7 @@ public sealed class PostgreSqlPayoutDispatchOutboxProcessor : IPayoutDispatchOut
             return await PostgreSqlTransactionExecutor.ExecuteAsync(
                 _db, IsolationLevel.ReadCommitted, async _ =>
             {
-            var currentOutbox = await _db.Set<PayoutDispatchOutboxRow>()
+            var currentOutbox = await _db.Set<EconomyOutboxRow>()
                 .SingleAsync(row => row.Id == lease.Id, cancellationToken);
             if (currentOutbox.CompletedAt.HasValue)
                 {
@@ -146,7 +152,7 @@ public sealed class PostgreSqlPayoutDispatchOutboxProcessor : IPayoutDispatchOut
             currentOutbox.CompletedAt = receipt.ObservedAt;
             currentOutbox.LeaseOwner = null;
             currentOutbox.LeaseExpiresAt = null;
-            currentOutbox.LastErrorCode = null;
+            currentOutbox.LastError = null;
             await _db.SaveChangesAsync(cancellationToken);
             return new PayoutDispatchOutboxResult(
                 command.OperationId, receipt.Outcome, true, currentOutbox.AttemptCount);
@@ -159,7 +165,7 @@ public sealed class PostgreSqlPayoutDispatchOutboxProcessor : IPayoutDispatchOut
         }
     }
 
-    private async ValueTask<PayoutDispatchOutboxRow?> ClaimAsync(
+    private async ValueTask<EconomyOutboxRow?> ClaimAsync(
         string workerId,
         DateTimeOffset now,
         CancellationToken cancellationToken)
@@ -167,12 +173,12 @@ public sealed class PostgreSqlPayoutDispatchOutboxProcessor : IPayoutDispatchOut
         return await PostgreSqlTransactionExecutor.ExecuteAsync(
             _db, IsolationLevel.ReadCommitted, async _ =>
         {
-        var row = await _db.Set<PayoutDispatchOutboxRow>()
+        var row = await _db.Set<EconomyOutboxRow>()
             .FromSqlInterpolated($"""
-                SELECT * FROM public.economy_payout_dispatch_outbox
-                WHERE "CompletedAt" IS NULL AND "AvailableAt" <= {now}
+                SELECT * FROM public.economy_outbox
+                WHERE "OutboxKind" = 3 AND "CompletedAt" IS NULL AND "AvailableAt" <= {now}
                   AND ("LeaseExpiresAt" IS NULL OR "LeaseExpiresAt" <= {now})
-                ORDER BY "CreatedAt", "Id"
+                ORDER BY "OccurredAt", "Id"
                 FOR UPDATE SKIP LOCKED
                 LIMIT 1
                 """)
@@ -197,12 +203,12 @@ public sealed class PostgreSqlPayoutDispatchOutboxProcessor : IPayoutDispatchOut
         CancellationToken cancellationToken)
     {
         await _db.Database.ExecuteSqlInterpolatedAsync($"""
-            UPDATE public.economy_payout_dispatch_outbox
+            UPDATE public.economy_outbox
             SET "LeaseOwner" = NULL,
                 "LeaseExpiresAt" = NULL,
                 "AvailableAt" = {now.AddMinutes(1)},
-                "LastErrorCode" = {"provider-error"}
-            WHERE "Id" = {id} AND "CompletedAt" IS NULL AND "LeaseOwner" = {workerId}
+                "LastError" = {"provider-error"}
+            WHERE "OutboxKind" = 3 AND "Id" = {id} AND "CompletedAt" IS NULL AND "LeaseOwner" = {workerId}
             """, cancellationToken);
     }
 

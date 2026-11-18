@@ -161,9 +161,10 @@ public sealed class DurableMarketplaceRefundService : IDurableMarketplaceRefundS
                 "The historical signed policy does not match the persisted settlement.");
             }
 
-            var persistedLegs = await _db.Set<MarketplaceSettlementLegRow>()
+            var persistedLegs = await _db.Set<MarketplaceValueLegRow>()
             .AsNoTracking()
-            .Where(row => row.SettlementId == settlement.Id)
+            .Where(row => row.LegKind == MarketplaceValueLegKind.Settlement &&
+                          row.SettlementId == settlement.Id)
             .OrderBy(row => row.Currency)
             .ToArrayAsync(transactionToken);
         if (persistedLegs.Length == 0)
@@ -182,7 +183,7 @@ public sealed class DurableMarketplaceRefundService : IDurableMarketplaceRefundS
             }
 
             return new PersistedMarketplaceRefundLeg(
-                leg.Currency, checked(cumulativeTarget - leg.RefundedUnits));
+                leg.Currency, checked(cumulativeTarget - leg.RefundedUnits!.Value));
         }).Where(leg => leg.Units > 0).ToArray();
         if (refundLegs.Length == 0)
             {
@@ -259,9 +260,10 @@ public sealed class DurableMarketplaceRefundService : IDurableMarketplaceRefundS
         var settlement = await _db.Set<MarketplaceSettlementRow>()
             .AsNoTracking()
             .SingleAsync(row => row.Id == refund.SettlementId, cancellationToken);
-        var legs = await _db.Set<MarketplaceRefundLegRow>()
+        var legs = await _db.Set<MarketplaceValueLegRow>()
             .AsNoTracking()
-            .Where(row => row.RefundId == refund.Id)
+            .Where(row => row.LegKind == MarketplaceValueLegKind.Refund &&
+                          row.RefundId == refund.Id)
             .OrderBy(row => row.Currency)
             .Select(row => new CoinAmount(row.Currency, row.Units))
             .ToArrayAsync(cancellationToken);

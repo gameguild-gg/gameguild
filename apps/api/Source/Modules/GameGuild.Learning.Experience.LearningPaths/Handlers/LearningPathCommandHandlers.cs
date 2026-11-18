@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Experience.LearningPaths;
 /// <summary>
 /// Command handlers for Learning Paths module
 /// </summary>
-public sealed class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<LearningPathCommandHandlers> logger)
+public sealed class LearningPathCommandHandlers(IApplicationDbContext context, ILogger<LearningPathCommandHandlers> logger, IPublisher? publisher = null)
     : ICommandHandler<CreateLearningPathCommand, LearningPath>,
       ICommandHandler<UpdateLearningPathCommand, LearningPath?>,
       ICommandHandler<DeleteLearningPathCommand, bool>,
@@ -303,7 +303,23 @@ public sealed class LearningPathCommandHandlers(IApplicationDbContext context, I
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Enrolled user {UserId} in path {PathId}", request.UserId, request.LearningPathId);
+
+        // Issue #1184 G4: LearningPathEnrolledEvent was declared but never raised; path
+        // enrollment is its producing site. Separate method (GGARCH003).
+        await PublishPathEnrolledAsync(request.UserId, request.LearningPathId, learningPath.Courses.Count, cancellationToken).ConfigureAwait(false);
+
         return enrollment;
+    }
+
+    private async Task PublishPathEnrolledAsync(Guid userId, Guid pathId, int totalCourses, CancellationToken cancellationToken)
+    {
+        if (publisher is null)
+        {
+            return;
+        }
+
+        await publisher.Publish(new LearningPathEnrolledEvent(
+            userId, pathId, null, totalCourses), cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<bool> Handle(UnenrollFromPathCommand request, CancellationToken cancellationToken)
@@ -366,7 +382,24 @@ public sealed class LearningPathCommandHandlers(IApplicationDbContext context, I
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
         logger.LogInformation("Completed path {PathId} for user {UserId}", request.LearningPathId, request.UserId);
+
+        // Issue #1184 G4: LearningPathCompletedEvent was declared but never raised; path
+        // completion is its producing site (per-path time totals are not tracked — zero here).
+        // Separate method (GGARCH003).
+        await PublishPathCompletedAsync(request.UserId, request.LearningPathId, enrollment.CoursesCompleted, cancellationToken).ConfigureAwait(false);
+
         return enrollment;
+    }
+
+    private async Task PublishPathCompletedAsync(Guid userId, Guid pathId, int coursesCompleted, CancellationToken cancellationToken)
+    {
+        if (publisher is null)
+        {
+            return;
+        }
+
+        await publisher.Publish(new LearningPathCompletedEvent(
+            userId, pathId, null, coursesCompleted, 0), cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<bool> Handle(AbandonPathCommand request, CancellationToken cancellationToken)

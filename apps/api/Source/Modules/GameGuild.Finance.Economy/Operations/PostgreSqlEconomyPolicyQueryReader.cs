@@ -126,8 +126,9 @@ public sealed class PostgreSqlEconomyPolicyQueryReader : IEconomyPolicyQueryRead
             return Array.Empty<EconomyPolicyAuditEntry>();
         }
 
-        var approvals = await _db.Set<EconomyCapabilityPolicyApprovalRow>().AsNoTracking()
-            .Where(item => item.PolicyId == policyId)
+        var approvals = await _db.Set<EconomyApprovalRow>().AsNoTracking()
+            .Where(item => item.ApprovalKind == EconomyApprovalKind.CapabilityPolicy &&
+                           item.SubjectId == policyId)
             .OrderBy(item => item.ApprovedAt)
             .ThenBy(item => item.Id)
             .ToArrayAsync(cancellationToken);

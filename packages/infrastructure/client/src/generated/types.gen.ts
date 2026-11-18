@@ -9,12 +9,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { z } from 'zod';
 
+/** Data model for AI Ai Backend Status Dto. */
+export interface AIAiBackendStatusDto {
+  adapter?: string | null;
+  backend?: string | null;
+  baseUrl?: string | null;
+  configured?: boolean;
+  credentialPolicy?: string | null;
+  credentialsConfigured?: boolean;
+  defaultModel?: string | null;
+  readinessCode?: string | null;
+  ready?: boolean;
+}
+
 /** Canonical request shape for conversational completions. */
 export interface AIAiChatInput {
+  backend?: string | null;
   maxTokens?: number | null;
   messages?: AIAiChatMessage[] | null;
   model?: string | null;
-  provider?: string | null;
   systemPrompt?: string | null;
   temperature?: number | null;
 }
@@ -27,6 +40,7 @@ export interface AIAiChatMessage {
 
 /** Canonical completion response shape exposed by the GameGuild API. */
 export interface AIAiCompletionOutput {
+  backend?: string | null;
   finishReason?: string | null;
   model?: string | null;
   provider?: string | null;
@@ -55,10 +69,10 @@ export interface AIAiConversationHistoryEntryDto {
 /** Data model for AI Ai Generated Content Draft Request. */
 export interface AIAiGeneratedContentDraftInput {
   audience?: string | null;
+  backend?: string | null;
   context?: string | null;
   maxTokens?: number | null;
   model?: string | null;
-  provider?: string | null;
   subject?: string | null;
   tone?: string | null;
 }
@@ -66,11 +80,11 @@ export interface AIAiGeneratedContentDraftInput {
 /** Data model for AI Ai Generated Content Request. */
 export interface AIAiGeneratedContentInput {
   audience?: string | null;
+  backend?: string | null;
   context?: string | null;
   kind?: AIAiGeneratedContentKind;
   maxTokens?: number | null;
   model?: string | null;
-  provider?: string | null;
   subject?: string | null;
   tone?: string | null;
 }
@@ -80,10 +94,11 @@ export type AIAiGeneratedContentKind = 'Email' | 'Report' | 'ListingDescription'
 
 /** Canonical request shape for single-prompt generation. */
 export interface AIAiGenerateInput {
+  backend?: string | null;
   maxTokens?: number | null;
   model?: string | null;
   prompt?: string | null;
-  provider?: string | null;
+  reasoningEnabled?: boolean | null;
   systemPrompt?: string | null;
   temperature?: number | null;
 }
@@ -108,9 +123,9 @@ export interface AIAiPromptTemplateDto {
 
 /** Data model for AI Ai Prompt Template Generate Request. */
 export interface AIAiPromptTemplateGenerateInput {
+  backend?: string | null;
   maxTokens?: number | null;
   model?: string | null;
-  provider?: string | null;
   temperature?: number | null;
   variables?: Record<string, string | null> | null;
 }
@@ -127,15 +142,6 @@ export interface AIAiPromptTemplateRenderOutput {
   systemPrompt?: string | null;
   templateId?: string;
   variables?: Record<string, string | null> | null;
-}
-
-/** Data model for AI Ai Provider Status Dto. */
-export interface AIAiProviderStatusDto {
-  baseUrl?: string | null;
-  configured?: boolean;
-  credentialsConfigured?: boolean;
-  defaultModel?: string | null;
-  provider?: string | null;
 }
 
 /** Data model for AI Ai Quota Status Dto. */
@@ -162,9 +168,9 @@ export interface AIAiQuotaStatusOutput {
 /** Data model for AI Ai Status Response. */
 export interface AIAiStatusOutput {
   allowTenantOverrides?: boolean;
-  defaultProvider?: string | null;
+  backends?: AIAiBackendStatusDto[] | null;
+  defaultBackend?: string | null;
   enabled?: boolean;
-  providers?: AIAiProviderStatusDto[] | null;
 }
 
 /** Normalized token usage information returned by a provider. */
@@ -769,6 +775,13 @@ export interface APIControllersStartMyAdRewardSessionInput {
 /** Data model for API Controllers Start My Kyc Request. */
 export interface APIControllersStartMyKycInput {
   idempotencyKey?: string | null;
+}
+
+/** Data model for API Controllers Submit Trust Safety Appeal Request. */
+export interface APIControllersSubmitTrustSafetyAppealInput {
+  restrictionReferenceHash?: string | null;
+  subjectHash?: string | null;
+  submissionEvidenceHash?: string | null;
 }
 
 /** Data model for API Core Compliance Record User Consent Endpoint Command+Result. */
@@ -13122,6 +13135,11 @@ export interface IdentityAuthenticationCompletePasswordResetInput {
   token: string;
 }
 
+/** Completes SMS enrollment with its one-time phone proof, without an authenticator secret. */
+export interface IdentityAuthenticationCompleteSmsMfaSetupInput {
+  code: string;
+}
+
 /** Request to complete WebAuthn authentication. */
 export interface IdentityAuthenticationCompleteWebAuthnAuthenticationInput {
   /** The JSON assertion response from navigator.credentials.get(). */
@@ -13172,6 +13190,7 @@ export interface IdentityAuthenticationCreateApiKeyCommand {
   ipWhitelist?: string | null;
   name: string | null;
   scopes: string[] | null;
+  stepUpReceipt?: string | null;
 }
 
 /** Data model for Identity Authentication Create Api Key Response. */
@@ -13678,6 +13697,13 @@ export interface IdentityAuthenticationMfaMethodsOutput {
   methods: IdentityAuthenticationMfaMethodInfo[] | null;
 }
 
+/** Data model for Identity Authentication Mfa Recovery Cancel Response. */
+export interface IdentityAuthenticationMfaRecoveryCancelOutput {
+  cancelled: boolean;
+  message: string | null;
+  success: boolean;
+}
+
 /** Data model for Identity Authentication Mfa Recovery Confirm Request. */
 export interface IdentityAuthenticationMfaRecoveryConfirmInput {
   /** Confirmation token from the second recovery email. */
@@ -14060,6 +14086,11 @@ export interface IdentityAuthenticationRotateKeyInput {
   validityDays?: number | null;
 }
 
+/** Fresh verification receipt for the account selected by the route. */
+export interface IdentityAuthenticationRotateServiceAccountSecretInput {
+  stepUpReceipt?: string | null;
+}
+
 /** Request to initiate a SAML federation provider sign-in */
 export interface IdentityAuthenticationSamlAuthorizeRequestDto {
   /** Optional RelayState the provider echoes on callback (defaults to a generated token) */
@@ -14295,12 +14326,14 @@ account (sign out everywhere) instead of only the current token. */
 
 /** Request for an SMS sign-in challenge */
 export interface IdentityAuthenticationSmsMfaChallengeInput {
-  /** User identifier whose enrolled phone receives the code */
-  userId: string;
+  /** Opaque continuation returned after successful first-factor verification */
+  mfaToken?: string | null;
 }
 
 /** Request to setup SMS MFA */
 export interface IdentityAuthenticationSmsMfaSetupInput {
+  /** Current account password re-verification before changing MFA delivery. */
+  password?: string | null;
   /** Phone number to receive SMS codes */
   phoneNumber: string | null;
 }
@@ -14315,10 +14348,43 @@ export interface IdentityAuthenticationSmsMfaSetupOutput {
   phoneNumberMasked: string | null;
 }
 
+/** Response indicating that step-up authentication is required. */
+export interface IdentityAuthenticationStepUpAuthenticationRequiredOutput {
+  /** Enrolled methods supported by operation step-up (TOTP, backup code, WebAuthn). */
+  availableMethods?: string[] | null;
+  /** Persisted operation-bound challenge; this identifier is not an authorization receipt. */
+  challengeId?: string;
+  detail?: string | null;
+  /** Expiration time for the step-up token. */
+  expiresAt?: string;
+  instance?: string | null;
+  operation?: IdentityAuthenticationStepUpOperationBinding;
+  /** Reason for step-up requirement. */
+  reason?: string | null;
+  /** Risk factors that triggered the requirement. */
+  riskFactors?: string[] | null;
+  riskLevel?: IdentityAuthenticationRiskLevel;
+  status?: number | null;
+  /** Indicates step-up auth is required. */
+  stepUpRequired?: boolean;
+  /** Challenge identifier retained for existing clients; verification still requires an enrolled factor. */
+  stepUpToken?: string | null;
+  title?: string | null;
+  type?: string | null;
+  [key: string]: any;
+}
+
 /** Data model for Identity Authentication Step Up Challenge Response. */
 export interface IdentityAuthenticationStepUpChallengeOutput {
   challengeId?: string;
   expiresAt?: string;
+}
+
+/** Data model for Identity Authentication Step Up Operation Binding. */
+export interface IdentityAuthenticationStepUpOperationBinding {
+  operationType?: string | null;
+  payloadHash?: string | null;
+  targetReference?: string | null;
 }
 
 /** Data model for Identity Authentication Step Up Receipt Response. */
@@ -19122,8 +19188,19 @@ export interface LearningAssessmentsGradeResultReleaseOutput {
   releaseId?: string;
 }
 
+/** Data model for Learning Assessments Grading Authoring Assessment AIReview Provider State Result. */
+export interface LearningAssessmentsGradingAuthoringAssessmentAIReviewProviderStateResult {
+  available?: boolean;
+  code?: string | null;
+  contexts?: LearningAssessmentsGradingContractsReviewExecutionContext[] | null;
+  message?: string | null;
+  policyVersions?: string[] | null;
+  providerKey?: string | null;
+}
+
 /** Data model for Learning Assessments Grading Authoring Assessment Authoring State Result. */
 export interface LearningAssessmentsGradingAuthoringAssessmentAuthoringStateResult {
+  aiReviewProviders?: LearningAssessmentsGradingAuthoringAssessmentAIReviewProviderStateResult[] | null;
   assessmentId?: string;
   assessmentVersion?: number;
   candidate?: LearningAssessmentsGradingAuthoringAssessmentRevisionStateResult;
@@ -27879,6 +27956,7 @@ export interface TrustSafetyTrustSafetyAppeal {
 export type TrustSafetyTrustSafetyAppealState = 'Submitted' | 'Assigned' | 'Upheld' | 'Overturned';
 
 // Zod Schema Declarations (to handle circular references)
+export let AIAiBackendStatusDtoSchema: z.ZodType<AIAiBackendStatusDto>;
 export let AIAiChatInputSchema: z.ZodType<AIAiChatInput>;
 export let AIAiChatMessageSchema: z.ZodType<AIAiChatMessage>;
 export let AIAiCompletionOutputSchema: z.ZodType<AIAiCompletionOutput>;
@@ -27891,7 +27969,6 @@ export let AIAiPromptTemplateDtoSchema: z.ZodType<AIAiPromptTemplateDto>;
 export let AIAiPromptTemplateGenerateInputSchema: z.ZodType<AIAiPromptTemplateGenerateInput>;
 export let AIAiPromptTemplateRenderInputSchema: z.ZodType<AIAiPromptTemplateRenderInput>;
 export let AIAiPromptTemplateRenderOutputSchema: z.ZodType<AIAiPromptTemplateRenderOutput>;
-export let AIAiProviderStatusDtoSchema: z.ZodType<AIAiProviderStatusDto>;
 export let AIAiQuotaStatusDtoSchema: z.ZodType<AIAiQuotaStatusDto>;
 export let AIAiQuotaStatusOutputSchema: z.ZodType<AIAiQuotaStatusOutput>;
 export let AIAiStatusOutputSchema: z.ZodType<AIAiStatusOutput>;
@@ -27970,6 +28047,7 @@ export let APIControllersRuntimeDetailsSchema: z.ZodType<APIControllersRuntimeDe
 export let APIControllersSettleMyMarketplaceOrderInputSchema: z.ZodType<APIControllersSettleMyMarketplaceOrderInput>;
 export let APIControllersStartMyAdRewardSessionInputSchema: z.ZodType<APIControllersStartMyAdRewardSessionInput>;
 export let APIControllersStartMyKycInputSchema: z.ZodType<APIControllersStartMyKycInput>;
+export let APIControllersSubmitTrustSafetyAppealInputSchema: z.ZodType<APIControllersSubmitTrustSafetyAppealInput>;
 export let APICoreComplianceRecordUserConsentEndpointCommandResultSchema: z.ZodType<APICoreComplianceRecordUserConsentEndpointCommandResult>;
 export let APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInputSchema: z.ZodType<APICoreComplianceUserConsentBridgeControllerUserConsentBridgeInput>;
 export let APICoreIntegrationCertificateEvmEvidenceOutputSchema: z.ZodType<APICoreIntegrationCertificateEvmEvidenceOutput>;
@@ -29019,6 +29097,7 @@ export let IdentityAuthenticationCompleteMfaSetupInputSchema: z.ZodType<Identity
 export let IdentityAuthenticationCompleteMfaSignInInputSchema: z.ZodType<IdentityAuthenticationCompleteMfaSignInInput>;
 export let IdentityAuthenticationCompletePasskeyApprovalInputSchema: z.ZodType<IdentityAuthenticationCompletePasskeyApprovalInput>;
 export let IdentityAuthenticationCompletePasswordResetInputSchema: z.ZodType<IdentityAuthenticationCompletePasswordResetInput>;
+export let IdentityAuthenticationCompleteSmsMfaSetupInputSchema: z.ZodType<IdentityAuthenticationCompleteSmsMfaSetupInput>;
 export let IdentityAuthenticationCompleteWebAuthnAuthenticationInputSchema: z.ZodType<IdentityAuthenticationCompleteWebAuthnAuthenticationInput>;
 export let IdentityAuthenticationCompleteWebAuthnRegistrationInputSchema: z.ZodType<IdentityAuthenticationCompleteWebAuthnRegistrationInput>;
 export let IdentityAuthenticationConfirmTrustedContactInputSchema: z.ZodType<IdentityAuthenticationConfirmTrustedContactInput>;
@@ -29076,6 +29155,7 @@ export let IdentityAuthenticationMfaErrorOutputSchema: z.ZodType<IdentityAuthent
 export let IdentityAuthenticationMfaMethodSchema: z.ZodType<IdentityAuthenticationMfaMethod>;
 export let IdentityAuthenticationMfaMethodInfoSchema: z.ZodType<IdentityAuthenticationMfaMethodInfo>;
 export let IdentityAuthenticationMfaMethodsOutputSchema: z.ZodType<IdentityAuthenticationMfaMethodsOutput>;
+export let IdentityAuthenticationMfaRecoveryCancelOutputSchema: z.ZodType<IdentityAuthenticationMfaRecoveryCancelOutput>;
 export let IdentityAuthenticationMfaRecoveryConfirmInputSchema: z.ZodType<IdentityAuthenticationMfaRecoveryConfirmInput>;
 export let IdentityAuthenticationMfaRecoveryConfirmOutputSchema: z.ZodType<IdentityAuthenticationMfaRecoveryConfirmOutput>;
 export let IdentityAuthenticationMfaRecoveryContinueInputSchema: z.ZodType<IdentityAuthenticationMfaRecoveryContinueInput>;
@@ -29120,6 +29200,7 @@ export let IdentityAuthenticationRiskLevelSchema: z.ZodType<IdentityAuthenticati
 export let IdentityAuthenticationRotateApiKeyInputSchema: z.ZodType<IdentityAuthenticationRotateApiKeyInput>;
 export let IdentityAuthenticationRotateApiKeyOutputSchema: z.ZodType<IdentityAuthenticationRotateApiKeyOutput>;
 export let IdentityAuthenticationRotateKeyInputSchema: z.ZodType<IdentityAuthenticationRotateKeyInput>;
+export let IdentityAuthenticationRotateServiceAccountSecretInputSchema: z.ZodType<IdentityAuthenticationRotateServiceAccountSecretInput>;
 export let IdentityAuthenticationSamlAuthorizeRequestDtoSchema: z.ZodType<IdentityAuthenticationSamlAuthorizeRequestDto>;
 export let IdentityAuthenticationSamlCallbackRequestDtoSchema: z.ZodType<IdentityAuthenticationSamlCallbackRequestDto>;
 export let IdentityAuthenticationSamlLogoutUrlOutputSchema: z.ZodType<IdentityAuthenticationSamlLogoutUrlOutput>;
@@ -29141,7 +29222,9 @@ export let IdentityAuthenticationSignOutInputSchema: z.ZodType<IdentityAuthentic
 export let IdentityAuthenticationSmsMfaChallengeInputSchema: z.ZodType<IdentityAuthenticationSmsMfaChallengeInput>;
 export let IdentityAuthenticationSmsMfaSetupInputSchema: z.ZodType<IdentityAuthenticationSmsMfaSetupInput>;
 export let IdentityAuthenticationSmsMfaSetupOutputSchema: z.ZodType<IdentityAuthenticationSmsMfaSetupOutput>;
+export let IdentityAuthenticationStepUpAuthenticationRequiredOutputSchema: z.ZodType<IdentityAuthenticationStepUpAuthenticationRequiredOutput>;
 export let IdentityAuthenticationStepUpChallengeOutputSchema: z.ZodType<IdentityAuthenticationStepUpChallengeOutput>;
+export let IdentityAuthenticationStepUpOperationBindingSchema: z.ZodType<IdentityAuthenticationStepUpOperationBinding>;
 export let IdentityAuthenticationStepUpReceiptOutputSchema: z.ZodType<IdentityAuthenticationStepUpReceiptOutput>;
 export let IdentityAuthenticationTrustDeviceInputSchema: z.ZodType<IdentityAuthenticationTrustDeviceInput>;
 export let IdentityAuthenticationTrustedContactActionResultSchema: z.ZodType<IdentityAuthenticationTrustedContactActionResult>;
@@ -29498,6 +29581,7 @@ export let LearningAssessmentsCreateGroupInputSchema: z.ZodType<LearningAssessme
 export let LearningAssessmentsCreateGroupSetInputSchema: z.ZodType<LearningAssessmentsCreateGroupSetInput>;
 export let LearningAssessmentsExtendPeerReviewWindowInputSchema: z.ZodType<LearningAssessmentsExtendPeerReviewWindowInput>;
 export let LearningAssessmentsGradeResultReleaseOutputSchema: z.ZodType<LearningAssessmentsGradeResultReleaseOutput>;
+export let LearningAssessmentsGradingAuthoringAssessmentAIReviewProviderStateResultSchema: z.ZodType<LearningAssessmentsGradingAuthoringAssessmentAIReviewProviderStateResult>;
 export let LearningAssessmentsGradingAuthoringAssessmentAuthoringStateResultSchema: z.ZodType<LearningAssessmentsGradingAuthoringAssessmentAuthoringStateResult>;
 export let LearningAssessmentsGradingAuthoringAssessmentCapabilityStateResultSchema: z.ZodType<LearningAssessmentsGradingAuthoringAssessmentCapabilityStateResult>;
 export let LearningAssessmentsGradingAuthoringAssessmentDraftResultSchema: z.ZodType<LearningAssessmentsGradingAuthoringAssessmentDraftResult>;
@@ -30242,15 +30326,28 @@ export let TrustSafetyTrustSafetyAppealSchema: z.ZodType<TrustSafetyTrustSafetyA
 export let TrustSafetyTrustSafetyAppealStateSchema: z.ZodType<TrustSafetyTrustSafetyAppealState>;
 
 // Zod Schema Definitions
+/** Zod schema for AIAiBackendStatusDto. Data model for AI Ai Backend Status Dto. */
+AIAiBackendStatusDtoSchema = z.object({
+  adapter: z.string().nullable().optional(),
+  backend: z.string().nullable().optional(),
+  baseUrl: z.string().nullable().optional(),
+  configured: z.boolean().optional(),
+  credentialPolicy: z.string().nullable().optional(),
+  credentialsConfigured: z.boolean().optional(),
+  defaultModel: z.string().nullable().optional(),
+  readinessCode: z.string().nullable().optional(),
+  ready: z.boolean().optional(),
+});
+
 /** Zod schema for AIAiChatInput. Canonical request shape for conversational completions. */
 AIAiChatInputSchema = z.object({
+  backend: z.string().nullable().optional(),
   maxTokens: z.number().int().nullable().optional(),
   messages: z
     .array(z.lazy(() => AIAiChatMessageSchema))
     .nullable()
     .optional(),
   model: z.string().nullable().optional(),
-  provider: z.string().nullable().optional(),
   systemPrompt: z.string().nullable().optional(),
   temperature: z.number().nullable().optional(),
 });
@@ -30263,6 +30360,7 @@ AIAiChatMessageSchema = z.object({
 
 /** Zod schema for AIAiCompletionOutput. Canonical completion response shape exposed by the GameGuild API. */
 AIAiCompletionOutputSchema = z.object({
+  backend: z.string().nullable().optional(),
   finishReason: z.string().nullable().optional(),
   model: z.string().nullable().optional(),
   provider: z.string().nullable().optional(),
@@ -30291,10 +30389,10 @@ AIAiConversationHistoryEntryDtoSchema = z.object({
 /** Zod schema for AIAiGeneratedContentDraftInput. Data model for AI Ai Generated Content Draft Request. */
 AIAiGeneratedContentDraftInputSchema = z.object({
   audience: z.string().nullable().optional(),
+  backend: z.string().nullable().optional(),
   context: z.string().nullable().optional(),
   maxTokens: z.number().int().nullable().optional(),
   model: z.string().nullable().optional(),
-  provider: z.string().nullable().optional(),
   subject: z.string().nullable().optional(),
   tone: z.string().nullable().optional(),
 });
@@ -30302,11 +30400,11 @@ AIAiGeneratedContentDraftInputSchema = z.object({
 /** Zod schema for AIAiGeneratedContentInput. Data model for AI Ai Generated Content Request. */
 AIAiGeneratedContentInputSchema = z.object({
   audience: z.string().nullable().optional(),
+  backend: z.string().nullable().optional(),
   context: z.string().nullable().optional(),
   kind: z.lazy(() => AIAiGeneratedContentKindSchema).optional(),
   maxTokens: z.number().int().nullable().optional(),
   model: z.string().nullable().optional(),
-  provider: z.string().nullable().optional(),
   subject: z.string().nullable().optional(),
   tone: z.string().nullable().optional(),
 });
@@ -30316,10 +30414,11 @@ AIAiGeneratedContentKindSchema = z.enum(['Email', 'Report', 'ListingDescription'
 
 /** Zod schema for AIAiGenerateInput. Canonical request shape for single-prompt generation. */
 AIAiGenerateInputSchema = z.object({
+  backend: z.string().nullable().optional(),
   maxTokens: z.number().int().nullable().optional(),
   model: z.string().nullable().optional(),
   prompt: z.string().nullable().optional(),
-  provider: z.string().nullable().optional(),
+  reasoningEnabled: z.boolean().nullable().optional(),
   systemPrompt: z.string().nullable().optional(),
   temperature: z.number().nullable().optional(),
 });
@@ -30344,9 +30443,9 @@ AIAiPromptTemplateDtoSchema = z.object({
 
 /** Zod schema for AIAiPromptTemplateGenerateInput. Data model for AI Ai Prompt Template Generate Request. */
 AIAiPromptTemplateGenerateInputSchema = z.object({
+  backend: z.string().nullable().optional(),
   maxTokens: z.number().int().nullable().optional(),
   model: z.string().nullable().optional(),
-  provider: z.string().nullable().optional(),
   temperature: z.number().nullable().optional(),
   variables: z.record(z.string(), z.string().nullable()).nullable().optional(),
 });
@@ -30363,15 +30462,6 @@ AIAiPromptTemplateRenderOutputSchema = z.object({
   systemPrompt: z.string().nullable().optional(),
   templateId: z.string().uuid().optional(),
   variables: z.record(z.string(), z.string().nullable()).nullable().optional(),
-});
-
-/** Zod schema for AIAiProviderStatusDto. Data model for AI Ai Provider Status Dto. */
-AIAiProviderStatusDtoSchema = z.object({
-  baseUrl: z.string().nullable().optional(),
-  configured: z.boolean().optional(),
-  credentialsConfigured: z.boolean().optional(),
-  defaultModel: z.string().nullable().optional(),
-  provider: z.string().nullable().optional(),
 });
 
 /** Zod schema for AIAiQuotaStatusDto. Data model for AI Ai Quota Status Dto. */
@@ -30401,12 +30491,12 @@ AIAiQuotaStatusOutputSchema = z.object({
 /** Zod schema for AIAiStatusOutput. Data model for AI Ai Status Response. */
 AIAiStatusOutputSchema = z.object({
   allowTenantOverrides: z.boolean().optional(),
-  defaultProvider: z.string().nullable().optional(),
-  enabled: z.boolean().optional(),
-  providers: z
-    .array(z.lazy(() => AIAiProviderStatusDtoSchema))
+  backends: z
+    .array(z.lazy(() => AIAiBackendStatusDtoSchema))
     .nullable()
     .optional(),
+  defaultBackend: z.string().nullable().optional(),
+  enabled: z.boolean().optional(),
 });
 
 /** Zod schema for AIAiUsageDto. Normalized token usage information returned by a provider. */
@@ -31041,6 +31131,13 @@ APIControllersStartMyAdRewardSessionInputSchema = z.object({
 /** Zod schema for APIControllersStartMyKycInput. Data model for API Controllers Start My Kyc Request. */
 APIControllersStartMyKycInputSchema = z.object({
   idempotencyKey: z.string().nullable().optional(),
+});
+
+/** Zod schema for APIControllersSubmitTrustSafetyAppealInput. Data model for API Controllers Submit Trust Safety Appeal Request. */
+APIControllersSubmitTrustSafetyAppealInputSchema = z.object({
+  restrictionReferenceHash: z.string().nullable().optional(),
+  subjectHash: z.string().nullable().optional(),
+  submissionEvidenceHash: z.string().nullable().optional(),
 });
 
 /** Zod schema for APICoreComplianceRecordUserConsentEndpointCommandResult. Data model for API Core Compliance Record User Consent Endpoint Command+Result. */
@@ -42547,6 +42644,11 @@ IdentityAuthenticationCompletePasswordResetInputSchema = z.object({
   token: z.string().min(1),
 });
 
+/** Zod schema for IdentityAuthenticationCompleteSmsMfaSetupInput. Completes SMS enrollment with its one-time phone proof, without an authenticator secret. */
+IdentityAuthenticationCompleteSmsMfaSetupInputSchema = z.object({
+  code: z.string().min(1).max(64),
+});
+
 /** Zod schema for IdentityAuthenticationCompleteWebAuthnAuthenticationInput. Request to complete WebAuthn authentication. */
 IdentityAuthenticationCompleteWebAuthnAuthenticationInputSchema = z.object({
   assertionResponse: z.string().nullable().optional(),
@@ -42588,6 +42690,7 @@ IdentityAuthenticationCreateApiKeyCommandSchema = z.object({
   ipWhitelist: z.string().nullable().optional(),
   name: z.string().nullable(),
   scopes: z.array(z.string()).nullable(),
+  stepUpReceipt: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationCreateApiKeyOutput. Data model for Identity Authentication Create Api Key Response. */
@@ -42997,6 +43100,13 @@ IdentityAuthenticationMfaMethodsOutputSchema = z.object({
   methods: z.array(z.lazy(() => IdentityAuthenticationMfaMethodInfoSchema)).nullable(),
 });
 
+/** Zod schema for IdentityAuthenticationMfaRecoveryCancelOutput. Data model for Identity Authentication Mfa Recovery Cancel Response. */
+IdentityAuthenticationMfaRecoveryCancelOutputSchema = z.object({
+  cancelled: z.boolean(),
+  message: z.string().nullable(),
+  success: z.boolean(),
+});
+
 /** Zod schema for IdentityAuthenticationMfaRecoveryConfirmInput. Data model for Identity Authentication Mfa Recovery Confirm Request. */
 IdentityAuthenticationMfaRecoveryConfirmInputSchema = z.object({
   confirmationToken: z.string().nullable(),
@@ -43306,6 +43416,11 @@ IdentityAuthenticationRotateKeyInputSchema = z.object({
   validityDays: z.number().int().nullable().optional(),
 });
 
+/** Zod schema for IdentityAuthenticationRotateServiceAccountSecretInput. Fresh verification receipt for the account selected by the route. */
+IdentityAuthenticationRotateServiceAccountSecretInputSchema = z.object({
+  stepUpReceipt: z.string().nullable().optional(),
+});
+
 /** Zod schema for IdentityAuthenticationSamlAuthorizeRequestDto. Request to initiate a SAML federation provider sign-in */
 IdentityAuthenticationSamlAuthorizeRequestDtoSchema = z.object({
   relayState: z.string().nullable().optional(),
@@ -43496,11 +43611,12 @@ IdentityAuthenticationSignOutInputSchema = z.object({
 
 /** Zod schema for IdentityAuthenticationSmsMfaChallengeInput. Request for an SMS sign-in challenge */
 IdentityAuthenticationSmsMfaChallengeInputSchema = z.object({
-  userId: z.string().uuid(),
+  mfaToken: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationSmsMfaSetupInput. Request to setup SMS MFA */
 IdentityAuthenticationSmsMfaSetupInputSchema = z.object({
+  password: z.string().nullable().optional(),
   phoneNumber: z.string().nullable(),
 });
 
@@ -43511,10 +43627,37 @@ IdentityAuthenticationSmsMfaSetupOutputSchema = z.object({
   phoneNumberMasked: z.string().nullable(),
 });
 
+/** Zod schema for IdentityAuthenticationStepUpAuthenticationRequiredOutput. Response indicating that step-up authentication is required. */
+IdentityAuthenticationStepUpAuthenticationRequiredOutputSchema = z
+  .object({
+    availableMethods: z.array(z.string()).nullable().optional(),
+    challengeId: z.string().uuid().optional(),
+    detail: z.string().nullable().optional(),
+    expiresAt: z.string().datetime({ offset: true }).optional(),
+    instance: z.string().nullable().optional(),
+    operation: z.lazy(() => IdentityAuthenticationStepUpOperationBindingSchema).optional(),
+    reason: z.string().nullable().optional(),
+    riskFactors: z.array(z.string()).nullable().optional(),
+    riskLevel: z.lazy(() => IdentityAuthenticationRiskLevelSchema).optional(),
+    status: z.number().int().nullable().optional(),
+    stepUpRequired: z.boolean().optional(),
+    stepUpToken: z.string().nullable().optional(),
+    title: z.string().nullable().optional(),
+    type: z.string().nullable().optional(),
+  })
+  .catchall(z.unknown());
+
 /** Zod schema for IdentityAuthenticationStepUpChallengeOutput. Data model for Identity Authentication Step Up Challenge Response. */
 IdentityAuthenticationStepUpChallengeOutputSchema = z.object({
   challengeId: z.string().uuid().optional(),
   expiresAt: z.string().datetime({ offset: true }).optional(),
+});
+
+/** Zod schema for IdentityAuthenticationStepUpOperationBinding. Data model for Identity Authentication Step Up Operation Binding. */
+IdentityAuthenticationStepUpOperationBindingSchema = z.object({
+  operationType: z.string().nullable().optional(),
+  payloadHash: z.string().nullable().optional(),
+  targetReference: z.string().nullable().optional(),
 });
 
 /** Zod schema for IdentityAuthenticationStepUpReceiptOutput. Data model for Identity Authentication Step Up Receipt Response. */
@@ -47454,8 +47597,25 @@ LearningAssessmentsGradeResultReleaseOutputSchema = z.object({
   releaseId: z.string().uuid().optional(),
 });
 
+/** Zod schema for LearningAssessmentsGradingAuthoringAssessmentAIReviewProviderStateResult. Data model for Learning Assessments Grading Authoring Assessment AIReview Provider State Result. */
+LearningAssessmentsGradingAuthoringAssessmentAIReviewProviderStateResultSchema = z.object({
+  available: z.boolean().optional(),
+  code: z.string().nullable().optional(),
+  contexts: z
+    .array(z.lazy(() => LearningAssessmentsGradingContractsReviewExecutionContextSchema))
+    .nullable()
+    .optional(),
+  message: z.string().nullable().optional(),
+  policyVersions: z.array(z.string()).nullable().optional(),
+  providerKey: z.string().nullable().optional(),
+});
+
 /** Zod schema for LearningAssessmentsGradingAuthoringAssessmentAuthoringStateResult. Data model for Learning Assessments Grading Authoring Assessment Authoring State Result. */
 LearningAssessmentsGradingAuthoringAssessmentAuthoringStateResultSchema = z.object({
+  aiReviewProviders: z
+    .array(z.lazy(() => LearningAssessmentsGradingAuthoringAssessmentAIReviewProviderStateResultSchema))
+    .nullable()
+    .optional(),
   assessmentId: z.string().uuid().optional(),
   assessmentVersion: z.number().int().optional(),
   candidate: z.lazy(() => LearningAssessmentsGradingAuthoringAssessmentRevisionStateResultSchema).optional(),
@@ -50883,7 +51043,7 @@ MvcProblemDetailsSchema = z
     title: z.string().nullable().optional(),
     type: z.string().nullable().optional(),
   })
-  .catchall(z.record(z.string(), z.unknown()));
+  .catchall(z.unknown());
 
 /** Zod schema for MvcValidationProblemDetails. Data model for Mvc Validation Problem Details. */
 MvcValidationProblemDetailsSchema = z
@@ -50895,7 +51055,7 @@ MvcValidationProblemDetailsSchema = z
     title: z.string().nullable().optional(),
     type: z.string().nullable().optional(),
   })
-  .catchall(z.record(z.string(), z.unknown()));
+  .catchall(z.unknown());
 
 /** Zod schema for NodesJsonNode. Data model for Nodes Json Node. */
 NodesJsonNodeSchema = z.object({
@@ -56061,12 +56221,12 @@ TrustSafetyTrustSafetyAppealSchema = z.object({
 TrustSafetyTrustSafetyAppealStateSchema = z.enum(['Submitted', 'Assigned', 'Upheld', 'Overturned']);
 
 // Backwards-compatible aliases for names generated before DTO identity was preserved
+export interface AIAiBackendStatus extends AIAiBackendStatusDto {}
+export { AIAiBackendStatusDtoSchema as AIAiBackendStatusSchema };
 export interface AIAiConversationHistoryEntry extends AIAiConversationHistoryEntryDto {}
 export { AIAiConversationHistoryEntryDtoSchema as AIAiConversationHistoryEntrySchema };
 export interface AIAiPromptTemplate extends AIAiPromptTemplateDto {}
 export { AIAiPromptTemplateDtoSchema as AIAiPromptTemplateSchema };
-export interface AIAiProviderStatus extends AIAiProviderStatusDto {}
-export { AIAiProviderStatusDtoSchema as AIAiProviderStatusSchema };
 export interface AIAiQuotaStatus extends AIAiQuotaStatusDto {}
 export { AIAiQuotaStatusDtoSchema as AIAiQuotaStatusSchema };
 export interface AIAiUsage extends AIAiUsageDto {}

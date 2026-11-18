@@ -25,7 +25,9 @@ using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Tenants;
 using GameGuild.Identity.Users;
 using GameGuild.LaunchPad;
+using GameGuild.TrustSafety;
 using GameGuild.Learning.Assessments;
+using GameGuild.Learning.Assessments.Grading.Abstractions;
 using GameGuild.Learning.Assessments.Grading.Code;
 using GameGuild.Learning.Assessments.QuizAdapter;
 using GameGuild.Learning.Certificates;
@@ -137,10 +139,17 @@ internal sealed class ApiProductComposition : IApiProductComposition
         builder.Services.AddSingleton<IDatabaseMigrationPrerequisite, EconomyMigrationPrerequisite>();
         builder.Services.AddEconomyCapabilityComposition(builder.Configuration);
         builder.Services.AddEconomyCoreComposition(builder.Configuration);
+        // Trust/Safety first producer (issue #1319 T1): decorate the Economy protected-operation
+        // risk-decision issuer so subject-affecting risk decisions are ingested into the
+        // Trust/Safety control plane (signed, versioned). Must run after the Economy core
+        // composition that registers the issuer.
+        builder.Services.AddEconomyRiskTrustSafetyIngestion();
         // Issue #1291 option C (FC1): the FinancialCrime economy hook decorates the trusted
         // protected operation authorizer registered above — order is load-bearing (the
         // last-wins interface registration must be the adapter), hence this call sits after
-        // the core composition, mirroring the evidence-reader registration rule.
+        // the core composition — and after the Trust/Safety ingestion above — so the FC
+        // adapter is the outermost last-wins registration, mirroring the evidence-reader
+        // registration rule.
         builder.Services.AddFinancialCrimeEconomyIngestion();
         // The module's own background services: the outbox drain (economy + KYC signals →
         // screenings, cases, decision consumption) and the periodic rescreening sweep,
@@ -170,6 +179,14 @@ internal sealed class ApiProductComposition : IApiProductComposition
         new GameGuild.Social.Announcements.AnnouncementsModule().ConfigureServices(builder.Services, builder.Configuration);
         builder.Services.AddCoursesModule();
         builder.Services.AddAssessmentsModule();
+        builder.Services.Configure<GradingAIReviewOptions>(
+            builder.Configuration.GetSection(GradingAIReviewOptions.SectionName));
+        builder.Services.AddScoped<IAIReviewProvider, GradingAIReviewProvider>();
+        if ((builder.Environment.IsDevelopment() || builder.Environment.IsEnvironment("Testing")) &&
+            builder.Configuration.GetValue<bool>("Grading:AIReview:ControlledProviderEnabled"))
+        {
+            builder.Services.AddScoped<IAIReviewProvider, ControlledGradingAIReviewProvider>();
+        }
         builder.Services.Configure<CodeGradingWorkerOptions>(builder.Configuration.GetSection(CodeGradingWorkerOptions.Section));
         builder.Services.AddSingleton<ICodeAssessmentExecutor, CodeGradingWorker>();
         builder.Services.AddQuizGradingAdapter();

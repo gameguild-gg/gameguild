@@ -2,6 +2,7 @@ using System.Text.Json;
 using GameGuild.Learning.Assessments.Grading.Abstractions;
 using GameGuild.Learning.Assessments.Grading.Contracts;
 using GameGuild.Learning.Assessments.Grading.Persistence;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace GameGuild.Learning.Assessments.Grading.Runtime;
@@ -115,8 +116,12 @@ public sealed class AIReviewStageHandler : IReviewStageHandler
 
 public sealed class AIReviewRequestConsumer(
     IAIReviewProviderRegistry providers,
+    IApplicationDbContext context,
     IServiceProvider services) : IAcademicOutboxConsumer
 {
+    private const string ReceiptCommandType = "ai-review-provider-response";
+    private const string ReceiptSchemaVersion = "ai-review-provider-response.v1";
+
     public string Key => "grading.ai-review-request.v1";
 
     public IReadOnlySet<string> EventTypes { get; } =
@@ -132,9 +137,19 @@ public sealed class AIReviewRequestConsumer(
             throw new JsonException("AI review request version or correlation is invalid.");
         }
 
-        var provider = providers.Resolve(request.ProviderKey, request.ProviderPolicyVersion, request.Context);
-        var response = await provider.ReviewAsync(request, cancellationToken).ConfigureAwait(false);
-        ValidateProviderResponse(request, response);
+        var actorId = await ResolveActorAsync(message, request, cancellationToken).ConfigureAwait(false);
+        var response = await FindResponseAsync(message, request, actorId, cancellationToken).ConfigureAwait(false);
+        if (response is null)
+        {
+            var provider = providers.Resolve(request.ProviderKey, request.ProviderPolicyVersion, request.Context);
+            response = await provider.ReviewAsync(
+                    new AIReviewProviderInvocationV1(1, message.TenantId, actorId, request),
+                    cancellationToken)
+                .ConfigureAwait(false);
+            ValidateProviderResponse(request, response);
+            await StoreResponseAsync(message, request, actorId, response, cancellationToken).ConfigureAwait(false);
+        }
+
         var orchestrator = services.GetRequiredService<IGradingExecutionOrchestrator>();
         await orchestrator.AcceptReviewEvidenceAsync(
                 request.GradingExecutionId,
@@ -147,6 +162,109 @@ public sealed class AIReviewRequestConsumer(
                     ProducedByService: $"{response.ProviderKey}/{response.ModelKey}@{response.ModelVersion}"),
                 cancellationToken)
             .ConfigureAwait(false);
+    }
+
+    private async Task<Guid> ResolveActorAsync(
+        AcademicOutboxEvent message,
+        AIReviewProviderRequestV1 request,
+        CancellationToken cancellationToken)
+    {
+        var execution = await context.Set<GradingExecution>()
+            .AsNoTracking()
+            .SingleOrDefaultAsync(value => value.Id == request.GradingExecutionId, cancellationToken)
+            .ConfigureAwait(false)
+            ?? throw new InvalidOperationException("AI review execution was not found.");
+        if (execution.TenantId != message.TenantId || execution.ExecutionContext != request.Context)
+        {
+            throw new InvalidOperationException("AI review execution context does not match the durable request.");
+        }
+
+        Guid actorId;
+        if (request.Context == ReviewExecutionContext.AuthorTest)
+        {
+            var subjectId = execution.TestRunSubjectId
+                ?? throw new InvalidOperationException("AI author test execution is missing its subject.");
+            actorId = await context.Set<AssessmentTestRunSubject>()
+                .AsNoTracking()
+                .Where(subject => subject.Id == subjectId && subject.TenantId == message.TenantId)
+                .Join(
+                    context.Set<AssessmentTestRun>().AsNoTracking(),
+                    subject => subject.TestRunId,
+                    run => run.Id,
+                    (_, run) => run.CreatedByUserId)
+                .SingleOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+        else
+        {
+            var submissionId = execution.AssessmentSubmissionId
+                ?? throw new InvalidOperationException("Official AI review execution is missing its submission.");
+            actorId = await context.Set<AssessmentSubmission>()
+                .AsNoTracking()
+                .Where(submission => submission.Id == submissionId && submission.TenantId == message.TenantId)
+                .Select(submission => submission.SubmittedByUserId ?? submission.StartedByUserId)
+                .SingleOrDefaultAsync(cancellationToken)
+                .ConfigureAwait(false);
+        }
+
+        return actorId == Guid.Empty
+            ? throw new InvalidOperationException("AI review could not resolve a trusted execution actor.")
+            : actorId;
+    }
+
+    private async Task<AIReviewProviderResponseV1?> FindResponseAsync(
+        AcademicOutboxEvent message,
+        AIReviewProviderRequestV1 request,
+        Guid actorId,
+        CancellationToken cancellationToken)
+    {
+        var receipt = await context.Set<GradingCommandReceipt>()
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                value => value.TenantId == message.TenantId &&
+                         value.ResourceId == request.ReviewStageId &&
+                         value.CommandType == ReceiptCommandType &&
+                         value.ActorId == actorId &&
+                         value.IdempotencyKey == request.RequestId.ToString("N"),
+                cancellationToken)
+            .ConfigureAwait(false);
+        if (receipt is null)
+        {
+            return null;
+        }
+
+        if (!string.Equals(receipt.RequestHash, message.PayloadHash, StringComparison.Ordinal) ||
+            !string.Equals(receipt.OutcomeSchemaVersion, ReceiptSchemaVersion, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("AI review idempotency receipt does not match the durable request.");
+        }
+
+        var response = JsonSerializer.Deserialize<AIReviewProviderResponseV1>(
+            receipt.OutcomeCanonicalJson,
+            GradingJson.Options) ?? throw new JsonException("Cached AI review response is invalid.");
+        ValidateProviderResponse(request, response);
+        return response;
+    }
+
+    private async Task StoreResponseAsync(
+        AcademicOutboxEvent message,
+        AIReviewProviderRequestV1 request,
+        Guid actorId,
+        AIReviewProviderResponseV1 response,
+        CancellationToken cancellationToken)
+    {
+        var canonical = CanonicalJson.Serialize(JsonSerializer.SerializeToElement(response, GradingJson.Options));
+        context.Set<GradingCommandReceipt>().Add(GradingCommandReceipt.Create(
+            message.TenantId,
+            request.ReviewStageId,
+            ReceiptCommandType,
+            actorId,
+            request.RequestId.ToString("N"),
+            message.PayloadHash,
+            ReceiptSchemaVersion,
+            canonical,
+            SystemClock.UtcNow.AddDays(90)));
+        await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private static void ValidateProviderResponse(

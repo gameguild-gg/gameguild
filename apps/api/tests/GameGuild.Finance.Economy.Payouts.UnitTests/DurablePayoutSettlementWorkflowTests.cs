@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild;
 using GameGuild.Finance.Economy.Contracts;
+using GameGuild.Finance.Economy.Persistence;
 using GameGuild.Finance.Economy.Ledger;
 using GameGuild.Finance.Economy.Risk;
 using Microsoft.EntityFrameworkCore;
@@ -527,9 +528,9 @@ public sealed class DurablePayoutSettlementWorkflowTests
 
     private sealed class RecordingDispatchOutbox : IPayoutDispatchOutboxWriter
     {
-        public List<PayoutDispatchOutboxRow> Rows { get; } = [];
+        public List<EconomyOutboxRow> Rows { get; } = [];
 
-        public Task AddAsync(PayoutDispatchOutboxRow row, CancellationToken cancellationToken = default)
+        public Task AddAsync(EconomyOutboxRow row, CancellationToken cancellationToken = default)
         {
             Rows.Add(row);
             return Task.CompletedTask;

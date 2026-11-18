@@ -38,11 +38,11 @@ export class AuthSigningKeysModule {
    *
    * Removes signing keys that have been expired beyond the retention period.
    */
-  async postAuthSigningKeysCleanup(body: Types.IdentityAuthenticationCleanupKeysInput): Promise<Result<Types.IdentityAuthenticationCleanupResult, ApiError>> {
+  async postAuthSigningKeysCleanup(body?: Types.IdentityAuthenticationCleanupKeysInput): Promise<Result<Types.IdentityAuthenticationCleanupResult, ApiError>> {
     const url = '/v1/auth/signing-keys:cleanup';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationCleanupKeysInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationCleanupKeysInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

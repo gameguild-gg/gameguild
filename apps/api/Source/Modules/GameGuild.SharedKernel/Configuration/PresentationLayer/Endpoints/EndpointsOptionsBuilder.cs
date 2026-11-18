@@ -6,7 +6,7 @@ public static class EndpointsOptionsBuilder
 {
     public static EndpointsOptions CreateWithValidation(IConfiguration configuration)
     {
-        var options = OptionBuilderUtilities.CreateAndBind(configuration, "Endpoints", EndpointsOptions.CreateDefault);
+        var options = OptionBuilderUtilities.CreateAndBind(configuration, EndpointsOptions.SectionName, EndpointsOptions.CreateDefault);
         options.Validate();
         return options;
     }

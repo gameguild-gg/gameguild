@@ -31,7 +31,9 @@ export class AuthApiKeysModule {
   }
 
   /**
-   * Create a new API key
+   * Create a new API key after fresh verification
+   *
+   * Creates an API key after fresh verification. Without a stepUpReceipt, a valid request returns HTTP 403 with a persisted challenge bound to the name, scopes, expiry and IP whitelist. Verify an enrolled supported factor and retry the identical creation fields with the returned receipt. Invalid or reused receipts cannot create a key.
    */
   async postAuthApiKeys(body: Types.IdentityAuthenticationCreateApiKeyCommand): Promise<Result<Types.IdentityAuthenticationCreateApiKeyOutput, ApiError>> {
     const url = '/v1/auth/api-keys';
@@ -58,11 +60,11 @@ export class AuthApiKeysModule {
   /**
    * Revoke an API key
    */
-  async postAuthApiKeysRevoke(keyId: string, body: Types.IdentityAuthenticationRevokeApiKeyInput): Promise<Result<void, ApiError>> {
+  async postAuthApiKeysRevoke(keyId: string, body?: Types.IdentityAuthenticationRevokeApiKeyInput): Promise<Result<void, ApiError>> {
     const url = `/v1/auth/api-keys/${keyId}:revoke`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationRevokeApiKeyInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationRevokeApiKeyInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -80,12 +82,12 @@ export class AuthApiKeysModule {
    */
   async postAuthApiKeysRotate(
     keyId: string,
-    body: Types.IdentityAuthenticationRotateApiKeyInput,
+    body?: Types.IdentityAuthenticationRotateApiKeyInput,
   ): Promise<Result<Types.IdentityAuthenticationRotateApiKeyOutput, ApiError>> {
     const url = `/v1/auth/api-keys/${keyId}:rotate`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationRotateApiKeyInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationRotateApiKeyInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

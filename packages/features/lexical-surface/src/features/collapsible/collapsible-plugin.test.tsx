@@ -1,31 +1,17 @@
-import { act, useEffect } from "react";
-import { createRoot, type Root } from "react-dom/client";
-import { LexicalComposer } from "@lexical/react/LexicalComposer";
-import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
-import {
-  $createParagraphNode,
-  $createTextNode,
-  $getRoot,
-  type EditorState,
-  type ElementNode,
-  type LexicalEditor,
-  type LexicalNode,
-} from "lexical";
-import { afterEach, beforeAll, describe, expect, it } from "vitest";
+/** @file Exercises collapsible structural transforms through a mounted editor. */
+import { LexicalComposer } from '@lexical/react/LexicalComposer';
+import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import { $createParagraphNode, $createTextNode, $getRoot } from 'lexical';
+import type { EditorState, ElementNode, LexicalEditor, LexicalNode } from 'lexical';
+import { act, useEffect } from 'react';
+import { createRoot } from 'react-dom/client';
+import type { Root } from 'react-dom/client';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 
-import {
-  $createCollapsibleContainerNode,
-  CollapsibleContainerNode,
-} from "./collapsible-container-node";
-import {
-  $createCollapsibleContentNode,
-  CollapsibleContentNode,
-} from "./collapsible-content-node";
-import {
-  $createCollapsibleTitleNode,
-  CollapsibleTitleNode,
-} from "./collapsible-title-node";
-import { CollapsiblePlugin } from "./collapsible-plugin";
+import { $createCollapsibleContainerNode, CollapsibleContainerNode } from './collapsible-container-node';
+import { $createCollapsibleContentNode, CollapsibleContentNode } from './collapsible-content-node';
+import { CollapsiblePlugin } from './collapsible-plugin';
+import { $createCollapsibleTitleNode, CollapsibleTitleNode } from './collapsible-title-node';
 
 let root: Root | null = null;
 
@@ -49,14 +35,14 @@ function CaptureEditor({ onReady }: { onReady: (editor: LexicalEditor) => void }
 
 function mountCollapsibleEditor(): LexicalEditor {
   const captured: { current: LexicalEditor | null } = { current: null };
-  const container = document.createElement("div");
+  const container = document.createElement('div');
   document.body.appendChild(container);
   root = createRoot(container);
   act(() => {
     root!.render(
       <LexicalComposer
         initialConfig={{
-          namespace: "collapsible-transform-test",
+          namespace: 'collapsible-transform-test',
           nodes: [CollapsibleContainerNode, CollapsibleTitleNode, CollapsibleContentNode],
           onError: (error) => {
             throw error;
@@ -81,21 +67,21 @@ async function settle(editor: LexicalEditor): Promise<EditorState> {
 }
 
 function describeRoot(state: EditorState): string {
-  let tree = "";
+  let tree = '';
   state.read(() => {
     const walk = (node: LexicalNode): string => {
       const element = node as ElementNode;
-      const children = typeof element.getChildren === "function" ? element.getChildren() : [];
+      const children = typeof element.getChildren === 'function' ? element.getChildren() : [];
       if (children.length === 0) return node.getType();
-      return `${node.getType()}[${children.map(walk).join(", ")}]`;
+      return `${node.getType()}[${children.map(walk).join(', ')}]`;
     };
     tree = walk($getRoot());
   });
   return tree;
 }
 
-describe("CollapsiblePlugin structural transforms", () => {
-  it("unwraps every child of an orphaned CollapsibleContentNode", async () => {
+describe('CollapsiblePlugin structural transforms', () => {
+  it('unwraps every child of an orphaned CollapsibleContentNode', async () => {
     const editor = mountCollapsibleEditor();
     editor.update(
       () => {
@@ -104,7 +90,7 @@ describe("CollapsiblePlugin structural transforms", () => {
         // children — the unwrap loop must relocate all of them even though
         // insertBefore mutates the child list during iteration.
         const orphan = $createCollapsibleContentNode();
-        for (const text of ["first", "second", "third"]) {
+        for (const text of ['first', 'second', 'third']) {
           orphan.append($createParagraphNode().append($createTextNode(text)));
         }
         $getRoot().append(orphan);
@@ -114,28 +100,21 @@ describe("CollapsiblePlugin structural transforms", () => {
     const state = await settle(editor);
     // Every child survives the unwrap: getChildren() returns a fresh array in
     // Lexical 0.53, so mutation during iteration cannot skip children.
-    expect(describeRoot(state)).toBe(
-      "root[paragraph[text], paragraph[text], paragraph[text]]",
-    );
+    expect(describeRoot(state)).toBe('root[paragraph[text], paragraph[text], paragraph[text]]');
   });
 
-  it("keeps a well-formed container untouched", async () => {
+  it('keeps a well-formed container untouched', async () => {
     const editor = mountCollapsibleEditor();
     editor.update(
       () => {
         $getRoot().clear();
         const container = $createCollapsibleContainerNode(true);
-        container.append(
-          $createCollapsibleTitleNode().append($createParagraphNode()),
-          $createCollapsibleContentNode().append($createParagraphNode()),
-        );
+        container.append($createCollapsibleTitleNode().append($createParagraphNode()), $createCollapsibleContentNode().append($createParagraphNode()));
         $getRoot().append(container);
       },
       { discrete: true },
     );
     const state = await settle(editor);
-    expect(describeRoot(state)).toBe(
-      "root[collapsible-container[collapsible-title[paragraph], collapsible-content[paragraph]]]",
-    );
+    expect(describeRoot(state)).toBe('root[collapsible-container[collapsible-title[paragraph], collapsible-content[paragraph]]]');
   });
 });

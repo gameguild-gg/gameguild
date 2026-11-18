@@ -4,6 +4,7 @@ using GameGuild.Configuration.PresentationLayer.GraphQL;
 using GameGuild.Identity.Authorization;
 using GameGuild.Identity.Provisioning;
 using GameGuild.Identity.Authentication;
+using GameGuild.Identity.Context.Middleware;
 using GameGuild.Identity.Tenants;
 using GameGuild.API.Core.ApiVersioning;
 using GameGuild.API.Core.CostAccounting;
@@ -118,6 +119,12 @@ public static class PipelineExtensions
         // 17. Authorization (enforce permissions after user is identified)
         app.UseAuthorization();
 
+        // 17a. Idempotency (issue #1248 N2): mutating requests (POST/PUT/PATCH) carrying an
+        // Idempotency-Key replay the cached response instead of reprocessing. Runs after
+        // authentication/authorization so the cache key is scoped to the authenticated
+        // subject, and before the endpoint surface so controller responses are captured.
+        app.UseIdempotency();
+
         // 18. Rate Limiting (throttle requests per client/endpoint)
         if (app.Configuration.GetValue<bool>("PresentationLayer:EnableRateLimiting"))
         {
@@ -184,7 +191,43 @@ public static class PipelineExtensions
             });
         }
 
+        // 26. Security-spine order validation (issue #1248 N3): MiddlewareOrderValidator was
+        // written but never invoked — an unarmed tripwire for the
+        // Authentication → Tenant → ActorContext → Authorization ordering. Invoked after the
+        // whole pipeline is built: a deviation fails fast in Development and logs a warning
+        // (visible, non-fatal) in every other environment.
+        ValidateSecuritySpineOrder(app);
+
         return app;
+    }
+
+    /// <summary>
+    ///     Runs <see cref="MiddlewareOrderValidator.ValidateSecurityMiddlewareOrder"/> with
+    ///     environment-aware severity: <see cref="InvalidOperationException"/> from a deviated
+    ///     security spine rethrows in Development (fail fast before the mis-ordered pipeline can
+    ///     serve traffic) and logs a warning elsewhere (the deployment stays up, the deviation is
+    ///     surfaced to operators).
+    /// </summary>
+    private static void ValidateSecuritySpineOrder(WebApplication app)
+    {
+        try
+        {
+            app.ValidateSecurityMiddlewareOrder();
+        }
+        catch (InvalidOperationException exception)
+        {
+            if (app.Environment.IsDevelopment())
+            {
+                throw;
+            }
+
+            app.Logger.LogWarning(
+                exception,
+                "Security middleware order validation failed: {Message}. " +
+                "The Authentication → Tenant → ActorContext → Authorization spine is mis-ordered; " +
+                "fix before the next Development run gates the deployment.",
+                exception.Message);
+        }
     }
 
     internal static void ConfigureOpenApiUi(SwaggerUIOptions options, OpenApiUiOptions configured)

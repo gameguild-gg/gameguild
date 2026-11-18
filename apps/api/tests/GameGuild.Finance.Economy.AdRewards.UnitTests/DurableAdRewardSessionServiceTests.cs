@@ -32,7 +32,7 @@ public sealed class DurableAdRewardSessionServiceTests
         var row = await context.Set<AdRewardSessionRow>().SingleAsync();
         row.State.Should().Be(DurableAdRewardSessionState.Issued);
         row.Version.Should().Be(1);
-        (await context.Set<AdRewardSessionEventRow>().SingleAsync()).State
+        (await context.Set<AdRewardTimelineRow>().SingleAsync()).State
             .Should().Be(DurableAdRewardSessionState.Issued);
 
         context.ChangeTracker.Clear();
@@ -45,7 +45,7 @@ public sealed class DurableAdRewardSessionServiceTests
         row = await context.Set<AdRewardSessionRow>().SingleAsync();
         row.Version.Should().Be(2);
         row.UpdatedAt.Should().Be(Now.AddSeconds(1));
-        (await context.Set<AdRewardSessionEventRow>().CountAsync()).Should().Be(1);
+        (await context.Set<AdRewardTimelineRow>().CountAsync()).Should().Be(1);
 
         await FluentActions.Awaiting(() => service.StartAsync(
                 request with { CreativeId = "different", RequestedAt = Now.AddSeconds(2) }).AsTask())

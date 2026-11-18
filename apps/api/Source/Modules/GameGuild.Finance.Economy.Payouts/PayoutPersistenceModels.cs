@@ -1,3 +1,4 @@
+using GameGuild.Finance.Economy.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Finance.Economy.Payouts;
@@ -30,15 +31,6 @@ internal sealed class PayoutOperationRow
     public DateTimeOffset UpdatedAt { get; set; }
 }
 
-internal sealed class PayoutProviderEventRow
-{
-    public string EventId { get; set; } = string.Empty;
-    public string EventHash { get; set; } = string.Empty;
-    public Guid OperationId { get; set; }
-    public PayoutOperationState ResultingState { get; set; }
-    public DateTimeOffset RecordedAt { get; set; }
-}
-
 internal sealed class PayoutConnectAccountRow
 {
     public Guid PayeeId { get; set; }
@@ -53,22 +45,6 @@ internal sealed class PayoutConnectAccountRow
     public DateTimeOffset ObservedAt { get; set; }
     public DateTimeOffset ExpiresAt { get; set; }
     public string EvidenceHash { get; set; } = string.Empty;
-}
-
-public sealed class PayoutDispatchOutboxRow
-{
-    public Guid Id { get; set; }
-    public Guid OperationId { get; set; }
-    public string IdempotencyKey { get; set; } = string.Empty;
-    public string Payload { get; set; } = string.Empty;
-    public string PayloadHash { get; set; } = string.Empty;
-    public DateTimeOffset CreatedAt { get; set; }
-    public DateTimeOffset AvailableAt { get; set; }
-    public DateTimeOffset? LeaseExpiresAt { get; set; }
-    public string? LeaseOwner { get; set; }
-    public int AttemptCount { get; set; }
-    public DateTimeOffset? CompletedAt { get; set; }
-    public string? LastErrorCode { get; set; }
 }
 
 internal sealed class PayoutAuthorizationEvidenceRow
@@ -126,14 +102,12 @@ public sealed class PayoutsModelConfiguration : IModelConfiguration
                 .HasDatabaseName("ix_economy_payout_operations_tenant_state_updated");
         });
 
-        modelBuilder.Entity<PayoutProviderEventRow>(builder =>
+        // #1092 Tier 1.4: economy_payout_provider_events merged into the
+        // shared economy_provider_events table (ProviderEventKind = 1 =
+        // Payout). The Payouts module keeps contributing the operation
+        // binding of its replay-dedupe rows.
+        modelBuilder.Entity<EconomyProviderEventRow>(builder =>
         {
-            builder.ToTable("economy_payout_provider_events");
-            builder.HasKey(row => row.EventId);
-            builder.Property(row => row.EventId).HasMaxLength(256);
-            builder.Property(row => row.EventHash).HasMaxLength(128);
-            builder.HasIndex(row => new { row.OperationId, row.RecordedAt })
-                .HasDatabaseName("ix_economy_payout_provider_events_operation_recorded");
             builder.HasOne<PayoutOperationRow>()
                 .WithMany()
                 .HasForeignKey(row => row.OperationId)
@@ -158,20 +132,15 @@ public sealed class PayoutsModelConfiguration : IModelConfiguration
             builder.HasIndex(row => new { row.State, row.ExpiresAt });
         });
 
-        modelBuilder.Entity<PayoutDispatchOutboxRow>(builder =>
+        // #1092 Tier 1.1: economy_payout_dispatch_outbox merged into the
+        // shared economy_outbox table (OutboxKind = 3 = PayoutDispatch). The
+        // Payouts module keeps contributing the operation binding of its
+        // queue rows.
+        modelBuilder.Entity<EconomyOutboxRow>(builder =>
         {
-            builder.ToTable("economy_payout_dispatch_outbox", table =>
-                table.HasCheckConstraint("ck_economy_payout_dispatch_outbox_attempts", "\"AttemptCount\" >= 0"));
-            builder.HasKey(row => row.Id);
-            builder.Property(row => row.Id).ValueGeneratedNever();
-            builder.Property(row => row.IdempotencyKey).HasMaxLength(256);
-            builder.Property(row => row.Payload).HasColumnType("jsonb");
-            builder.Property(row => row.PayloadHash).HasMaxLength(128);
-            builder.Property(row => row.LeaseOwner).HasMaxLength(200);
-            builder.Property(row => row.LastErrorCode).HasMaxLength(100);
-            builder.HasIndex(row => row.OperationId).IsUnique();
-            builder.HasIndex(row => new { row.CompletedAt, row.AvailableAt, row.LeaseExpiresAt });
-            builder.HasOne<PayoutOperationRow>().WithMany().HasForeignKey(row => row.OperationId)
+            builder.HasOne<PayoutOperationRow>()
+                .WithMany()
+                .HasForeignKey(row => row.OperationId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 

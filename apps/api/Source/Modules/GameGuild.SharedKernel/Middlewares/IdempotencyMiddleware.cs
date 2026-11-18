@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
@@ -15,17 +14,16 @@ namespace GameGuild;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <b>⚠️ Single-Instance Limitation:</b> This middleware uses <see cref="IMemoryCache"/>
-/// which is local to the process. In a multi-instance deployment (e.g., Kubernetes pods,
-/// Azure App Service scale-out), each instance maintains its own cache — meaning the same
-/// idempotency key can be processed independently by different instances.
+/// <b>Multi-instance support (issue #1248 N2):</b> the default store is
+/// <see cref="DistributedCacheIdempotencyStore"/>, backed by <c>IDistributedCache</c>
+/// (Redis in production, the distributed memory cache in single-node/dev), so cached
+/// idempotent responses are shared across every application instance.
 /// </para>
 /// <para>
-/// <b>Production Migration Path:</b> To support multi-instance deployments, replace
-/// the default <see cref="MemoryCacheIdempotencyStore"/> with an <see cref="IIdempotencyStore"/>
-/// implementation backed by <c>IDistributedCache</c> (Redis, SQL Server, etc.)
-/// and use distributed locking (e.g., RedLock) to prevent concurrent processing of the
-/// same key across instances.
+/// <b>Concurrency caveat:</b> <c>IDistributedCache</c> has no atomic set-if-absent, so the
+/// in-flight check cannot fully exclude two instances processing the same brand-new key
+/// concurrently (that needs a distributed lock such as RedLock — see
+/// <see cref="DistributedCacheIdempotencyStore"/>). Replay correctness is preserved.
 /// </para>
 /// </remarks>
 public sealed class IdempotencyMiddleware
@@ -228,6 +226,9 @@ public static class IdempotencyMiddlewareExtensions
     /// <summary>
     /// Registers idempotency services in the DI container.
     /// Call this before <see cref="UseIdempotency"/>.
+    /// The default store is <see cref="DistributedCacheIdempotencyStore"/> over
+    /// <c>IDistributedCache</c> (issue #1248 N2 — multi-instance safe); a local
+    /// distributed-memory provider is installed only when no other provider exists.
     /// </summary>
     /// <param name="services">The service collection</param>
     /// <param name="configure">Optional configuration</param>
@@ -239,8 +240,7 @@ public static class IdempotencyMiddlewareExtensions
             services.Configure(configure);
         }
 
-        services.AddMemoryCache();
-        services.TryAddSingleton<IIdempotencyStore, MemoryCacheIdempotencyStore>();
+        services.AddDistributedIdempotencyStore();
 
         return services;
     }
