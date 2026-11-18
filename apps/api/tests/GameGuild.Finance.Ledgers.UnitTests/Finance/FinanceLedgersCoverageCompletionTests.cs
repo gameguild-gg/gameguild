@@ -822,7 +822,11 @@ public sealed class FinanceLedgersCoverageCompletionTests
         public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default) where TRequest : IRequest
             => Send<Unit>(request, cancellationToken);
 
-        public Task<object?> Send(object request, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<object?> Send(object request, CancellationToken cancellationToken = default) {
+            _ = request;
+            _ = cancellationToken;
+            throw new NotSupportedException();
+        }
     }
 
     private sealed class FakeLedgerHierarchyService(
@@ -832,6 +836,8 @@ public sealed class FinanceLedgersCoverageCompletionTests
             Guid tenantId, string code, string name, string currencyCode, Guid createdByUserId,
             string? description = null, CancellationToken ct = default)
         {
+            _ = ct;
+
             var ledger = Ledger.CreateRoot(tenantId, code, name, currencyCode, createdByUserId, description);
             return Task.FromResult(ledger);
         }
@@ -844,11 +850,18 @@ public sealed class FinanceLedgersCoverageCompletionTests
             return Task.FromResult(Ledger.CreateChild(parent, type, code, name, createdByUserId, description, currencyCode));
         }
 
-        public Task MoveLedgerAsync(Guid ledgerId, Guid newParentLedgerId, Guid movedByUserId, CancellationToken ct = default) =>
-            Task.CompletedTask; // closure rebuild is covered by the service-level tests
+        public Task MoveLedgerAsync(Guid ledgerId, Guid newParentLedgerId, Guid movedByUserId, CancellationToken ct = default) {
+            _ = ledgerId;
+            _ = newParentLedgerId;
+            _ = movedByUserId;
+            _ = ct;
+            return Task.CompletedTask;
+        } // closure rebuild is covered by the service-level tests
 
-        public Task<LedgerTreeNode> GetHierarchyTreeAsync(Guid rootLedgerId, int? maxDepth = null, CancellationToken ct = default) =>
-            Task.FromResult(new LedgerTreeNode
+        public Task<LedgerTreeNode> GetHierarchyTreeAsync(Guid rootLedgerId, int? maxDepth = null, CancellationToken ct = default) {
+            _ = maxDepth;
+            _ = ct;
+            return Task.FromResult(new LedgerTreeNode
             {
                 Id = rootLedgerId,
                 Code = "ROOT",
@@ -858,12 +871,18 @@ public sealed class FinanceLedgersCoverageCompletionTests
                 CurrencyCode = "USD",
                 Depth = 0
             });
+        }
 
-        public Task<IReadOnlyList<Ledger>> GetAncestorPathAsync(Guid ledgerId, CancellationToken ct = default) =>
-            Task.FromResult<IReadOnlyList<Ledger>>([]);
+        public Task<IReadOnlyList<Ledger>> GetAncestorPathAsync(Guid ledgerId, CancellationToken ct = default) {
+            _ = ledgerId;
+            _ = ct;
+            return Task.FromResult<IReadOnlyList<Ledger>>([]);
+        }
 
-        public Task<bool> CanMoveToParentAsync(Guid ledgerId, Guid newParentLedgerId, CancellationToken ct = default) =>
-            Task.FromResult(ledgerId != newParentLedgerId);
+        public Task<bool> CanMoveToParentAsync(Guid ledgerId, Guid newParentLedgerId, CancellationToken ct = default) {
+            _ = ct;
+            return Task.FromResult(ledgerId != newParentLedgerId);
+        }
     }
 
     private sealed class FakeLedgerEntryService(
@@ -908,6 +927,8 @@ public sealed class FinanceLedgersCoverageCompletionTests
 
         public Task DeleteEntryAsync(Guid entryId, Guid deletedByUserId, CancellationToken ct = default)
         {
+            _ = deletedByUserId;
+
             var entry = entryRepository.GetByIdAsync(entryId, ct).Result!;
             entry.EnsureCanDelete();
             return Task.CompletedTask;
@@ -941,6 +962,8 @@ public sealed class FinanceLedgersCoverageCompletionTests
     {
         public async Task<LedgerBalance> GetBalanceAsync(Guid ledgerId, DateOnly? asOfDate = null, CancellationToken ct = default)
         {
+            _ = asOfDate;
+
             var ledger = await ledgerRepository.GetByIdAsync(ledgerId, ct);
             var entries = await entryRepository.GetByLedgerAsync(ledgerId, ct: ct);
             return Summarize(ledger!, entries);
@@ -948,19 +971,39 @@ public sealed class FinanceLedgersCoverageCompletionTests
 
         public async Task<LedgerBalance> GetConsolidatedBalanceAsync(Guid ledgerId, DateOnly? asOfDate = null, CancellationToken ct = default)
         {
+            _ = asOfDate;
+
             var ledger = await ledgerRepository.GetByIdAsync(ledgerId, ct);
             var entries = await entryRepository.GetByLedgerIncludingDescendantsAsync(ledgerId, ct: ct);
             return Summarize(ledger!, entries);
         }
 
-        public Task<LedgerRollupNode> GetHierarchicalRollupAsync(Guid rootLedgerId, DateOnly? fromDate = null, DateOnly? toDate = null, CancellationToken ct = default) =>
+        public Task<LedgerRollupNode> GetHierarchicalRollupAsync(Guid rootLedgerId, DateOnly? fromDate = null, DateOnly? toDate = null, CancellationToken ct = default) {
+            _ = rootLedgerId;
+            _ = fromDate;
+            _ = toDate;
+            _ = ct;
             throw new NotSupportedException();
+        }
 
-        public Task<IReadOnlyList<CategoryRollup>> GetCategoryRollupAsync(Guid ledgerId, bool includeDescendants, DateOnly? fromDate = null, DateOnly? toDate = null, CancellationToken ct = default) =>
+        public Task<IReadOnlyList<CategoryRollup>> GetCategoryRollupAsync(Guid ledgerId, bool includeDescendants, DateOnly? fromDate = null, DateOnly? toDate = null, CancellationToken ct = default) {
+            _ = ledgerId;
+            _ = includeDescendants;
+            _ = fromDate;
+            _ = toDate;
+            _ = ct;
             throw new NotSupportedException();
+        }
 
-        public Task<IReadOnlyList<PeriodRollup>> GetPeriodRollupAsync(Guid ledgerId, bool includeDescendants, DateOnly fromDate, DateOnly toDate, PeriodGranularity granularity, CancellationToken ct = default) =>
+        public Task<IReadOnlyList<PeriodRollup>> GetPeriodRollupAsync(Guid ledgerId, bool includeDescendants, DateOnly fromDate, DateOnly toDate, PeriodGranularity granularity, CancellationToken ct = default) {
+            _ = ledgerId;
+            _ = includeDescendants;
+            _ = fromDate;
+            _ = toDate;
+            _ = granularity;
+            _ = ct;
             throw new NotSupportedException();
+        }
 
         public async Task RefreshLedgerStatsAsync(Guid ledgerId, CancellationToken ct = default)
         {
@@ -1005,12 +1048,20 @@ public sealed class FinanceLedgersCoverageCompletionTests
             return ledger;
         }
 
-        public Task UpdateFilterAsync(Guid virtualLedgerId, VirtualLedgerFilter filter, Guid updatedByUserId, CancellationToken ct = default) =>
-            Task.CompletedTask;
+        public Task UpdateFilterAsync(Guid virtualLedgerId, VirtualLedgerFilter filter, Guid updatedByUserId, CancellationToken ct = default) {
+            _ = virtualLedgerId;
+            _ = filter;
+            _ = updatedByUserId;
+            _ = ct;
+            return Task.CompletedTask;
+        }
 
         public async Task<IReadOnlyList<LedgerEntry>> GetVirtualEntriesAsync(
             Guid virtualLedgerId, DateOnly? fromDate = null, DateOnly? toDate = null, int skip = 0, int take = 50, CancellationToken ct = default)
         {
+            _ = fromDate;
+            _ = toDate;
+
             var ledger = await ledgerRepository.GetByIdAsync(virtualLedgerId, ct)
                 ?? throw new InvalidOperationException($"Virtual ledger '{virtualLedgerId}' not found.");
 
@@ -1028,7 +1079,7 @@ public sealed class FinanceLedgersCoverageCompletionTests
             var ledger = await ledgerRepository.GetByIdAsync(virtualLedgerId, ct)
                 ?? throw new InvalidOperationException($"Virtual ledger '{virtualLedgerId}' not found.");
 
-            var entries = await GetVirtualEntriesAsync(virtualLedgerId, null, asOfDate, 0, int.MaxValue, ct);
+            var entries = await GetVirtualEntriesAsync(virtualLedgerId, toDate: asOfDate, take: int.MaxValue, ct: ct);
             var totalDebit = entries.Where(e => e.Type == EntryType.Debit).Sum(e => e.Amount);
             var totalCredit = entries.Where(e => e.Type == EntryType.Credit).Sum(e => e.Amount);
             return new LedgerBalance(virtualLedgerId, ledger.Code, ledger.Name, totalDebit, totalCredit, totalCredit - totalDebit, entries.Count, ledger.CurrencyCode, DateTime.UtcNow, true);
@@ -1578,8 +1629,10 @@ public sealed class FinanceLedgersCoverageCompletionTests
         public Task<LedgerEntry?> GetByExternalIdAsync(string externalId, CancellationToken ct = default) =>
             Task.FromResult(Entries.FirstOrDefault(e => e.ExternalReferenceId == externalId));
 
-        public Task<LedgerEntry?> GetByReferenceAsync(Guid tenantId, string referenceNumber, CancellationToken ct = default) =>
-            Task.FromResult(Entries.FirstOrDefault(e => e.TenantId == tenantId && e.ReferenceNumber == referenceNumber));
+        public Task<LedgerEntry?> GetByReferenceAsync(Guid tenantId, string referenceNumber, CancellationToken ct = default) {
+            _ = ct;
+            return Task.FromResult(Entries.FirstOrDefault(e => e.TenantId == tenantId && e.ReferenceNumber == referenceNumber));
+        }
 
         public Task<IReadOnlyList<LedgerEntry>> SearchAsync(
             Guid tenantId,
@@ -1594,6 +1647,8 @@ public sealed class FinanceLedgersCoverageCompletionTests
             DateOnly? toDate = null,
             CancellationToken ct = default)
         {
+            _ = ct;
+
             IEnumerable<LedgerEntry> filtered = Entries.Where(e => e.TenantId == tenantId);
 
             if (ledgerIds.Count > 0)

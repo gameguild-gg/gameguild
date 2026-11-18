@@ -59,6 +59,9 @@ public interface ITokenRevocationService
     /// <returns>Number of entries cleaned up</returns>
     Task<int> CleanupExpiredAsync(CancellationToken cancellationToken = default);
 
+    Task TrackSessionAccessTokenAsync(Guid sessionId, string jti, DateTime expiresAt)
+        => TrackSessionAccessTokenAsync(sessionId, jti, expiresAt, default);
+
     /// <summary>
     ///     Records the access-token JTI currently bound to a persisted session (issue #1179).
     /// </summary>
@@ -66,7 +69,7 @@ public interface ITokenRevocationService
     ///     <para>
     ///         Called by the token issuer whenever a session-bound access token is minted
     ///         (sign-in, refresh, MFA completion). The index enables
-    ///         <see cref="RevokeSessionAccessTokenAsync"/> — when a session is terminated or a
+    ///         <see cref="RevokeSessionAccessTokenAsync(Guid, string, CancellationToken)"/> — when a session is terminated or a
     ///         refresh-token family is revoked, the paired access token's JTI can be written to
     ///         the per-token deny-list so it dies immediately instead of at natural expiry.
     ///     </para>
@@ -80,8 +83,17 @@ public interface ITokenRevocationService
     /// <param name="jti">The access token's JWT ID</param>
     /// <param name="expiresAt">When the access token naturally expires</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    Task TrackSessionAccessTokenAsync(Guid sessionId, string jti, DateTime expiresAt, CancellationToken cancellationToken = default)
+    Task TrackSessionAccessTokenAsync(Guid sessionId, string jti, DateTime expiresAt, CancellationToken cancellationToken)
         => Task.CompletedTask;
+
+    Task RevokeSessionAccessTokenAsync(Guid sessionId)
+        => RevokeSessionAccessTokenAsync(sessionId, null, default);
+
+    Task RevokeSessionAccessTokenAsync(Guid sessionId, string? reason)
+        => RevokeSessionAccessTokenAsync(sessionId, reason, default);
+
+    Task RevokeSessionAccessTokenAsync(Guid sessionId, CancellationToken cancellationToken)
+        => RevokeSessionAccessTokenAsync(sessionId, null, cancellationToken);
 
     /// <summary>
     ///     Writes the session's tracked access-token JTI to the per-token deny-list (issue #1179).
@@ -93,6 +105,6 @@ public interface ITokenRevocationService
     /// <param name="sessionId">The session whose current access token should be denied</param>
     /// <param name="reason">Optional reason recorded with the revocation</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    Task RevokeSessionAccessTokenAsync(Guid sessionId, string? reason = null, CancellationToken cancellationToken = default)
+    Task RevokeSessionAccessTokenAsync(Guid sessionId, string? reason, CancellationToken cancellationToken)
         => Task.CompletedTask;
 }

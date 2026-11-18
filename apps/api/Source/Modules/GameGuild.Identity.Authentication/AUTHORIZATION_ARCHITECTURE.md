@@ -2101,6 +2101,15 @@ public async Task Authorization_PerformsUnderLoad()
 
 ## Platform Authorization Hardening
 
+Expired guest credentials may identify retained data only through the dedicated continuity
+reader. That reader keeps lifetime validation enabled and requires an explicit expiry in
+the past and a coherent validity interval. A missing expiry, a future expiry, or a not-before
+time later than expiry fails closed. Signature, issuer, guest audience, HS256 algorithm and
+structural guest identity checks still apply. Ordinary guest authentication continues to
+reject expired tokens. The authenticated upgrade service separately enforces the retention
+grace and consumes the retained snapshot once; reading an expired credential grants no
+access and does not renew the session.
+
 ### Elevated-role MFA compliance grace at sign-in (hotfix login-mfa-turnstile)
 
 When a subject's MFA requirement comes only from an elevated role
@@ -2564,9 +2573,23 @@ Those original criteria remain open until their separate evidence is accepted.
 
 `Jwt:RefreshTokenSlidingExpiration` defaults to `true`, retaining renewal on each
 successful refresh. With `false`, rotation preserves the predecessor's deadline
-or a shorter configured TTL. Both modes retain `SessionOptions.AbsoluteTimeoutMinutes`
+or a shorter configured TTL — except inside the final-week renewal window
+(`RefreshTokenLifetimeResolver.RenewalWindowDays`, 7 days): a refresh occurring
+with seven days or less remaining mints the full configured lifetime even when
+sliding expiration is disabled, so an actively used session is not cut down to
+the predecessor's remaining deadline in its last week. Both modes retain
+`SessionOptions.AbsoluteTimeoutMinutes`
 measured from the original session creation; rotation cannot reset that boundary.
 The existing idle timeout and active-session checks remain mandatory.
+
+Remember-me defaults ON across every issuing path (local, polymorphic, OAuth,
+OIDC/SAML, Web3, and the host sign-in endpoint): a null `RememberMe` flag is
+treated as persistent, and only an explicit `false` selects the standard
+lifetime. Sign-up issues a persistent session because the register request does
+not carry the flag. The standard refresh lifetime default is 30 days
+(`RefreshTokenLifetimeResolver.StandardDefaultDays`), matching the persistent
+default; typed `JwtOptions` and the raw-config fallbacks retain their configured
+values where present.
 
 Session binding and rotation cap the stored refresh credential at the actual
 persisted session deadline. Credential sign-in, sign-up, OAuth/Discord and Web3

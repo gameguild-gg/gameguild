@@ -8,10 +8,16 @@
     "generic": "Something went wrong during sign-in. Please try again.",
     "backToSignIn": "Back to sign in"
   },
+  "feedTabs": {
+    "ariaLabel": "Social feed",
+    "recent": "Recent",
+    "following": "Following",
+    "community": "Community",
+    "saved": "Saved"
+  },
   "signIn": {
     "continueWithDiscord": "Continue with Discord",
-    "magicLink": "Sign in with an email link",
-    "emailCode": "Sign in with an email code",
+    "passwordless": "Sign in without a password",
     "continueWithWallet": "Continue with",
     "walletConnecting": "Connecting…",
     "walletSigning": "Signing…",

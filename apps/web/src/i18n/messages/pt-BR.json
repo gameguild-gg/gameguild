@@ -8,10 +8,16 @@
     "generic": "Algo deu errado durante o login. Tente novamente.",
     "backToSignIn": "Voltar para o login"
   },
+  "feedTabs": {
+    "ariaLabel": "Feed social",
+    "recent": "Recentes",
+    "following": "Seguindo",
+    "community": "Comunidade",
+    "saved": "Salvos"
+  },
   "signIn": {
     "continueWithDiscord": "Continuar com o Discord",
-    "magicLink": "Entrar com link por e-mail",
-    "emailCode": "Entrar com um código por e-mail",
+    "passwordless": "Entrar sem senha",
     "continueWithWallet": "Continuar com",
     "walletConnecting": "Conectando…",
     "walletSigning": "Assinando…",

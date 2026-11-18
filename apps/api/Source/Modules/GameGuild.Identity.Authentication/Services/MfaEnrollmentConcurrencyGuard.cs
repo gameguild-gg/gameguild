@@ -26,15 +26,21 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 public interface IMfaEnrollmentConcurrencyGuard
 {
+
+    Task<T> ExecuteEnrollmentOperationAsync<T>(Guid userId, Func<Task<T>> operation)
+        => ExecuteEnrollmentOperationAsync<T>(userId, operation, default);
     /// <summary>
     ///     Executes <paramref name="operation" /> while holding the subject's MFA enrollment
     ///     claim. Callers must not await unrelated work inside the claim beyond the MFA
     ///     mutation itself.
     /// </summary>
-    Task<T> ExecuteEnrollmentOperationAsync<T>(Guid userId, Func<Task<T>> operation, CancellationToken cancellationToken = default);
+    Task<T> ExecuteEnrollmentOperationAsync<T>(Guid userId, Func<Task<T>> operation, CancellationToken cancellationToken);
 
-    /// <summary>Value-less variant of <see cref="ExecuteEnrollmentOperationAsync{T}" />.</summary>
-    Task ExecuteEnrollmentOperationAsync(Guid userId, Func<Task> operation, CancellationToken cancellationToken = default);
+    Task ExecuteEnrollmentOperationAsync(Guid userId, Func<Task> operation)
+        => ExecuteEnrollmentOperationAsync(userId, operation, default);
+
+    /// <summary>Value-less variant of <see cref="ExecuteEnrollmentOperationAsync{T}(Guid, Func{Task{T}}, CancellationToken)" />.</summary>
+    Task ExecuteEnrollmentOperationAsync(Guid userId, Func<Task> operation, CancellationToken cancellationToken);
 }
 
 /// <summary>
@@ -47,7 +53,10 @@ public sealed class MfaEnrollmentConcurrencyGuard : IMfaEnrollmentConcurrencyGua
     private readonly ConcurrentDictionary<Guid, SemaphoreSlim> _subjectLocks = new();
     private bool _disposed;
 
-    public async Task<T> ExecuteEnrollmentOperationAsync<T>(Guid userId, Func<Task<T>> operation, CancellationToken cancellationToken = default)
+    public Task<T> ExecuteEnrollmentOperationAsync<T>(Guid userId, Func<Task<T>> operation)
+        => ExecuteEnrollmentOperationAsync<T>(userId, operation, default);
+
+    public async Task<T> ExecuteEnrollmentOperationAsync<T>(Guid userId, Func<Task<T>> operation, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(operation);
         cancellationToken.ThrowIfCancellationRequested();
@@ -64,7 +73,10 @@ public sealed class MfaEnrollmentConcurrencyGuard : IMfaEnrollmentConcurrencyGua
         }
     }
 
-    public async Task ExecuteEnrollmentOperationAsync(Guid userId, Func<Task> operation, CancellationToken cancellationToken = default)
+    public Task ExecuteEnrollmentOperationAsync(Guid userId, Func<Task> operation)
+        => ExecuteEnrollmentOperationAsync(userId, operation, default);
+
+    public async Task ExecuteEnrollmentOperationAsync(Guid userId, Func<Task> operation, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(operation);
         cancellationToken.ThrowIfCancellationRequested();

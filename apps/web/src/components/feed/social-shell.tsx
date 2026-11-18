@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { getTranslations } from "next-intl/server";
 import {
   BuildStories,
   type SocialStoryPreview,
@@ -8,6 +9,7 @@ import { SocialFeedClient } from "@/components/feed/social-feed-client";
 import {
   SocialFeedTabs,
   type SocialFeedTab,
+  type SocialFeedTabLabels,
 } from "@/components/feed/social-feed-tabs";
 import {
   SocialRail,
@@ -125,6 +127,17 @@ export async function SocialFeed({
     (profile) => profile.userId && profile.userId !== currentUserId,
   );
 
+  const feedTabsT = await getTranslations("feedTabs");
+  const feedTabLabels: SocialFeedTabLabels = {
+    ariaLabel: feedTabsT("ariaLabel"),
+    tab: {
+      foryou: feedTabsT("recent"),
+      following: feedTabsT("following"),
+      community: feedTabsT("community"),
+      saved: feedTabsT("saved"),
+    },
+  };
+
   return (
     <div
       data-testid="social-shell"
@@ -132,7 +145,7 @@ export async function SocialFeed({
     >
       <div className="mx-auto grid min-h-[calc(100svh-4rem)] w-full max-w-[1260px] grid-cols-1 gap-0 xl:grid-cols-[minmax(0,820px)_360px] xl:gap-6">
         <div className="min-w-0">
-          <SocialFeedTabs active={tab} />
+          <SocialFeedTabs active={tab} labels={feedTabLabels} />
           <BuildStories
             key={storyPreviews.map((story) => story.id).join(":")}
             userName={userName}

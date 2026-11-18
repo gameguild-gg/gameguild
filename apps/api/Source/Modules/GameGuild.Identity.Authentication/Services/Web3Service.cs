@@ -212,7 +212,7 @@ public class Web3Service : IWeb3Service
         }
 
         // Single-use claim. The process-wide nonce gate fences concurrent verifies on this node
-        // (the deserialized challenge instance is per-request, so its own TryConsume cannot);
+        // Each request deserializes a separate challenge, so instance-local consumption is insufficient.
         // cross-instance single use is the remove below (the push-MFA factor's distributed
         // consumption pattern). Removing the nonce entry first means a racing verify on any
         // node reads an unknown challenge.

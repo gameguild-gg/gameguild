@@ -24,7 +24,10 @@ public sealed class DistributedCacheTenantMaintenanceStateService(
 
     private static readonly JsonSerializerOptions SerializationOptions = new(JsonSerializerDefaults.Web);
 
-    public async Task<TenantMaintenanceState?> FindAsync(Guid tenantId, CancellationToken cancellationToken = default)
+    public Task<TenantMaintenanceState?> FindAsync(Guid tenantId)
+        => FindAsync(tenantId, default);
+
+    public async Task<TenantMaintenanceState?> FindAsync(Guid tenantId, CancellationToken cancellationToken)
     {
         if (tenantId == Guid.Empty)
         {
@@ -62,7 +65,10 @@ public sealed class DistributedCacheTenantMaintenanceStateService(
         }
     }
 
-    public async Task SetMaintenanceAsync(Guid tenantId, TenantMaintenanceState? state, CancellationToken cancellationToken = default)
+    public Task SetMaintenanceAsync(Guid tenantId, TenantMaintenanceState? state)
+        => SetMaintenanceAsync(tenantId, state, default);
+
+    public async Task SetMaintenanceAsync(Guid tenantId, TenantMaintenanceState? state, CancellationToken cancellationToken)
     {
         if (tenantId == Guid.Empty)
         {
