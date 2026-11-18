@@ -77,10 +77,7 @@ describe('SignInForm', () => {
 
   it('renders navigation links', () => {
     renderWithUser(
-      <SignInForm
-        magicLinkLabel="Sign in with an email link"
-        emailCodeLabel="Sign in with an email code"
-      />,
+      <SignInForm passwordlessLabel="Sign in without a password" />,
     );
 
     expect(screen.getByText('Sign up')).toHaveAttribute('href', '/sign-up?redirectTo=%2F');
@@ -88,26 +85,25 @@ describe('SignInForm', () => {
       'href',
       '/forgot-password'
     );
-    expect(screen.getByText('Sign in with an email link')).toHaveAttribute(
+    // Single passwordless entry (#1236): email-code is not a sign-in method —
+    // a typed code and a magic link both require mailbox access.
+    expect(screen.getByText('Sign in without a password')).toHaveAttribute(
       'href',
       '/magic-link?redirectTo=%2F'
     );
-    expect(screen.getByText('Sign in with an email code')).toHaveAttribute(
-      'href',
-      '/email-code'
-    );
+    expect(screen.queryByText('Sign in with an email code')).not.toBeInTheDocument();
     // Terms of Service / Privacy Policy moved to the shared (auth) layout footer.
   });
 
-  it('preserves the redirect destination in the magic-link request link', () => {
+  it('preserves the redirect destination in the passwordless link', () => {
     renderWithUser(
       <SignInForm
-        magicLinkLabel="Sign in with an email link"
+        passwordlessLabel="Sign in without a password"
         redirectTo="/workspace?tab=files"
       />
     );
 
-    expect(screen.getByText('Sign in with an email link')).toHaveAttribute(
+    expect(screen.getByText('Sign in without a password')).toHaveAttribute(
       'href',
       '/magic-link?redirectTo=%2Fworkspace%3Ftab%3Dfiles'
     );
@@ -159,6 +155,29 @@ describe('SignInForm', () => {
     expect(mockAuth.signIn).toHaveBeenCalledWith('credentials', {
       email: 'test@example.com',
       password: 'password123',
+      rememberMe: true,
+      redirectTo: '/',
+      turnstileToken: null,
+    });
+  });
+
+  it('defaults the remember-me checkbox to checked', () => {
+    renderWithUser(<SignInForm />);
+
+    expect(screen.getByLabelText('Remember me on this device')).toBeChecked();
+  });
+
+  it('submits rememberMe false when the user opts out of the default', async () => {
+    const { user } = renderWithUser(<SignInForm />);
+
+    await user.type(screen.getByLabelText('Email'), 'test@example.com');
+    await user.type(screen.getByLabelText('Password'), 'password123');
+    await user.click(screen.getByLabelText('Remember me on this device'));
+    await user.click(screen.getByRole('button', { name: /sign in$/i }));
+
+    expect(mockAuth.signIn).toHaveBeenCalledWith('credentials', {
+      email: 'test@example.com',
+      password: 'password123',
       rememberMe: false,
       redirectTo: '/',
       turnstileToken: null,
@@ -170,7 +189,6 @@ describe('SignInForm', () => {
 
     await user.type(screen.getByLabelText('Email'), 'test@example.com');
     await user.type(screen.getByLabelText('Password'), 'password123');
-    await user.click(screen.getByLabelText('Remember me on this device'));
     await user.click(screen.getByRole('button', { name: /sign in$/i }));
 
     expect(mockAuth.signIn).toHaveBeenCalledWith('credentials', {

@@ -1,14 +1,26 @@
 import { Link } from "@/i18n/navigation";
 import { cn } from "@game-guild/ui/lib/utils";
 
+// Tab labels are localized via the `feedTabs` message namespace (issue #1381):
+// the default tab is honestly named "Recent" — the feed is timestamp-ordered
+// (FeedScope.ForYou), not interest-ranked, so "For you" would overpromise
+// (#1234 owner decision; reintroduce a personalized label only with a real
+// recommendation MVP). This component is deliberately synchronous and
+// presentational: the async server SocialFeed resolves the translations and
+// passes them in, so nested-promise elements never reach a render tree.
 export const SOCIAL_FEED_TABS = [
-  { id: "foryou", label: "For you" },
-  { id: "following", label: "Following" },
-  { id: "community", label: "Community" },
-  { id: "saved", label: "Saved" },
+  { id: "foryou", labelKey: "recent" },
+  { id: "following", labelKey: "following" },
+  { id: "community", labelKey: "community" },
+  { id: "saved", labelKey: "saved" },
 ] as const;
 
 export type SocialFeedTab = (typeof SOCIAL_FEED_TABS)[number]["id"];
+
+export type SocialFeedTabLabels = {
+  ariaLabel: string;
+  tab: Record<SocialFeedTab, string>;
+};
 
 export function isSocialFeedTab(
   value: string | undefined,
@@ -18,12 +30,14 @@ export function isSocialFeedTab(
 
 export function SocialFeedTabs({
   active,
+  labels,
 }: {
   active: SocialFeedTab;
+  labels: SocialFeedTabLabels;
 }): React.JSX.Element {
   return (
     <nav
-      aria-label="Social feed"
+      aria-label={labels.ariaLabel}
       className="sticky top-0 z-20 flex h-14 items-end gap-8 bg-background/95 px-4 backdrop-blur-xl sm:px-6"
     >
       {SOCIAL_FEED_TABS.map((tab) => {
@@ -38,7 +52,7 @@ export function SocialFeedTabs({
               isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {tab.label}
+            {labels.tab[tab.id]}
             {isActive ? (
               <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary" />
             ) : null}

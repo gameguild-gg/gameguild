@@ -46,8 +46,27 @@ function createClient() {
 }
 
 async function request<T>(input: Parameters<ReturnType<typeof createClient>["request"]>[0]) {
+  // Session-expired guard: mirror the actions module's typed
+  // AUTHENTICATION_ERROR so feed reads surface a re-authenticable 401
+  // (non-retryable) instead of leaking the raw API payload.
+  if (!(await getToken())) {
+    throw new SocialFeedRequestError({
+      status: 401,
+      code: "AUTHENTICATION_ERROR",
+      message: "Your session has expired. Please sign in again.",
+    });
+  }
   const result = await createClient().request<T>(input);
-  if (!result.ok) throw new SocialFeedRequestError(result.error);
+  if (!result.ok) {
+    if (result.error.status === 401) {
+      throw new SocialFeedRequestError({
+        status: 401,
+        code: "AUTHENTICATION_ERROR",
+        message: "Your session has expired. Please sign in again.",
+      });
+    }
+    throw new SocialFeedRequestError(result.error);
+  }
   return result.data;
 }
 

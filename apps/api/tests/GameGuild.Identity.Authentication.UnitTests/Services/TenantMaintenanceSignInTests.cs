@@ -75,7 +75,7 @@ public sealed class TenantMaintenanceSignInTests
         _userRepoMock.Setup(x => x.GetByIdAsync(_user.Id, It.IsAny<CancellationToken>())).ReturnsAsync(_user);
         _jwtTokenServiceMock
             .Setup(x => x.GenerateAccessTokenAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string[]>(), It.IsAny<Guid?>(), It.IsAny<int>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((Guid userId, string _, string[] _, Guid? _, int _, Guid sessionId, CancellationToken _) => $"access-{sessionId:N}");
+            .ReturnsAsync((Guid _, string _, string[] _, Guid? _, int _, Guid sessionId, CancellationToken _) => $"access-{sessionId:N}");
         _jwtTokenServiceMock
             .Setup(x => x.GenerateRefreshTokenAsync(It.IsAny<Guid>(), It.IsAny<DeviceInfo>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(() => $"refresh-{Guid.NewGuid():N}");
@@ -239,7 +239,7 @@ public sealed class TenantMaintenanceSignInTests
     public async Task OpenEndedWindow_NoRetryAfterHint()
     {
         MemberHasRole("Member");
-        MaintenanceWindowOpen(resumesAt: null);
+        MaintenanceWindowOpen();
 
         var act = () => CreateSut().LocalSignInAsync(ValidRequest);
 

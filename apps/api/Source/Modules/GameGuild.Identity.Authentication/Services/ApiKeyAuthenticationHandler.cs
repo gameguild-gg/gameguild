@@ -15,7 +15,7 @@ namespace GameGuild.Identity.Authentication;
 public sealed class ApiKeyAuthenticationHandler : AuthenticationHandler<ApiKeyAuthenticationOptions>
 {
     /// <summary>Issue #1192: failed validations (unknown key hashes) tolerated per source before lockout.</summary>
-    public const int LockoutThreshold = 10;
+    public static int LockoutThreshold => 10;
 
     /// <summary>Issue #1192: how long a source stays locked after the threshold is reached.</summary>
     public static readonly TimeSpan LockoutDuration = TimeSpan.FromMinutes(30);

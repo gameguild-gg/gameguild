@@ -203,10 +203,15 @@ public sealed class SessionAccessTokenDenyListTests
         public Task RevokeSessionAccessTokenAsync(Guid sessionId, string reason, CancellationToken cancellationToken = default) =>
             store.RevokeSessionAccessTokenAsync(sessionId, reason, cancellationToken);
 
-        public Task FlushCommittedAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task FlushCommittedAsync(CancellationToken cancellationToken = default) {
+            _ = cancellationToken;
+            return Task.CompletedTask;
+        }
 
         public void DiscardPending()
         {
+            // This immediate coordinator has no deferred writes to discard.
+
         }
     }
 
@@ -217,6 +222,8 @@ public sealed class SessionAccessTokenDenyListTests
 
         public Task RevokeSessionAccessTokenAsync(Guid sessionId, string reason, CancellationToken cancellationToken = default)
         {
+            _ = cancellationToken;
+
             _pending.Add((sessionId, reason));
             return Task.CompletedTask;
         }

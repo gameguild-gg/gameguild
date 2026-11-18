@@ -80,6 +80,20 @@ describe('createProxy', () => {
     expect(location).toContain('callbackUrl=%2Fdashboard');
   });
 
+  it('should preserve the query string in the callbackUrl', async () => {
+    const config = makeConfig();
+    const withAuth = createProxy(config);
+    const proxyHandler = withAuth();
+
+    const request = new Request('http://localhost:3000/workspace/projects?tab=files&sort=name');
+    const response = await proxyHandler(request);
+
+    expect(response.status).toBe(302);
+    const location = new URL(response.headers.get('Location')!, 'http://localhost:3000');
+    expect(location.pathname).toBe('/sign-in');
+    expect(location.searchParams.get('callbackUrl')).toBe('/workspace/projects?tab=files&sort=name');
+  });
+
   it('should allow authenticated requests to pass through', async () => {
     const config = makeConfig();
     const withAuth = createProxy(config);
