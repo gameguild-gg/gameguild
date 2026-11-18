@@ -29,15 +29,15 @@ const subscribeToHydration = () => () => undefined;
 export function SignInForm({
   className,
   redirectTo = "/",
-  magicLinkLabel,
-  emailCodeLabel,
+  passwordlessLabel,
   providers,
   guestEntry,
   ...props
 }: React.ComponentProps<"div"> & {
   redirectTo?: string;
-  magicLinkLabel?: string;
-  emailCodeLabel?: string;
+  /** Single passwordless entry (issue #1236): one link to the email-link flow,
+   *  which itself offers the email-code alternative. */
+  passwordlessLabel?: string;
   providers?: React.ReactNode;
   /** Capability-gated "Continue as guest" affordance (issue #213); rendered by the page. */
   guestEntry?: React.ReactNode;
@@ -226,23 +226,13 @@ export function SignInForm({
                     Sign up
                   </Link>
                 </FieldDescription>
-                {magicLinkLabel ? (
+                {passwordlessLabel ? (
                   <FieldDescription className="text-center text-slate-300">
                     <Link
                       href={`/magic-link?redirectTo=${encodeURIComponent(redirectTo)}`}
                       className="text-sky-200 underline-offset-4 hover:underline"
                     >
-                      {magicLinkLabel}
-                    </Link>
-                  </FieldDescription>
-                ) : null}
-                {emailCodeLabel ? (
-                  <FieldDescription className="text-center text-slate-300">
-                    <Link
-                      href="/email-code"
-                      className="text-sky-200 underline-offset-4 hover:underline"
-                    >
-                      {emailCodeLabel}
+                      {passwordlessLabel}
                     </Link>
                   </FieldDescription>
                 ) : null}
