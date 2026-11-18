@@ -26,8 +26,6 @@ import React from 'react';
 
 const SECURITY_PATH = '/workspace/settings/security';
 
-type SecurityLoadErrorStatus = Exclude<SecurityLoadStatus, 'ok'>;
-
 /** Most user-actionable status across the session and MFA loaders. */
 function aggregateLoadStatus(sessions: SecurityLoadStatus, mfa: MfaLoadStatus): SecurityLoadStatus {
   const priority: SecurityLoadStatus[] = ['unauthorized', 'notFound', 'serverError', 'contractError'];
@@ -65,7 +63,7 @@ export default async function SecuritySettingsPage({
           <AlertTriangle className="size-4" aria-hidden />
           <AlertTitle>{t('loadError.title')}</AlertTitle>
           <AlertDescription>
-            <span>{t(`loadError.${loadStatus as SecurityLoadErrorStatus}`)}</span>
+            <span>{t(`loadError.${loadStatus}`)}</span>
             <span className="mt-3 block">
               <Link
                 href={SECURITY_PATH}
