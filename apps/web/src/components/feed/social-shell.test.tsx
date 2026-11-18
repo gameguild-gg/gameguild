@@ -14,6 +14,17 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@/auth", () => ({ auth: mocks.auth }));
+vi.mock("next-intl/server", () => ({
+  // SocialFeed resolves the feedTabs labels server-side (#1381).
+  getTranslations: async () => (key: string) =>
+    ({
+      ariaLabel: "Social feed",
+      recent: "Recent",
+      following: "Following",
+      community: "Community",
+      saved: "Saved",
+    })[key] ?? key,
+}));
 vi.mock("@/lib/feed/queries", () => ({
   loadSocialFeed: mocks.loadSocialFeed,
   loadStories: mocks.loadStories,

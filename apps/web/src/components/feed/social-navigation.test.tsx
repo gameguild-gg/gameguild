@@ -7,17 +7,6 @@ vi.mock("@/i18n/navigation", () => ({
   usePathname: () => "/",
 }));
 
-vi.mock("next-intl/server", () => ({
-  getTranslations: async () => (key: string) =>
-    ({
-      ariaLabel: "Social feed",
-      recent: "Recent",
-      following: "Following",
-      community: "Community",
-      saved: "Saved",
-    })[key] ?? key,
-}));
-
 import { SocialFeedTabs } from "./social-feed-tabs";
 import { SocialRail } from "./social-rail";
 import { socialNavigationData } from "@/components/app/social-navigation";
@@ -55,10 +44,18 @@ describe("social navigation", () => {
     );
   });
 
-  it("gives Recent, Following, Community, and Saved distinct locale-aware destinations", async () => {
+  it("gives Recent, Following, Community, and Saved distinct locale-aware destinations", () => {
     // #1381: the default tab is honestly "Recent" (timestamp-ordered feed —
-    // no interest ranking) and tab labels are localized, not hardcoded English.
-    render(await SocialFeedTabs({ active: "community" }));
+    // no interest ranking) and tab labels arrive localized from SocialFeed.
+    render(
+      <SocialFeedTabs
+        active="community"
+        labels={{
+          ariaLabel: "Social feed",
+          tab: { foryou: "Recent", following: "Following", community: "Community", saved: "Saved" },
+        }}
+      />,
+    );
     const destinations = [
       ["Recent", "/feed"],
       ["Following", "/feed?tab=following"],

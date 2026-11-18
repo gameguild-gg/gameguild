@@ -1,12 +1,13 @@
 import { Link } from "@/i18n/navigation";
-import { getTranslations } from "next-intl/server";
 import { cn } from "@game-guild/ui/lib/utils";
 
 // Tab labels are localized via the `feedTabs` message namespace (issue #1381):
 // the default tab is honestly named "Recent" — the feed is timestamp-ordered
 // (FeedScope.ForYou), not interest-ranked, so "For you" would overpromise
 // (#1234 owner decision; reintroduce a personalized label only with a real
-// recommendation MVP).
+// recommendation MVP). This component is deliberately synchronous and
+// presentational: the async server SocialFeed resolves the translations and
+// passes them in, so nested-promise elements never reach a render tree.
 export const SOCIAL_FEED_TABS = [
   { id: "foryou", labelKey: "recent" },
   { id: "following", labelKey: "following" },
@@ -16,21 +17,27 @@ export const SOCIAL_FEED_TABS = [
 
 export type SocialFeedTab = (typeof SOCIAL_FEED_TABS)[number]["id"];
 
+export type SocialFeedTabLabels = {
+  ariaLabel: string;
+  tab: Record<SocialFeedTab, string>;
+};
+
 export function isSocialFeedTab(
   value: string | undefined,
 ): value is SocialFeedTab {
   return SOCIAL_FEED_TABS.some((tab) => tab.id === value);
 }
 
-export async function SocialFeedTabs({
+export function SocialFeedTabs({
   active,
+  labels,
 }: {
   active: SocialFeedTab;
-}): Promise<React.JSX.Element> {
-  const t = await getTranslations("feedTabs");
+  labels: SocialFeedTabLabels;
+}): React.JSX.Element {
   return (
     <nav
-      aria-label={t("ariaLabel")}
+      aria-label={labels.ariaLabel}
       className="sticky top-0 z-20 flex h-14 items-end gap-8 bg-background/95 px-4 backdrop-blur-xl sm:px-6"
     >
       {SOCIAL_FEED_TABS.map((tab) => {
@@ -45,7 +52,7 @@ export async function SocialFeedTabs({
               isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground",
             )}
           >
-            {t(tab.labelKey)}
+            {labels.tab[tab.id]}
             {isActive ? (
               <span className="absolute inset-x-0 bottom-0 h-0.5 rounded-full bg-primary" />
             ) : null}
