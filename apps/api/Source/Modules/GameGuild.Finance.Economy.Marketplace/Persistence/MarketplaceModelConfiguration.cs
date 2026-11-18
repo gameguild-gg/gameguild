@@ -4,28 +4,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Finance.Economy.Marketplace.Persistence;
 
-internal sealed class MarketplaceCurrencyPolicyVersionRow
-{
-    public Guid TenantId { get; set; }
-    public Guid ProductId { get; set; }
-    public long Version { get; set; }
-    public Guid SellerId { get; set; }
-    public ProductCurrencyMode Mode { get; set; }
-    public long HardPriceUnits { get; set; }
-    public long SoftPriceUnits { get; set; }
-    public int PlatformFeePpm { get; set; }
-    public DateTimeOffset EffectiveAt { get; set; }
-    public DateTimeOffset ExpiresAt { get; set; }
-    public Guid PlatformFeeWalletId { get; set; }
-    public long RefundHoldTicks { get; set; }
-    public string CanonicalPayload { get; set; } = string.Empty;
-    public string PayloadHash { get; set; } = string.Empty;
-    public string KeyId { get; set; } = string.Empty;
-    public string Signature { get; set; } = string.Empty;
-    public Guid ProposedBy { get; set; }
-    public Guid ApprovedBy { get; set; }
-    public DateTimeOffset PublishedAt { get; set; }
-}
+// #1092 Tier 2.3: MarketplaceCurrencyPolicyVersionRow merged into the shared
+// EconomyPolicyVersionRow (PolicyDomain = MarketplaceCurrency). The module
+// re-asserts the unified table below so module-only fixture contexts address
+// the merged table instead of a CLR-name convention table.
 
 internal sealed class MarketplaceSettlementRow
 {

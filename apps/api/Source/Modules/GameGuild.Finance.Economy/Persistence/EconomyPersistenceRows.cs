@@ -450,14 +450,8 @@ internal sealed class EconomyRegisteredCapabilityRow
     public DateTimeOffset? RevokedAt { get; set; }
 }
 
-internal sealed class EconomyRiskDecisionConsumptionRow
-{
-    public Guid Id { get; set; }
-    public Guid RiskDecisionId { get; set; }
-    public Guid PostingGroupId { get; set; }
-    public string OperationFingerprint { get; set; } = string.Empty;
-    public DateTimeOffset ConsumedAt { get; set; }
-}
+// #1092 Tier 2.2: EconomyRiskDecisionConsumptionRow merged into
+// EconomyUnitConsumptionRow (ConsumptionKind = RiskDecision).
 
 internal sealed class EconomyRiskCounterRow
 {
@@ -628,16 +622,8 @@ internal sealed class EconomyCapabilityReceiptRow
     public string Signature { get; set; } = string.Empty;
 }
 
-internal sealed class EconomyCapabilityReceiptConsumptionRow
-{
-    public Guid Id { get; set; }
-    public Guid ReceiptId { get; set; }
-    public Guid TenantId { get; set; }
-    public Guid ActorId { get; set; }
-    public string OperationFingerprint { get; set; } = string.Empty;
-    public long KillSwitchEpoch { get; set; }
-    public DateTimeOffset ConsumedAt { get; set; }
-}
+// #1092 Tier 2.2: EconomyCapabilityReceiptConsumptionRow merged into
+// EconomyUnitConsumptionRow (ConsumptionKind = CapabilityReceipt).
 
 internal sealed class EconomyKillSwitchRow
 {
