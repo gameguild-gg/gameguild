@@ -747,7 +747,7 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                     "(\"PolicyDomain\" = 2) OR (\"SubjectId\" IS NOT NULL AND \"SellerId\" IS NOT NULL AND \"Mode\" IS NOT NULL AND \"PlatformFeeWalletId\" IS NOT NULL AND \"RefundHoldTicks\" IS NOT NULL AND \"PlatformFeePpm\" BETWEEN 0 AND 999999 AND \"RefundHoldTicks\" > 0 AND ((\"Mode\" = 1 AND \"HardPriceUnits\" > 0 AND \"SoftPriceUnits\" = 0) OR (\"Mode\" = 2 AND \"HardPriceUnits\" = 0 AND \"SoftPriceUnits\" > 0) OR (\"Mode\" IN (3, 4) AND \"HardPriceUnits\" > 0 AND \"SoftPriceUnits\" > 0)))");
                 table.HasCheckConstraint(
                     "ck_economy_policy_versions_adnetwork_shape",
-                    "(\"PolicyDomain\" = 1) OR (\"SubjectKey\" IS NOT NULL AND \"IssuanceMode\" IS NOT NULL AND \"YieldState\" IS NOT NULL AND \"ContractedRevenueSharePpm\" BETWEEN 0 AND 1000000 AND \"SafetyBufferPpm\" BETWEEN 0 AND 999999 AND \"MinimumVisiblePpm\" BETWEEN 0 AND 1000000 AND \"EstimatedNetEcpmUsdNanos\" > 0 AND \"MaximumRewardSoftUnits\" > 0 AND \"MaximumFocusLossTicks\" >= 0 AND \"ReportStaleAfterTicks\" > 0 AND \"Ranking\" >= 0 AND \"BudgetWindowTicks\" > 0 AND \"MaximumUserSoftUnits\" > 0 AND \"MaximumDeviceSoftUnits\" > 0 AND \"MaximumIpSoftUnits\" > 0 AND \"MaximumAsnSoftUnits\" > 0 AND \"MaximumNetworkSoftUnits\" > 0 AND \"MaximumGlobalSoftUnits\" > 0 AND \"FundedLossBudgetUsdNanos\" > 0)");
+                    "(\"PolicyDomain\" = 1) OR (\"SubjectKey\" IS NOT NULL AND \"IssuanceMode\" IS NOT NULL AND \"YieldState\" IS NOT NULL AND \"ReportsCurrentThrough\" IS NOT NULL AND \"ProviderHash\" IS NOT NULL AND \"ProviderCertified\" IS NOT NULL AND \"ContractedRevenueSharePpm\" BETWEEN 0 AND 1000000 AND \"SafetyBufferPpm\" BETWEEN 0 AND 999999 AND \"MinimumVisiblePpm\" BETWEEN 0 AND 1000000 AND \"EstimatedNetEcpmUsdNanos\" > 0 AND \"MaximumRewardSoftUnits\" > 0 AND \"MaximumFocusLossTicks\" >= 0 AND \"ReportStaleAfterTicks\" > 0 AND \"Ranking\" >= 0 AND \"BudgetWindowTicks\" > 0 AND \"MaximumUserSoftUnits\" > 0 AND \"MaximumDeviceSoftUnits\" > 0 AND \"MaximumIpSoftUnits\" > 0 AND \"MaximumAsnSoftUnits\" > 0 AND \"MaximumNetworkSoftUnits\" > 0 AND \"MaximumGlobalSoftUnits\" > 0 AND \"FundedLossBudgetUsdNanos\" > 0)");
             });
             builder.HasKey(row => row.Id);
             builder.Property(row => row.Id).HasDefaultValueSql("gen_random_uuid()");
@@ -801,8 +801,8 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                     "(\"OperationKind\" = 1 AND \"ApprovedBy\" IS NULL) OR (\"OperationKind\" = 2 AND ((\"State\" = 1 AND \"ApprovedBy\" IS NULL) OR (\"State\" BETWEEN 2 AND 7 AND \"ApprovedBy\" IS NOT NULL)))");
                 table.HasCheckConstraint(
                     "ck_economy_operations_subject_shape",
-                    "(\"OperationKind\" = 1 AND \"PayeeId\" IS NOT NULL AND \"WalletId\" IS NOT NULL AND \"ProviderAccountId\" IS NOT NULL AND \"ProviderBindingHash\" IS NOT NULL AND \"EligibilityHash\" IS NOT NULL AND \"PeriodStart\" IS NULL AND \"PlatformFeeWalletId\" IS NULL AND \"SourceAssetKey\" IS NULL AND \"ExecutionEpoch\" IS NULL) OR " +
-                    "(\"OperationKind\" = 2 AND \"PayeeId\" IS NULL AND \"WalletId\" IS NULL AND \"ProviderAccountId\" IS NULL AND \"ProviderBindingHash\" IS NULL AND \"EligibilityHash\" IS NULL AND \"KillSwitchEpoch\" IS NULL AND \"PeriodStart\" IS NOT NULL AND \"PlatformFeeWalletId\" IS NOT NULL AND \"SourceAssetKey\" IS NOT NULL AND \"ExecutionEpoch\" IS NOT NULL)");
+                    "(\"OperationKind\" = 1 AND \"PayeeId\" IS NOT NULL AND \"WalletId\" IS NOT NULL AND \"ProviderAccountId\" IS NOT NULL AND \"ProviderBindingHash\" IS NOT NULL AND \"EligibilityHash\" IS NOT NULL AND \"RiskDecisionId\" IS NOT NULL AND \"PeriodStart\" IS NULL AND \"PlatformFeeWalletId\" IS NULL AND \"SourceAssetKey\" IS NULL AND \"ExecutionEpoch\" IS NULL) OR " +
+                    "(\"OperationKind\" = 2 AND \"PayeeId\" IS NULL AND \"WalletId\" IS NULL AND \"ProviderAccountId\" IS NULL AND \"ProviderBindingHash\" IS NULL AND \"EligibilityHash\" IS NULL AND \"RiskDecisionId\" IS NULL AND \"KillSwitchEpoch\" IS NULL AND \"PeriodStart\" IS NOT NULL AND \"PlatformFeeWalletId\" IS NOT NULL AND \"SourceAssetKey\" IS NOT NULL AND \"ExecutionEpoch\" IS NOT NULL)");
             });
             builder.HasKey(row => row.Id);
             builder.Property(row => row.Id).ValueGeneratedNever();
@@ -1020,6 +1020,18 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 .IsUnique()
                 .HasFilter("\"ConsumptionKind\" = 4")
                 .HasDatabaseName("ux_economy_unit_consumptions_budget_session");
+            builder.HasIndex(row => new { row.TenantId, row.Scope, row.SubjectHash, row.ConsumedAt })
+                .HasFilter("\"ConsumptionKind\" = 3")
+                .HasDatabaseName("ix_economy_unit_consumptions_tenant_scope_subject");
+            builder.HasIndex(row => new { row.UserId, row.ConsumedAt })
+                .HasFilter("\"ConsumptionKind\" = 4")
+                .HasDatabaseName("ix_economy_unit_consumptions_budget_user");
+            builder.HasIndex(row => new { row.DeviceRiskHash, row.ConsumedAt })
+                .HasFilter("\"ConsumptionKind\" = 4")
+                .HasDatabaseName("ix_economy_unit_consumptions_budget_device");
+            builder.HasIndex(row => new { row.Network, row.ConsumedAt })
+                .HasFilter("\"ConsumptionKind\" = 4")
+                .HasDatabaseName("ix_economy_unit_consumptions_budget_network");
             builder.HasOne<EconomyCapabilityReceiptRow>()
                 .WithMany()
                 .HasForeignKey(row => row.ReceiptId)

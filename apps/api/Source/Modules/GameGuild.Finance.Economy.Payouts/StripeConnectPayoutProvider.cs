@@ -3,6 +3,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
+using GameGuild.Finance.Economy.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
@@ -191,8 +192,9 @@ public sealed class StripeConnectPayoutProvider : IConnectPayoutProvider, IStrip
 
         ArgumentException.ThrowIfNullOrWhiteSpace(providerPayoutId);
         EnsureConfigured();
-        var operation = await _db.Set<PayoutOperationRow>().AsNoTracking()
-            .SingleOrDefaultAsync(row => row.Id == operationId, cancellationToken)
+        var operation = await _db.Set<EconomyOperationRow>().AsNoTracking()
+            .SingleOrDefaultAsync(row => row.OperationKind == EconomyOperationKind.Payout &&
+                                         row.Id == operationId, cancellationToken)
             ?? throw new KeyNotFoundException("Payout operation was not found.");
         var payoutId = providerPayoutId.StartsWith("unknown:", StringComparison.Ordinal)
             ? await FindPayoutByOperationAsync(operation, cancellationToken)
@@ -246,8 +248,9 @@ public sealed class StripeConnectPayoutProvider : IConnectPayoutProvider, IStrip
         }
 
         var destinationHash = RequireString(metadata, "destination_hash");
-        var operation = await _db.Set<PayoutOperationRow>().AsNoTracking()
-            .SingleOrDefaultAsync(row => row.Id == operationId, cancellationToken)
+        var operation = await _db.Set<EconomyOperationRow>().AsNoTracking()
+            .SingleOrDefaultAsync(row => row.OperationKind == EconomyOperationKind.Payout &&
+                                         row.Id == operationId, cancellationToken)
             ?? throw new PayoutEvidenceException("Stripe payout webhook references an unknown operation.");
         if (!string.Equals(operation.ProviderAccountId, accountId, StringComparison.Ordinal) ||
             !string.Equals(operation.DestinationHash, destinationHash, StringComparison.Ordinal))
@@ -332,7 +335,7 @@ public sealed class StripeConnectPayoutProvider : IConnectPayoutProvider, IStrip
     }
 
     private async ValueTask<string> FindPayoutByOperationAsync(
-        PayoutOperationRow operation,
+        EconomyOperationRow operation,
         CancellationToken cancellationToken)
     {
         using var response = await SendFormAsync(

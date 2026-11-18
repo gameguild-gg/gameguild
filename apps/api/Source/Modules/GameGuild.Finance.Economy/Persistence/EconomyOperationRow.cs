@@ -59,6 +59,9 @@ public sealed class EconomyOperationRow
     public string? ProviderPayoutId { get; set; }
     public long? KillSwitchEpoch { get; set; }
 
+    /// <summary>Risk decision that authorized the payout (kind 1 only).</summary>
+    public Guid? RiskDecisionId { get; set; }
+
     // Admin-withdrawal-only columns (OperationKind = 2).
     public DateOnly? PeriodStart { get; set; }
     public Guid? ApprovedBy { get; set; }

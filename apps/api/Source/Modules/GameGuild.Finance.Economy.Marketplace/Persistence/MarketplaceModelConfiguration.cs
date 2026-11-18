@@ -165,22 +165,25 @@ public sealed class MarketplaceModelConfiguration : IModelConfiguration
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
 
-        modelBuilder.Entity<MarketplaceCurrencyPolicyVersionRow>(builder =>
+        // #1092 Tier 2.3: economy_marketplace_currency_policy_versions merged
+        // into the shared economy_policy_versions table (PolicyDomain = 1 =
+        // MarketplaceCurrency). The module re-asserts the unified table so
+        // contexts composing only this configuration address the merged
+        // table instead of a CLR-name convention table. The Marketplace
+        // domain keeps its (TenantId, product, Version) uniqueness and its
+        // effective-window index through the partial indexes declared with
+        // the unified registration in the Economy module.
+        modelBuilder.Entity<EconomyPolicyVersionRow>(builder =>
         {
-            builder.ToTable("economy_marketplace_currency_policy_versions", table =>
-            {
-                table.HasCheckConstraint("ck_economy_marketplace_currency_policy_versions_version", "\"Version\" > 0");
-                table.HasCheckConstraint("ck_economy_marketplace_currency_policy_versions_fee", "\"PlatformFeePpm\" BETWEEN 0 AND 999999");
-                table.HasCheckConstraint("ck_economy_marketplace_currency_policy_versions_prices", "(\"Mode\" = 1 AND \"HardPriceUnits\" > 0 AND \"SoftPriceUnits\" = 0) OR (\"Mode\" = 2 AND \"HardPriceUnits\" = 0 AND \"SoftPriceUnits\" > 0) OR (\"Mode\" IN (3, 4) AND \"HardPriceUnits\" > 0 AND \"SoftPriceUnits\" > 0)");
-                table.HasCheckConstraint("ck_economy_marketplace_currency_policy_versions_window", "\"ExpiresAt\" > \"EffectiveAt\" AND \"RefundHoldTicks\" > 0");
-                table.HasCheckConstraint("ck_economy_marketplace_currency_policy_versions_dual_control", "\"ProposedBy\" <> \"ApprovedBy\"");
-            });
-            builder.HasKey(row => new { row.TenantId, row.ProductId, row.Version });
-            builder.Property(row => row.CanonicalPayload).HasColumnType("text");
-            builder.Property(row => row.PayloadHash).HasMaxLength(128);
-            builder.Property(row => row.KeyId).HasMaxLength(256);
-            builder.Property(row => row.Signature).HasColumnType("text");
-            builder.HasIndex(row => new { row.TenantId, row.ProductId, row.EffectiveAt, row.ExpiresAt });
+            builder.ToTable("economy_policy_versions");
+            builder.HasKey(row => row.Id);
+            builder.HasIndex(row => new { row.TenantId, row.SubjectId, row.Version })
+                .IsUnique()
+                .HasFilter("\"PolicyDomain\" = 1")
+                .HasDatabaseName("ux_economy_policy_versions_marketplace_version");
+            builder.HasIndex(row => new { row.TenantId, row.SubjectId, row.EffectiveAt, row.ExpiresAt })
+                .HasFilter("\"PolicyDomain\" = 1")
+                .HasDatabaseName("ix_economy_policy_versions_marketplace_window");
         });
 
         modelBuilder.Entity<MarketplaceSettlementRow>(builder =>
