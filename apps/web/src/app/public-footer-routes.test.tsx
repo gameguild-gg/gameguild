@@ -23,7 +23,8 @@ const footerRoutes = [
   { href: '/', page: '[locale]/(public)/page.tsx' },
   { href: '/jobs', page: '[locale]/(public)/jobs/page.tsx' },
   { href: '/courses', page: '[locale]/(public)/courses/page.tsx' },
-  { href: '/programs', page: '[locale]/(public)/programs/page.tsx' },
+  // /programs has no catalog surface (redirects to /courses) and is no longer
+  // linked from the footer; program detail routes remain reachable directly.
   { href: '/projects', page: '[locale]/(social)/projects/page.tsx' },
   { href: '/testing-lab', page: '[locale]/(public)/testing-lab/page.tsx' },
   { href: '/launch-pad', page: '[locale]/(social)/launch-pad/page.tsx' },
