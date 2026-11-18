@@ -10,13 +10,15 @@ public class SubscriptionLifecycleService(
     ISubscriptionPlanService planService,
     ISubscriptionIntervalPricingService intervalPricingService,
     IBillingCalculator billingCalculator,
-    ILogger<SubscriptionLifecycleService> logger) : ISubscriptionLifecycleService
+    ILogger<SubscriptionLifecycleService> logger,
+    GameGuild.CQRS.IPublisher? publisher = null) : ISubscriptionLifecycleService
 {
     private readonly ISubscriptionRepository _repository = repository ?? throw new ArgumentNullException(nameof(repository));
     private readonly ISubscriptionPlanService _planService = planService ?? throw new ArgumentNullException(nameof(planService));
     private readonly ISubscriptionIntervalPricingService _intervalPricingService = intervalPricingService ?? throw new ArgumentNullException(nameof(intervalPricingService));
     private readonly IBillingCalculator _billingCalculator = billingCalculator ?? throw new ArgumentNullException(nameof(billingCalculator));
     private readonly ILogger<SubscriptionLifecycleService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly GameGuild.CQRS.IPublisher? _publisher = publisher;
 
     private async Task<Subscription> GetRequiredAsync(Guid subscriptionId, CancellationToken ct)
     {
@@ -146,6 +148,14 @@ public class SubscriptionLifecycleService(
         var proratedAmount = new Money(proration.NetAdjustment, currency);
         var creditApplied = new Money(proration.CreditForUnused, currency);
 
+        // Issue #1184 G4: SubscriptionUpgradedEvent was declared but never raised; the
+        // successful plan upgrade is its producing site.
+        if (_publisher is not null && subscription.TenantId.HasValue)
+        {
+            await _publisher.Publish(new SubscriptionUpgradedEvent(
+                subscription.Id, subscription.TenantId.Value, oldPlan.Id, newPlanId, proratedAmount), cancellationToken).ConfigureAwait(false);
+        }
+
         return SubscriptionUpgradeResult.CreateSuccess(subscription, proratedAmount, creditApplied);
     }
 
@@ -153,6 +163,7 @@ public class SubscriptionLifecycleService(
     {
         var subscription = await GetRequiredAsync(subscriptionId, cancellationToken).ConfigureAwait(false);
         var newPlan = await GetRequiredPlanAsync(newPlanId, cancellationToken).ConfigureAwait(false);
+        var oldPlanId = subscription.PlanId;
 
         var newAmount = await GetPriceForCycleAsync(newPlan, subscription.BillingCycle, cancellationToken).ConfigureAwait(false);
         var proration = subscription.ChangePlan(newPlanId, newAmount, effectiveDate);
@@ -162,6 +173,14 @@ public class SubscriptionLifecycleService(
 
         var currency = subscription.Amount.Currency;
         var creditIssued = new Money(proration.CreditForUnused, currency);
+
+        // Issue #1184 G4: SubscriptionDowngradedEvent was declared but never raised; the
+        // successful plan downgrade is its producing site.
+        if (_publisher is not null && subscription.TenantId.HasValue)
+        {
+            await _publisher.Publish(new SubscriptionDowngradedEvent(
+                subscription.Id, subscription.TenantId.Value, oldPlanId, newPlanId, creditIssued), cancellationToken).ConfigureAwait(false);
+        }
 
         return SubscriptionDowngradeResult.CreateSuccess(subscription, actualEffectiveDate, creditIssued);
     }

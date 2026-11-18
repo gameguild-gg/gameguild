@@ -68,6 +68,7 @@ public sealed class TrustedDevicesController(
     [ProducesResponseType<SessionSuccessResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType<StepUpAuthenticationRequiredResponse>(StatusCodes.Status423Locked)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> TrustCurrentDevice([FromBody] TrustDeviceRequest body, CancellationToken ct)
     {

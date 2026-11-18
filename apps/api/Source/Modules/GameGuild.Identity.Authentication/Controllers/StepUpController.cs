@@ -82,10 +82,13 @@ public sealed class StepUpController(ISender sender) : AuthControllerBase
         ArgumentNullException.ThrowIfNull(request);
         try
         {
-            return Ok(await sender.Send(new VerifyStepUpChallengeCommand(
+            var outcome = await sender.Send(new VerifyStepUpChallengeCommand(
                 challengeId,
                 new StepUpVerification(request.Method, request.Evidence)),
-                cancellationToken).ConfigureAwait(false));
+                cancellationToken).ConfigureAwait(false);
+            return outcome.Success && outcome.Receipt is { } receipt
+                ? Ok(receipt)
+                : InvalidRequest("MFA evidence is invalid.");
         }
         catch (ArgumentException exception)
         {

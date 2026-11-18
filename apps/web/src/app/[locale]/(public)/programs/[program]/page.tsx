@@ -71,7 +71,7 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
 
         <div className="container relative mx-auto min-h-[720px] px-4 py-10">
           <Link
-            href="/programs"
+            href="/courses"
             className={cn(
               buttonVariants({
                 variant: "ghost",
@@ -80,7 +80,7 @@ export default async function ProgramDetailPage({ params }: ProgramDetailPagePro
             )}
           >
             <ArrowLeft />
-            Back to programs
+            Back to courses
           </Link>
 
           <div className="grid gap-12 lg:grid-cols-[1fr_420px] lg:items-end">

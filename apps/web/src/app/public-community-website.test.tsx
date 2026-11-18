@@ -182,7 +182,7 @@ describe('public community website UX', () => {
     expect(within(nav).getAllByRole('button').map((button) => button.textContent)).toEqual(['Learn', 'More']);
 
     fireEvent.click(within(nav).getByRole('button', { name: /learn/i }));
-    expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual(['Courses', 'Programs']);
+    expect((await screen.findAllByRole('menuitem')).map((item) => item.textContent)).toEqual(['Courses']);
   });
 
   it('groups the authenticated social header around learning, building, and release', async () => {

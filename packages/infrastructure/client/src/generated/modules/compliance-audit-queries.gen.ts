@@ -225,12 +225,12 @@ export class ComplianceAuditQueriesModule {
    */
   async postAuditQueriesSavedExecute(
     id: string,
-    body: Types.ComplianceAuditAuditQueryPagingApiInput,
+    body?: Types.ComplianceAuditAuditQueryPagingApiInput,
   ): Promise<Result<Types.ComplianceAuditAuditQueryDslExecutionResult, ApiError>> {
     const url = `/v1/audit-queries/saved/${id}:execute`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditAuditQueryPagingApiInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAuditQueryPagingApiInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

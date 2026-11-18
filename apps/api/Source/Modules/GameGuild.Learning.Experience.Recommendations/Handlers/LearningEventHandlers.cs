@@ -115,35 +115,6 @@ public sealed class SearchPerformedHistoryHandler(
 }
 
 /// <summary>
-/// Handles SearchResultClickedEvent to update search history with click data
-/// </summary>
-public sealed class SearchResultClickedHandler(
-    IApplicationDbContext context,
-    ILogger<SearchResultClickedHandler> logger)
-    : IDomainEventHandler<SearchResultClickedEvent>
-{
-    public async Task Handle(SearchResultClickedEvent notification, CancellationToken cancellationToken)
-    {
-        logger.LogDebug("Recording search result click for user {UserId}, query '{Query}'", notification.UserId, notification.Query);
-
-        // Find recent search history for this user/query
-        var recentCutoff = SystemClock.UtcNow.AddMinutes(-30);
-        var searchHistory = await context.Set<SearchHistory>()
-            .Where(s => s.UserId == notification.UserId)
-            .Where(s => s.Query == notification.Query)
-            .Where(s => s.CreatedAt >= recentCutoff)
-            .OrderByDescending(s => s.CreatedAt)
-            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
-
-        if (searchHistory != null)
-        {
-            searchHistory.RecordClick(notification.ClickedCourseId, notification.Position);
-            await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        }
-    }
-}
-
-/// <summary>
 /// Handles LearningProgressUpdatedEvent to refresh recommendations when significant progress is made
 /// </summary>
 public sealed class LearningProgressRecommendationRefreshHandler(

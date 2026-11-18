@@ -1,231 +1,349 @@
 "use client"
 
 import type { CodeFile } from "./types"
-import type { RegisteredFileSystemProvider as MonacoFileSystemProvider } from '@codingame/monaco-vscode-files-service-override'
-import { URI } from 'vscode-uri'
 import { getTypeScriptSupport, type MonacoRuntime as Monaco } from './monaco-runtime'
-import type { editor, languages, Position } from "monaco-editor"
+import type { editor, IDisposable, languages, Position, Uri } from "monaco-editor"
 
-let fileSystemProvider: MonacoFileSystemProvider | null = null
-let disposable: { dispose: () => void } | null = null
-let isInitialized = false
-let currentFiles: CodeFile[] = []
-let completionDisposables: Array<{ dispose: () => void }> = []
+const DEFAULT_INSTANCE_ID = "default"
+
+interface ExtraLibraryRegistration {
+  content: string
+  disposables: IDisposable[]
+}
+
+interface MonacoWorkspaceState {
+  instanceId: string
+  consumerCount: number
+  files: Map<string, CodeFile>
+  directories: Set<string>
+  explicitDirectories: Set<string>
+  modelUris: Set<string>
+  extraLibraries: Map<string, ExtraLibraryRegistration>
+}
+
+export interface MonacoWorkspaceSnapshot {
+  instanceId: string
+  consumerCount: number
+  files: readonly CodeFile[]
+  directories: readonly string[]
+}
+
+const workspaces = new Map<string, MonacoWorkspaceState>()
+let completionDisposables: IDisposable[] = []
+let completionMonaco: Monaco | null = null
 let monacoInstance: Monaco | null = null
-let fsConsumerCount = 0
+
+function normalizeRelativePath(path: string) {
+  const segments: string[] = []
+
+  for (const segment of path.replaceAll("\\", "/").split("/")) {
+    if (!segment || segment === ".") continue
+    if (segment === "..") {
+      segments.pop()
+      continue
+    }
+    segments.push(segment)
+  }
+
+  return segments.join("/")
+}
+
+function normalizeInstanceId(instanceId?: string) {
+  return normalizeRelativePath(instanceId ?? DEFAULT_INSTANCE_ID) || DEFAULT_INSTANCE_ID
+}
+
+function getWorkspace(instanceId?: string, create = false) {
+  const normalizedInstanceId = normalizeInstanceId(instanceId)
+  let workspace = workspaces.get(normalizedInstanceId)
+
+  if (!workspace && create) {
+    workspace = {
+      instanceId: normalizedInstanceId,
+      consumerCount: 0,
+      files: new Map(),
+      directories: new Set(),
+      explicitDirectories: new Set(),
+      modelUris: new Set(),
+      extraLibraries: new Map(),
+    }
+    workspaces.set(normalizedInstanceId, workspace)
+  }
+
+  return workspace
+}
+
+function toWorkspaceUri(monaco: Monaco, workspace: MonacoWorkspaceState, filePath: string): Uri {
+  const workspaceRoot = workspace.instanceId === DEFAULT_INSTANCE_ID ? "" : `/${workspace.instanceId}`
+  return monaco.Uri.from({
+    scheme: "file",
+    path: `${workspaceRoot}/${normalizeRelativePath(filePath)}`,
+  })
+}
+
+function collectDirectories(files: Iterable<CodeFile>) {
+  const directories = new Set<string>()
+
+  for (const file of files) {
+    const parts = normalizeRelativePath(file.path).split("/")
+    for (let index = 1; index < parts.length; index++) {
+      directories.add(parts.slice(0, index).join("/"))
+    }
+  }
+
+  return directories
+}
+
+function refreshDirectories(workspace: MonacoWorkspaceState) {
+  workspace.directories = new Set([
+    ...workspace.explicitDirectories,
+    ...collectDirectories(workspace.files.values()),
+  ])
+}
+
+function disposeExtraLibrary(workspace: MonacoWorkspaceState, filePath: string) {
+  const registration = workspace.extraLibraries.get(filePath)
+  if (!registration) return
+
+  registration.disposables.forEach((disposable) => disposable.dispose())
+  workspace.extraLibraries.delete(filePath)
+}
+
+function syncExtraLibrary(workspace: MonacoWorkspaceState, file: CodeFile) {
+  const monaco = monacoInstance
+  const filePath = normalizeRelativePath(file.path)
+  const existing = workspace.extraLibraries.get(filePath)
+  const isJavaScriptFamily = file.language === "typescript" || file.language === "javascript"
+
+  if (!monaco || !isJavaScriptFamily) {
+    disposeExtraLibrary(workspace, filePath)
+    return
+  }
+
+  if (existing?.content === file.content) return
+  disposeExtraLibrary(workspace, filePath)
+
+  const typescript = getTypeScriptSupport(monaco)
+  if (!typescript) return
+
+  const uri = toWorkspaceUri(monaco, workspace, filePath).toString()
+  workspace.extraLibraries.set(filePath, {
+    content: file.content,
+    disposables: [
+      typescript.typescriptDefaults.addExtraLib(file.content, uri),
+      typescript.javascriptDefaults.addExtraLib(file.content, uri),
+    ],
+  })
+}
+
+function syncModel(
+  workspace: MonacoWorkspaceState,
+  file: CodeFile,
+  previousContent?: string,
+  forceUpdate = false,
+) {
+  const monaco = monacoInstance
+  if (!monaco) return
+
+  const uri = toWorkspaceUri(monaco, workspace, file.path)
+  const uriKey = uri.toString()
+  let model = monaco.editor.getModel(uri)
+
+  if (!model) {
+    model = monaco.editor.createModel(file.content, file.language, uri)
+  } else {
+    const canReplace = forceUpdate || (previousContent !== undefined && model.getValue() === previousContent)
+    if (canReplace && model.getValue() !== file.content) {
+      model.setValue(file.content)
+    }
+    if (model.getLanguageId() !== file.language) {
+      monaco.editor.setModelLanguage(model, file.language)
+    }
+  }
+
+  workspace.modelUris.add(uriKey)
+  syncExtraLibrary(workspace, file)
+}
+
+function disposeWorkspaceFile(workspace: MonacoWorkspaceState, filePath: string) {
+  const normalizedPath = normalizeRelativePath(filePath)
+  disposeExtraLibrary(workspace, normalizedPath)
+
+  const monaco = monacoInstance
+  if (monaco) {
+    const uri = toWorkspaceUri(monaco, workspace, normalizedPath)
+    const model = monaco.editor.getModel(uri)
+    if (model && !model.isDisposed()) model.dispose()
+    workspace.modelUris.delete(uri.toString())
+  }
+
+  workspace.files.delete(normalizedPath)
+}
+
+function disposeWorkspace(workspace: MonacoWorkspaceState) {
+  Array.from(workspace.extraLibraries.keys()).forEach((filePath) => disposeExtraLibrary(workspace, filePath))
+
+  const monaco = monacoInstance
+  if (monaco) {
+    workspace.modelUris.forEach((uriValue) => {
+      const model = monaco.editor.getModel(monaco.Uri.parse(uriValue))
+      if (model && !model.isDisposed()) model.dispose()
+    })
+  }
+
+  workspace.modelUris.clear()
+  workspace.files.clear()
+  workspace.directories.clear()
+  workspace.explicitDirectories.clear()
+}
+
+function hydrateWorkspace(workspace: MonacoWorkspaceState) {
+  workspace.files.forEach((file) => syncModel(workspace, file))
+}
+
+function disposeCompletionProviders() {
+  completionDisposables.forEach((disposable) => disposable.dispose())
+  completionDisposables = []
+  completionMonaco = null
+}
 
 export function setMonacoInstance(monaco: Monaco) {
-  monacoInstance = monaco
-}
-
-export async function initializeMonacoFileSystem() {
-  if (typeof window === "undefined") return null
-
-  fsConsumerCount++
-  if (isInitialized) return fileSystemProvider
-
-  try {
-    const { registerFileSystemOverlay, RegisteredFileSystemProvider } = await import(
-      "@codingame/monaco-vscode-files-service-override"
-    )
-
-    // Criar o provider em memória
-    fileSystemProvider = new RegisteredFileSystemProvider(false) // false = read-write
-    
-    // Registrar o overlay (retorna IDisposable para cleanup)
-    disposable = registerFileSystemOverlay(1, fileSystemProvider)
-    
-    isInitialized = true
-    console.log('[Monaco FS] File system initialized')
-    return fileSystemProvider
-  } catch (error) {
-    console.error('[Monaco FS] Failed to initialize:', error)
-    return null
-  }
-}
-
-export async function syncFilesToMonacoFS(files: CodeFile[], instanceId?: string) {
-  if (!fileSystemProvider) {
-    await initializeMonacoFileSystem()
-  }
-
-  if (!fileSystemProvider) {
-    return
-  }
-
-  // Guardar referência dos arquivos para o completion provider
-  currentFiles = files
-
-  try {
-    // Coletar todos os diretórios únicos
-    const directories = new Set<string>()
-    files.forEach(file => {
-      const parts = file.path.split('/')
-      if (parts.length > 1) {
-        let currentPath = ''
-        for (let i = 0; i < parts.length - 1; i++) {
-          currentPath += (i > 0 ? '/' : '') + parts[i]
-          if (currentPath) {
-            directories.add(currentPath)
-          }
-        }
-      }
-    })
-
-    // Criar diretórios
-    for (const dir of Array.from(directories).sort()) {
-      try {
-        const fullPath = instanceId ? `/${instanceId}/${dir}` : `/${dir}`
-        const dirUri = URI.file(fullPath)
-        fileSystemProvider.mkdirSync(dirUri)
-      } catch {
-        // Diretório já existe
-      }
-    }
-
-    // Criar/atualizar cada arquivo no sistema virtual
-    for (const file of files) {
-      try {
-        const fullPath = instanceId ? `/${instanceId}/${file.path}` : `/${file.path}`
-        const uri = URI.file(fullPath)
-        
-        await fileSystemProvider.writeFile(
-          uri,
-          new TextEncoder().encode(file.content),
-          { create: true, overwrite: true, unlock: false, atomic: false }
-        )
-      } catch {
-        // Ignorar erros individuais de arquivos
-      }
-    }
-    
-    // Se Monaco está disponível, adicionar arquivos como extra libs para TypeScript
-    const ts = getTypeScriptSupport(monacoInstance)
-    if (ts) {
-      files.forEach(file => {
-        if (file.language === 'typescript' || file.language === 'javascript') {
-          const fullPath = instanceId ? `file:///${instanceId}/${file.path}` : `file:///${file.path}`
-          
-          // Adicionar como lib extra para o TypeScript worker reconhecer
-          ts.typescriptDefaults.addExtraLib(
-            file.content,
-            fullPath
-          )
-          ts.javascriptDefaults.addExtraLib(
-            file.content,
-            fullPath
-          )
-        }
+  if (monacoInstance !== monaco) {
+    disposeCompletionProviders()
+    workspaces.forEach((workspace) => {
+      Array.from(workspace.extraLibraries.keys()).forEach((filePath) => disposeExtraLibrary(workspace, filePath))
+      workspace.modelUris.forEach((uriValue) => {
+        const model = monacoInstance?.editor.getModel(monacoInstance.Uri.parse(uriValue))
+        if (model && !model.isDisposed()) model.dispose()
       })
-    }
-  } catch {
-    // Silenciar erros - não são críticos para a funcionalidade
+      workspace.modelUris.clear()
+    })
+  }
+
+  monacoInstance = monaco
+  workspaces.forEach(hydrateWorkspace)
+}
+
+export function initializeMonacoFileSystem(instanceId?: string) {
+  if (typeof window === "undefined") return Promise.resolve(null)
+
+  const workspace = getWorkspace(instanceId, true)!
+  workspace.consumerCount++
+  return Promise.resolve(getFileSystemProvider(instanceId))
+}
+
+export function syncFilesToMonacoFS(files: CodeFile[], instanceId?: string) {
+  if (typeof window === "undefined") return Promise.resolve()
+
+  const workspace = getWorkspace(instanceId, true)!
+  const nextPaths = new Set<string>()
+
+  for (const originalFile of files) {
+    const filePath = normalizeRelativePath(originalFile.path)
+    if (!filePath) continue
+
+    const file = { ...originalFile, path: filePath }
+    const previous = workspace.files.get(filePath)
+    workspace.files.set(filePath, file)
+    nextPaths.add(filePath)
+    syncModel(workspace, file, previous?.content)
+  }
+
+  Array.from(workspace.files.keys())
+    .filter((filePath) => !nextPaths.has(filePath))
+    .forEach((filePath) => disposeWorkspaceFile(workspace, filePath))
+
+  refreshDirectories(workspace)
+  return Promise.resolve()
+}
+
+export function updateMonacoFile(filePath: string, content: string, instanceId?: string) {
+  if (typeof window === "undefined") return Promise.resolve()
+
+  const workspace = getWorkspace(instanceId)
+  const normalizedPath = normalizeRelativePath(filePath)
+  const current = workspace?.files.get(normalizedPath)
+  if (!workspace || !current) return Promise.resolve()
+
+  const updated = { ...current, content }
+  workspace.files.set(normalizedPath, updated)
+  syncModel(workspace, updated, current.content, true)
+  return Promise.resolve()
+}
+
+export function deleteMonacoFile(filePath: string, instanceId?: string) {
+  const workspace = getWorkspace(instanceId)
+  if (!workspace) return Promise.resolve()
+
+  disposeWorkspaceFile(workspace, filePath)
+  refreshDirectories(workspace)
+  return Promise.resolve()
+}
+
+export function createMonacoDirectory(dirPath: string, instanceId?: string) {
+  const workspace = getWorkspace(instanceId, true)!
+  const normalizedPath = normalizeRelativePath(dirPath)
+  if (normalizedPath) {
+    workspace.explicitDirectories.add(normalizedPath)
+    refreshDirectories(workspace)
   }
 }
 
-export async function updateMonacoFile(filePath: string, content: string, instanceId?: string) {
-  if (!fileSystemProvider) {
-    return
+export function getFileSystemProvider(instanceId?: string): MonacoWorkspaceSnapshot | null {
+  const workspace = getWorkspace(instanceId)
+  if (!workspace) return null
+
+  return {
+    instanceId: workspace.instanceId,
+    consumerCount: workspace.consumerCount,
+    files: Array.from(workspace.files.values(), (file) => ({ ...file })),
+    directories: Array.from(workspace.directories).sort(),
+  }
+}
+
+export function disposeMonacoFileSystem(instanceId?: string) {
+  const workspace = getWorkspace(instanceId)
+  if (workspace) {
+    workspace.consumerCount = Math.max(0, workspace.consumerCount - 1)
+    if (workspace.consumerCount > 0) return
+
+    disposeWorkspace(workspace)
+    workspaces.delete(workspace.instanceId)
   }
 
-  try {
-    const fullPath = instanceId ? `/${instanceId}/${filePath}` : `/${filePath}`
-    const uri = URI.file(fullPath)
-    
-    // Criar diretórios se necessário
-    const parts = filePath.split('/')
-    if (parts.length > 1) {
-      let currentPath = ''
-      for (let i = 0; i < parts.length - 1; i++) {
-        currentPath += (i > 0 ? '/' : '') + parts[i]
-        if (currentPath) {
-          try {
-            const dirFullPath = instanceId ? `/${instanceId}/${currentPath}` : `/${currentPath}`
-            const dirUri = URI.file(dirFullPath)
-            fileSystemProvider.mkdirSync(dirUri)
-          } catch {
-            // Diretório já existe ou erro, continuar
-          }
-        }
+  if (Array.from(workspaces.values()).every((candidate) => candidate.consumerCount === 0)) {
+    workspaces.forEach((candidate) => disposeWorkspace(candidate))
+    workspaces.clear()
+    disposeCompletionProviders()
+    monacoInstance = null
+  }
+}
+
+function getCompletionContext(modelPath: string) {
+  const normalizedModelPath = `/${normalizeRelativePath(modelPath)}`
+
+  for (const workspace of workspaces.values()) {
+    if (workspace.instanceId === DEFAULT_INSTANCE_ID) continue
+    const prefix = `/${workspace.instanceId}/`
+    if (normalizedModelPath.startsWith(prefix)) {
+      return {
+        workspace,
+        relativeModelPath: normalizedModelPath.slice(prefix.length - 1),
       }
     }
-    
-    await fileSystemProvider.writeFile(
-      uri,
-      new TextEncoder().encode(content),
-      { create: true, overwrite: true, unlock: false, atomic: false }
-    )
-    
-    // Atualizar extraLib se Monaco estiver disponível
-    const tsUpdate = getTypeScriptSupport(monacoInstance)
-    if (tsUpdate) {
-      const fileExt = filePath.split('.').pop()
-      if (fileExt === 'ts' || fileExt === 'tsx' || fileExt === 'js' || fileExt === 'jsx') {
-        const libPath = instanceId ? `file:///${instanceId}/${filePath}` : `file:///${filePath}`
-        tsUpdate.typescriptDefaults.addExtraLib(content, libPath)
-        tsUpdate.javascriptDefaults.addExtraLib(content, libPath)
-      }
-    }
-  } catch {
-    // Silenciar erros de file system - não são críticos
   }
-}
 
-export async function deleteMonacoFile(filePath: string) {
-  if (!fileSystemProvider) return
-
-  try {
-    const uri = URI.file(`/${filePath}`)
-    await fileSystemProvider.delete(uri)
-  } catch {
-    // Arquivo pode não existir, ignorar
-  }
-}
-
-export function createMonacoDirectory(dirPath: string) {
-  if (!fileSystemProvider) return
-
-  try {
-    const uri = URI.file(`/${dirPath}`)
-    // RegisteredFileSystemProvider usa mkdirSync ao invés de mkdir com parâmetro
-    fileSystemProvider.mkdirSync(uri)
-  } catch {
-    // Diretório pode já existir, ignorar
-  }
-}
-
-export function getFileSystemProvider() {
-  return fileSystemProvider
-}
-
-export function disposeMonacoFileSystem() {
-  fsConsumerCount--
-  if (fsConsumerCount > 0) {
-    console.log('[Monaco FS] Skipping dispose, still', fsConsumerCount, 'consumer(s)')
-    return
-  }
-  if (disposable) {
-    disposable.dispose()
-    disposable = null
-  }
-  
-  // Dispose completion providers
-  completionDisposables.forEach(d => d.dispose())
-  completionDisposables = []
-  
-  fileSystemProvider = null
-  isInitialized = false
-  currentFiles = []
-  console.log('[Monaco FS] File system disposed')
+  const defaultWorkspace = workspaces.get(DEFAULT_INSTANCE_ID)
+  return defaultWorkspace
+    ? { workspace: defaultWorkspace, relativeModelPath: normalizedModelPath }
+    : null
 }
 
 export function registerPathCompletionProvider(monaco: Monaco) {
-  // Salvar instância do Monaco
-  monacoInstance = monaco
-  
-  // Dispose previous providers
-  completionDisposables.forEach(d => d.dispose())
-  completionDisposables = []
+  setMonacoInstance(monaco)
+  if (completionMonaco === monaco && completionDisposables.length > 0) return
+
+  disposeCompletionProviders()
+  completionMonaco = monaco
 
   // Provider combinado para TypeScript e JavaScript
   const createProvider = () => ({
@@ -234,18 +352,18 @@ export function registerPathCompletionProvider(monaco: Monaco) {
       const lineContent = model.getLineContent(position.lineNumber)
       const textBeforeCursor = lineContent.substring(0, position.column - 1)
       
-      // Detectar se estamos dentro de um import/require/from
       const importMatch = textBeforeCursor.match(/(?:import.*?from\s*|require\s*\()\s*['"]([^'"]*?)$/)
-      if (!importMatch || !importMatch[1]) return { suggestions: [] }
+      if (!importMatch) return { suggestions: [] }
       
       const currentPath = importMatch[1] || ''
-      const modelPath = model.uri.path || ''
+      const context = getCompletionContext(model.uri.path || '')
+      if (!context) return { suggestions: [] }
+      const modelPath = context.relativeModelPath
       const currentDir = modelPath.split('/').slice(0, -1).join('/')
       
       const suggestions: languages.CompletionItem[] = []
 
-      // Sugerir arquivos disponíveis
-      currentFiles.forEach(file => {
+      context.workspace.files.forEach(file => {
         const filePath = `/${file.path}`
         const fileName = file.path.split('/').pop() || ''
 
@@ -314,18 +432,18 @@ export function registerPathCompletionProvider(monaco: Monaco) {
       const lineContent = model.getLineContent(position.lineNumber)
       const textBeforeCursor = lineContent.substring(0, position.column - 1)
       
-      // Detectar imports Python: from X import, import X
       const importMatch = textBeforeCursor.match(/(?:from\s+|import\s+)([^\s'"]*?)$/)
-      if (!importMatch || !importMatch[1]) return { suggestions: [] }
+      if (!importMatch) return { suggestions: [] }
       
       const currentPath = importMatch[1] || ''
-      const modelPath = model.uri.path || ''
+      const context = getCompletionContext(model.uri.path || '')
+      if (!context) return { suggestions: [] }
+      const modelPath = context.relativeModelPath
       const currentDir = modelPath.split('/').slice(0, -1).join('/')
       
       const suggestions: languages.CompletionItem[] = []
       
-      // Sugerir arquivos Python disponíveis
-      currentFiles.forEach(file => {
+      context.workspace.files.forEach(file => {
         if (file.language !== 'python') return
         
         const filePath = `/${file.path}`
@@ -367,18 +485,18 @@ export function registerPathCompletionProvider(monaco: Monaco) {
       const lineContent = model.getLineContent(position.lineNumber)
       const textBeforeCursor = lineContent.substring(0, position.column - 1)
       
-      // Detectar require Lua: require("X") ou require 'X'
       const requireMatch = textBeforeCursor.match(/require\s*\(?['"]([^'"]*?)$/)
-      if (!requireMatch || !requireMatch[1]) return { suggestions: [] }
+      if (!requireMatch) return { suggestions: [] }
       
       const currentPath = requireMatch[1] || ''
-      const modelPath = model.uri.path || ''
+      const context = getCompletionContext(model.uri.path || '')
+      if (!context) return { suggestions: [] }
+      const modelPath = context.relativeModelPath
       const currentDir = modelPath.split('/').slice(0, -1).join('/')
       
       const suggestions: languages.CompletionItem[] = []
       
-      // Sugerir arquivos Lua disponíveis
-      currentFiles.forEach(file => {
+      context.workspace.files.forEach(file => {
         if (file.language !== 'lua') return
         
         const filePath = `/${file.path}`
@@ -420,5 +538,4 @@ export function registerPathCompletionProvider(monaco: Monaco) {
   const luaProvider = monaco.languages.registerCompletionItemProvider('lua', createLuaProvider())
 
   completionDisposables.push(tsProvider, jsProvider, pyProvider, luaProvider)
-  console.log('[Monaco FS] Path completion providers registered')
 }

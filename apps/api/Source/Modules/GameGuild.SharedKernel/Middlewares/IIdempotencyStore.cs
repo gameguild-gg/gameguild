@@ -9,13 +9,13 @@ namespace GameGuild;
 /// <remarks>
 ///     <para><b>Built-in implementations:</b></para>
 ///     <list type="bullet">
-///         <item><description><see cref="MemoryCacheIdempotencyStore"/> — in-process <c>IMemoryCache</c> (default, single-instance only)</description></item>
+///         <item><description><see cref="DistributedCacheIdempotencyStore"/> — <c>IDistributedCache</c>-backed (default; multi-instance safe, issue #1248 N2)</description></item>
+///         <item><description><see cref="MemoryCacheIdempotencyStore"/> — in-process <c>IMemoryCache</c> (single-instance only; kept for tests and single-node hosts)</description></item>
 ///     </list>
 ///     <para>
-///     <b>Production migration:</b> Implement this interface with <c>IDistributedCache</c> (Redis)
-///     and register it in DI to get cross-instance idempotency. The distributed implementation
-///     should also use distributed locking (e.g., RedLock) for the in-flight check to prevent
-///     race conditions across instances.
+///     Cross-instance in-flight mutual exclusion additionally requires a distributed lock
+///     (e.g., RedLock) — see the concurrency caveat on
+///     <see cref="DistributedCacheIdempotencyStore"/>.
 ///     </para>
 /// </remarks>
 public interface IIdempotencyStore

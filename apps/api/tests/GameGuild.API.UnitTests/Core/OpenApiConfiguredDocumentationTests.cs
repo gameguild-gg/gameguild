@@ -248,6 +248,8 @@ public sealed class OpenApiConfiguredDocumentationTests
         var descriptors = provider.GetRequiredService<IOptions<SwaggerGenOptions>>().Value.DocumentFilterDescriptors;
 
         descriptors.Should().Contain(descriptor => descriptor.Type == typeof(ConfiguredOpenApiDocumentFilter));
+        provider.GetRequiredService<IOptions<SwaggerGenOptions>>().Value.OperationFilterDescriptors
+            .Should().Contain(descriptor => descriptor.Type == typeof(MvcRequestBodyRequiredOperationFilter));
         provider.GetRequiredService<IOptions<SwaggerGenOptions>>().Value.SchemaFilterDescriptors
             .Count(descriptor => descriptor.Type.Name == "XmlCommentsSchemaFilter")
             .Should().Be(1);

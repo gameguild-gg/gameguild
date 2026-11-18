@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text.Json;
 using GameGuild.CQRS;
 using GameGuild.Identity.Context.Actors;
 using FluentValidation;
@@ -14,6 +16,10 @@ public sealed record CreateApiKeyCommand : ICommand<Result<CreateApiKeyResponse>
     public required string[] Scopes { get; init; }
     public DateTime? ExpiresAt { get; init; }
     public string? IpWhitelist { get; init; }
+    [AuditSensitive]
+    public string? StepUpReceipt { get; init; }
+
+    internal CreateApiKeyCommand Snapshot() => this with { Scopes = Scopes?.ToArray() ?? [] };
 }
 
 public sealed record CreateApiKeyResponse
@@ -60,17 +66,20 @@ public sealed class CreateApiKeyHandler : ICommandHandler<CreateApiKeyCommand, R
     private readonly IActorContextAccessor _actorContext;
     private readonly ILogger<CreateApiKeyHandler> _logger;
     private readonly IApiKeyAuditEventSink? _apiKeyAuditSink;
+    private readonly IStepUpReceiptService _stepUpReceipts;
     private readonly IHttpContextAccessor? _httpContextAccessor;
 
     public CreateApiKeyHandler(
         IApiKeyRepository apiKeyRepository,
         IActorContextAccessor actorContext,
+        IStepUpReceiptService stepUpReceipts,
         ILogger<CreateApiKeyHandler> logger,
         IApiKeyAuditEventSink? apiKeyAuditSink = null,
         IHttpContextAccessor? httpContextAccessor = null)
     {
         _apiKeyRepository = apiKeyRepository;
         _actorContext = actorContext;
+        _stepUpReceipts = stepUpReceipts;
         _logger = logger;
         _apiKeyAuditSink = apiKeyAuditSink;
         _httpContextAccessor = httpContextAccessor;
@@ -78,19 +87,54 @@ public sealed class CreateApiKeyHandler : ICommandHandler<CreateApiKeyCommand, R
 
     public async Task<Result<CreateApiKeyResponse>> Handle(CreateApiKeyCommand request, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(request);
+        var intent = request.Snapshot();
         var actor = _actorContext.ActorContext;
-        if (!actor.SubjectIdAsGuid.HasValue)
+        if (!actor.IsAuthenticated || actor.ActorKind != ActorKind.User ||
+            actor.SubjectIdAsGuid is not { } actorId || actorId == Guid.Empty)
         {
             return Result.Failure<CreateApiKeyResponse>(Error.Failure("Auth.Required", "User must be authenticated to create API keys"));
         }
 
+        if (actor.TenantId is not { } tenantId || tenantId == Guid.Empty ||
+            !Guid.TryParse(actor.TypedAttributes.SessionId, out var sessionId) || sessionId == Guid.Empty)
+        {
+            return Result.Failure<CreateApiKeyResponse>(Error.Failure(
+                "Auth.ContextUnavailable", "An authenticated tenant and session context is required"));
+        }
+
+        // Validate before any challenge/receipt is consumed, including direct command calls.
+        var validation = await new CreateApiKeyValidator().ValidateAsync(intent, cancellationToken).ConfigureAwait(false);
+        if (!validation.IsValid)
+        {
+            return Result.Failure<CreateApiKeyResponse>(Error.Validation(
+                "ApiKey.Invalid", string.Join("; ", validation.Errors.Select(error => error.ErrorMessage))));
+        }
+
+        if (string.IsNullOrWhiteSpace(intent.StepUpReceipt))
+        {
+            return Result.Failure<CreateApiKeyResponse>(Error.Failure(
+                "StepUp.Required", "Fresh verification is required to create an API key"));
+        }
+
+        try
+        {
+            await _stepUpReceipts.ConsumeAsync(
+                StepUpBinding(intent), intent.StepUpReceipt, cancellationToken).ConfigureAwait(false);
+        }
+        catch (StepUpReceiptInvalidException)
+        {
+            return Result.Failure<CreateApiKeyResponse>(Error.Failure(
+                "StepUp.Invalid", "Step-up receipt is invalid, expired, mismatched, or already consumed"));
+        }
+
         var (apiKey, plaintext) = ApiKey.Create(
-            actor.SubjectIdAsGuid.Value,
-            actor.TenantId ?? Guid.Empty,
-            request.Name,
-            request.Scopes,
-            request.ExpiresAt,
-            request.IpWhitelist);
+            actorId,
+            tenantId,
+            intent.Name,
+            intent.Scopes,
+            intent.ExpiresAt,
+            intent.IpWhitelist);
 
         // Issue #1192: record when this key was minted by another API-key credential. The
         // linkage lets revocation cascade to attacker-minted replacements of a leaked
@@ -105,7 +149,7 @@ public sealed class CreateApiKeyHandler : ICommandHandler<CreateApiKeyCommand, R
         await _apiKeyRepository.AddAsync(apiKey, cancellationToken).ConfigureAwait(false);
 
         _logger.LogInformation("API key created: {KeyId} for user {UserId} with scopes {Scopes}",
-            apiKey.Id, actor.SubjectIdAsGuid.Value, string.Join(", ", request.Scopes));
+            apiKey.Id, actorId, string.Join(", ", intent.Scopes));
 
         await ApiKeyLifecycleAudit.RecordAsync(
             _apiKeyAuditSink,
@@ -121,6 +165,18 @@ public sealed class CreateApiKeyHandler : ICommandHandler<CreateApiKeyCommand, R
 
         return Result.Success(CreateApiKeyResponse.FromEntity(apiKey, plaintext));
     }
+
+    /// <summary>Binds fresh verification to every client-controlled creation field, excluding the receipt.</summary>
+    public static StepUpOperationBinding StepUpBinding(CreateApiKeyCommand intent) => new(
+        "create-api-key",
+        "current-user",
+        Convert.ToHexString(SHA256.HashData(JsonSerializer.SerializeToUtf8Bytes(new
+        {
+            intent.Name,
+            intent.Scopes,
+            intent.ExpiresAt,
+            intent.IpWhitelist
+        }))).ToLowerInvariant());
 
     /// <summary>
     ///     The api-key credential behind the current request, when the actor authenticated with

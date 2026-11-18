@@ -7,7 +7,7 @@
 - **Distribution is voted every quarter** at the quarterly governors' meeting (see 05): governors vote how much of the quarter's distributable profit goes to revenue shareholders.
 - Payouts in crypto (stablecoins, e.g., USDC).
 - **Only revenue shareholders receive funds and bear pro-rata capital-call obligation for company bills/debts. Governance-only shareholders receive nothing and owe nothing.**
-- Revenue shares are freely transferable; whoever holds them at the quarterly snapshot receives that quarter's payout.
+- Revenue shares are transferable under ROFR; only vested shares transfer; whoever holds them at the quarterly snapshot receives that quarter's payout.
 
 ## Repayment waterfall (in the operating agreement)
 
@@ -27,7 +27,7 @@ Every 3 months (quarterly governors' meeting)
   ├─ review: performance vs. plan
   ├─ vote: distribution % of distributable profit (0–100%)
   ├─ vote: next quarter's plan (becomes the planned-spend baseline, 05)
-  ├─ vote: contractor compensation; voted performance payments for uncontracted governor work (limited mechanism)
+  ├─ vote: contract approvals for the quarter's work
   └─ execute: USDC transfers to revenue shareholders, pro-rata per cap-table snapshot
 ```
 
@@ -40,7 +40,6 @@ Runway floor: **6 months** of operating costs must remain after any distribution
 | Distribution % of quarterly distributable profit | 0–100% |
 | Extra founder-loan repayment tranche | optional acceleration |
 | Reinvestment allocation | product / growth / reserve |
-| Voted performance payments | uncontracted governor work, measured + voted, limited |
 | Special allocations | bounty pools, contributor grants |
 
 ## Founder loans (repaid before distributions)
@@ -72,6 +71,7 @@ KYC'd wallet registry for all revenue shareholders; treasury diversification via
 ## Anti-abuse
 
 - Profit-share computed at quarterly snapshot; wallets declared/KYC'd for compliance
+- Transfers: ROFR + vested-only (04) — no buying a payout stream the week before a snapshot
 - New investors joining mid-quarter: pro-rata from entry snapshot only
 
 ## Tax note

@@ -38,8 +38,6 @@ jobs:
       - name: Choose self-hosted pool or GitHub-hosted overflow
         id: select
         env:
-          GH_TOKEN: ${{ github.token }}
-          REPOSITORY: ${{ github.repository }}
           FORK_PR: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork }}
         run: |
           set -eu
@@ -48,25 +46,10 @@ jobs:
             echo 'pool=["ubuntu-latest"]' >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          pool='["self-hosted","gameguild"]'
-          response=$(curl -s -w '\n%{http_code}' \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H 'Accept: application/vnd.github+json' \
-            "https://api.github.com/repos/$REPOSITORY/actions/runners" || echo $'\n000')
-          status=$(tail -n1 <<<"$response")
-          body=$(sed '$d' <<<"$response")
-          if [[ "$status" == '200' ]]; then
-            total=$(jq '[.runners[] | select(any(.labels[]; .name == "gameguild"))] | length' <<<"$body")
-            busy=$(jq '[.runners[] | select(any(.labels[]; .name == "gameguild")) | select(.busy == true)] | length' <<<"$body")
-            echo "Self-hosted ARC runners: total=$total busy=$busy (max 9)."
-            if [[ "$busy" -ge 9 ]]; then
-              echo 'All 9 ARC runners busy; overflowing to GitHub-hosted.' >&2
-              pool='["ubuntu-latest"]'
-            fi
-          else
-            echo "Runner list unavailable (HTTP $status); defaulting to self-hosted." >&2
-          fi
-          echo "pool=$pool" >> "$GITHUB_OUTPUT"
+          # The runner-count probe against /actions/runners was removed: that
+          # endpoint is admin-only and GITHUB_TOKEN always gets HTTP 403.
+          # ARC autoscales 0..9 on demand; self-hosted is the default.
+          echo 'pool=["gameguild"]' >> "$GITHUB_OUTPUT"
 
   prepare:
     name: Resolve tested release candidate

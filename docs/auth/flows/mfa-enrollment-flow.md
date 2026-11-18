@@ -7,9 +7,11 @@
 
 All enrollment endpoints live in `MfaController` (`Controllers/MfaController.cs:19-23`, `[Authorize]`); identity comes from `GetCurrentUserId()` (`Controllers/AuthControllerBase.cs:17`). Commands are dispatched over `ISender` to `MfaMutationCommandHandler` (`Commands/MfaMutationCommands.cs:15-36`), `SmsPushMfaCommandHandler` (`Commands/SmsPushMfaCommands.cs:28-62`) and the email handlers (`Commands/EmailMfaCommands.cs:18-20`), which delegate to factor services behind the `MfaService` orchestrator (`Services/MfaService.cs:12-22`).
 
-TOTP (`POST auth/mfa/totp:setup`, `Controllers/MfaController.cs:54-78`) generates a 160-bit Base32 secret (`Services/TotpMfaService.cs:209-217`), stores it **encrypted** (`:54`), and returns an `otpauth://` QR URI (`:222-228`) with a 10-minute setup window (`MfaOptions.SetupSessionDurationMinutes`, `SharedKernel/Configuration/ApplicationLayer/MfaOptions.cs:52`). Setup also pre-generates 10 backup codes of 12 chars (`MfaService.cs:37-44`, `MfaOptions.cs:28-34`) stored as PBKDF2-SHA256-600k hashes (`Services/BackupCodeMfaService.cs:205-213`) — but the controller returns `BackupCodes = []` (`Controllers/MfaController.cs:76`), so the only way to see codes is `backup-codes:regenerate` after enablement. `totp:complete` (`:86-104`) verifies the code (±1 step clock skew, fixed-time compare, `TotpMfaService.cs:233-248`) and flips `IsEnabled` atomically through the `PostgreSqlTotpReplayStore` watermark (`Repositories/PostgreSqlTotpReplayStore.cs:51-69`, `INSERT … ON CONFLICT … WHERE last_accepted_step < new`), preventing same-step replay across nodes. Failed attempts accumulate (`MfaAttemptTrackingService.cs:312-334`): 5 failures → 15-minute lockout (`MfaOptions.cs:16-22`, checked `:372-379`).
+TOTP (`POST auth/mfa/totp:setup`, `Controllers/MfaController.cs:54-78`) generates a 160-bit Base32 secret (`Services/TotpMfaService.cs:209-217`), stores it **encrypted** (`:54`), and returns an `otpauth://` QR URI (`:222-228`) with a 10-minute setup window (`MfaOptions.SetupSessionDurationMinutes`, `SharedKernel/Configuration/ApplicationLayer/MfaOptions.cs:52`). Setup also pre-generates 10 backup codes of 12 chars (`MfaService.cs:37-44`, `MfaOptions.cs:28-34`) stored as PBKDF2-SHA256-600k hashes (`Services/BackupCodeMfaService.cs:205-213`) and returned in the authenticated setup response. The user can save these codes before confirming TOTP; they become usable only after successful confirmation. `totp:complete` (`:86-104`) verifies the code (±1 step clock skew, fixed-time compare, `TotpMfaService.cs:233-248`) and flips `IsEnabled` atomically through the `PostgreSqlTotpReplayStore` watermark (`Repositories/PostgreSqlTotpReplayStore.cs:51-69`, `INSERT … ON CONFLICT … WHERE last_accepted_step < new`), preventing same-step replay across nodes. Failed attempts accumulate (`MfaAttemptTrackingService.cs:312-334`): 5 failures → 15-minute lockout (`MfaOptions.cs:16-22`, checked `:372-379`).
 
-SMS/email OTP mirror `EmailCodeService` semantics (`Services/SmsMfaService.cs:11-17`, `Services/EmailMfaService.cs`): crypto-random 6-digit codes, SHA-256-digest-only storage in `IMemoryCache`, constant-time comparison with a dummy-digest miss path, single-use, 5-attempt ceiling, 10-minute lifetime, 60-second resend throttle (`SmsMfaService.cs:25-36`); delivery failure drops the live code (`:162-168`). Completing either enrollment sets `SmsPhoneNumber`/`EmailMfaAddress` and `IsEnabled = true` (`SmsMfaService.cs:76-79`, `EmailMfaService.cs:79-84`). Push registration stores a device token (16–512 chars) on the MFA row (`Services/PushMfaService.cs:31-60`); challenges are 120-second Pending/Approved/Denied state machines in `IDistributedCache` (`:63-168`), verified via `VerifyAsync` with explicit TOTP fallback on timeout (`:171-224`). Disable requires the account password (`Services/MfaService.cs:113-131`, issue #244 hardening), wipes all factor data, revokes every user token unconditionally and terminates sessions per option (`Services/MfaAttemptTrackingService.cs:144-196`).
+SMS/email OTP mirror `EmailCodeService` semantics (`Services/SmsMfaService.cs:11-17`, `Services/EmailMfaService.cs`): crypto-random 6-digit codes, SHA-256-digest-only storage in `IMemoryCache`, constant-time comparison with a dummy-digest miss path, single-use, 5-attempt ceiling, 10-minute lifetime, 60-second resend throttle (`SmsMfaService.cs:25-36`); delivery failure drops the live code (`:162-168`). SMS setup re-verifies the authenticated account password in `SmsPushMfaCommandHandler` before requesting delivery. `SmsMfaService.CompleteEnrollmentAsync` consumes an enrollment-purpose proof, creates the configuration when absent, and records the verified phone with `IsEnabled` and `IsSetupComplete`. First enrollment selects `Sms` and clears an unconfirmed TOTP setup; already verified factor configuration is retained. Email enrollment records `EmailMfaAddress` and enables its configuration through `EmailMfaService`. Push registration stores a device token (16–512 chars) on the MFA row (`Services/PushMfaService.cs:31-60`); challenges are 120-second Pending/Approved/Denied state machines in `IDistributedCache` (`:63-168`), verified via `VerifyAsync` with explicit TOTP fallback on timeout (`:171-224`). Disable requires the account password (`Services/MfaService.cs:113-131`, issue #244 hardening), wipes all factor data, revokes every user token unconditionally and terminates sessions per option (`Services/MfaAttemptTrackingService.cs:144-196`).
+
+The anonymous `sms:challenge` route accepts an opaque `mfaToken` from successful first-factor authentication. `SendSmsMfaChallengeHandler` delegates to `SignInMfaService.SendSmsChallengeAsync`, which checks the active `VerifyFactor` continuation, current subject/version/tenant/policy and enrolled SMS factor before resolving the recipient server-side. A user id alone cannot request delivery. Enrollment codes and sign-in codes have separate purposes; a sign-in code also belongs to its exact continuation. Code issuance remains subject to the atomic per-cache, per-user resend budget and ten-minute code lifetime, and completion still requires an active continuation. Email/push continuation support and distributed OTP storage remain gaps below.
 
 ## 2. End-to-End Flowchart — happy path and every edge case
 
@@ -18,15 +20,15 @@ flowchart TD
     subgraph TOTP["TOTP enrollment"]
         T1["POST auth mfa totp setup - Authorize<br/>MfaController.cs L54"] --> T2["InitiateMfaSetupCommand<br/>MfaMutationCommands.cs L22"]
         T2 --> T3{"MfaOptions Enabled<br/>TotpMfaService.cs L31"}
-        T3 -- "disabled globally" --> T500a["InvalidOperationException<br/>generic 500 - ExceptionHandlingMiddleware.cs L74"]
+        T3 -- "disabled globally" --> T400a["MfaConfigurationDeniedException<br/>failure result, HTTP 400"]
         T3 -- "enabled" --> T4{"Existing config IsEnabled<br/>TotpMfaService.cs L43"}
-        T4 -- "already enabled" --> T500b["InvalidOperationException MFA already enabled - L47<br/>500 not the declared 400 - see Gaps"]
+        T4 -- "already enabled" --> T400b["MfaConfigurationDeniedException<br/>failure result, HTTP 400; existing factor unchanged"]
         T4 -- "not enabled" --> T5["GenerateBase32Secret 160 bits - L51<br/>encrypted at rest - L54"]
         T5 --> T6["IsEnabled false IsSetupComplete false<br/>SetupExpiresAt now plus 10 min - L61"]
         T6 --> T7["Create or Update user_mfa_configuration row - L66"]
         T7 --> T8["otpauth URI with issuer secret SHA1 6 digits 30s - L70"]
         T8 --> T9["MfaService also generates 10 backup codes of 12 chars<br/>hashed PBKDF2 then stored - MfaService.cs L37"]
-        T9 --> T10["200 SecretKey plus QrCodeUri plus ExpiresAt<br/>BackupCodes returned EMPTY - MfaController.cs L76"]
+        T9 --> T10["200 SecretKey plus QrCodeUri plus ExpiresAt<br/>BackupCodes contains the generated plaintext codes"]
         T10 --> T11["User scans QR in authenticator app<br/>then POST totp complete with code - MfaController.cs L86"]
         T11 --> T12{"VerifyTotpAsync<br/>TotpMfaService.cs L87"}
         T12 -- "no config or no secret" --> TF1["false plus attempt row<br/>No TOTP configuration - L104"]
@@ -46,28 +48,29 @@ flowchart TD
     subgraph BACKUP["Backup codes"]
         B1["GET auth mfa backup-codes - masked status<br/>MfaController.cs L144"] --> B2["counts only - plaintext never returned - L154"]
         B3["POST auth mfa backup-codes regenerate<br/>MfaController.cs L170"] --> B4{"MFA IsEnabled<br/>BackupCodeMfaService.cs L37"}
-        B4 -- "not enabled or MFA disabled globally" --> B500["InvalidOperationException<br/>500 - see Gaps"]
+        B4 -- "not enabled or MFA disabled globally" --> B400["MfaConfigurationDeniedException<br/>empty regeneration result, HTTP 400"]
         B4 -- "enabled" --> B5["HashSet until 10 unique codes - L44<br/>charset without lookalikes - L194"]
         B5 --> B6["PBKDF2 SHA256 600000 iters per code - L210<br/>BackupCodeSet serialized to row - L62"]
         B6 --> B7["200 plaintext codes shown once - L70<br/>invalidates all previous codes"]
     end
 
-    subgraph SMS["SMS OTP factor - issue 244"]
-        S1["POST auth mfa sms setup with phone<br/>MfaController.cs L197"] --> S2{"E.164 normalize 8 to 15 digits<br/>SmsMfaService.cs L225"}
-        S2 -- "invalid" --> S400a["400 Phone number must be E.164 - L45"]
-        S2 -- "valid" --> S3{"60s resend throttle per user<br/>IMemoryCache - L116"}
-        S3 -- "throttled" --> S400b["400 code was sent recently - L50"]
-        S3 -- "ok" --> S4["6 digit crypto random code<br/>SHA256 digest cached 10 min - L127"]
-        S4 --> S5["publish SmsMfaCodeRequestedNotification - L150"]
-        S5 -- "publish fails" --> S410a["code removed then rethrow - L165"]
-        S5 -- "queued" --> S6["200 masked phone plus 600s expiry"]
-        S6 --> S7["POST sms complete with code<br/>MfaController.cs L228"]
-        S7 --> S8{"ConsumeCode - L176<br/>constant time compare incl dummy digest"}
-        S8 -- "no entry or expired or 5 wrong attempts or reused" --> S400c["400 Invalid or expired SMS code - L66"]
-        S8 -- "match" --> S9{"user_mfa_configuration row exists - L69"}
-        S9 -- "missing" --> S400d["400 No MFA configuration - L73"]
-        S9 -- "exists" --> S10["SmsPhoneNumber saved IsEnabled true - L76"]
-        S10 --> S11["200 SMS MFA enrolled - L83"]
+    subgraph SMS["SMS OTP enrollment"]
+        S0["Authenticated POST sms setup<br/>phoneNumber plus password"] --> SP{"Password re-verification<br/>SmsPushMfaCommandHandler"}
+        SP -- "denied or verifier absent" --> S400p["400 - no SMS dispatched"]
+        SP -- "verified" --> S2{"Normalize E.164 phone<br/>SmsMfaService.StartEnrollmentAsync"}
+        S2 -- "invalid" --> S400a["400 Phone number must be E.164"]
+        S2 -- "valid" --> S3{"Atomic 60s resend budget per user<br/>shared IMemoryCache gate"}
+        S3 -- "throttled" --> S400b["400 code was sent recently"]
+        S3 -- "ok" --> S4["Six-digit random enrollment code<br/>digest cached for ten minutes"]
+        S4 --> S5["Publish SmsMfaCodeRequestedNotification"]
+        S5 -- "dispatch throws" --> S410a["Issued entry removed; exception propagates"]
+        S5 -- "queued" --> S6["200 masked phone plus expiry"]
+        S6 --> S7["Authenticated POST sms complete<br/>code only; actor from request context"]
+        S7 --> S8{"Consume enrollment-purpose proof<br/>fixed-time digest comparison"}
+        S8 -- "wrong purpose, expired, exhausted or reused" --> S400c["400 Invalid or expired SMS code"]
+        S8 -- "matched" --> S9["Create or update MFA configuration<br/>SmsPhoneNumber verified; setup complete"]
+        S9 --> S10["First enrollment selects Sms<br/>unconfirmed TOTP setup cleared"]
+        S10 --> S11["200 SMS MFA enrolled"]
     end
 
     subgraph EMAILF["Email OTP factor - issue 1152"]
@@ -186,7 +189,7 @@ flowchart TD
     DF3 -->|"push challenge state JSON 120s"| DF8["IDistributedCache Redis"]
     DF3 -->|"SmsMfaCodeRequested EmailMfaCodeRequested PushMfaChallenge notifications"| DF9["Notifications delivery pipeline"]
     DF9 -->|"OTP code or push approval prompt"| DF10["User phone email mobile device"]
-    DF2 -->|"secret shown once in QR uri plus backup codes on regenerate"| DF1
+    DF2 -->|"secret shown in setup response; backup codes on setup or regeneration"| DF1
     DF3 -->|"enrollment and verification metrics"| DF11["MfaEnrollmentMetrics"]
 ```
 
@@ -194,8 +197,8 @@ flowchart TD
 
 | # | Edge case | Code path | Outcome |
 |---|-----------|-----------|---------|
-| 1 | MFA globally disabled (`Mfa:Enabled=false`) | `SetupTotpAsync` throws (`Services/TotpMfaService.cs:31-34`); same for backup-code generation (`BackupCodeMfaService.cs:26-29`) | 500 (InvalidOperationException), not the declared 400 (`Controllers/MfaController.cs:58`) |
-| 2 | TOTP setup while already enabled | `InvalidOperationException("MFA is already enabled")` (`TotpMfaService.cs:43-48`) | 500; re-enrollment requires disable first |
+| 1 | MFA globally disabled | TOTP setup / backup-code generation throws MfaConfigurationDeniedException; setup orchestrator / regeneration handler maps only this typed denial | HTTP 400; no backup codes issued |
+| 2 | TOTP setup while already enabled | Typed configuration denial becomes unsuccessful MfaSetupResult | HTTP 400; existing encrypted factor and enablement unchanged |
 | 3 | Setup abandoned > 10 minutes | `SetupExpiresAt` guard wipes secret + backup codes (`TotpMfaService.cs:109-121`, `MfaOptions.cs:52`) | later `totp:complete` → 400 "Invalid TOTP code", setup must restart |
 | 4 | Re-scanning/re-setup before completion | `SetupTotpAsync` overwrites secret + resets window on existing row (`TotpMfaService.cs:57-67`) | previous pending secret invalidated; new QR issued |
 | 5 | Wrong TOTP code | `FindMatchingTotpStep` miss → `RecordFailedMfaAttemptAsync` (`TotpMfaService.cs:168-173`) | 400; `FailedAttempts++` |
@@ -203,15 +206,15 @@ flowchart TD
 | 7 | Same TOTP code replayed (two sessions) | `PostgreSqlTotpReplayStore` watermark `WHERE last_accepted_step < new` (`Repositories/PostgreSqlTotpReplayStore.cs:51-59`) | second use rejected as "Invalid or previously used code" |
 | 8 | Concurrent TOTP verify race on the same step | atomic upsert + savepoint (`PostgreSqlTotpReplayStore.cs:32-44`) | exactly one winner; loser counts a failed attempt |
 | 9 | Clock skew between phone and server | ±1 step window (`MfaOptions.cs:46`, loop `TotpMfaService.cs:240-246`) | codes from previous/next 30s step accepted |
-| 10 | Backup codes generated at setup never displayed | controller returns `BackupCodes = []` (`Controllers/MfaController.cs:71-77`) | user must call regenerate after completing setup to ever see codes (see Gaps) |
-| 11 | Regenerate with MFA not enabled | `InvalidOperationException("MFA must be enabled…")` (`BackupCodeMfaService.cs:37-42`) | 500 (declared 200/401 at `Controllers/MfaController.cs:173-174`) |
+| 10 | Backup codes generated at setup | Controller returns result.BackupCodes with the setup response | Ten distinct codes are available to save; stored hashes do not disclose them; usable once after TOTP confirmation |
+| 11 | Regenerate with MFA not enabled | Password re-verification runs first; typed configuration denial maps to an empty regeneration result | HTTP 400; no new factor or backup set created |
 | 12 | Backup-code verify races on concurrent use | retry loop with `DbUpdateConcurrencyException` reload, max 16 (`BackupCodeMfaService.cs:94-155`) | loser rechecks; exhausted retries → 400 |
 | 13 | Legacy SHA-256 backup-code hashes | dual verify path (`BackupCodeMfaService.cs:235-240`) | old-format hashes still verify; new codes PBKDF2 600k |
 | 14 | SMS phone not E.164 | `NormalizePhoneNumber` (`SmsMfaService.cs:225-240`) | 400 with format guidance |
 | 15 | SMS/email code requested twice within 60 s | per-user throttle (`SmsMfaService.cs:115-124`, `EmailMfaService.cs`) | 400 "code was sent recently" |
 | 16 | SMS/email OTP delivery pipeline failure | code removed from cache then rethrow (`SmsMfaService.cs:162-168`) | no orphan live code; request errors out |
 | 17 | 5 wrong SMS/email code guesses | `FailedAttempts >= 5` invalidates the code (`SmsMfaService.cs:204-212`) | code dead; must wait throttle and request new |
-| 18 | SMS/email complete with no MFA config row | `configuration is null` (`SmsMfaService.cs:69-74`) | 400 "No MFA configuration found" |
+| 18 | SMS completion with no MFA configuration | `SmsMfaService.CompleteEnrollmentAsync` creates the row only after consuming a valid enrollment-purpose proof | SMS becomes the first verified factor; unverified or failed delivery does not enroll a phone |
 | 19 | Push device token malformed (<16 or >512 chars) | shape check (`PushMfaService.cs:41-44`) | 400 invalid token |
 | 20 | Push challenge expires (120 s) before response | `RespondAsync` expiry branch (`PushMfaService.cs:141-145`) | 400 "Challenge expired"; `VerifyAsync` signals TOTP fallback (`:197-208`) |
 | 21 | Push challenge answered twice | `Status != Pending` (`PushMfaService.cs:147-151`) | 400 "Challenge was already answered" — no decision flip-flop |
@@ -232,7 +235,7 @@ flowchart TD
 | POST `v{v}/auth/mfa/backup-codes:regenerate` | `RegenerateMfaBackupCodesCommand` → `BackupCodeMfaService.GenerateBackupCodesAsync` | `Controllers/MfaController.cs:170-185` |
 | POST `v{v}/auth/mfa/sms:setup` | `StartSmsMfaEnrollmentCommand` → `SmsMfaService.StartEnrollmentAsync` | `Controllers/MfaController.cs:197-220` |
 | POST `v{v}/auth/mfa/sms:complete` | `CompleteSmsMfaEnrollmentCommand` → `SmsMfaService.CompleteEnrollmentAsync` | `Controllers/MfaController.cs:228-246` |
-| POST `v{v}/auth/mfa/sms:challenge` (anonymous) | `SendSmsMfaChallengeCommand` → `SmsMfaService.SendChallengeAsync` | `Controllers/MfaController.cs:255-276` |
+| POST `v{v}/auth/mfa/sms:challenge` (anonymous) | `SendSmsMfaChallengeCommand` → `SendSmsMfaChallengeHandler` → `SignInMfaService.SendSmsChallengeAsync` | `Controllers/MfaController.cs:255-276` |
 | POST `v{v}/auth/mfa/email:setup` | `StartEmailMfaEnrollmentCommand` → `EmailMfaService.StartEnrollmentAsync` | `Controllers/MfaController.cs:287-309` |
 | POST `v{v}/auth/mfa/email:complete` | `CompleteEmailMfaEnrollmentCommand` → `EmailMfaService.CompleteEnrollmentAsync` | `Controllers/MfaController.cs:317-335` |
 | POST `v{v}/auth/mfa/email:challenge` (anonymous) | `SendEmailMfaChallengeCommand` → `EmailMfaService.SendChallengeAsync` | `Controllers/MfaController.cs:344-365` |
@@ -266,11 +269,11 @@ Setup/complete/regenerate/register routes are `[Authorize]`; `verify`, `sms:chal
 
 ## 9. Gaps — realistic scenarios the code does not handle
 
-1. **Setup-time backup codes are never shown to the user.** `MfaService.InitiateMfaSetupAsync` generates 10 codes and stores their hashes (`Services/MfaService.cs:37-44`), but `InitiateTotpSetup` returns `BackupCodes = []` (`Controllers/MfaController.cs:76`). The plaintext exists only in the handler's memory and is discarded. A user who completes TOTP setup and never calls `backup-codes:regenerate` believes they have codes that they have never seen — and regeneration invalidates the stored set anyway.
-2. **Error contract mismatch: domain throws produce 500 where 400/401 declared.** `totp:setup` with MFA disabled or already enabled throws `InvalidOperationException` (`TotpMfaService.cs:33`, `:47`) and `backup-codes:regenerate` when not enabled (`BackupCodeMfaService.cs:41`); the middleware converts these to 500 (`SharedKernel/Middlewares/ExceptionHandlingMiddleware.cs:74-85`) although the controller declares 400 (`Controllers/MfaController.cs:58`, `:173`). No `MfaDisabledException`/typed mapping exists.
+1. **Resolved in #1195: setup-time backup-code response.** The authenticated setup response now includes the exact generated backup-code set. PostgreSQL HTTP regressions cover the response, hashed storage, TOTP confirmation and single-use code verification.
+2. **Resolved in #1195: expected configuration denials.** MFA disabled / already enabled during TOTP setup and MFA disabled / not enabled during backup-code regeneration use an internal typed denial and the existing HTTP 400 result contract. Regeneration still requires successful password re-verification. Other exceptions, permission failures and cancellation propagate; an infrastructure failure still returns HTTP 500.
 3. **SMS and email OTP state is per-node `IMemoryCache`.** Code digests and throttle stamps (`SmsMfaService.cs:135-146`) live in process memory: on multi-node deployments the code can be issued by node A and verified against node B (fail), and the 60-second resend throttle is trivially bypassed by round-robin nodes. Push challenges got `IDistributedCache` (`PushMfaService.cs:18`); SMS/email did not.
-4. **No per-user authorization on the enrollment endpoints beyond authentication.** Any authenticated session (including a stolen one) can call `totp:setup` (overwriting a pending setup), `push:register-device` (replacing the push token with the attacker's device, `PushMfaService.cs:53`), or `sms:setup` (rebinding the phone). Only `mfa:disable` re-verifies the password. Enrollment changes are not step-up-gated.
+4. **Enrollment gates vary by operation.** SMS setup, push-device registration, backup-code regeneration and MFA disable require password re-verification. TOTP setup still relies on the authenticated session and can replace a pending setup. A common passwordless step-up policy for all enrollment mutations is not implemented by this SMS change.
 5. **Passwordless (OAuth-only) accounts can never disable MFA self-service.** `DisableMfaAsync` requires a stored `PasswordHash` (`Services/MfaService.cs:119-124`); an OAuth-created account (`User.CreateOAuthUser`) has none, so once MFA is on, disable is impossible without support — there is no alternative second-factor confirmation path.
 6. **Lockout only counts the shared `FailedAttempts` counter.** TOTP, backup-code, and (partially) other factor failures all increment one counter on the same row (`MfaAttemptTrackingService.cs:312-334`); there is no per-method lockout, so SMS-code spraying also locks TOTP, and the lockout is not surfaced distinctly to the user (all failures read "Invalid MFA code"/"Account locked" with identical 400s).
-7. **`sms:challenge`, `email:challenge`, `push:challenge` are `[AllowAnonymous]` with user-id-only payloads.** Anyone knowing a user's id can trigger SMS/email codes (60 s throttle per user is the only brake, `SmsMfaService.cs:115-124`) — an SMS-bombing / enumeration vector; the responses leak whether the factor is enrolled via distinct failure messages ("SMS MFA is not enrolled for this account.", `SmsMfaService.cs:92`).
+7. **Email/push challenge authorization remains incomplete.** Their anonymous user-id-based challenge surfaces still need protection against enumeration and unsolicited delivery. SMS now requires a valid first-factor continuation and resolves the enrolled recipient server-side; raw user ids, stale continuations and a proof from another purpose cannot authorize an SMS sign-in. SMS resend state remains per-node, as described above.
 8. **Push approval has no out-of-band binding to the requesting session.** The challenge state carries only `UserId` (`PushMfaService.cs:79-85`); `RespondAsync` accepts approve/deny from anyone presenting the challenge id with no device-attestation or proof-of-possession beyond the notification itself, and a denied challenge is removable only on `VerifyAsync` (`:214`) — a pending challenge left unanswered blocks nothing but is replayable as a fallback signal indefinitely within TTL+5min cache retention.

@@ -134,12 +134,12 @@ export class ComplianceAuditFieldLevelModule {
    * Runs access-pattern analysis over the recent window and persists detected anomalies.
    */
   async postApiAuditFieldLevelAnomaliesAnalyze(
-    body: Types.ComplianceAuditAnalyzeFieldAccessPatternsInput,
+    body?: Types.ComplianceAuditAnalyzeFieldAccessPatternsInput,
   ): Promise<Result<Types.ComplianceAuditFieldAccessPatternAnalysisResult[], ApiError>> {
     const url = '/api/audit/field-level/anomalies/analyze';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditAnalyzeFieldAccessPatternsInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAnalyzeFieldAccessPatternsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -625,12 +625,12 @@ export class ComplianceAuditFieldLevelModule {
    * Runs access-pattern analysis over the recent window and persists detected anomalies.
    */
   async postAuditFieldLevelAnomaliesAnalyze(
-    body: Types.ComplianceAuditAnalyzeFieldAccessPatternsInput,
+    body?: Types.ComplianceAuditAnalyzeFieldAccessPatternsInput,
   ): Promise<Result<Types.ComplianceAuditFieldAccessPatternAnalysisResult[], ApiError>> {
     const url = '/v1/audit/field-level/anomalies/analyze';
 
     // Validate request body
-    const validatedBody = safeParse(Types.ComplianceAuditAnalyzeFieldAccessPatternsInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ComplianceAuditAnalyzeFieldAccessPatternsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

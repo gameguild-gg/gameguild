@@ -17,7 +17,6 @@ const primaryNav = [
   { label: 'Community', href: '/community' },
   { label: 'Blogs', href: '/blogs' },
   { label: 'Courses', href: '/courses' },
-  { label: 'Programs', href: '/programs' },
   { label: 'Projects', href: '/projects' },
   { label: 'Testing Lab', href: '/testing-lab' },
   { label: 'Launch Pad', href: '/launch-pad' },
@@ -29,10 +28,7 @@ const desktopPrimaryNav = [
   { label: 'Community', href: '/community' },
   {
     label: 'Learn',
-    items: [
-      { label: 'Courses', href: '/courses' },
-      { label: 'Programs', href: '/programs' },
-    ],
+    items: [{ label: 'Courses', href: '/courses' }],
   },
   { label: 'Projects', href: '/projects' },
   { label: 'Testing Lab', href: '/testing-lab' },
@@ -51,10 +47,7 @@ const socialDesktopNav = [
   { label: 'Community', href: '/community' },
   {
     label: 'Learn',
-    items: [
-      { label: 'Courses', href: '/courses' },
-      { label: 'Programs', href: '/programs' },
-    ],
+    items: [{ label: 'Courses', href: '/courses' }],
   },
   {
     label: 'Build',
@@ -78,10 +71,7 @@ const footerSections = [
     title: 'Learn',
     accentClass: 'text-primary',
     hoverClass: 'hover:text-primary',
-    links: [
-      { label: 'Courses', href: '/courses' },
-      { label: 'Programs', href: '/programs' },
-    ],
+    links: [{ label: 'Courses', href: '/courses' }],
   },
   {
     title: 'Build & test',

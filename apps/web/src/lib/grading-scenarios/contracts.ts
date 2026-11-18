@@ -1,5 +1,13 @@
 export type GradingScenarioHealth = "not-prepared" | "ready" | "unhealthy";
 
+export interface GradingScenarioReviewProviderSummary {
+  key: string;
+  policyVersion: string;
+  runtimeBackend: string | null;
+  runtimeProvider: string | null;
+  model: string | null;
+}
+
 export interface GradingScenarioTargetSummary {
   key: string;
   title: string;
@@ -8,6 +16,7 @@ export interface GradingScenarioTargetSummary {
   capability: string | null;
   validationCaseId: string | null;
   maxCheckpoint: string;
+  reviewProvider: GradingScenarioReviewProviderSummary | null;
 }
 
 export interface GradingScenarioCapabilitySummary {

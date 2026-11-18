@@ -41,12 +41,12 @@ export class ResourcesContentsVersioningModule {
    */
   async postApiContentsVersioningApprove(
     versionId: string,
-    body: Types.ResourcesContentsReviewInput,
+    body?: Types.ResourcesContentsReviewInput,
   ): Promise<Result<Types.ResourcesContentsContentVersionDto, ApiError>> {
     const url = `/api/contents/versioning/${versionId}/approve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ResourcesContentsReviewInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ResourcesContentsReviewInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -111,12 +111,12 @@ export class ResourcesContentsVersioningModule {
    */
   async postApiContentsVersioningReject(
     versionId: string,
-    body: Types.ResourcesContentsReviewInput,
+    body?: Types.ResourcesContentsReviewInput,
   ): Promise<Result<Types.ResourcesContentsContentVersionDto, ApiError>> {
     const url = `/api/contents/versioning/${versionId}/reject`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.ResourcesContentsReviewInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.ResourcesContentsReviewInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
