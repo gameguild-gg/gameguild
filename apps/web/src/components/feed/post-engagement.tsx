@@ -271,7 +271,10 @@ export function PostEngagement({
         >
           <ChevronDown className="size-3.5" />
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="flex min-w-0 gap-1 p-1.5">
+        {/* Reaction options must size to their content: the shared dropdown
+            content forces anchor-width + overflow-x-hidden, which would clip
+            the six options against the size-7 trigger (issue #1235). */}
+        <DropdownMenuContent align="start" className="flex w-auto min-w-max gap-1 overflow-visible p-1.5">
           {REACTIONS.map((entry) => (
             <DropdownMenuItem
               key={entry.value}
@@ -279,6 +282,7 @@ export function PostEngagement({
               disabled={reactionPending || reactionHydrationPending}
               className="flex size-8 justify-center p-0"
               aria-label={entry.label}
+              title={entry.label}
             >
               <entry.icon className="size-4" aria-hidden="true" />
             </DropdownMenuItem>
