@@ -20755,7 +20755,7 @@ export const postAuthMfaRecoveryRequestEndpoint = {
 /**
  * Complete a verified first factor with the account's enrolled or newly provisioned MFA method.
  *
- * Consumes the expiring first-factor challenge and verifies an enrolled TOTP, SMS or backup code. Identity, tenant, policy and token version come from the server-side challenge. A successful response contains MFA-bound credentials.
+ * Consumes the expiring first-factor challenge and verifies an enrolled TOTP, SMS, email or backup code. Identity, tenant, policy and token version come from the server-side challenge. A successful response contains MFA-bound credentials.
  */
 export interface PostAuthMfaSignInCompleteInput {
   body: Types.IdentityAuthenticationCompleteMfaSignInInput;
