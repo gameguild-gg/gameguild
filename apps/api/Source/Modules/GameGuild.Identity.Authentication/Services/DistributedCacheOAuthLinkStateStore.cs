@@ -20,7 +20,10 @@ public sealed class DistributedCacheOAuthLinkStateStore(IDistributedCache cache)
 
     private static readonly TimeSpan EvictionSlack = TimeSpan.FromMinutes(5);
 
-    public async Task SaveAsync(Guid userId, string provider, string state, CancellationToken cancellationToken = default)
+    public Task SaveAsync(Guid userId, string provider, string state)
+        => SaveAsync(userId, provider, state, default);
+
+    public async Task SaveAsync(Guid userId, string provider, string state, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrEmpty(state);
 
@@ -32,7 +35,10 @@ public sealed class DistributedCacheOAuthLinkStateStore(IDistributedCache cache)
             cancellationToken).ConfigureAwait(false);
     }
 
-    public async Task<bool> ValidateAndConsumeAsync(Guid userId, string provider, string state, CancellationToken cancellationToken = default)
+    public Task<bool> ValidateAndConsumeAsync(Guid userId, string provider, string state)
+        => ValidateAndConsumeAsync(userId, provider, state, default);
+
+    public async Task<bool> ValidateAndConsumeAsync(Guid userId, string provider, string state, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(state))
         {

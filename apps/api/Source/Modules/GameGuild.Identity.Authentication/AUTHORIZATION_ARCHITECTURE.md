@@ -2101,6 +2101,15 @@ public async Task Authorization_PerformsUnderLoad()
 
 ## Platform Authorization Hardening
 
+Expired guest credentials may identify retained data only through the dedicated continuity
+reader. That reader keeps lifetime validation enabled and requires an explicit expiry in
+the past and a coherent validity interval. A missing expiry, a future expiry, or a not-before
+time later than expiry fails closed. Signature, issuer, guest audience, HS256 algorithm and
+structural guest identity checks still apply. Ordinary guest authentication continues to
+reject expired tokens. The authenticated upgrade service separately enforces the retention
+grace and consumes the retained snapshot once; reading an expired credential grants no
+access and does not renew the session.
+
 ### Elevated-role MFA compliance grace at sign-in (hotfix login-mfa-turnstile)
 
 When a subject's MFA requirement comes only from an elevated role

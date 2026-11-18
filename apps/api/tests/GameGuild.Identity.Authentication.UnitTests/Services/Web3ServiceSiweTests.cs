@@ -322,27 +322,59 @@ public sealed class Web3ServiceSiweTests
     /// <summary>Simulates an unavailable store: writes are silently dropped, reads see nothing.</summary>
     private sealed class DropWriteDistributedCache : IDistributedCache
     {
-        public byte[]? Get(string key) => null;
+        public byte[]? Get(string key) {
+            _ = key;
+            return null;
+        }
 
-        public Task<byte[]?> GetAsync(string key, CancellationToken token = default) => Task.FromResult<byte[]?>(null);
+        public Task<byte[]?> GetAsync(string key, CancellationToken token = default) {
+            _ = key;
+            _ = token;
+            return Task.FromResult<byte[]?>(null);
+        }
 
         public void Set(string key, byte[] value, DistributedCacheEntryOptions options)
         {
+            // This deterministic fixture intentionally does not persist cache state.
+            _ = key;
+            _ = value;
+            _ = options;
+
         }
 
-        public Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default) => Task.CompletedTask;
+        public Task SetAsync(string key, byte[] value, DistributedCacheEntryOptions options, CancellationToken token = default) {
+            _ = key;
+            _ = value;
+            _ = options;
+            _ = token;
+            return Task.CompletedTask;
+        }
 
         public void Remove(string key)
         {
+            // This deterministic fixture intentionally does not persist cache state.
+            _ = key;
+
         }
 
-        public Task RemoveAsync(string key, CancellationToken token = default) => Task.CompletedTask;
+        public Task RemoveAsync(string key, CancellationToken token = default) {
+            _ = key;
+            _ = token;
+            return Task.CompletedTask;
+        }
 
         public void Refresh(string key)
         {
+            // This deterministic fixture intentionally does not persist cache state.
+            _ = key;
+
         }
 
-        public Task RefreshAsync(string key, CancellationToken token = default) => Task.CompletedTask;
+        public Task RefreshAsync(string key, CancellationToken token = default) {
+            _ = key;
+            _ = token;
+            return Task.CompletedTask;
+        }
     }
 
     private static string Sign(string message, EthECKey key)

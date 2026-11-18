@@ -99,8 +99,8 @@ public sealed class PricingEngineTests
 
         var act = () => CreateEngine().CalculateAsync(request);
 
-        // A present-but-unresolvable plan id is a missing-entity lookup (404 mapping);
-        // an absent plan id with no custom amount stays an argument/validation failure.
+        // A missing referenced plan returns the standard not-found response.
+        // An absent plan without a custom amount remains a validation failure.
         if (planIdEmpty)
         {
             await act.Should().ThrowAsync<InvalidOperationException>();
