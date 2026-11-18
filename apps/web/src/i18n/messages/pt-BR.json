@@ -234,6 +234,14 @@
       "title": "Segurança e sessões",
       "description": "Revise todas as sessões ativas, nomeie os dispositivos que você reconhece e encerre qualquer atividade suspeita.",
       "actionFailed": "A solicitação falhou. Tente novamente.",
+      "loadError": {
+        "title": "Não foi possível carregar os dados de segurança",
+        "unauthorized": "Sua sessão expirou ao carregar esta página. Entre novamente e volte aqui para revisar suas sessões e a autenticação de dois fatores.",
+        "notFound": "O serviço de segurança não está aceitando esta conta no momento. Tente novamente em instantes; suas sessões e configurações de dois fatores não foram alteradas.",
+        "serverError": "O serviço de segurança não respondeu. Tente novamente em instantes; suas sessões e configurações de dois fatores não foram alteradas.",
+        "contractError": "O serviço de segurança retornou dados que este aplicativo não conseguiu entender. Tentar novamente pode ajudar quando o serviço estiver atualizado; suas configurações não foram alteradas.",
+        "retry": "Tentar novamente"
+      },
       "analysis": {
         "title": "Análise de segurança da sessão",
         "description": "{sessions, plural, =1 {1 sessão ativa} other {# sessões ativas}} em {devices, plural, =1 {1 dispositivo} other {# dispositivos}}.",
@@ -394,7 +402,15 @@
         "dismiss": "Dispensar lembrete de dois fatores"
       },
       "errors": {
-        "saveFailed": "Não foi possível salvar suas preferências de segurança."
+        "saveFailed": "Não foi possível salvar suas preferências de segurança.",
+        "sessionExpired": "Sua sessão expirou. Entre novamente e tente de novo.",
+        "targetMissing": "Essa sessão ou dispositivo não existe mais. A lista será atualizada para o estado atual.",
+        "renameFailed": "Não foi possível renomear a sessão. Verifique o nome (1–64 caracteres) e tente novamente.",
+        "terminateFailed": "Não foi possível encerrar a sessão. Ela pode já estar fechada — atualize a página e confira a lista.",
+        "terminateOthersFailed": "Não foi possível encerrar as outras sessões. Tente novamente em instantes.",
+        "terminateAllFailed": "Não foi possível encerrar as sessões. Tente novamente em instantes.",
+        "trustFailed": "Não foi possível marcar este dispositivo como confiável. Tente novamente em instantes.",
+        "revokeFailed": "Não foi possível remover o dispositivo confiável. Ele pode já ter sido removido — atualize a página e confira a lista."
       }
     },
     "accessibility": {

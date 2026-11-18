@@ -234,6 +234,14 @@
       "title": "Security & sessions",
       "description": "Review every active session, name the devices you recognize, and terminate anything suspicious.",
       "actionFailed": "The request failed. Please try again.",
+      "loadError": {
+        "title": "Security data could not be loaded",
+        "unauthorized": "Your session expired while loading this page. Sign in again, then return here to review your sessions and multi-factor settings.",
+        "notFound": "The security service is not accepting this account right now. Retry in a moment; your sessions and multi-factor settings were not changed.",
+        "serverError": "The security service failed to respond. Retry in a moment; your sessions and multi-factor settings were not changed.",
+        "contractError": "The security service returned data this app could not understand. Retrying may help once the service is up to date; your settings were not changed.",
+        "retry": "Retry"
+      },
       "analysis": {
         "title": "Session security analysis",
         "description": "{sessions, plural, =1 {1 active session} other {# active sessions}} across {devices, plural, =1 {1 device} other {# devices}}.",
@@ -394,7 +402,15 @@
         "dismiss": "Dismiss two-factor reminder"
       },
       "errors": {
-        "saveFailed": "We could not save your security preferences."
+        "saveFailed": "We could not save your security preferences.",
+        "sessionExpired": "Your session expired. Sign in again, then retry.",
+        "targetMissing": "That session or device no longer exists. The list will refresh to its current state.",
+        "renameFailed": "The session could not be renamed. Check the name (1–64 characters) and try again.",
+        "terminateFailed": "The session could not be terminated. It may already be closed — refresh the page and check the list.",
+        "terminateOthersFailed": "Other sessions could not be terminated. Try again in a moment.",
+        "terminateAllFailed": "Sessions could not be terminated. Try again in a moment.",
+        "trustFailed": "This device could not be trusted. Try again in a moment.",
+        "revokeFailed": "The trusted device could not be removed. It may already be untrusted — refresh the page and check the list."
       }
     },
     "accessibility": {
