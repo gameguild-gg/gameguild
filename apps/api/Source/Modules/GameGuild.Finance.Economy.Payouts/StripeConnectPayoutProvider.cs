@@ -214,7 +214,7 @@ public sealed class StripeConnectPayoutProvider : IConnectPayoutProvider, IStrip
             operationId,
             MapPayoutOutcome(OptionalString(document.RootElement, "status")),
             payoutId,
-            operation.ProviderAccountId,
+            operation.ProviderAccountId!,
             operation.DestinationHash,
             Hash(raw),
             string.Empty,

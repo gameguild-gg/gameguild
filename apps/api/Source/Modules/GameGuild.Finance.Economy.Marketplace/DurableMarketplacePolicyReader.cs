@@ -110,7 +110,7 @@ public sealed class PostgreSqlDurableMarketplacePolicyReader : IDurableMarketpla
             row.PlatformFeePpm!.Value,
             row.EffectiveAt);
         return new DurableMarketplacePolicySnapshot(
-            row.TenantId, policy, row.PlatformFeeWalletId.Value,
+            row.TenantId, policy, row.PlatformFeeWalletId!.Value,
             TimeSpan.FromTicks(row.RefundHoldTicks!.Value),
             row.PayloadHash, row.KeyId, row.Signature);
     }

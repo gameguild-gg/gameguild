@@ -138,7 +138,8 @@ public sealed class PostgreSqlEconomyCapabilityControlPlaneStoreTests
             receipt.KillSwitchEpoch,
             Now.AddSeconds(1),
             CancellationToken.None);
-        (await context.Set<EconomyCapabilityReceiptConsumptionRow>().CountAsync()).Should().Be(1);
+        (await context.Set<EconomyUnitConsumptionRow>()
+            .CountAsync(row => row.ConsumptionKind == EconomyUnitConsumptionKind.CapabilityReceipt)).Should().Be(1);
 
         await FluentActions.Awaiting(() => store.ConsumeAsync(
                 receipt.Id,

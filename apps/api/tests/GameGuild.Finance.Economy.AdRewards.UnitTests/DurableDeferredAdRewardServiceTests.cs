@@ -3,6 +3,7 @@ using GameGuild.Finance.Economy.AdRewards.Persistence;
 using GameGuild.Finance.Economy.Contracts;
 using GameGuild.Finance.Economy.Funding;
 using GameGuild.Finance.Economy.Ledger;
+using GameGuild.Finance.Economy.Persistence;
 using GameGuild.Finance.Economy.Risk;
 using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.EntityFrameworkCore;
@@ -33,8 +34,10 @@ public sealed class DurableDeferredAdRewardServiceTests
         issuance.Requests.Should().ContainSingle();
         issuance.Requests[0].ProviderEventReference.Should()
             .Be($"report-a:1:{fixture.Session.Id:N}");
-        (await fixture.Context.Set<AdRewardCapConsumptionRow>().CountAsync()).Should().Be(6);
-        (await fixture.Context.Set<AdRewardBudgetConsumptionRow>().CountAsync()).Should().Be(1);
+        (await fixture.Context.Set<EconomyUnitConsumptionRow>()
+            .CountAsync(row => row.ConsumptionKind == EconomyUnitConsumptionKind.AdRewardCap)).Should().Be(6);
+        (await fixture.Context.Set<EconomyUnitConsumptionRow>()
+            .CountAsync(row => row.ConsumptionKind == EconomyUnitConsumptionKind.AdRewardBudget)).Should().Be(1);
         (await fixture.Context.Set<AdRewardAttributionRow>().SingleAsync()).ProviderBatchId.Should().Be("batch-a");
         var pending = await fixture.Context.Set<AdRewardPendingClaimRow>().SingleAsync();
         pending.ConfirmationIdempotencyKeyHash.Should().NotBeNull();
@@ -276,10 +279,11 @@ public sealed class DurableDeferredAdRewardServiceTests
         IssuedAt = Now.AddMinutes(-2), ExpiresAt = Now.AddMinutes(3), UpdatedAt = Now, Version = 1
     };
 
-    private static AdRewardCapConsumptionRow Consumption(
+    private static EconomyUnitConsumptionRow Consumption(
         Guid tenantId, Guid sessionId, AdRewardCapScope scope, string subject, long units) => new()
     {
-        Id = Guid.NewGuid(), TenantId = tenantId, SessionId = sessionId, Scope = scope,
+        Id = Guid.NewGuid(), ConsumptionKind = EconomyUnitConsumptionKind.AdRewardCap,
+        TenantId = tenantId, SessionId = sessionId, Scope = (int)scope,
         SubjectHash = subject, WindowStartedAt = Now.AddHours(-1), WindowEndsAt = Now.AddHours(1),
         SoftUnits = units, LossBudgetUsdNanos = 0, ConsumedAt = Now.AddMinutes(-1)
     };
