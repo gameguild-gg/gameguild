@@ -156,7 +156,7 @@ AIReview.
 | --- | --- | --- | --- |
 | 1 | [`01`](./01-domain-contracts-and-typescript-adapter.md) | dominio coding e adapter TypeScript | contratos e testes de conformidade fechados |
 | 2 | [`02`](./02-backend-code-adapter-boundary.md) | modulo backend separado e core sem code | build, testes e arquitetura backend verdes |
-| 3 | [`03`](./03-coding-surface-and-web-integration.md) | coding-surface paralela e composicao web de grading | autoria, learner e grader de grading usando a nova superficie; emception-ui preservado |
+| 3 | [`03`](./03-coding-surface-and-web-integration.md) | coding-surface paralela e composicao web de grading, executada em quatro subplanos | quatro gates internos concluidos; autoria, learner e grader de grading usando a nova superficie; emception-ui preservado |
 | 4 | [`04`](./04-end-to-end-validation-and-cutover.md) | E2E, auditoria de capabilities e cutover | fluxo oficial e negativos de acesso aprovados |
 | 5 | [`05`](./05-emception-capability-and-language-review.md) | orquestracao da expansao aditiva de linguagens | baseline comum aprovada e decisao independente por linguagem |
 | 6 | [`06`](./06-code-studio-discovery-and-refoundation.md) | descoberta e eventual refundacao do Code Studio | decisao explicita de produto e arquitetura |
@@ -164,6 +164,13 @@ AIReview.
 Nao se inicia a fase 2 enquanto a fase 1 estiver apenas parcialmente definida.
 As fases 5 e 6 nao bloqueiam o fluxo inicial de coding assessment nas linguagens
 ja suportadas. Elas nao autorizam por si mesmas mudancas no Emception.
+
+A parte 3 possui sequencia interna obrigatoria: caracterizacao e decisoes,
+fundacao do package, perfis e personas, e por fim integracao web com CI. O
+estado, as decisoes, o mapa de consumidores e os gaps de capability ficam em
+[`03-coding-surface/`](./03-coding-surface/). Esses arquivos devem ser
+atualizados em cada checkpoint para que a execucao nao dependa da memoria de
+uma conversa ou de uma IA. Concluir apenas um subplano nao libera a parte 4.
 
 A parte 5 e executada por subplanos. O baseline comum precede todos; JavaScript
 precede TypeScript; Ruby, SQL e C# podem avancar independentemente depois da

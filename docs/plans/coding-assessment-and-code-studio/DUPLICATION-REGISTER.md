@@ -101,7 +101,9 @@ Emception, `@game-guild/emception-ui` ou suas APIs existentes.
 
 ## Copias previstas para a nova implementacao
 
-Os targets sao indicativos ate `CODE-UI-01`. A implementacao deve substituir o
+Os targets sao indicativos ate
+[`CODE-UI-01`](./03-coding-surface/01-characterization-and-decision-baseline.md).
+A implementacao deve substituir o
 target pelo path real, registrar o commit exato de origem e descrever o delta.
 
 | ID | Estado | Origem preservada | Target previsto | Parte copiada | Divergencia esperada |

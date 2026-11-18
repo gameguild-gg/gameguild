@@ -12,7 +12,8 @@ Pre-requisitos:
 
 - [`01`](./01-domain-contracts-and-typescript-adapter.md) concluido;
 - [`02`](./02-backend-code-adapter-boundary.md) concluido;
-- [`03`](./03-coding-surface-and-web-integration.md) concluido.
+- [`03`](./03-coding-surface-and-web-integration.md) concluido, incluindo os
+  quatro subplanos registrados em `03-coding-surface/` e seu estado persistente.
 
 ## Principios
 
