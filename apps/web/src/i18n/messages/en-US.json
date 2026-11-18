@@ -8,6 +8,13 @@
     "generic": "Something went wrong during sign-in. Please try again.",
     "backToSignIn": "Back to sign in"
   },
+  "feedTabs": {
+    "ariaLabel": "Social feed",
+    "recent": "Recent",
+    "following": "Following",
+    "community": "Community",
+    "saved": "Saved"
+  },
   "signIn": {
     "continueWithDiscord": "Continue with Discord",
     "passwordless": "Sign in without a password",
