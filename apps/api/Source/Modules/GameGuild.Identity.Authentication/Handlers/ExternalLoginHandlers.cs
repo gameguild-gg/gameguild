@@ -79,6 +79,7 @@ public sealed class LinkGoogleAccountCommandHandler(
 
 public sealed class DiscordLinkAuthorizeCommandHandler(
     IOAuthService oAuthService,
+    IOAuthLinkStateStore linkStateStore,
     ILogger<DiscordLinkAuthorizeCommandHandler> logger
 ) : ICommandHandler<DiscordLinkAuthorizeCommand, DiscordLinkAuthorizeResponse>
 {
@@ -93,18 +94,31 @@ public sealed class DiscordLinkAuthorizeCommandHandler(
             state
         ).ConfigureAwait(false);
 
+        // Issue #1181: record the issued state server-side so the callback can round-trip
+        // validate it — CSRF protection no longer rests solely on the calling client.
+        await linkStateStore.SaveAsync(request.UserId, "discord", state, cancellationToken).ConfigureAwait(false);
+
         return new DiscordLinkAuthorizeResponse { AuthUrl = authUrl, State = state };
     }
 }
 
 public sealed class LinkDiscordAccountCommandHandler(
     IOAuthService oAuthService,
+    IOAuthLinkStateStore linkStateStore,
     IExternalLoginRepository externalLoginRepository,
     ILogger<LinkDiscordAccountCommandHandler> logger
 ) : ICommandHandler<LinkDiscordAccountCommand>
 {
     public async Task<Unit> Handle(LinkDiscordAccountCommand request, CancellationToken cancellationToken)
     {
+        // Issue #1181: server-side round-trip validation of the echoed state — the callback
+        // must present the exact state this server issued to this user, and it is consumed
+        // on use. A direct API caller can no longer skip the authorize step.
+        if (!await linkStateStore.ValidateAndConsumeAsync(request.UserId, "discord", request.State, cancellationToken).ConfigureAwait(false))
+        {
+            throw new InvalidOAuthLinkStateException("Invalid or expired OAuth link state. Restart the link flow and try again.");
+        }
+
         OAuthUserProfile profile;
         try
         {
@@ -126,6 +140,84 @@ public sealed class LinkDiscordAccountCommandHandler(
     }
 }
 
+/// <summary>
+///     Provider-parameterized link flow (issue #1181): GitHub and Microsoft had no link
+///     endpoints — those links could only appear implicitly via the sign-in auto-link policy.
+///     Same authorize/callback shape as Discord (URL + server-recorded state), generalized
+///     over the providers that only expose the authorization-code flow.
+/// </summary>
+public sealed class ExternalLoginLinkAuthorizeCommandHandler(
+    IOAuthService oAuthService,
+    IOAuthLinkStateStore linkStateStore,
+    ILogger<ExternalLoginLinkAuthorizeCommandHandler> logger
+) : ICommandHandler<ExternalLoginLinkAuthorizeCommand, ExternalLoginLinkAuthorizeResponse>
+{
+    private static readonly HashSet<string> SupportedProviders = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "github",
+        "microsoft"
+    };
+
+    public async Task<ExternalLoginLinkAuthorizeResponse> Handle(ExternalLoginLinkAuthorizeCommand request, CancellationToken cancellationToken)
+    {
+        var provider = NormalizeProvider(request.Provider);
+
+        logger.LogInformation("Initiating {Provider} OAuth link flow with redirect to {RedirectUri}", provider, request.RedirectUri);
+
+        var state = Guid.NewGuid().ToString("N");
+        var authUrl = await oAuthService.GetAuthorizationUrlAsync(provider, request.RedirectUri, state).ConfigureAwait(false);
+
+        await linkStateStore.SaveAsync(request.UserId, provider, state, cancellationToken).ConfigureAwait(false);
+
+        return new ExternalLoginLinkAuthorizeResponse { AuthUrl = authUrl, State = state };
+    }
+
+    internal static string NormalizeProvider(string provider)
+    {
+        if (!SupportedProviders.Contains(provider))
+        {
+            throw new NotSupportedException($"Provider not supported for account linking: {provider}");
+        }
+
+        return provider.ToLowerInvariant();
+    }
+}
+
+public sealed class ExternalLoginLinkCallbackCommandHandler(
+    IOAuthService oAuthService,
+    IOAuthLinkStateStore linkStateStore,
+    IExternalLoginRepository externalLoginRepository,
+    ILogger<ExternalLoginLinkCallbackCommandHandler> logger
+) : ICommandHandler<ExternalLoginLinkCallbackCommand>
+{
+    public async Task<Unit> Handle(ExternalLoginLinkCallbackCommand request, CancellationToken cancellationToken)
+    {
+        var provider = ExternalLoginLinkAuthorizeCommandHandler.NormalizeProvider(request.Provider);
+
+        // Issue #1181: the echoed state must match the server-issued record, one-shot.
+        if (!await linkStateStore.ValidateAndConsumeAsync(request.UserId, provider, request.State, cancellationToken).ConfigureAwait(false))
+        {
+            throw new InvalidOAuthLinkStateException("Invalid or expired OAuth link state. Restart the link flow and try again.");
+        }
+
+        OAuthUserProfile profile;
+        try
+        {
+            profile = await oAuthService.HandleCallbackAsync(provider, request.Code, request.State, request.RedirectUri).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (OAuthProviderUnavailableException.IsProviderUnavailability(exception, cancellationToken))
+        {
+            throw new OAuthProviderUnavailableException(provider, exception);
+        }
+
+        var grantedScopes = oAuthService.ResolveAuthorizationScopes(provider);
+
+        await ExternalLoginLinking.LinkAsync(externalLoginRepository, provider, profile.ProviderId, request.UserId, grantedScopes, logger, cancellationToken).ConfigureAwait(false);
+
+        return Unit.Value;
+    }
+}
+
 public sealed class UnlinkExternalLoginCommandHandler(
     IExternalLoginRepository externalLoginRepository,
     IUserRepository userRepository
@@ -135,7 +227,12 @@ public sealed class UnlinkExternalLoginCommandHandler(
     {
         var logins = await externalLoginRepository.GetByUserIdAsync(request.UserId, cancellationToken).ConfigureAwait(false);
 
-        if (logins.All(l => l.Provider != request.Provider))
+        // Issue #1181: match the provider case-insensitively (the scope-revocation handler
+        // already did) — an ordinal compare made DELETE .../GOOGLE 404 for a stored `google`
+        // row while scopes:revoke on the same casing succeeded, leaving the link undeletable.
+        var link = logins.FirstOrDefault(l => l.Provider.Equals(request.Provider, StringComparison.OrdinalIgnoreCase));
+
+        if (link is null)
         {
             throw new ExternalLoginNotFoundException($"No {request.Provider} login linked to this account");
         }
@@ -147,7 +244,8 @@ public sealed class UnlinkExternalLoginCommandHandler(
             throw new LastSignInMethodException("Cannot remove the last sign-in method");
         }
 
-        await externalLoginRepository.DeleteAsync(request.Provider, request.UserId, cancellationToken).ConfigureAwait(false);
+        // Delete by the stored row's canonical provider casing so the delete always hits.
+        await externalLoginRepository.DeleteAsync(link.Provider, request.UserId, cancellationToken).ConfigureAwait(false);
 
         return Unit.Value;
     }

@@ -920,7 +920,6 @@ public sealed class AuthorizationCoverageCompletionTests
             typeof(SoDController),
 #pragma warning disable CS0618 // Coverage helper instantiates deprecated header-stub middlewares (issue #1203)
             typeof(AccessReviewMiddleware),
-            typeof(AbacPolicyMiddleware),
             typeof(PermissionCachingMiddleware)
 #pragma warning restore CS0618
         };

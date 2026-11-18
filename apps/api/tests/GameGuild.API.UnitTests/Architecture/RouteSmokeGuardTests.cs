@@ -168,6 +168,13 @@ public sealed class RouteSmokeGuardTests(RouteSmokeHostFixture host)
             // 503 here is availability reporting, not a wiring gap.
             ("/health", "readiness probes report 503 by design"),
             ("/api/health", "readiness probes report 503 by design"),
+
+            // External identity providers (SAML/OIDC) are absent from the smoke host by
+            // design: metadata, sign-in, logout and end-session URLs answer 503
+            // (provider-not-configured availability reporting), the same designed
+            // degradation class as the readiness probes above.
+            ("/v1/auth/saml/", "external SAML IdP absent in the smoke host — 503 by design"),
+            ("/v1/auth/oidc/", "external OIDC IdP absent in the smoke host — 503 by design"),
         ];
 
         public static bool IsMatch(string method, string path)

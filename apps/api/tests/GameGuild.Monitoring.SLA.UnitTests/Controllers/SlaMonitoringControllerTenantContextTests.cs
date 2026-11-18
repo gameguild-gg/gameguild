@@ -63,7 +63,7 @@ public class SlaMonitoringControllerTenantContextTests
         var tenantId = Guid.NewGuid();
         var controller = CreateController(sender, tenantId);
         var violationId = Guid.NewGuid();
-        var command = new ConcreteResolveSloViolationCommand(violationId, Guid.Empty, "done");
+        var command = new ResolveSloViolationCommand(violationId, Guid.Empty, "done");
         sender.Setup(s => s.Send(It.Is<ResolveSloViolationCommand>(value => value.TenantId == tenantId), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Unit.Value);
 
@@ -98,7 +98,4 @@ public class SlaMonitoringControllerTenantContextTests
 
         return new SlaMonitoringController(sender.Object, actorContextAccessor.Object);
     }
-
-    private sealed record ConcreteResolveSloViolationCommand(Guid ViolationId, Guid TenantId, string? ResolutionNotes = null)
-        : ResolveSloViolationCommand(ViolationId, TenantId, ResolutionNotes);
 }

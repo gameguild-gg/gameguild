@@ -328,36 +328,15 @@ public class EmailVerificationService(
     {
         try
         {
-            // Cache identity needs a distinct key per address; log redaction deliberately emits a constant marker.
-            // Normalize before hashing so case variants of the same address share one rate-limit bucket,
-            // and use the complete digest to avoid truncation collisions and keep raw emails out of cache keys.
-            var emailDigest = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(email.Trim().ToLowerInvariant())));
-            var rateLimitKey = RateLimitKeyPrefix + $"{userId}:{emailDigest}";
-
-            var lastSentRaw = await cache.GetStringAsync(rateLimitKey, CancellationToken.None).ConfigureAwait(false);
-            if (DateTime.TryParse(lastSentRaw, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var lastSent))
+            if (!await CanResendVerificationEmailAsync(userId, email).ConfigureAwait(false))
             {
-                var timeSinceLastSent = SystemClock.UtcNow - lastSent;
-
-                if (timeSinceLastSent < ResendRateLimitWindow)
-                {
-                    logger.LogWarning(
-                        "Rate limit exceeded for resending verification email to user {UserId}. Last sent {Seconds} seconds ago",
-                        LogRedaction.RedactId(userId, "uid"),
-                        timeSinceLastSent.TotalSeconds);
-
-                    return false;
-                }
+                return false;
             }
 
             var token = await GenerateVerificationTokenAsync(userId, email).ConfigureAwait(false);
             await SendVerificationEmailAsync(email, token).ConfigureAwait(false);
 
-            await cache.SetStringAsync(
-                rateLimitKey,
-                SystemClock.UtcNow.ToString("O", CultureInfo.InvariantCulture),
-                new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = ResendRateLimitWindow },
-                CancellationToken.None).ConfigureAwait(false);
+            await MarkVerificationEmailSentAsync(userId, email).ConfigureAwait(false);
 
             logger.LogInformation("Resent verification email to user {UserId}", LogRedaction.RedactId(userId, "uid"));
             return true;
@@ -368,6 +347,67 @@ public class EmailVerificationService(
                 LogRedaction.RedactId(userId, "uid"), ex.GetType().FullName);
             return false;
         }
+    }
+
+    /// <summary>
+    ///     Shared cooldown gate for every verification-email dispatch path (issue #1197): the
+    ///     two-minute per-(user, address) window is keyed identically here and in
+    ///     <see cref="ResendVerificationEmailAsync"/>, so the command handler and the resend
+    ///     method enforce one and the same brake. Cooldown-store failures propagate to the
+    ///     caller, which decides whether the throttle is a hard dependency (the resend method:
+    ///     fail closed) or a best-effort brake (the dispatch handler: fail open).
+    /// </summary>
+    public async Task<bool> CanResendVerificationEmailAsync(Guid userId, string email)
+    {
+        var lastSentRaw = await cache.GetStringAsync(RateLimitKey(userId, email), CancellationToken.None).ConfigureAwait(false);
+        if (DateTime.TryParse(lastSentRaw, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind, out var lastSent))
+        {
+            var timeSinceLastSent = SystemClock.UtcNow - lastSent;
+
+            if (timeSinceLastSent < ResendRateLimitWindow)
+            {
+                logger.LogWarning(
+                    "Rate limit exceeded for resending verification email to user {UserId}. Last sent {Seconds} seconds ago",
+                    LogRedaction.RedactId(userId, "uid"),
+                    timeSinceLastSent.TotalSeconds);
+
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    ///     Stamps the shared cooldown key after a successful verification-email delivery (issue #1197).
+    ///     Best-effort: a cache write failure is logged and never fails the surrounding delivery path.
+    /// </summary>
+    public async Task MarkVerificationEmailSentAsync(Guid userId, string email)
+    {
+        try
+        {
+            await cache.SetStringAsync(
+                RateLimitKey(userId, email),
+                SystemClock.UtcNow.ToString("O", CultureInfo.InvariantCulture),
+                new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = ResendRateLimitWindow },
+                CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError("Could not stamp the verification-email cooldown for user {UserId}: {ErrorType}",
+                LogRedaction.RedactId(userId, "uid"), ex.GetType().FullName);
+        }
+    }
+
+    /// <summary>
+    ///     Cache identity needs a distinct key per address; log redaction deliberately emits a constant marker.
+    ///     Normalize before hashing so case variants of the same address share one rate-limit bucket,
+    ///     and use the complete digest to avoid truncation collisions and keep raw emails out of cache keys.
+    /// </summary>
+    private static string RateLimitKey(Guid userId, string email)
+    {
+        var emailDigest = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(email.Trim().ToLowerInvariant())));
+        return RateLimitKeyPrefix + $"{userId}:{emailDigest}";
     }
 
     public async Task<bool> IsTokenValidAsync(string token)

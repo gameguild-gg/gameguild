@@ -25,6 +25,12 @@ const mocks = vi.hoisted(() => ({
 
 import { WebVitalsReporter } from './web-vitals-reporter';
 
+// gtag.js queue entries are arguments objects (array-like), not arrays.
+const isArgs = (e: unknown): e is ArrayLike<unknown> => typeof e === 'object' && e !== null && 'length' in e && 'callee' in e;
+
+const cmd = (e: unknown) => (isArgs(e) ? Array.from(e) : e);
+
+
 type AnalyticsWindow = Window & {
   dataLayer?: unknown[];
   gtag?: (...args: unknown[]) => void;
@@ -34,14 +40,14 @@ function w(): AnalyticsWindow {
   return window as AnalyticsWindow;
 }
 
-function events(name: string): Array<Record<string, unknown>> {
-  return (w().dataLayer ?? []).filter(
-    (e): e is Record<string, unknown> => Array.isArray(e) && e[0] === 'event' && e[1] === name,
-  );
+function events(name: string): Array<unknown[]> {
+  return (w().dataLayer ?? [])
+    .filter((e) => isArgs(e) && e[0] === 'event' && e[1] === name)
+    .map(cmd);
 }
 
-function allEvents(): Array<Record<string, unknown>> {
-  return (w().dataLayer ?? []).filter((e): e is Record<string, unknown> => Array.isArray(e) && e[0] === 'event');
+function allEvents(): Array<unknown[]> {
+  return (w().dataLayer ?? []).filter((e) => isArgs(e) && e[0] === 'event').map(cmd);
 }
 
 function fakeMetric(overrides: Record<string, unknown> = {}): unknown {

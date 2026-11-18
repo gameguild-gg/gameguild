@@ -168,7 +168,7 @@ public class SlaMonitoringControllerTests
     [Fact]
     public async Task ResolveViolation_IdMismatch_ShouldReturnBadRequest()
     {
-        var command = new TestResolveSloViolationCommand(Guid.NewGuid(), _tenantId, "note");
+        var command = new ResolveSloViolationCommand(Guid.NewGuid(), _tenantId, "note");
 
         var result = await _sut.ResolveViolation(Guid.NewGuid(), command, CancellationToken.None);
 
@@ -179,7 +179,7 @@ public class SlaMonitoringControllerTests
     public async Task ResolveViolation_ShouldReturnNoContent()
     {
         var id = Guid.NewGuid();
-        var command = new TestResolveSloViolationCommand(id, _tenantId, "resolved");
+        var command = new ResolveSloViolationCommand(id, _tenantId, "resolved");
 
         _sender.Setup(sender => sender.Send(It.IsAny<ResolveSloViolationCommand>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Unit.Value);
@@ -188,7 +188,4 @@ public class SlaMonitoringControllerTests
 
         result.Should().BeOfType<NoContentResult>();
     }
-
-    private sealed record TestResolveSloViolationCommand(Guid ViolationId, Guid TenantId, string? ResolutionNotes = null)
-        : ResolveSloViolationCommand(ViolationId, TenantId, ResolutionNotes);
 }

@@ -34,7 +34,7 @@ public sealed class ListPermissionTemplatesQueryHandler(
         // Read surface is admin-shaped: templates enumerate grantable permission sets.
         if (!Actor.IsAuthenticated || (!Actor.IsSystemAdmin && !Actor.IsTenantAdmin))
         {
-            throw new UnauthorizedAccessException(
+            throw new AccessDeniedException(
                 "Listing permission templates requires tenant administration or system administration");
         }
 
@@ -106,7 +106,7 @@ public sealed class GetPermissionTemplateVersionsQueryHandler(
     {
         if (!Actor.IsAuthenticated || (!Actor.IsSystemAdmin && !Actor.IsTenantAdmin))
         {
-            throw new UnauthorizedAccessException(
+            throw new AccessDeniedException(
                 "Reading permission template versions requires tenant administration or system administration");
         }
 
@@ -201,7 +201,7 @@ public sealed class GetPermissionTemplateMigrationQueryHandler(
     {
         if (!Actor.IsAuthenticated || !Actor.IsSystemAdmin)
         {
-            throw new UnauthorizedAccessException(
+            throw new AccessDeniedException(
                 "Reading permission template migrations requires system administrator privileges");
         }
 
@@ -210,7 +210,7 @@ public sealed class GetPermissionTemplateMigrationQueryHandler(
             .FirstOrDefaultAsync(m => m.Id == request.MigrationId, cancellationToken).ConfigureAwait(false);
         if (migration is null)
         {
-            throw new InvalidOperationException($"Template migration {request.MigrationId} not found");
+            throw new EntityNotFoundException("PermissionTemplateMigration", request.MigrationId);
         }
 
         var templateName = await dbContext.Set<PermissionTemplate>()

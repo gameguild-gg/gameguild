@@ -1,8 +1,8 @@
 # 03 — Legal Structure & Jurisdiction
 
-> Status: RESEARCH COMPLETE (2026-11-02), REVISED same day — DAO/token mechanics dropped. Wrapper choice below still valid but scope reduced: no token issuance, so VASP/securities-token concerns largely fall away. Cayman becomes **optional/deferred**.
+> Status: RESEARCH COMPLETE (2026-11-02). Recommendation: Delaware DevCo-led structure; offshore layer deferred.
 
-## Simplified structure (no-token version)
+## Simplified structure
 
 ```
 Delaware DevCo (C-Corp)   ← everything: ops, equity, investor SAFEs, treasury, USDC payouts
@@ -39,7 +39,7 @@ A single Delaware C-Corp covers the whole plan: equity-weighted governance by co
 | Matheus | TBD (possibly BR) | if BR: Lei 14.754 accrual tax 15% on pro-rata offshore profits + CBE |
 | Joel | TBD (possibly BR) | same as above |
 
-**Structural consequence — Tolsta holds NO direct stake in any foreign entity.** Economics via Delaware DevCo (equity + comp) and governance tokens (securities-checked). This eliminates Tolsta's 5471 burden and ETBUS footprint. BR-resident holders: same logic — services income via BR entity or DevCo-equity rather than direct offshore profit claims.
+**Structural consequence — Tolsta holds NO direct stake in any foreign entity.** Economics via Delaware DevCo (equity + comp). This eliminates Tolsta's 5471 burden and ETBUS footprint. BR-resident holders: same logic — services income via BR entity or DevCo-equity rather than direct offshore profit claims.
 
 ## Recommendation
 
@@ -84,7 +84,7 @@ Cayman caveats: Economic Substance rules (if fund-management/IP/HQ activities �
 - US founder taxed on worldwide income regardless of wrapper — same trap, both directions.
 - RMI LLC / BVI can check-the-box (Form 8832): single-owner → disregarded, multi-member → partnership (K-1s).
 - ETBUS triggers to keep OUT of the foundation: US-based managers doing core revenue work, regular/continuous US services, US office. → Cayman council majority non-US; US founder works via DevCo.
-- Governance token with profit rights = securities risk category (Howey) — counsel before issuance; include "no expectation of profit from others' efforts" analysis in whitepaper.
+- Governance-token profit rights = securities risk category (Howey) — irrelevant to current structure; only if a token layer is ever added.
 - Crypto dividends to US founder = ordinary income at FMV on receipt.
 - Compliance: Form 5471 / 8938 / FBAR — $10k+ penalties for missing. Non-negotiable budget line.
 

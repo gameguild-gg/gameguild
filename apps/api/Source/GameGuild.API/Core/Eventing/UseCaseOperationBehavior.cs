@@ -13,6 +13,7 @@ internal sealed class UseCaseOperationBehavior<TRequest, TResponse>(
     IUseCaseOperationContextAccessor operationContextAccessor,
     IUseCaseEventContractRegistry? eventContractRegistry = null,
     IUseCaseEventVerifier? eventVerifier = null,
+    GameGuild.Identity.Authentication.ITokenRevocationPostCommitCoordinator? tokenRevocationPostCommit = null,
     ILogger<UseCaseOperationBehavior<TRequest, TResponse>>? logger = null)
     : IPipelineBehavior<TRequest, TResponse>
     where TRequest : IRequestBase
@@ -74,6 +75,9 @@ internal sealed class UseCaseOperationBehavior<TRequest, TResponse>(
                 if (CommandOutcome.ShouldRollback(response))
                 {
                     await transaction.RollbackAsync(CancellationToken.None).ConfigureAwait(false);
+                    // Issue #1179: cache deny-list writes deferred during the handler die with
+                    // the rollback — the database state they accompany never happened.
+                    tokenRevocationPostCommit?.DiscardPending();
                     context.DiscardPendingPermissionAuditChanges();
                     context.ChangeTracker.Clear();
                     operationContext.ResetForRetry();
@@ -87,6 +91,13 @@ internal sealed class UseCaseOperationBehavior<TRequest, TResponse>(
                 }
 
                 await transaction.CommitAsync(cancellationToken).ConfigureAwait(false);
+                // Issue #1179: only now are deferred session access-token deny-list writes
+                // durable alongside the committed terminations.
+                if (tokenRevocationPostCommit is not null)
+                {
+                    await tokenRevocationPostCommit.FlushCommittedAsync(cancellationToken).ConfigureAwait(false);
+                }
+
                 await context.FlushPendingPermissionAuditChangesAsync(cancellationToken).ConfigureAwait(false);
                 return response;
             }
@@ -105,6 +116,7 @@ internal sealed class UseCaseOperationBehavior<TRequest, TResponse>(
                 }
                 finally
                 {
+                    tokenRevocationPostCommit?.DiscardPending();
                     context.DiscardPendingPermissionAuditChanges();
                     context.ChangeTracker.Clear();
                     operationContext.ResetForRetry();

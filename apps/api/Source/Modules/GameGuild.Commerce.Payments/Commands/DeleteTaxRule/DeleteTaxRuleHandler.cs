@@ -13,7 +13,7 @@ public sealed class DeleteTaxRuleHandler(IApplicationDbContext context) : IComma
         var rule = await context.Set<TaxRule>()
             .Include(item => item.DefaultTaxRate)
             .FirstOrDefaultAsync(item => item.Id == request.RuleId, cancellationToken)
-            ?? throw new InvalidOperationException($"Tax rule '{request.RuleId}' not found.");
+            ?? throw new EntityNotFoundException("TaxRule", request.RuleId);
 
         rule.IsActive = false;
         rule.Touch();

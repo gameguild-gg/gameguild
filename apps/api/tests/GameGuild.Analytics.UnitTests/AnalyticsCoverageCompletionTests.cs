@@ -79,11 +79,11 @@ public sealed class AnalyticsCoverageCompletionTests
                 new DashboardWidget { Id = Guid.NewGuid(), Title = "Visible", SortOrder = 1, Type = WidgetType.Gauge }
             }
         };
-        repository.Setup(current => current.GetByIdAsync(dashboard.Id, It.IsAny<CancellationToken>())).ReturnsAsync(dashboard);
-        repository.Setup(current => current.GetByIdAsync(Guid.Empty, It.IsAny<CancellationToken>())).ReturnsAsync((Dashboard?)null);
+        repository.Setup(current => current.GetByIdForTenantAsync(dashboard.Id, It.IsAny<Guid?>(), It.IsAny<CancellationToken>())).ReturnsAsync(dashboard);
+        repository.Setup(current => current.GetByIdForTenantAsync(Guid.Empty, It.IsAny<Guid?>(), It.IsAny<CancellationToken>())).ReturnsAsync((Dashboard?)null);
         repository.Setup(current => current.GetBySlugAsync("current", It.IsAny<CancellationToken>())).ReturnsAsync(dashboard);
         repository.Setup(current => current.GetBySlugAsync("conflict", It.IsAny<CancellationToken>())).ReturnsAsync(existing);
-        var update = new UpdateDashboardCommandHandler(repository.Object);
+        var update = new UpdateDashboardCommandHandler(repository.Object, DashboardCommandsTests.ActorAccessor(null).Object);
 
         (await update.Handle(new UpdateDashboardCommand(Guid.Empty, new UpdateDashboardRequest("Title", "current")), CancellationToken.None))
             .Should().BeNull();
@@ -107,12 +107,13 @@ public sealed class AnalyticsCoverageCompletionTests
         };
         var repository = new Mock<IDashboardRepository>();
         repository.Setup(current => current.GetAllAsync(tenantId, It.IsAny<CancellationToken>())).ReturnsAsync(dashboards);
-        repository.Setup(current => current.GetByIdAsync(dashboards[0].Id, It.IsAny<CancellationToken>())).ReturnsAsync(dashboards[0]);
-        repository.Setup(current => current.GetByIdAsync(Guid.Empty, It.IsAny<CancellationToken>())).ReturnsAsync((Dashboard?)null);
+        repository.Setup(current => current.GetByIdForTenantAsync(dashboards[0].Id, tenantId, It.IsAny<CancellationToken>())).ReturnsAsync(dashboards[0]);
+        repository.Setup(current => current.GetByIdForTenantAsync(Guid.Empty, tenantId, It.IsAny<CancellationToken>())).ReturnsAsync((Dashboard?)null);
+        var actors = DashboardCommandsTests.ActorAccessor(tenantId);
 
-        var all = await new GetDashboardsQueryHandler(repository.Object).Handle(new GetDashboardsQuery(tenantId), CancellationToken.None);
-        var one = await new GetDashboardByIdQueryHandler(repository.Object).Handle(new GetDashboardByIdQuery(dashboards[0].Id), CancellationToken.None);
-        var missing = await new GetDashboardByIdQueryHandler(repository.Object).Handle(new GetDashboardByIdQuery(Guid.Empty), CancellationToken.None);
+        var all = await new GetDashboardsQueryHandler(repository.Object, actors.Object).Handle(new GetDashboardsQuery(tenantId), CancellationToken.None);
+        var one = await new GetDashboardByIdQueryHandler(repository.Object, actors.Object).Handle(new GetDashboardByIdQuery(dashboards[0].Id), CancellationToken.None);
+        var missing = await new GetDashboardByIdQueryHandler(repository.Object, actors.Object).Handle(new GetDashboardByIdQuery(Guid.Empty), CancellationToken.None);
 
         all.Select(current => current.Title).Should().Equal("A", "B");
         one.Should().NotBeNull();

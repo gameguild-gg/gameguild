@@ -15,6 +15,13 @@ vi.mock('next/script', () => ({
 
 import { GoogleAnalytics } from './google-analytics';
 
+// gtag.js queue entries are arguments objects (array-like), not arrays.
+const isArgs = (e: unknown): e is ArrayLike<unknown> => typeof e === 'object' && e !== null && 'length' in e && 'callee' in e;
+
+const cmd = (e: unknown) => (isArgs(e) ? Array.from(e) : e);
+const cmds = (layer: unknown[]) => layer.map(cmd);
+
+
 type AnalyticsWindow = Window & {
   dataLayer?: unknown[];
   gtag?: (...args: unknown[]) => void;
@@ -65,7 +72,7 @@ describe('GoogleAnalytics (consent mode v2)', () => {
     // Consent default is installed before anything loads…
     const w = analyticsWindow();
     expect(typeof w.gtag).toBe('function');
-    expect(w.dataLayer).toEqual([
+    expect(cmds(w.dataLayer!)).toEqual([
       { 'gg:consent-default': true },
       ['consent', 'default', expect.anything()],
       // Absent consent is pushed as an explicit denial (fail closed)…
@@ -81,7 +88,7 @@ describe('GoogleAnalytics (consent mode v2)', () => {
     render(<GoogleAnalytics measurementId="G-TESTID" />);
 
     const w = analyticsWindow();
-    expect(w.dataLayer![1]).toEqual([
+    expect(cmd(w.dataLayer![1])).toEqual([
       'consent',
       'default',
       {
@@ -105,7 +112,7 @@ describe('GoogleAnalytics (consent mode v2)', () => {
       strategy: 'afterInteractive',
       src: 'https://www.googletagmanager.com/gtag/js?id=G-TESTID',
     });
-    expect(layer).toEqual([
+    expect(cmds(layer)).toEqual([
       { 'gg:consent-default': true },
       ['consent', 'default', expect.anything()],
       ['consent', 'update', { analytics_storage: 'granted', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' }],
@@ -114,13 +121,26 @@ describe('GoogleAnalytics (consent mode v2)', () => {
     ]);
   });
 
+  it('injects the shared-queue gtag.js (l=dataLayer) when Firebase owns the same measurement id', () => {
+    persistConsent(true);
+    render(<GoogleAnalytics measurementId="G-FB-SHARED" __firebaseMeasurementIdForTest="G-FB-SHARED" />);
+
+    const layer = analyticsWindow().dataLayer!;
+    expect(scriptRenders).toHaveLength(1);
+    expect(scriptRenders[0]).toMatchObject({
+      id: 'gg-ga4-loader',
+      src: 'https://www.googletagmanager.com/gtag/js?l=dataLayer&id=G-FB-SHARED',
+    });
+    expect(layer.some((e) => isArgs(e) && e[0] === 'config')).toBe(true);
+  });
+
   it('marketing-only consent does not enable analytics storage', () => {
     persistConsent(false, true);
     render(<GoogleAnalytics measurementId="G-TESTID" />);
 
     const layer = analyticsWindow().dataLayer!;
     expect(scriptRenders).toHaveLength(0); // GA transport needs analytics purpose
-    expect(layer.some((e) => Array.isArray(e) && e[0] === 'config')).toBe(false);
+    expect(layer.some((e) => isArgs(e) && e[0] === 'config')).toBe(false);
   });
 
   it('pushes a denied update on revocation and does not re-issue the consent default', async () => {
@@ -134,9 +154,9 @@ describe('GoogleAnalytics (consent mode v2)', () => {
     });
 
     const layer = analyticsWindow().dataLayer!;
-    expect(layer.filter((e) => Array.isArray(e) && e[1] === 'default')).toHaveLength(1);
-    const lastUpdate = [...layer].reverse().find((e) => Array.isArray(e) && e[1] === 'update');
-    expect(lastUpdate).toEqual([
+    expect(layer.filter((e) => isArgs(e) && e[1] === 'default')).toHaveLength(1);
+    const lastUpdate = [...layer].reverse().find((e) => isArgs(e) && e[1] === 'update');
+    expect(cmd(lastUpdate)).toEqual([
       'consent',
       'update',
       { analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' },

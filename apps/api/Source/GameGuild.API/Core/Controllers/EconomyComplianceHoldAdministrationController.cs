@@ -18,7 +18,8 @@ public sealed class EconomyComplianceHoldAdministrationController(
     ISender sender,
     IComplianceHoldAdministrationStore holds,
     IActorContextAccessor actorContextAccessor,
-    TimeProvider timeProvider) : BaseApiController
+    TimeProvider timeProvider,
+    GameGuild.Identity.Authentication.IStepUpRequiredResponder stepUpRequiredResponder) : BaseApiController
 {
     [HttpGet]
     [ProducesResponseType(typeof(ComplianceHoldPage), StatusCodes.Status200OK)]
@@ -143,6 +144,11 @@ public sealed class EconomyComplianceHoldAdministrationController(
         catch (KeyNotFoundException)
         {
             return NotFound();
+        }
+        catch (GameGuild.Identity.Authentication.StepUpRequiredException exception)
+        {
+            // Issue #1191: the structured step-up trigger (423 with challenge instructions).
+            return await stepUpRequiredResponder.StepUpRequiredAsync(actorContextAccessor, exception).ConfigureAwait(false);
         }
         catch (InvalidOperationException exception)
         {

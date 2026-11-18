@@ -123,13 +123,28 @@ public sealed class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Ex
 
     private static async Task HandleDomainExceptionAsync(HttpContext context, DomainException exception)
     {
-        var statusCode = exception is EntityNotFoundException
-            ? StatusCodes.Status404NotFound
-            : StatusCodes.Status422UnprocessableEntity;
+        // Issue #1197: uniqueness violations (e.g. duplicate email on sign-up) are conflicts,
+        // not generic domain-rule failures — map them to 409 with a typed ProblemDetails.
+        var statusCode = exception switch
+        {
+            EntityNotFoundException => StatusCodes.Status404NotFound,
+            DuplicateEntityException => StatusCodes.Status409Conflict,
+            _ => StatusCodes.Status422UnprocessableEntity
+        };
         var problemDetails = new ProblemDetails
         {
-            Type = statusCode == StatusCodes.Status404NotFound ? RfcUrls.NotFound : RfcUrls.UnprocessableEntity,
-            Title = statusCode == StatusCodes.Status404NotFound ? "Resource Not Found" : "Domain Rule Violation",
+            Type = statusCode switch
+            {
+                StatusCodes.Status404NotFound => RfcUrls.NotFound,
+                StatusCodes.Status409Conflict => RfcUrls.Conflict,
+                _ => RfcUrls.UnprocessableEntity
+            },
+            Title = statusCode switch
+            {
+                StatusCodes.Status404NotFound => "Resource Not Found",
+                StatusCodes.Status409Conflict => "Conflict",
+                _ => "Domain Rule Violation"
+            },
             Status = statusCode,
             Detail = exception.Message
         };

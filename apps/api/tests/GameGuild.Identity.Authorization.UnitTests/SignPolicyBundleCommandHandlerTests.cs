@@ -102,7 +102,7 @@ public class SignPolicyBundleCommandHandlerTests
         var act = () => handler.Handle(
             new SignPolicyBundleCommand { BundleId = Guid.NewGuid() }, CancellationToken.None);
 
-        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        await act.Should().ThrowAsync<AccessDeniedException>();
         bundles.VerifyNoOtherCalls();
     }
 
@@ -119,7 +119,7 @@ public class SignPolicyBundleCommandHandlerTests
         var act = () => handler.Handle(
             new SignPolicyBundleCommand { BundleId = Guid.NewGuid() }, CancellationToken.None);
 
-        await act.Should().ThrowAsync<UnauthorizedAccessException>()
+        await act.Should().ThrowAsync<AccessDeniedException>()
             .WithMessage("*system administration*");
         bundles.VerifyNoOtherCalls();
     }
@@ -275,7 +275,7 @@ public class SignPolicyBundleCommandHandlerTests
         var act = () => handler.Handle(
             new DeployPolicyBundleCommand { BundleId = bundle.Id }, CancellationToken.None);
 
-        await act.Should().ThrowAsync<InvalidOperationException>()
+        await act.Should().ThrowAsync<BusinessRuleViolationException>()
             .WithMessage("*only approved bundles can be deployed*");
         materializer.VerifyNoOtherCalls();
     }
@@ -356,7 +356,7 @@ public class SignPolicyBundleCommandHandlerTests
             },
             CancellationToken.None);
 
-        await act.Should().ThrowAsync<UnauthorizedAccessException>();
+        await act.Should().ThrowAsync<AccessDeniedException>();
         bundles.VerifyNoOtherCalls();
     }
 
@@ -380,7 +380,7 @@ public class SignPolicyBundleCommandHandlerTests
             },
             CancellationToken.None);
 
-        await act.Should().ThrowAsync<UnauthorizedAccessException>()
+        await act.Should().ThrowAsync<AccessDeniedException>()
             .WithMessage("*Global policy bundle create requires system administration*");
         bundles.VerifyNoOtherCalls();
     }
@@ -497,7 +497,7 @@ public class SignPolicyBundleCommandHandlerTests
         var act = () => handler.Handle(
             new ListPolicyBundlesQuery { TenantId = Guid.NewGuid() }, CancellationToken.None);
 
-        await act.Should().ThrowAsync<UnauthorizedAccessException>()
+        await act.Should().ThrowAsync<AccessDeniedException>()
             .WithMessage("*Listing policy bundles requires tenant administration*");
         bundles.VerifyNoOtherCalls();
     }

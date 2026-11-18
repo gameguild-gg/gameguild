@@ -22,7 +22,7 @@ public class RatingModerationService(
         var userId = GetCurrentUserId();
 
         var rating = await db.Set<Rating>()
-            .FirstOrDefaultAsync(r => r.Id == ratingId && !r.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(r => r.Id == ratingId && r.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (rating == null)
         {
@@ -35,7 +35,7 @@ public class RatingModerationService(
         }
 
         var existingVote = await db.Set<RatingHelpfulVote>()
-            .FirstOrDefaultAsync(v => v.RatingId == ratingId && v.UserId == userId && !v.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(v => v.RatingId == ratingId && v.UserId == userId && v.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (existingVote != null)
         {
@@ -73,7 +73,7 @@ public class RatingModerationService(
         var userId = GetCurrentUserId();
 
         var vote = await db.Set<RatingHelpfulVote>()
-            .FirstOrDefaultAsync(v => v.RatingId == ratingId && v.UserId == userId && !v.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(v => v.RatingId == ratingId && v.UserId == userId && v.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (vote == null)
         {
@@ -81,7 +81,7 @@ public class RatingModerationService(
         }
 
         var rating = await db.Set<Rating>()
-            .FirstOrDefaultAsync(r => r.Id == ratingId && !r.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(r => r.Id == ratingId && r.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (rating != null && vote.IsHelpful)
         {
@@ -97,7 +97,7 @@ public class RatingModerationService(
     public async Task<Result> ReportAsync(Guid ratingId, string reason, CancellationToken ct = default)
     {
         var rating = await db.Set<Rating>()
-            .FirstOrDefaultAsync(r => r.Id == ratingId && !r.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(r => r.Id == ratingId && r.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (rating == null)
         {
@@ -128,7 +128,7 @@ public class RatingModerationService(
         CancellationToken ct = default)
     {
         var ratings = await db.Set<Rating>()
-            .Where(r => !r.IsDeleted)
+            .Where(r => r.DeletedAt == null)
             .Where(r => r.ModerationStatus == RatingModerationStatus.Pending ||
                         r.ModerationStatus == RatingModerationStatus.Flagged)
             .OrderByDescending(r => r.ReportCount)
@@ -143,7 +143,7 @@ public class RatingModerationService(
     public async Task<Result> ApproveAsync(Guid ratingId, CancellationToken ct = default)
     {
         var rating = await db.Set<Rating>()
-            .FirstOrDefaultAsync(r => r.Id == ratingId && !r.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(r => r.Id == ratingId && r.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (rating == null)
         {
@@ -162,7 +162,7 @@ public class RatingModerationService(
     public async Task<Result> RejectAsync(Guid ratingId, CancellationToken ct = default)
     {
         var rating = await db.Set<Rating>()
-            .FirstOrDefaultAsync(r => r.Id == ratingId && !r.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(r => r.Id == ratingId && r.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (rating == null)
         {
@@ -181,7 +181,7 @@ public class RatingModerationService(
     public async Task<Result> AdminDeleteAsync(Guid ratingId, CancellationToken ct = default)
     {
         var rating = await db.Set<Rating>()
-            .FirstOrDefaultAsync(r => r.Id == ratingId && !r.IsDeleted, ct).ConfigureAwait(false);
+            .FirstOrDefaultAsync(r => r.Id == ratingId && r.DeletedAt == null, ct).ConfigureAwait(false);
 
         if (rating == null)
         {

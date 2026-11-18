@@ -14,17 +14,7 @@ namespace GameGuild.Identity.Users;
 /// <param name="Sort">Sort criteria</param>
 public sealed record GetUsersQuery(string? Email = null, string? Status = null, bool IncludeDeleted = false, string? SearchTerm = null, string? Cursor = null, int Limit = 50, string? Sort = null) : IQuery<PagedResult<UserDto>>;
 
-/// <summary>
-///     Query to get users metadata/statistics
-/// </summary>
-public sealed record GetUsersMetadataQuery : IQuery<UsersMetadataDto>;
-
-/// <summary>
-///     Metadata about users collection
-/// </summary>
-/// <param name="TotalCount">Total number of users</param>
-/// <param name="ActiveCount">Number of active users</param>
-/// <param name="InactiveCount">Number of inactive users</param>
-/// <param name="DeletedCount">Number of soft-deleted users</param>
-/// <param name="ETag">ETag for caching</param>
-public sealed record UsersMetadataDto(int TotalCount, int ActiveCount, int InactiveCount, int DeletedCount, string ETag);
+// GetUsersMetadataQuery + UsersMetadataDto were removed with issue #1277 batch 1:
+// the query had no handler, no route and no caller (the platform users-metadata
+// rollup it anticipated never landed — docs/identity/users/cqrs-wiring-matrix.md §1,
+// dead request type 11).

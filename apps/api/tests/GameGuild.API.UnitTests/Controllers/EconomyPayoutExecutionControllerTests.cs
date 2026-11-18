@@ -257,7 +257,8 @@ public sealed class EconomyPayoutExecutionControllerTests
                 payouts: payouts, stepUp: resolvedStepUp, timeProvider: new FixedTimeProvider(Now)),
             payouts,
             Accessor(actor),
-            new FixedTimeProvider(Now));
+            new FixedTimeProvider(Now),
+            StubStepUpResponder.Instance);
     }
 
     private static EconomyStripeConnectWebhookController WebhookController(

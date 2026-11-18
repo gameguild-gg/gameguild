@@ -206,16 +206,12 @@ public class AdditionalRecordCoverageTests
         var banner = new UserBannerDto("https://example.com/banner.png", uploadedAt, 2048, "image/png");
         var uploadBanner = new UploadUserBannerRequest("base64-banner", "image/png", "banner.png");
         var roleAssignment = new UserRoleAssignment(Guid.NewGuid(), "Admin");
-        var metadata = new UsersMetadataDto(10, 7, 2, 1, "etag-1");
-        var deliverySettingsQuery = new GetUserNotificationDeliverySettingsQuery(Guid.NewGuid());
 
         avatar.FileSize.Should().Be(1024);
         uploadAvatar.FileName.Should().Be("avatar.png");
         banner.ContentType.Should().Be("image/png");
         uploadBanner.ImageData.Should().Be("base64-banner");
         roleAssignment.Role.Should().Be("Admin");
-        metadata.ActiveCount.Should().Be(7);
-        deliverySettingsQuery.UserId.Should().NotBe(Guid.Empty);
     }
 
     [Fact]

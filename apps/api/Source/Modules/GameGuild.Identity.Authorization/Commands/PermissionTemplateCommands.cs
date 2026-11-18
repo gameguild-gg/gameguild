@@ -80,20 +80,20 @@ public sealed class CreatePermissionTemplateCommandHandler(
     {
         if (!Actor.IsAuthenticated)
         {
-            throw new UnauthorizedAccessException("User is not authenticated");
+            throw new AuthenticationRequiredException("User is not authenticated");
         }
 
         if (request.IsSystemTemplate)
         {
             if (!Actor.IsSystemAdmin && !Actor.HasPermission(SystemPermission.Keys.ManageGlobalDefaults))
             {
-                throw new UnauthorizedAccessException(
+                throw new AccessDeniedException(
                     $"Creating system permission templates requires '{SystemPermission.Keys.ManageGlobalDefaults}' permission");
             }
         }
         else if (!Actor.IsSystemAdmin && !Actor.IsTenantAdmin)
         {
-            throw new UnauthorizedAccessException(
+            throw new AccessDeniedException(
                 "Creating permission templates requires tenant administration or system administration");
         }
 
@@ -218,26 +218,26 @@ public sealed class UpdatePermissionTemplateCommandHandler(
     {
         if (!Actor.IsAuthenticated)
         {
-            throw new UnauthorizedAccessException("User is not authenticated");
+            throw new AuthenticationRequiredException("User is not authenticated");
         }
 
         var template = await dbContext.Set<PermissionTemplate>()
             .FirstOrDefaultAsync(t => t.Id == request.TemplateId, cancellationToken).ConfigureAwait(false);
         if (template is null)
         {
-            throw new InvalidOperationException($"Permission template {request.TemplateId} not found");
+            throw new EntityNotFoundException("PermissionTemplate", request.TemplateId);
         }
 
         // SECURITY: system templates are immutable by definition (entity contract).
         if (template.IsSystemTemplate)
         {
-            throw new UnauthorizedAccessException(
+            throw new AccessDeniedException(
                 $"System permission template '{template.Name}' cannot be modified");
         }
 
         if (!Actor.IsSystemAdmin && !Actor.IsTenantAdmin)
         {
-            throw new UnauthorizedAccessException(
+            throw new AccessDeniedException(
                 "Updating permission templates requires tenant administration or system administration");
         }
 
@@ -385,7 +385,7 @@ public sealed class DeletePermissionTemplateCommandHandler(
     {
         if (!Actor.IsAuthenticated)
         {
-            throw new UnauthorizedAccessException("User is not authenticated");
+            throw new AuthenticationRequiredException("User is not authenticated");
         }
 
         var template = await dbContext.Set<PermissionTemplate>()
@@ -397,13 +397,13 @@ public sealed class DeletePermissionTemplateCommandHandler(
 
         if (template.IsSystemTemplate)
         {
-            throw new UnauthorizedAccessException(
+            throw new AccessDeniedException(
                 $"System permission template '{template.Name}' cannot be deleted");
         }
 
         if (!Actor.IsSystemAdmin && !Actor.IsTenantAdmin)
         {
-            throw new UnauthorizedAccessException(
+            throw new AccessDeniedException(
                 "Deleting permission templates requires tenant administration or system administration");
         }
 
@@ -508,18 +508,18 @@ public sealed class InstantiatePermissionTemplateCommandHandler(
     {
         if (!Actor.IsAuthenticated)
         {
-            throw new UnauthorizedAccessException("User is not authenticated");
+            throw new AuthenticationRequiredException("User is not authenticated");
         }
 
         var tenantId = request.TenantId ?? Actor.TenantId;
         if (tenantId is null || tenantId == Guid.Empty)
         {
-            throw new UnauthorizedAccessException("Template instantiation requires a tenant scope");
+            throw new AccessDeniedException("Template instantiation requires a tenant scope");
         }
 
         if (!Actor.IsSystemAdmin && (!Actor.IsTenantAdmin || Actor.TenantId != tenantId))
         {
-            throw new UnauthorizedAccessException(
+            throw new AccessDeniedException(
                 "Instantiating a permission template in another tenant requires system administration privileges");
         }
 
@@ -527,7 +527,7 @@ public sealed class InstantiatePermissionTemplateCommandHandler(
             .FirstOrDefaultAsync(t => t.Id == request.TemplateId && t.IsActive, cancellationToken).ConfigureAwait(false);
         if (template is null)
         {
-            throw new InvalidOperationException($"Permission template {request.TemplateId} not found or inactive");
+            throw new EntityNotFoundException("PermissionTemplate", request.TemplateId);
         }
 
         var latestVersionNumber = await dbContext.Set<PermissionTemplateVersion>()
@@ -817,7 +817,7 @@ public sealed class MigratePermissionTemplateCommandHandler(
     {
         if (!Actor.IsAuthenticated || !Actor.IsSystemAdmin)
         {
-            throw new UnauthorizedAccessException(
+            throw new AccessDeniedException(
                 "Migrating permission templates across tenants requires system administrator privileges");
         }
 
@@ -825,7 +825,7 @@ public sealed class MigratePermissionTemplateCommandHandler(
             .FirstOrDefaultAsync(t => t.Id == request.TemplateId, cancellationToken).ConfigureAwait(false);
         if (template is null)
         {
-            throw new InvalidOperationException($"Permission template {request.TemplateId} not found");
+            throw new EntityNotFoundException("PermissionTemplate", request.TemplateId);
         }
 
         var targetVersion = await dbContext.Set<PermissionTemplateVersion>()
@@ -1226,7 +1226,7 @@ public sealed class RollbackPermissionTemplateMigrationCommandHandler(
     {
         if (!Actor.IsAuthenticated || !Actor.IsSystemAdmin)
         {
-            throw new UnauthorizedAccessException(
+            throw new AccessDeniedException(
                 "Rolling back permission template migrations requires system administrator privileges");
         }
 
@@ -1234,7 +1234,7 @@ public sealed class RollbackPermissionTemplateMigrationCommandHandler(
             .FirstOrDefaultAsync(m => m.Id == request.MigrationId, cancellationToken).ConfigureAwait(false);
         if (migration is null)
         {
-            throw new InvalidOperationException($"Template migration {request.MigrationId} not found");
+            throw new EntityNotFoundException("PermissionTemplateMigration", request.MigrationId);
         }
 
         if (migration.IsDryRun)
@@ -1250,7 +1250,7 @@ public sealed class RollbackPermissionTemplateMigrationCommandHandler(
 
         var template = await dbContext.Set<PermissionTemplate>()
             .FirstOrDefaultAsync(t => t.Id == migration.TemplateId, cancellationToken).ConfigureAwait(false)
-            ?? throw new InvalidOperationException($"Permission template {migration.TemplateId} not found");
+            ?? throw new EntityNotFoundException("PermissionTemplate", migration.TemplateId);
 
         var rollbackEntries = string.IsNullOrWhiteSpace(migration.RollbackPlan)
             ? []

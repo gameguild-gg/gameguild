@@ -16,24 +16,6 @@ public sealed class TestingLabContractCoverageTests
         var close = open.AddDays(1);
         var start = close.AddDays(1);
         var end = start.AddHours(2);
-        var request = new UpdateTestingRequestCommand(
-            id, "Title", "Description", "https://example.test/build", InstructionType.File,
-            "Instructions", "https://example.test/instructions", fileId, "Feedback", 4,
-            start, end, true);
-
-        request.Id.Should().Be(id);
-        request.Title.Should().Be("Title");
-        request.Description.Should().Be("Description");
-        request.DownloadUrl.Should().Be("https://example.test/build");
-        request.InstructionsType.Should().Be(InstructionType.File);
-        request.InstructionsContent.Should().Be("Instructions");
-        request.InstructionsUrl.Should().Be("https://example.test/instructions");
-        request.InstructionsFileId.Should().Be(fileId);
-        request.FeedbackFormContent.Should().Be("Feedback");
-        request.MaxTesters.Should().Be(4);
-        request.StartDate.Should().Be(start);
-        request.EndDate.Should().Be(end);
-        request.IsActive.Should().BeTrue();
 
         var update = new UpdateTestingEventRequest(
             "Event", "Description", TestingEventMode.Hybrid, TestingEventApprovalMode.Committee,

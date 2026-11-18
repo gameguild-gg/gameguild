@@ -222,6 +222,57 @@ export class AuthModule {
   }
 
   /**
+   * Start the GitHub or Microsoft link flow for the current user (issue #1181).
+   *
+   * Returns the provider OAuth authorization URL plus the state parameter. The state is also recorded server-side and validated (one-shot) at the link callback. Supported providers: github, microsoft.
+   */
+  async postAuthExternalLoginsLinkAuthorize(
+    provider: string,
+    body: Types.IdentityAuthenticationDiscordLinkAuthorizeInput,
+  ): Promise<Result<Types.IdentityAuthenticationExternalLoginLinkAuthorizeOutput, ApiError>> {
+    const url = `/v1/auth/external-logins/${provider}:link-authorize`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationDiscordLinkAuthorizeInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    // Validate response
+    if (result.ok) {
+      const validatedData = safeParse(Types.IdentityAuthenticationExternalLoginLinkAuthorizeOutputSchema, result.data, 'response');
+      return { ok: true, data: validatedData };
+    }
+
+    return result;
+  }
+
+  /**
+   * Complete the GitHub or Microsoft link flow for the current user (issue #1181).
+   *
+   * Round-trip validates the echoed state against the server-issued record, exchanges the authorization code for the user profile, and links the provider identity to the authenticated user. Idempotent when already linked to the same user. Supported providers: github, microsoft.
+   */
+  async postAuthExternalLoginsLinkCallback(provider: string, body: Types.IdentityAuthenticationDiscordLinkCallbackInput): Promise<Result<void, ApiError>> {
+    const url = `/v1/auth/external-logins/${provider}:link-callback`;
+
+    // Validate request body
+    const validatedBody = safeParse(Types.IdentityAuthenticationDiscordLinkCallbackInputSchema, body, 'request');
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      body: validatedBody,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
    * Preview the scopes a provider link flow will request (authorization-time consent screen data).
    *
    * Returns the exact OAuth scopes the provider link flow will request, resolved the same way the authorize step embeds them in the authorization URL. Powers the authorization-time consent surface shown before linking (issue #250).

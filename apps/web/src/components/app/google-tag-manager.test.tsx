@@ -15,6 +15,12 @@ vi.mock('next/script', () => ({
 
 import { GoogleTagManager } from './google-tag-manager';
 
+// gtag.js queue entries are arguments objects (array-like), not arrays.
+const isArgs = (e: unknown): e is ArrayLike<unknown> => typeof e === 'object' && e !== null && 'length' in e && 'callee' in e;
+
+const cmd = (e: unknown) => (isArgs(e) ? Array.from(e) : e);
+
+
 type DataLayerWindow = Window & { dataLayer?: Record<string, unknown>[] };
 
 function dataLayer(): Record<string, unknown>[] | undefined {
@@ -68,11 +74,11 @@ describe('GoogleTagManager (consent mode v2)', () => {
     render(<GoogleTagManager containerId="GTM-TESTID" />);
 
     const layer = dataLayer()!;
-    const defaultIndex = layer.findIndex((entry) => Array.isArray(entry) && entry[1] === 'default');
+    const defaultIndex = layer.findIndex((entry) => isArgs(entry) && entry[1] === 'default');
     const startIndex = layer.findIndex((entry) => entry['event'] === 'gtm.js');
     expect(defaultIndex).toBeGreaterThanOrEqual(0);
     expect(startIndex).toBeGreaterThan(defaultIndex);
-    expect(layer[defaultIndex]).toEqual([
+    expect(cmd(layer[defaultIndex])).toEqual([
       'consent',
       'default',
       {
@@ -109,8 +115,8 @@ describe('GoogleTagManager (consent mode v2)', () => {
     render(<GoogleTagManager containerId="GTM-TESTID" />);
 
     expect(scriptRenders).toHaveLength(1);
-    const update = dataLayer()!.find((entry) => Array.isArray(entry) && entry[1] === 'update');
-    expect(update).toEqual([
+    const update = dataLayer()!.find((entry) => isArgs(entry) && entry[1] === 'update');
+    expect(cmd(update)).toEqual([
       'consent',
       'update',
       { analytics_storage: 'denied', ad_storage: 'granted', ad_user_data: 'granted', ad_personalization: 'granted' },
@@ -145,8 +151,8 @@ describe('GoogleTagManager (consent mode v2)', () => {
 
     expect(container).toBeEmptyDOMElement();
     expect(document.getElementById('gg-gtm-loader')).toBeNull();
-    const update = dataLayer()!.filter((entry) => Array.isArray(entry) && entry[1] === 'update').pop();
-    expect(update).toEqual([
+    const update = dataLayer()!.filter((entry) => isArgs(entry) && entry[1] === 'update').pop();
+    expect(cmd(update)).toEqual([
       'consent',
       'update',
       { analytics_storage: 'denied', ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied' },

@@ -66,8 +66,11 @@ export function buildPageLoadTimingPayload(entry: PerformanceNavigationTiming, p
 export function sendToGa4(w: ConsentWindow, eventName: string, payload: Record<string, string | number>): void {
   try {
     w.dataLayer = w.dataLayer || [];
-    w.gtag ??= (...args: unknown[]) => {
-      w.dataLayer!.push(args);
+    // Same arguments-object requirement as consent-mode.ts: array-form entries
+    // are silently dropped by gtag.js.
+    w.gtag ??= function (this: unknown) {
+      // eslint-disable-next-line prefer-rest-params -- arguments object is gtag.js's wire format
+      w.dataLayer!.push(arguments as unknown as unknown[]);
     };
     w.gtag('event', eventName, payload);
   } catch {

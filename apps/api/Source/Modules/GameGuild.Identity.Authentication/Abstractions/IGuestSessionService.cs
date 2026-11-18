@@ -12,6 +12,12 @@ public enum GuestSessionFailureReason
     /// <summary>The guest session is unknown, expired or already upgraded.</summary>
     GuestSessionUnavailable,
 
+    /// <summary>
+    ///     The guest credential expired mid-use and its data could not be carried into the
+    ///     authenticated session (token unreadable, or past the retention grace — issue #1128).
+    /// </summary>
+    GuestSessionExpired,
+
     /// <summary>The upgrade caller did not present an authenticated session.</summary>
     AuthenticatedSessionRequired
 }

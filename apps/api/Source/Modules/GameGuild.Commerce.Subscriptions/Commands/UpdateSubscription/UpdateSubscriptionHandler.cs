@@ -14,7 +14,7 @@ public sealed class UpdateSubscriptionHandler(IApplicationDbContext context)
     {
         var subscription = await context.Set<Subscription>()
             .FirstOrDefaultAsync(s => s.Id == request.SubscriptionId, cancellationToken)
-            ?? throw new InvalidOperationException($"Subscription {request.SubscriptionId} not found");
+            ?? throw new EntityNotFoundException("Subscription", request.SubscriptionId);
 
         // Use entity methods for updates (they have proper validation and raise events)
         // Create Money value object with the request amount and subscription's currency

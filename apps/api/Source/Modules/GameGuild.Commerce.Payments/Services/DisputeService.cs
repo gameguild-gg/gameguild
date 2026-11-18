@@ -72,16 +72,25 @@ public class DisputeService(
 
         if (dispute == null) throw new InvalidOperationException($"Dispute {disputeId} not found");
 
+        // Issue #1280 R-P1: only the non-terminal review transitions are settable through
+        // this surface, and only through the entity's guarded methods. The terminal
+        // statuses (Won/Lost/Resolved) and Cancelled belong to gateway reconciliation
+        // (webhooks -> ApplyGatewayStatus), ResolveDisputeAsync and CancelDisputeAsync —
+        // never to an arbitrary status assignment here.
         switch (newStatus)
         {
-            case DisputeStatus.UnderReview : dispute.MoveToReview(); break;
-            case DisputeStatus.PendingCustomerResponse : dispute.RequestCustomerResponse(dueDate ?? SystemClock.UtcNow.AddDays(7)); break;
-            case DisputeStatus.PendingMerchantResponse : dispute.RequestMerchantResponse(dueDate ?? SystemClock.UtcNow.AddDays(7)); break;
-            default :
-                dispute.Status = newStatus;
-                if (dueDate.HasValue) dispute.DueDate = dueDate.Value;
-
+            case DisputeStatus.UnderReview :
+                dispute.MoveToReview();
                 break;
+            case DisputeStatus.PendingCustomerResponse :
+                dispute.RequestCustomerResponse(dueDate ?? SystemClock.UtcNow.AddDays(7));
+                break;
+            case DisputeStatus.PendingMerchantResponse :
+                dispute.RequestMerchantResponse(dueDate ?? SystemClock.UtcNow.AddDays(7));
+                break;
+            default :
+                throw new InvalidOperationException(
+                    $"Dispute {disputeId} cannot move to {newStatus} through the status endpoint: terminal states are set by gateway reconciliation, resolution or cancellation.");
         }
 
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);

@@ -36,7 +36,7 @@ public sealed class GrantResourcePermissionCommandHandler(
             || string.IsNullOrWhiteSpace(request.ResourceType)
             || request.Permissions.Count == 0)
         {
-            throw new InvalidOperationException("UserId, ResourceId, ResourceType and at least one permission are required");
+            throw new RequestValidationException("UserId, ResourceId, ResourceType and at least one permission are required");
         }
 
         logger.LogInformation(
@@ -103,7 +103,7 @@ public sealed class GrantResourcePermissionCommandHandler(
     {
         if (!Actor.IsAuthenticated)
         {
-            throw new UnauthorizedAccessException("User is not authenticated");
+            throw new AuthenticationRequiredException("User is not authenticated");
         }
 
         if (Actor.IsSystemAdmin)
@@ -117,7 +117,7 @@ public sealed class GrantResourcePermissionCommandHandler(
                 "Actor {ActorId} attempted to grant global resource permissions without '{Permission}'",
                 Actor.SubjectId, SystemPermission.Keys.ManageGlobalDefaults);
 
-            throw new UnauthorizedAccessException(
+            throw new AccessDeniedException(
                 $"Granting global resource permissions requires '{SystemPermission.Keys.ManageGlobalDefaults}' permission");
         }
 
@@ -127,7 +127,7 @@ public sealed class GrantResourcePermissionCommandHandler(
                 "Actor {ActorId} attempted to grant resource permissions in tenant {TenantId} without tenant administration",
                 Actor.SubjectId, tenantId);
 
-            throw new UnauthorizedAccessException(
+            throw new AccessDeniedException(
                 "Granting resource permissions requires system administration or tenant administration of the target tenant");
         }
     }
@@ -157,7 +157,7 @@ public sealed class RevokeResourcePermissionCommandHandler(
     {
         if (!Actor.IsAuthenticated)
         {
-            throw new UnauthorizedAccessException("User is not authenticated");
+            throw new AuthenticationRequiredException("User is not authenticated");
         }
 
         if (Actor.IsSystemAdmin)
@@ -170,7 +170,7 @@ public sealed class RevokeResourcePermissionCommandHandler(
                 "Actor {ActorId} attempted to revoke global resource permissions without '{Permission}'",
                 Actor.SubjectId, SystemPermission.Keys.ManageGlobalDefaults);
 
-            throw new UnauthorizedAccessException(
+            throw new AccessDeniedException(
                 $"Revoking global resource permissions requires '{SystemPermission.Keys.ManageGlobalDefaults}' permission");
         }
         else if (request.TenantId != Actor.TenantId || !Actor.IsTenantAdmin)
@@ -179,7 +179,7 @@ public sealed class RevokeResourcePermissionCommandHandler(
                 "Actor {ActorId} attempted to revoke resource permissions in tenant {TenantId} without tenant administration",
                 Actor.SubjectId, request.TenantId);
 
-            throw new UnauthorizedAccessException(
+            throw new AccessDeniedException(
                 "Revoking resource permissions requires system administration or tenant administration of the target tenant");
         }
 

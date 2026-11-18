@@ -1,18 +1,20 @@
 namespace GameGuild.Commerce.Products;
 
 /// <summary>
-/// Exception thrown when a product is not found
+/// Exception thrown when a product is not found.
+/// Derives from <see cref="EntityNotFoundException"/> so the exception middleware
+/// answers 404 instead of 500 (issue #1278 not-found→500 class).
 /// </summary>
-public class ProductNotFoundException : Exception
+public class ProductNotFoundException : EntityNotFoundException
 {
     public ProductNotFoundException(Guid productId)
-        : base($"Product with ID '{productId}' was not found.")
+        : base("Product", productId, $"Product with ID '{productId}' was not found.")
     {
         ProductId = productId;
     }
 
     public ProductNotFoundException(Guid productId, string message)
-        : base(message)
+        : base("Product", productId, message)
     {
         ProductId = productId;
     }
@@ -32,18 +34,20 @@ public class ConcurrencyException : Exception
 }
 
 /// <summary>
-/// Exception thrown when a promo code is not found
+/// Exception thrown when a promo code is not found.
+/// Derives from <see cref="EntityNotFoundException"/> so the exception middleware
+/// answers 404 instead of 500 (issue #1278 not-found→500 class).
 /// </summary>
-public class PromoCodeNotFoundException : Exception
+public class PromoCodeNotFoundException : EntityNotFoundException
 {
     public PromoCodeNotFoundException(string code)
-        : base($"Promo code '{code}' was not found.")
+        : base("PromoCode", Guid.Empty, $"Promo code '{code}' was not found.")
     {
         Code = code;
     }
 
     public PromoCodeNotFoundException(Guid promoCodeId)
-        : base($"Promo code with ID '{promoCodeId}' was not found.")
+        : base("PromoCode", promoCodeId, $"Promo code with ID '{promoCodeId}' was not found.")
     {
         PromoCodeId = promoCodeId;
     }
@@ -53,9 +57,11 @@ public class PromoCodeNotFoundException : Exception
 }
 
 /// <summary>
-/// Exception thrown when a promo code is invalid or cannot be applied
+/// Exception thrown when a promo code is invalid or cannot be applied.
+/// Derives from <see cref="DomainException"/> so the exception middleware answers
+/// 422 (domain rule violation) instead of 500.
 /// </summary>
-public class InvalidPromoCodeException : Exception
+public class InvalidPromoCodeException : DomainException
 {
     public InvalidPromoCodeException(string code, string reason)
         : base($"Promo code '{code}' is invalid: {reason}")

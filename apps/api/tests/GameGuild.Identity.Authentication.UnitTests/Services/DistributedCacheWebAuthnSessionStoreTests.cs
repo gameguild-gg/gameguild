@@ -8,8 +8,8 @@ namespace GameGuild.Identity.Authentication.UnitTests.Services;
 
 /// <summary>
 ///     Distributed WebAuthn challenge store tests (issue #234): user-keyed ceremony storage,
-///     guest-slot assertion sessions, JSON round-trips of the Fido2 options and TTL expiry
-///     against the domain clock.
+///     challenge-keyed guest assertion sessions (issue #1198), JSON round-trips of the Fido2
+///     options and TTL expiry against the domain clock.
 /// </summary>
 public sealed class DistributedCacheWebAuthnSessionStoreTests
 {
@@ -71,7 +71,7 @@ public sealed class DistributedCacheWebAuthnSessionStoreTests
     }
 
     [Fact]
-    public async Task AssertionSession_IsIsolatedPerUser_AndGuestSlotIsSeparate()
+    public async Task AssertionSession_IsIsolatedPerUser_AndGuestCeremoniesAreIsolatedPerChallenge()
     {
         var store = CreateStore();
         var user1 = Guid.NewGuid();
@@ -83,13 +83,36 @@ public sealed class DistributedCacheWebAuthnSessionStoreTests
 
         (await store.FindAssertionSessionAsync(user1))!.AssertionOptions!.Challenge.Should().Equal(11);
         (await store.FindAssertionSessionAsync(user2))!.AssertionOptions!.Challenge.Should().Equal(22);
-        (await store.FindGuestAssertionSessionAsync())!.AssertionOptions!.Challenge.Should().Equal(33);
+        (await store.FindGuestAssertionSessionAsync(Base64Url([33])))!.AssertionOptions!.Challenge.Should().Equal(33);
 
         // Per-user removal leaves the others intact (replaces the process-local FindFirst scan).
         await store.RemoveAssertionSessionAsync(user1);
         (await store.FindAssertionSessionAsync(user1)).Should().BeNull();
         (await store.FindAssertionSessionAsync(user2)).Should().NotBeNull();
-        (await store.FindGuestAssertionSessionAsync()).Should().NotBeNull();
+        (await store.FindGuestAssertionSessionAsync(Base64Url([33]))).Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task GuestCeremonies_ConcurrentSessionsDoNotOverwriteEachOther()
+    {
+        // Issue #1198: two anonymous ceremonies (second tab / second device) must coexist —
+        // the old single shared guest slot let the second begin invalidate the first.
+        var store = CreateStore();
+
+        var firstSessionId = await store.StoreAssertionSessionAsync(new WebAuthnSession { UserId = null, Challenge = [1], AssertionOptions = AssertionOptions(1) });
+        var secondSessionId = await store.StoreAssertionSessionAsync(new WebAuthnSession { UserId = null, Challenge = [2], AssertionOptions = AssertionOptions(2) });
+
+        firstSessionId.Should().NotBe(secondSessionId);
+
+        var first = await store.FindGuestAssertionSessionAsync(Base64Url([1]));
+        var second = await store.FindGuestAssertionSessionAsync(Base64Url([2]));
+        first!.AssertionOptions!.Challenge.Should().Equal(1);
+        second!.AssertionOptions!.Challenge.Should().Equal(2);
+
+        // Completing the first ceremony leaves the second fully usable.
+        await store.RemoveGuestAssertionSessionAsync(Base64Url([1]));
+        (await store.FindGuestAssertionSessionAsync(Base64Url([1]))).Should().BeNull();
+        (await store.FindGuestAssertionSessionAsync(Base64Url([2])))!.AssertionOptions!.Challenge.Should().Equal(2);
     }
 
     [Fact]

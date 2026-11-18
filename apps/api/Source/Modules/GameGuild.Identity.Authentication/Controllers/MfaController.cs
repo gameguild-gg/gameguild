@@ -74,6 +74,9 @@ public sealed class MfaController(
             SecretKey = result.SecretKey,
             QrCodeUri = result.QrCodeUrl,
             ExpiresAt = result.ExpiresAt,
+            // Issue #1195: the setup path generates and stores the initial backup-code
+            // set (MfaService.InitiateMfaSetupAsync) — surface it to the user instead
+            // of discarding it, so the codes are visible without a regenerate call.
             BackupCodes = result.BackupCodes ?? []
         });
     }

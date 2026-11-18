@@ -136,7 +136,8 @@ public sealed class EconomyComplianceHoldAdministrationControllerTests
             EconomyHandlerSenders.Compliance(holds: store.Object, stepUp: new RecordingStepUpExecutor()),
             store.Object,
             accessor,
-            new FixedTimeProvider(Now));
+            new FixedTimeProvider(Now),
+            StubStepUpResponder.Instance);
         var holdId = Guid.NewGuid();
 
         (await controller.List(null, null, 10, null, default)).Should().BeOfType<ForbidResult>();
@@ -157,7 +158,8 @@ public sealed class EconomyComplianceHoldAdministrationControllerTests
                 stepUp: executor ?? new RecordingStepUpExecutor()),
             store,
             Actor([EconomyPermission.Keys.OperateCompliance]),
-            new FixedTimeProvider(Now));
+            new FixedTimeProvider(Now),
+            StubStepUpResponder.Instance);
 
     private static ActorContextAccessor Actor(IReadOnlyCollection<string> permissions)
     {

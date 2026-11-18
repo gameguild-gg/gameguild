@@ -189,10 +189,12 @@ public sealed class DeletePromoStackingRuleCommandHandler(
 }
 
 /// <summary>
-/// Exception thrown when a promo stacking rule is not found
+/// Exception thrown when a promo stacking rule is not found.
+/// Derives from <see cref="EntityNotFoundException"/> so the exception middleware
+/// answers 404 instead of 500 (issue #1278 not-found→500 class).
 /// </summary>
 public sealed class PromoStackingRuleNotFoundException(Guid ruleId)
-    : Exception($"Promo stacking rule {ruleId} was not found");
+    : EntityNotFoundException("PromoStackingRule", ruleId, $"Promo stacking rule {ruleId} was not found");
 
 /// <summary>
 /// Validator for <see cref="CreatePromoStackingRuleCommand"/>

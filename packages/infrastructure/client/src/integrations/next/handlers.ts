@@ -24,7 +24,7 @@ import { decodeJWT } from '../../runtime/auth/jwt';
 import { resolveAuthPermissions, resolveAuthRoles } from '../../runtime/auth/claims';
 import { AuthError, CredentialsSignInError, ProviderNotFoundError, CSRFError, SignUpError, AuthServiceUnavailableError } from '../../runtime/auth/errors';
 import { registerAccount } from '../../runtime/auth/sign-up';
-import { revokeSessionRefreshToken } from '../../runtime/auth/sign-out';
+import { signOutServerSession } from '../../runtime/auth/sign-out';
 import type { IdentityAuthenticationLocalSignUpInput } from '../../generated/types.gen';
 import { AuthMultiFactorModule } from '../../generated/modules/auth-multi-factor.gen';
 import { createServerClient } from '../../server';
@@ -571,13 +571,16 @@ export function createHandlers(config: ResolvedAuthConfig) {
   }
 
   async function handleSignOut(cookies: Map<string, string>, responseCookies: ResponseCookies): Promise<Response> {
-    // Best-effort revoke the refresh token on the backend
+    // Best-effort server-side sign-out before clearing the cookies.
     const encryptedToken = sessionStore.read((name) => cookies.get(name));
     if (encryptedToken) {
       try {
         const token = await decodeJWT({ token: encryptedToken, secret: config.secret });
+        // Prefer the dedicated sign-out endpoint (issue #1196) via the generated
+        // client: it deny-lists the current access token's jti, revoking only the
+        // refresh token left the browser's access token usable until its expiry.
         if (token) {
-          await revokeSessionRefreshToken(config.apiUrl, token);
+          await signOutServerSession(config.apiUrl, token, false);
         }
       } catch {
         // Ignore decode errors

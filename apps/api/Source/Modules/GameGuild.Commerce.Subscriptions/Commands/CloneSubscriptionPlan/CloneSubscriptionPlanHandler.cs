@@ -15,7 +15,7 @@ public sealed class CloneSubscriptionPlanHandler(IApplicationDbContext context, 
         var sourcePlan = await context.Set<SubscriptionPlan>()
             .AsNoTracking()
             .FirstOrDefaultAsync(p => p.Id == request.SourcePlanId, cancellationToken)
-            ?? throw new InvalidOperationException($"Subscription plan {request.SourcePlanId} not found");
+            ?? throw new EntityNotFoundException("SubscriptionPlan", request.SourcePlanId);
 
         // Use constructor to create new plan with required parameters
         var newPlan = new SubscriptionPlan(

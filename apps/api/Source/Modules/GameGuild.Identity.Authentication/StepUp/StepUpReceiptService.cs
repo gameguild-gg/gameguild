@@ -20,7 +20,9 @@ public sealed class StepUpReceiptService(
     {
         ArgumentNullException.ThrowIfNull(binding);
         var subject = RequireSubject();
-        var now = timeProvider.GetUtcNow();
+        // Use the store's microsecond precision so the returned expiry matches its persisted value.
+        var clock = timeProvider.GetUtcNow();
+        var now = new DateTimeOffset(clock.UtcTicks - clock.UtcTicks % TimeSpan.TicksPerMicrosecond, TimeSpan.Zero);
         var challenge = new StepUpChallenge
         {
             Id = Guid.NewGuid(),

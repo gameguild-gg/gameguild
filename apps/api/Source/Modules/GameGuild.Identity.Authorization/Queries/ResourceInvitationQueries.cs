@@ -91,7 +91,7 @@ public sealed class GetPendingResourceInvitationsQueryHandler(
         var email = Actor.TypedAttributes.Email;
         if (string.IsNullOrWhiteSpace(email))
         {
-            throw new UnauthorizedAccessException("Authenticated user must have an email address to view invitations");
+            throw new AuthenticationRequiredException("Authenticated user must have an email address to view invitations");
         }
 
         var normalizedEmail = email.Trim().ToUpperInvariant();

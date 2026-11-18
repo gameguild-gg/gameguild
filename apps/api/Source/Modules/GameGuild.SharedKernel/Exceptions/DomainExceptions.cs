@@ -45,11 +45,32 @@ public class EntityNotFoundException : DomainException
     public Guid EntityId { get; }
 
     public EntityNotFoundException(string entityType, Guid entityId)
-        : base($"{entityType} with ID {entityId} was not found")
+        : this(entityType, entityId, $"{entityType} with ID {entityId} was not found")
+    {
+    }
+
+    /// <summary>
+    ///     Allows a precise message when the lookup key is not the entity ID itself
+    ///     (e.g. "wallet for user {userId}") while keeping the 404 mapping.
+    /// </summary>
+    public EntityNotFoundException(string entityType, Guid entityId, string message)
+        : base(message)
     {
         EntityType = entityType;
         EntityId = entityId;
     }
+}
+
+/// <summary>
+///     Exception thrown when creating or updating an entity would violate a uniqueness
+///     constraint (duplicate key). Mapped to <c>409 Conflict</c> by the global exception
+///     handling middleware.
+/// </summary>
+public class DuplicateEntityException : DomainException
+{
+    protected DuplicateEntityException(string message) : base(message) { }
+
+    protected DuplicateEntityException(string message, Exception innerException) : base(message, innerException) { }
 }
 
 /// <summary>

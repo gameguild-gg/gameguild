@@ -9,6 +9,7 @@ public sealed class SocialProfileServiceTests
     private readonly Mock<ISocialProfileRepository> _profiles = new(MockBehavior.Strict);
     private readonly Mock<IProfileSkillRepository> _skills = new(MockBehavior.Strict);
     private readonly Mock<IProfilePortfolioRepository> _portfolio = new(MockBehavior.Strict);
+    private readonly Mock<IProfileFollowerPort> _followers = new(MockBehavior.Strict);
 
     [Fact]
     public async Task UpsertProfile_WhenMissingCreatesNormalizedProfile()
@@ -215,7 +216,7 @@ public sealed class SocialProfileServiceTests
         _portfolio.Verify(repository => repository.AddAsync(It.IsAny<ProfilePortfolioItem>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
-    private SocialProfileService CreateSubject() => new(_profiles.Object, _skills.Object, _portfolio.Object);
+    private SocialProfileService CreateSubject() => new(_profiles.Object, _skills.Object, _portfolio.Object, _followers.Object);
 
     [Fact]
     public async Task GetOrCreate_WhenMissingCreatesProfileWithUniqueHandleDerivedFromUserId()
@@ -280,7 +281,8 @@ public sealed class SocialProfileCompletenessLifecycleTests
         var service = new SocialProfileService(
             new SocialProfileRepository(context),
             new ProfileSkillRepository(context),
-            new ProfilePortfolioRepository(context));
+            new ProfilePortfolioRepository(context),
+            new NullProfileFollowerPort());
         var userId = Guid.NewGuid();
         var profile = await service.UpsertProfileAsync(new UpdateSocialProfileCommand(userId, "creator", "Creator"));
         context.ResetSaveChangesCallCount();
@@ -319,4 +321,155 @@ public sealed class SocialProfileCompletenessLifecycleTests
         var profile = await new SocialProfileRepository(verificationContext).GetByUserAsync(userId);
         return profile!.ToDto();
     }
+}
+
+/// <summary>
+///     Issue #1315 SP1: the by-handle and by-user reads enforce ProfileVisibility —
+///     Private/Connections profiles are served only to the owner, a system admin, or an
+///     explicit follower; anonymous and non-entitled callers get null (404 at the surface).
+/// </summary>
+public sealed class SocialProfileVisibilityTests
+{
+    private readonly Mock<ISocialProfileRepository> _profiles = new(MockBehavior.Strict);
+    private readonly Mock<IProfileFollowerPort> _followers = new(MockBehavior.Strict);
+
+    [Fact]
+    public async Task GetByHandleForViewer_PublicProfile_IsVisibleToAnonymousCaller()
+    {
+        var profile = CreateProfile(ProfileVisibility.Public);
+        SetupVisibleByHandle(profile, viewerId: null);
+
+        var result = await CreateSubject().GetByHandleForViewerAsync("creator", new ProfileViewer(null, IsSystemAdmin: false));
+
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(profile.Id);
+        _followers.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task GetByHandleForViewer_PrivateProfile_AnonymousCallerGetsNullWithoutFollowConsultation()
+    {
+        var profile = CreateProfile(ProfileVisibility.Private);
+        _profiles.Setup(repository => repository.GetVisibleByHandleAsync("creator", null, default)).ReturnsAsync((SocialProfile?)null);
+
+        var result = await CreateSubject().GetByHandleForViewerAsync("creator", new ProfileViewer(null, IsSystemAdmin: false));
+
+        result.Should().BeNull();
+        _profiles.Verify(repository => repository.GetByHandleAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _followers.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task GetByHandleForViewer_PrivateProfile_OwnerSeesFullDetails()
+    {
+        var profile = CreateProfile(ProfileVisibility.Private, location: "Secret City", website: "https://secret.test");
+        SetupVisibleByHandle(profile, viewerId: profile.UserId);
+
+        var result = await CreateSubject().GetByHandleForViewerAsync("creator", new ProfileViewer(profile.UserId, IsSystemAdmin: false));
+
+        result.Should().NotBeNull();
+        result!.Location.Should().Be("Secret City");
+        result.WebsiteUrl.Should().Be("https://secret.test");
+    }
+
+    [Fact]
+    public async Task GetByHandleForViewer_PrivateProfile_ExplicitFollowerSeesFullDetails()
+    {
+        var profile = CreateProfile(ProfileVisibility.Private);
+        var followerId = Guid.NewGuid();
+        _profiles.Setup(repository => repository.GetVisibleByHandleAsync("creator", followerId, default)).ReturnsAsync((SocialProfile?)null);
+        _profiles.Setup(repository => repository.GetByHandleAsync("creator", default)).ReturnsAsync(profile);
+        _followers.Setup(port => port.IsFollowerAsync(followerId, profile.UserId, default)).ReturnsAsync(true);
+
+        var result = await CreateSubject().GetByHandleForViewerAsync("creator", new ProfileViewer(followerId, IsSystemAdmin: false));
+
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(profile.Id);
+    }
+
+    [Fact]
+    public async Task GetByHandleForViewer_PrivateProfile_AuthenticatedNonFollowerGetsNull()
+    {
+        var profile = CreateProfile(ProfileVisibility.Private);
+        var stranger = Guid.NewGuid();
+        _profiles.Setup(repository => repository.GetVisibleByHandleAsync("creator", stranger, default)).ReturnsAsync((SocialProfile?)null);
+        _profiles.Setup(repository => repository.GetByHandleAsync("creator", default)).ReturnsAsync(profile);
+        _followers.Setup(port => port.IsFollowerAsync(stranger, profile.UserId, default)).ReturnsAsync(false);
+
+        var result = await CreateSubject().GetByHandleForViewerAsync("creator", new ProfileViewer(stranger, IsSystemAdmin: false));
+
+        result.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GetByHandleForViewer_PrivateProfile_ConnectionsVisibilityFollowsTheSameEntitlement()
+    {
+        var profile = CreateProfile(ProfileVisibility.Connections);
+        var followerId = Guid.NewGuid();
+        _profiles.Setup(repository => repository.GetVisibleByHandleAsync("creator", followerId, default)).ReturnsAsync((SocialProfile?)null);
+        _profiles.Setup(repository => repository.GetByHandleAsync("creator", default)).ReturnsAsync(profile);
+        _followers.Setup(port => port.IsFollowerAsync(followerId, profile.UserId, default)).ReturnsAsync(true);
+
+        var result = await CreateSubject().GetByHandleForViewerAsync("creator", new ProfileViewer(followerId, IsSystemAdmin: false));
+
+        result.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task GetByHandleForViewer_SystemAdmin_SeesPrivateProfileWithoutFollowConsultation()
+    {
+        var profile = CreateProfile(ProfileVisibility.Private);
+        _profiles.Setup(repository => repository.GetByHandleAsync("creator", default)).ReturnsAsync(profile);
+
+        var result = await CreateSubject().GetByHandleForViewerAsync("creator", new ProfileViewer(Guid.NewGuid(), IsSystemAdmin: true));
+
+        result.Should().NotBeNull();
+        result!.Id.Should().Be(profile.Id);
+        _followers.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task GetByUserForViewer_PrivateProfile_AnonymousGetsNullAndOwnerSeesFull()
+    {
+        var profile = CreateProfile(ProfileVisibility.Private);
+        _profiles.Setup(repository => repository.GetVisibleByUserAsync(profile.UserId, null, default)).ReturnsAsync((SocialProfile?)null);
+        var subject = CreateSubject();
+
+        (await subject.GetByUserForViewerAsync(profile.UserId, new ProfileViewer(null, IsSystemAdmin: false))).Should().BeNull();
+
+        _profiles.Setup(repository => repository.GetVisibleByUserAsync(profile.UserId, profile.UserId, default)).ReturnsAsync(profile);
+        var owned = await subject.GetByUserForViewerAsync(profile.UserId, new ProfileViewer(profile.UserId, IsSystemAdmin: false));
+        owned!.Id.Should().Be(profile.Id);
+    }
+
+    [Fact]
+    public async Task GetByUserForViewer_PublicProfile_IsVisibleToEveryViewer()
+    {
+        var profile = CreateProfile(ProfileVisibility.Public);
+        var stranger = Guid.NewGuid();
+        _profiles.Setup(repository => repository.GetVisibleByUserAsync(profile.UserId, stranger, default)).ReturnsAsync(profile);
+
+        var result = await CreateSubject().GetByUserForViewerAsync(profile.UserId, new ProfileViewer(stranger, IsSystemAdmin: false));
+
+        result.Should().NotBeNull();
+    }
+
+    private SocialProfileService CreateSubject()
+        => new(_profiles.Object, Mock.Of<IProfileSkillRepository>(), Mock.Of<IProfilePortfolioRepository>(), _followers.Object);
+
+    private void SetupVisibleByHandle(SocialProfile profile, Guid? viewerId)
+        => _profiles.Setup(repository => repository.GetVisibleByHandleAsync("creator", viewerId, default)).ReturnsAsync(profile);
+
+    private static SocialProfile CreateProfile(
+        ProfileVisibility visibility,
+        string? location = null,
+        string? website = null) => new()
+    {
+        UserId = Guid.NewGuid(),
+        Handle = "creator",
+        DisplayName = "Creator",
+        Visibility = visibility,
+        Location = location,
+        WebsiteUrl = website
+    };
 }

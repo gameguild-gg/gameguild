@@ -39,6 +39,14 @@ public sealed class SendEmailVerificationEnumerationProtectionTests
         _emailService
             .Setup(s => s.GenerateVerificationTokenAsync(userId, email))
             .ReturnsAsync("verification-token");
+        // Issue #1197: the delivery path is gated by the shared resend cooldown; these
+        // fixtures exercise delivery, so the cooldown must allow the send.
+        _emailService
+            .Setup(s => s.CanResendVerificationEmailAsync(userId, email))
+            .ReturnsAsync(true);
+        _emailService
+            .Setup(s => s.MarkVerificationEmailSentAsync(userId, email))
+            .Returns(Task.CompletedTask);
     }
 
     private void SetupUnknownUser(string email)
@@ -156,6 +164,70 @@ public sealed class SendEmailVerificationEnumerationProtectionTests
         attempts.Should().Be(2);
         _auditSink.Verify(
             s => s.RecordAsync(It.IsAny<AuthenticationAuditEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_CooldownActive_SuppressesDeliveryWithoutEnumerationSignal()
+    {
+        // Issue #1197: the command handler must honor the shared resend cooldown instead of
+        // calling generate+send directly; the suppressed response stays generic so the gate
+        // cannot be used to distinguish known from unknown accounts.
+        var userId = Guid.NewGuid();
+        const string email = "cooled@example.com";
+        SetupKnownUser(userId, email);
+        _emailService
+            .Setup(s => s.CanResendVerificationEmailAsync(userId, email))
+            .ReturnsAsync(false);
+
+        var result = await CreateSubject().Handle(Command(email), CancellationToken.None);
+
+        result.Message.Should().Be(UserEnumerationProtectionService.GenericEmailVerificationMessage);
+        _emailService.Verify(
+            s => s.GenerateVerificationTokenAsync(It.IsAny<Guid>(), It.IsAny<string>()),
+            Times.Never);
+        _emailService.Verify(
+            s => s.SendVerificationEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string?>()),
+            Times.Never);
+        _emailService.Verify(
+            s => s.MarkVerificationEmailSentAsync(It.IsAny<Guid>(), It.IsAny<string>()),
+            Times.Never);
+        _auditSink.Verify(
+            s => s.RecordAsync(It.IsAny<AuthenticationAuditEvent>(), It.IsAny<CancellationToken>()),
+            Times.Never);
+    }
+
+    [Fact]
+    public async Task Handle_SuccessfulDelivery_StampsTheSharedCooldown()
+    {
+        var userId = Guid.NewGuid();
+        const string email = "stamp@example.com";
+        SetupKnownUser(userId, email);
+        _emailService
+            .Setup(s => s.SendVerificationEmailAsync(email, "verification-token", It.IsAny<string?>()))
+            .Returns(Task.CompletedTask);
+
+        await CreateSubject().Handle(Command(email), CancellationToken.None);
+
+        _emailService.Verify(
+            s => s.MarkVerificationEmailSentAsync(userId, email),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task Handle_DeliveryFails_DoesNotStampTheCooldown()
+    {
+        var userId = Guid.NewGuid();
+        const string email = "unstamp@example.com";
+        SetupKnownUser(userId, email);
+        _emailService
+            .Setup(s => s.SendVerificationEmailAsync(email, It.IsAny<string>(), It.IsAny<string?>()))
+            .ThrowsAsync(new InvalidOperationException("Authentication notification was not durably queued."));
+
+        await CreateSubject().Handle(Command(email), CancellationToken.None);
+
+        _emailService.Verify(
+            s => s.MarkVerificationEmailSentAsync(It.IsAny<Guid>(), It.IsAny<string>()),
             Times.Never);
     }
 

@@ -1,20 +1,24 @@
 using System.Security.Cryptography;
 using System.Text;
-using Microsoft.Extensions.Caching.Memory;
+using System.Text.Json;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
 
 /// <summary>
-///     Issues and verifies one-time email sign-in codes backed by the in-process
-///     memory cache. Codes are six cryptographically random digits, live for ten
-///     minutes, accept at most five verification attempts, are single-use, and are
-///     stored only as SHA-256 digests. Code comparison is constant-time, including
-///     a dummy comparison on the unknown-email path so timings stay uniform.
+///     Issues and verifies one-time email sign-in codes backed by <see cref="IDistributedCache"/>
+///     (issue #1272: the Redis path in production, mirroring the token revocation store — the
+///     previous in-process memory cache reset the sixty-second resend throttle and the
+///     five-attempt ceiling per node and lost every pending code on restart). Codes are six
+///     cryptographically random digits, live for ten minutes, accept at most five verification
+///     attempts, are single-use, and are stored only as SHA-256 digests. Code comparison is
+///     constant-time, including a dummy comparison on the unknown-email path so timings stay
+///     uniform.
 /// </summary>
 public class EmailCodeService(
     ILogger<EmailCodeService> logger,
-    IMemoryCache memoryCache) : IEmailCodeService
+    IDistributedCache cache) : IEmailCodeService
 {
     private const string EntryKeyPrefix = "emailcode:entry:";
     private const string ThrottleKeyPrefix = "emailcode:throttle:";
@@ -35,55 +39,59 @@ public class EmailCodeService(
     /// </summary>
     public static readonly TimeSpan EvictionSlack = TimeSpan.FromMinutes(5);
 
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+
     private static readonly byte[] DummyDigest = SHA256.HashData(Encoding.UTF8.GetBytes("email-code-timing-equalizer"));
 
-    public Task<string?> GenerateEmailCodeAsync(Guid userId, string email)
+    public async Task<string?> GenerateEmailCodeAsync(Guid userId, string email)
     {
         var normalizedEmail = NormalizeEmail(email);
         var emailDigest = EmailDigest(normalizedEmail);
         var throttleKey = ThrottleKeyPrefix + emailDigest;
 
-        if (memoryCache.TryGetValue(throttleKey, out DateTime lastIssued) &&
+        var lastIssuedRaw = await cache.GetStringAsync(throttleKey).ConfigureAwait(false);
+        if (DateTime.TryParse(lastIssuedRaw, out var lastIssued) &&
             SystemClock.UtcNow - lastIssued < ResendThrottleWindow)
         {
             logger.LogWarning(
                 "Email-code request throttled for user {UserId}; a code was issued {Seconds:F0}s ago",
                 LogRedaction.RedactId(userId, "uid"),
                 (SystemClock.UtcNow - lastIssued).TotalSeconds);
-            return Task.FromResult<string?>(null);
+            return null;
         }
 
         // Crypto-random six-digit code (000000–999999, uniform via the RNG rejection-free Int32 overload).
         var code = RandomNumberGenerator.GetInt32(0, 1_000_000).ToString("D6", System.Globalization.CultureInfo.InvariantCulture);
-        var entry = new EmailCodeInfo
-        {
-            UserId = userId,
-            Email = normalizedEmail,
-            CodeDigest = SHA256.HashData(Encoding.UTF8.GetBytes(code)),
-            ExpiresAt = SystemClock.UtcNow.Add(CodeLifetime)
-        };
+        var state = new EmailCodeState(
+            userId,
+            normalizedEmail,
+            Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(code))),
+            SystemClock.UtcNow.Add(CodeLifetime),
+            FailedAttempts: 0);
 
-        memoryCache.Set(EntryKeyPrefix + emailDigest, entry, new MemoryCacheEntryOptions
-        {
-            // Cache-level eviction is only a safety net for abandoned entries, so it must
-            // be relative to the cache's own clock. The logical ten-minute TTL lives in
-            // entry.ExpiresAt and is enforced against the domain clock (SystemClock) in
-            // VerifyEmailCodeAsync — stamping an absolute, domain-clock-derived expiration
-            // here would let the cache's real-time scanner evict live entries whenever the
-            // domain clock (e.g. a fake provider in tests) disagrees with wall time.
-            AbsoluteExpirationRelativeToNow = CodeLifetime + EvictionSlack
-        }.SetSize(1));
+        // Cache-level eviction is only a safety net for abandoned entries, so it must be
+        // relative to the cache's own clock. The logical ten-minute TTL lives in
+        // state.ExpiresAt and is enforced against the domain clock (SystemClock) in
+        // VerifyEmailCodeAsync — stamping an absolute, domain-clock-derived expiration here
+        // would let the cache's real-time scanner evict live entries whenever the domain clock
+        // (e.g. a fake provider in tests) disagrees with wall time.
+        await cache.SetStringAsync(
+            EntryKeyPrefix + emailDigest,
+            JsonSerializer.Serialize(state, JsonOptions),
+            new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = CodeLifetime + EvictionSlack })
+            .ConfigureAwait(false);
 
-        memoryCache.Set(throttleKey, SystemClock.UtcNow, new MemoryCacheEntryOptions
-        {
-            AbsoluteExpirationRelativeToNow = ResendThrottleWindow
-        }.SetSize(1));
+        await cache.SetStringAsync(
+            throttleKey,
+            SystemClock.UtcNow.ToString("O"),
+            new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = ResendThrottleWindow })
+            .ConfigureAwait(false);
 
         logger.LogInformation("Generated one-time email sign-in code for user {UserId}", LogRedaction.RedactId(userId, "uid"));
-        return Task.FromResult<string?>(code);
+        return code;
     }
 
-    public Task<TokenValidationResult> VerifyEmailCodeAsync(string email, string code)
+    public async Task<TokenValidationResult> VerifyEmailCodeAsync(string email, string code)
     {
         var normalizedEmail = NormalizeEmail(email);
         var entryKey = EntryKeyPrefix + EmailDigest(normalizedEmail);
@@ -93,58 +101,80 @@ public class EmailCodeService(
 
         // Constant-time comparison on every path, including unknown emails, so the
         // digest match itself never becomes a timing oracle.
-        var entry = memoryCache.TryGetValue(entryKey, out EmailCodeInfo? stored) ? stored : null;
-        var storedDigest = entry?.CodeDigest ?? DummyDigest;
-        var matches = CryptographicOperations.FixedTimeEquals(storedDigest, suppliedDigest);
-
-        if (entry is null)
+        EmailCodeState? state = null;
+        var storedPayload = await cache.GetStringAsync(entryKey).ConfigureAwait(false);
+        if (!string.IsNullOrWhiteSpace(storedPayload))
         {
-            logger.LogWarning("Verification attempted with no pending email sign-in code");
-            return Task.FromResult(TokenValidationResult.Failed("Invalid code"));
+            try
+            {
+                state = JsonSerializer.Deserialize<EmailCodeState>(storedPayload, JsonOptions);
+            }
+            catch (JsonException)
+            {
+                // A corrupt entry behaves as an unknown code: fail closed.
+                state = null;
+            }
         }
 
-        if (entry.ExpiresAt < SystemClock.UtcNow)
+        var storedDigest = state is null ? DummyDigest : Convert.FromHexString(state.CodeDigest);
+        var matches = CryptographicOperations.FixedTimeEquals(storedDigest, suppliedDigest);
+
+        if (state is null)
         {
-            memoryCache.Remove(entryKey);
-            logger.LogWarning("Expired email sign-in code used for user {UserId}", LogRedaction.RedactId(entry.UserId, "uid"));
-            return Task.FromResult(TokenValidationResult.Failed("Expired code"));
+            logger.LogWarning("Verification attempted with no pending email sign-in code");
+            return TokenValidationResult.Failed("Invalid code");
+        }
+
+        if (state.ExpiresAt < SystemClock.UtcNow)
+        {
+            await cache.RemoveAsync(entryKey).ConfigureAwait(false);
+            logger.LogWarning("Expired email sign-in code used for user {UserId}", LogRedaction.RedactId(state.UserId, "uid"));
+            return TokenValidationResult.Failed("Expired code");
         }
 
         if (!matches)
         {
-            entry.FailedAttempts++;
-            if (entry.FailedAttempts >= MaxVerificationAttempts)
+            state = state with { FailedAttempts = state.FailedAttempts + 1 };
+            if (state.FailedAttempts >= MaxVerificationAttempts)
             {
-                memoryCache.Remove(entryKey);
+                await cache.RemoveAsync(entryKey).ConfigureAwait(false);
                 logger.LogWarning(
                     "Email sign-in code exhausted after {Attempts} failed attempts for user {UserId}",
-                    entry.FailedAttempts,
-                    LogRedaction.RedactId(entry.UserId, "uid"));
+                    state.FailedAttempts,
+                    LogRedaction.RedactId(state.UserId, "uid"));
             }
             else
             {
+                // Persist the shared failure count so the ceiling applies across nodes.
+                await cache.SetStringAsync(
+                    entryKey,
+                    JsonSerializer.Serialize(state, JsonOptions),
+                    new DistributedCacheEntryOptions { AbsoluteExpirationRelativeToNow = CodeLifetime + EvictionSlack })
+                    .ConfigureAwait(false);
                 logger.LogWarning(
                     "Wrong email sign-in code submitted for user {UserId}; {Remaining} attempts left",
-                    LogRedaction.RedactId(entry.UserId, "uid"),
-                    MaxVerificationAttempts - entry.FailedAttempts);
+                    LogRedaction.RedactId(state.UserId, "uid"),
+                    MaxVerificationAttempts - state.FailedAttempts);
             }
 
-            return Task.FromResult(TokenValidationResult.Failed("Invalid code"));
+            return TokenValidationResult.Failed("Invalid code");
         }
 
-        if (!entry.TryConsume())
-        {
-            logger.LogWarning("Already consumed email sign-in code used for user {UserId}", LogRedaction.RedactId(entry.UserId, "uid"));
-            return Task.FromResult(TokenValidationResult.Failed("Invalid code"));
-        }
-
-        memoryCache.Remove(entryKey);
-        logger.LogInformation("Email sign-in code consumed successfully for user {UserId}", LogRedaction.RedactId(entry.UserId, "uid"));
-        return Task.FromResult(new TokenValidationResult(true, entry.UserId, entry.Email));
+        // Single use is enforced by removal: a replay (from any node) reads no pending code.
+        await cache.RemoveAsync(entryKey).ConfigureAwait(false);
+        logger.LogInformation("Email sign-in code consumed successfully for user {UserId}", LogRedaction.RedactId(state.UserId, "uid"));
+        return new TokenValidationResult(true, state.UserId, state.Email);
     }
 
     private static string NormalizeEmail(string email) => email.Trim().ToLowerInvariant();
 
     private static string EmailDigest(string normalizedEmail) =>
         Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(normalizedEmail)));
+
+    /// <summary>
+    ///     Stored state of an issued one-time email sign-in code. The code itself is never
+    ///     kept: only its SHA-256 digest, so a cache or log disclosure cannot leak a usable
+    ///     credential.
+    /// </summary>
+    internal sealed record EmailCodeState(Guid UserId, string Email, string CodeDigest, DateTime ExpiresAt, int FailedAttempts);
 }

@@ -238,6 +238,118 @@ public class LedgerEntryRepository : ILedgerEntryRepository
             .FirstOrDefaultAsync(e => e.ExternalReferenceId == externalId, ct);
     }
 
+    public Task<LedgerEntry?> GetByReferenceAsync(Guid tenantId, string referenceNumber)
+        => GetByReferenceAsync(tenantId, referenceNumber, default);
+
+    public async Task<LedgerEntry?> GetByReferenceAsync(Guid tenantId, string referenceNumber, CancellationToken ct)
+    {
+        return await _entries
+            .Include(e => e.Ledger)
+            .FirstOrDefaultAsync(e => e.TenantId == tenantId && e.ReferenceNumber == referenceNumber, ct);
+    }
+
+    public Task<IReadOnlyList<LedgerEntry>> SearchAsync(Guid tenantId, IReadOnlyList<Guid> ledgerIds)
+        => SearchAsync(tenantId, ledgerIds, null, null, null, null, null, null, null, null, default);
+
+    public Task<IReadOnlyList<LedgerEntry>> SearchAsync(Guid tenantId, IReadOnlyList<Guid> ledgerIds, string? searchTerm)
+        => SearchAsync(tenantId, ledgerIds, searchTerm, null, null, null, null, null, null, null, default);
+
+    public Task<IReadOnlyList<LedgerEntry>> SearchAsync(Guid tenantId, IReadOnlyList<Guid> ledgerIds, string? searchTerm, EntryType? type)
+        => SearchAsync(tenantId, ledgerIds, searchTerm, type, null, null, null, null, null, null, default);
+
+    public Task<IReadOnlyList<LedgerEntry>> SearchAsync(Guid tenantId, IReadOnlyList<Guid> ledgerIds, string? searchTerm, EntryType? type, EntryCategory? category)
+        => SearchAsync(tenantId, ledgerIds, searchTerm, type, category, null, null, null, null, null, default);
+
+    public Task<IReadOnlyList<LedgerEntry>> SearchAsync(Guid tenantId, IReadOnlyList<Guid> ledgerIds, string? searchTerm, EntryType? type, EntryCategory? category, EntryStatus? status)
+        => SearchAsync(tenantId, ledgerIds, searchTerm, type, category, status, null, null, null, null, default);
+
+    public Task<IReadOnlyList<LedgerEntry>> SearchAsync(Guid tenantId, IReadOnlyList<Guid> ledgerIds, string? searchTerm, EntryType? type, EntryCategory? category, EntryStatus? status, decimal? minAmount)
+        => SearchAsync(tenantId, ledgerIds, searchTerm, type, category, status, minAmount, null, null, null, default);
+
+    public Task<IReadOnlyList<LedgerEntry>> SearchAsync(Guid tenantId, IReadOnlyList<Guid> ledgerIds, string? searchTerm, EntryType? type, EntryCategory? category, EntryStatus? status, decimal? minAmount, decimal? maxAmount)
+        => SearchAsync(tenantId, ledgerIds, searchTerm, type, category, status, minAmount, maxAmount, null, null, default);
+
+    public Task<IReadOnlyList<LedgerEntry>> SearchAsync(Guid tenantId, IReadOnlyList<Guid> ledgerIds, string? searchTerm, EntryType? type, EntryCategory? category, EntryStatus? status, decimal? minAmount, decimal? maxAmount, DateOnly? fromDate)
+        => SearchAsync(tenantId, ledgerIds, searchTerm, type, category, status, minAmount, maxAmount, fromDate, null, default);
+
+    public Task<IReadOnlyList<LedgerEntry>> SearchAsync(Guid tenantId, IReadOnlyList<Guid> ledgerIds, string? searchTerm, EntryType? type, EntryCategory? category, EntryStatus? status, decimal? minAmount, decimal? maxAmount, DateOnly? fromDate, DateOnly? toDate)
+        => SearchAsync(tenantId, ledgerIds, searchTerm, type, category, status, minAmount, maxAmount, fromDate, toDate, default);
+
+    public Task<IReadOnlyList<LedgerEntry>> SearchAsync(Guid tenantId, IReadOnlyList<Guid> ledgerIds, CancellationToken ct)
+        => SearchAsync(tenantId, ledgerIds, null, null, null, null, null, null, null, null, ct);
+
+    public async Task<IReadOnlyList<LedgerEntry>> SearchAsync(
+        Guid tenantId,
+        IReadOnlyList<Guid> ledgerIds,
+        string? searchTerm,
+        EntryType? type,
+        EntryCategory? category,
+        EntryStatus? status,
+        decimal? minAmount,
+        decimal? maxAmount,
+        DateOnly? fromDate,
+        DateOnly? toDate,
+        CancellationToken ct)
+    {
+        var query = _entries
+            .Include(e => e.Ledger)
+            .Where(e => e.TenantId == tenantId);
+
+        if (ledgerIds.Count > 0)
+        {
+            query = query.Where(e => ledgerIds.Contains(e.LedgerId));
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            var term = searchTerm.Trim();
+            query = query.Where(e =>
+                e.Description.Contains(term)
+                || e.ReferenceNumber.Contains(term)
+                || (e.CounterpartyName != null && e.CounterpartyName.Contains(term)));
+        }
+
+        if (type.HasValue)
+        {
+            query = query.Where(e => e.Type == type.Value);
+        }
+
+        if (category.HasValue)
+        {
+            query = query.Where(e => e.Category == category.Value);
+        }
+
+        if (status.HasValue)
+        {
+            query = query.Where(e => e.Status == status.Value);
+        }
+
+        if (minAmount.HasValue)
+        {
+            query = query.Where(e => e.Amount >= minAmount.Value);
+        }
+
+        if (maxAmount.HasValue)
+        {
+            query = query.Where(e => e.Amount <= maxAmount.Value);
+        }
+
+        if (fromDate.HasValue)
+        {
+            query = query.Where(e => e.TransactionDate >= fromDate.Value);
+        }
+
+        if (toDate.HasValue)
+        {
+            query = query.Where(e => e.TransactionDate <= toDate.Value);
+        }
+
+        return await query
+            .OrderByDescending(e => e.TransactionDate)
+            .ThenBy(e => e.ReferenceNumber)
+            .ToListAsync(ct);
+    }
+
     public async Task<IReadOnlyList<LedgerEntry>> GetByLedgerAsync(
         Guid ledgerId,
         DateTimeOffset? fromDate = null,

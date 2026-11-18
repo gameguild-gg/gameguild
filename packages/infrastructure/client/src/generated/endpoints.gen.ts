@@ -20195,6 +20195,42 @@ export const deleteAuthExternalLoginsEndpoint = {
 } as const;
 
 /**
+ * Start the GitHub or Microsoft link flow for the current user (issue #1181).
+ *
+ * Returns the provider OAuth authorization URL plus the state parameter. The state is also recorded server-side and validated (one-shot) at the link callback. Supported providers: github, microsoft.
+ */
+export interface PostAuthExternalLoginsLinkAuthorizeInput {
+  provider: string;
+  body?: Types.IdentityAuthenticationDiscordLinkAuthorizeInput;
+}
+export type PostAuthExternalLoginsLinkAuthorizeOutput = Types.IdentityAuthenticationExternalLoginLinkAuthorizeOutput;
+export const postAuthExternalLoginsLinkAuthorizeEndpoint = {
+  operationId: 'postAuthExternalLoginsLinkAuthorize' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/external-logins/{provider}:link-authorize' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
+ * Complete the GitHub or Microsoft link flow for the current user (issue #1181).
+ *
+ * Round-trip validates the echoed state against the server-issued record, exchanges the authorization code for the user profile, and links the provider identity to the authenticated user. Idempotent when already linked to the same user. Supported providers: github, microsoft.
+ */
+export interface PostAuthExternalLoginsLinkCallbackInput {
+  provider: string;
+  body?: Types.IdentityAuthenticationDiscordLinkCallbackInput;
+}
+export type PostAuthExternalLoginsLinkCallbackOutput = void;
+export const postAuthExternalLoginsLinkCallbackEndpoint = {
+  operationId: 'postAuthExternalLoginsLinkCallback' as const,
+  method: 'POST' as const,
+  path: '/v1/auth/external-logins/{provider}:link-callback' as const,
+  tags: ['Auth'] as const,
+  requiresAuth: true,
+} as const;
+
+/**
  * Preview the scopes a provider link flow will request (authorization-time consent screen data).
  *
  * Returns the exact OAuth scopes the provider link flow will request, resolved the same way the authorize step embeds them in the authorization URL. Powers the authorization-time consent surface shown before linking (issue #250).
@@ -21816,10 +21852,10 @@ export const getAuthTrustedDevicesEndpoint = {
  * Trust the current device
  *
  * Trusting a device is a security-sensitive grant, so it requires fresh verification
- * (issue #1144): create a step-up challenge (POST /v1/auth/step-up/challenges) with
- * operation type "trust-device", target reference "current-session", and payload hash
- * SHA-256 of the trimmed device name; verify it with any MFA method and pass the
- * returned receipt as `stepUpReceipt`.
+ * (issues #1144 and #1191). A request without a receipt returns HTTP 403 with a persisted
+ * challenge, its server-derived operation binding, expiry, and available supported factors.
+ * Verify the challenge with an enrolled TOTP, backup code, or active WebAuthn credential,
+ * then retry the same device name with the returned receipt as `stepUpReceipt`.
  */
 export interface PostAuthTrustedDevicesInput {
   body?: Types.IdentityAuthenticationTrustDeviceInput;
@@ -36160,6 +36196,8 @@ export const endpoints = {
   postAuthEmailVerify: postAuthEmailVerifyEndpoint,
   headAuthExternalLogins: headAuthExternalLoginsEndpoint,
   deleteAuthExternalLogins: deleteAuthExternalLoginsEndpoint,
+  postAuthExternalLoginsLinkAuthorize: postAuthExternalLoginsLinkAuthorizeEndpoint,
+  postAuthExternalLoginsLinkCallback: postAuthExternalLoginsLinkCallbackEndpoint,
   getAuthExternalLoginsLinkPreview: getAuthExternalLoginsLinkPreviewEndpoint,
   postAuthExternalLoginsScopesRevoke: postAuthExternalLoginsScopesRevokeEndpoint,
   postAuthExternalLoginsDiscordLinkAuthorize: postAuthExternalLoginsDiscordLinkAuthorizeEndpoint,

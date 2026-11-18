@@ -148,7 +148,8 @@ public sealed class BlogAiController(
     /// <summary>Streams persisted run events (SSE) until the run reaches a terminal state.</summary>
     [HttpGet("runs/{runId:guid}/stream")]
     [Produces("text/event-stream")]
-    public async Task StreamRun(
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult> StreamRun(
         Guid postId,
         Guid runId,
         [FromHeader(Name = "Last-Event-ID")] long? lastEventId,
@@ -158,19 +159,30 @@ public sealed class BlogAiController(
         Response.ContentType = "text/event-stream";
         Response.Headers.CacheControl = "no-cache, no-transform";
         Response.Headers.Append("X-Accel-Buffering", "no");
-        await foreach (var streamEvent in aiAuthoring.StreamRun(
-                           tenantId,
-                           actorId,
-                           postId,
-                           runId,
-                           lastEventId ?? 0,
-                           cancellationToken).ConfigureAwait(false))
+        try
         {
-            await Response.WriteAsync($"id: {streamEvent.Sequence}\n", cancellationToken).ConfigureAwait(false);
-            await Response.WriteAsync($"event: {streamEvent.Type}\n", cancellationToken).ConfigureAwait(false);
-            await Response.WriteAsync($"data: {SerializeStreamEvent(streamEvent)}\n\n", cancellationToken).ConfigureAwait(false);
-            await Response.Body.FlushAsync(cancellationToken).ConfigureAwait(false);
+            await foreach (var streamEvent in aiAuthoring.StreamRun(
+                               tenantId,
+                               actorId,
+                               postId,
+                               runId,
+                               lastEventId ?? 0,
+                               cancellationToken).ConfigureAwait(false))
+            {
+                await Response.WriteAsync($"id: {streamEvent.Sequence}\n", cancellationToken).ConfigureAwait(false);
+                await Response.WriteAsync($"event: {streamEvent.Type}\n", cancellationToken).ConfigureAwait(false);
+                await Response.WriteAsync($"data: {SerializeStreamEvent(streamEvent)}\n\n", cancellationToken).ConfigureAwait(false);
+                await Response.Body.FlushAsync(cancellationToken).ConfigureAwait(false);
+            }
         }
+        catch (KeyNotFoundException) when (!Response.HasStarted)
+        {
+            // Same missing-run contract as GET runs/{runId}: the stream cannot start
+            // for a run that does not exist.
+            return NotFound();
+        }
+
+        return new EmptyResult();
     }
 
     /// <summary>Applies a pending proposal to the post (revision-guarded).</summary>

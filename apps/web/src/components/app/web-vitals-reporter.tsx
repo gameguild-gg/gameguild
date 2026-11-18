@@ -42,8 +42,32 @@ const firebaseConfigured = Boolean(
     process.env.NEXT_PUBLIC_FIREBASE_APP_ID?.trim(),
 );
 
+const gaMeasurementId = () => process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim() || undefined;
+
+/**
+ * When the GA4 loader (google-analytics.tsx) and Firebase share a measurement
+ * id, OUR <Script> tag must be in the DOM before `getAnalytics()` — its
+ * findGtagScriptOnPage() dedupe matches on the gtag URL + dataLayer name, and
+ * a miss makes Firebase inject a second, racing instance (zero /g/collect;
+ * observed live 2026-11-07). Both loaders start on the same consent grant, so
+ * wait briefly for the tag; if GA is not configured (or never appears) proceed
+ * and let Firebase inject its own.
+ */
+async function waitForSharedGtagScript(): Promise<void> {
+  const gaId = gaMeasurementId();
+  if (!gaId) return;
+  const fbId = process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID?.trim();
+  if (!fbId || fbId !== gaId) return;
+  const deadline = Date.now() + 5000;
+  while (Date.now() < deadline) {
+    if (document.querySelector('script[src*="googletagmanager.com/gtag/js?l=dataLayer"]')) return;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+}
+
 const loadFirebaseAnalytics: FirebaseAnalyticsLoader = async () => {
   if (!firebaseConfigured || typeof window === 'undefined') return null;
+  await waitForSharedGtagScript();
   const [{ initializeApp, getApps }, { getAnalytics, isSupported, logEvent, setAnalyticsCollectionEnabled }] = await Promise.all([
     import('@firebase/app'),
     import('@firebase/analytics'),

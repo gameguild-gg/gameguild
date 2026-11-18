@@ -132,7 +132,7 @@ public class FullUpdateSubscriptionPlanHandlerTests
         var act = () => new FullUpdateSubscriptionPlanHandler(context, new SubscriptionPlanSlugGenerator(), _planListCache.Object)
             .Handle(Command(Guid.NewGuid()), CancellationToken.None);
 
-        await act.Should().ThrowAsync<InvalidOperationException>()
+        await act.Should().ThrowAsync<EntityNotFoundException>()
             .WithMessage("*not found*");
     }
 }
