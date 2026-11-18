@@ -460,8 +460,13 @@ namespace GameGuild.API.Database.Migrations
                 DO $t2_writers$
                 DECLARE
                     definition text;
+                    nl text;
                     values_head text;
+                    values_head_crlf text;
                     policy_head text;
+                    policy_head_crlf text;
+                    policy_replacement text;
+                    policy_replacement_crlf text;
                     function_oid oid;
                     function_name text;
                     changed boolean;
@@ -473,9 +478,12 @@ namespace GameGuild.API.Database.Migrations
                     -- other schemas' aggregates while filtering (a bare
                     -- pg_get_functiondef() filter over pg_proc errors on
                     -- pg_catalog.array_agg). Multi-line needles are built
-                    -- with chr(10) so they never depend on the line endings
-                    -- this migration file carries; every fetched definition
-                    -- is normalized to LF first. The table-typed readers are
+                    -- with explicit chr(10)/chr(13) concatenations in BOTH
+                    -- line-ending styles and applied without normalizing the
+                    -- fetched body: the rewrite must be byte-preserving so
+                    -- the mirrored Down restores exactly the text earlier
+                    -- migrations left (their own pattern rewrites are
+                    -- whitespace-sensitive). The table-typed readers are
                     -- excluded by name (they are recreated against
                     -- economy_operations by the next statement), so only the
                     -- in-place writers are rewritten here.
@@ -486,15 +494,24 @@ namespace GameGuild.API.Database.Migrations
                     WHERE n.nspname = 'economy_private'
                       AND p.prokind = 'f';
 
-                    values_head := 'VALUES (' || chr(10) || '        p_id, ';
-                    policy_head := 'public.economy_marketplace_currency_policy_versions policy' || chr(10) ||
+                    nl := chr(10);
+                    values_head := 'VALUES (' || nl || '        p_id, ';
+                    values_head_crlf := 'VALUES (' || chr(13) || nl || '        p_id, ';
+                    policy_head := 'public.economy_marketplace_currency_policy_versions policy' || nl ||
                                    '    WHERE policy."TenantId" = p_tenant_id';
+                    policy_head_crlf := 'public.economy_marketplace_currency_policy_versions policy' || chr(13) || nl ||
+                                        '    WHERE policy."TenantId" = p_tenant_id';
+                    policy_replacement := 'public.economy_policy_versions policy' || nl ||
+                                          '    WHERE policy."PolicyDomain" = 1' || nl ||
+                                          '      AND policy."TenantId" = p_tenant_id';
+                    policy_replacement_crlf := 'public.economy_policy_versions policy' || chr(13) || nl ||
+                                               '    WHERE policy."PolicyDomain" = 1' || chr(13) || nl ||
+                                               '      AND policy."TenantId" = p_tenant_id';
 
                     FOREACH function_oid IN ARRAY economy_function_oids LOOP
                         SELECT p.proname INTO function_name
                         FROM pg_proc p WHERE p.oid = function_oid;
                         definition := pg_get_functiondef(function_oid);
-                        definition := replace(definition, chr(13) || chr(10), chr(10));
                         changed := false;
 
                         -- === payout-side writers (OperationKind = 1) ========
@@ -519,8 +536,14 @@ namespace GameGuild.API.Database.Migrations
                                 values_head || 'p_tenant_id,',
                                 values_head || '1, p_tenant_id,');
                             definition := replace(definition,
+                                values_head_crlf || 'p_tenant_id,',
+                                values_head_crlf || '1, p_tenant_id,');
+                            definition := replace(definition,
                                 values_head || 'pg_catalog.btrim(p_idempotency_key)',
                                 values_head || '1, pg_catalog.btrim(p_idempotency_key)');
+                            definition := replace(definition,
+                                values_head_crlf || 'pg_catalog.btrim(p_idempotency_key)',
+                                values_head_crlf || '1, pg_catalog.btrim(p_idempotency_key)');
                             changed := true;
                         END IF;
 
@@ -551,8 +574,14 @@ namespace GameGuild.API.Database.Migrations
                                 values_head || 'p_tenant_id,',
                                 values_head || '2, p_tenant_id,');
                             definition := replace(definition,
+                                values_head_crlf || 'p_tenant_id,',
+                                values_head_crlf || '2, p_tenant_id,');
+                            definition := replace(definition,
                                 values_head || 'pg_catalog.btrim(p_idempotency_key)',
                                 values_head || '2, pg_catalog.btrim(p_idempotency_key)');
+                            definition := replace(definition,
+                                values_head_crlf || 'pg_catalog.btrim(p_idempotency_key)',
+                                values_head_crlf || '2, pg_catalog.btrim(p_idempotency_key)');
                             changed := true;
                         END IF;
 
@@ -579,11 +608,11 @@ namespace GameGuild.API.Database.Migrations
                             -- The Marketplace policy verification blocks: the
                             -- domain predicate rides first (so the per-domain
                             -- partial uniques and window indexes stay
-                            -- usable), then the subject column rename.
-                            definition := replace(definition, policy_head,
-                                'public.economy_policy_versions policy' || chr(10) ||
-                                '    WHERE policy."PolicyDomain" = 1' || chr(10) ||
-                                '      AND policy."TenantId" = p_tenant_id');
+                            -- usable), then the subject column rename. Both
+                            -- line-ending styles are tried; the replacement
+                            -- mirrors the matched style byte for byte.
+                            definition := replace(definition, policy_head, policy_replacement);
+                            definition := replace(definition, policy_head_crlf, policy_replacement_crlf);
                             definition := replace(definition,
                                 'public.economy_marketplace_currency_policy_versions',
                                 'public.economy_policy_versions');
@@ -979,39 +1008,39 @@ namespace GameGuild.API.Database.Migrations
                 name: "economy_ad_network_policy_versions",
                 columns: table => new
                 {
-                    TenantId = table.Column<Guid>(type: "uuid", nullable: false),
                     Network = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Version = table.Column<long>(type: "bigint", nullable: false),
-                    ApprovedBy = table.Column<Guid>(type: "uuid", nullable: false),
-                    BudgetWindowTicks = table.Column<long>(type: "bigint", nullable: false),
-                    CanonicalPayload = table.Column<string>(type: "text", nullable: false),
-                    ContractedRevenueSharePpm = table.Column<int>(type: "integer", nullable: false),
                     EffectiveAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    EstimatedNetEcpmUsdNanos = table.Column<long>(type: "bigint", nullable: false),
                     ExpiresAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    FundedLossBudgetUsdNanos = table.Column<long>(type: "bigint", nullable: false),
                     IssuanceMode = table.Column<int>(type: "integer", nullable: false),
-                    KeyId = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    MaximumAsnSoftUnits = table.Column<long>(type: "bigint", nullable: false),
-                    MaximumDeviceSoftUnits = table.Column<long>(type: "bigint", nullable: false),
-                    MaximumFocusLossTicks = table.Column<long>(type: "bigint", nullable: false),
-                    MaximumGlobalSoftUnits = table.Column<long>(type: "bigint", nullable: false),
-                    MaximumIpSoftUnits = table.Column<long>(type: "bigint", nullable: false),
-                    MaximumNetworkSoftUnits = table.Column<long>(type: "bigint", nullable: false),
-                    MaximumRewardSoftUnits = table.Column<long>(type: "bigint", nullable: false),
-                    MaximumUserSoftUnits = table.Column<long>(type: "bigint", nullable: false),
-                    MinimumVisiblePpm = table.Column<int>(type: "integer", nullable: false),
-                    PayloadHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    ProposedBy = table.Column<Guid>(type: "uuid", nullable: false),
-                    ProviderCertified = table.Column<bool>(type: "boolean", nullable: false),
-                    ProviderHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    PublishedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    Ranking = table.Column<int>(type: "integer", nullable: false),
-                    ReportStaleAfterTicks = table.Column<long>(type: "bigint", nullable: false),
-                    ReportsCurrentThrough = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    YieldState = table.Column<int>(type: "integer", nullable: false),
+                    EstimatedNetEcpmUsdNanos = table.Column<long>(type: "bigint", nullable: false),
+                    ContractedRevenueSharePpm = table.Column<int>(type: "integer", nullable: false),
                     SafetyBufferPpm = table.Column<int>(type: "integer", nullable: false),
-                    Signature = table.Column<string>(type: "text", nullable: false),
-                    YieldState = table.Column<int>(type: "integer", nullable: false)
+                    MinimumVisiblePpm = table.Column<int>(type: "integer", nullable: false),
+                    MaximumFocusLossTicks = table.Column<long>(type: "bigint", nullable: false),
+                    MaximumRewardSoftUnits = table.Column<long>(type: "bigint", nullable: false),
+                    ReportsCurrentThrough = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    ReportStaleAfterTicks = table.Column<long>(type: "bigint", nullable: false),
+                    Ranking = table.Column<int>(type: "integer", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uuid", nullable: false, defaultValue: new Guid("00000000-0000-0000-0000-000000000000")),
+                    ApprovedBy = table.Column<Guid>(type: "uuid", nullable: false, defaultValue: new Guid("00000000-0000-0000-0000-000000000000")),
+                    BudgetWindowTicks = table.Column<long>(type: "bigint", nullable: false, defaultValue: 0L),
+                    CanonicalPayload = table.Column<string>(type: "text", nullable: false, defaultValue: ""),
+                    FundedLossBudgetUsdNanos = table.Column<long>(type: "bigint", nullable: false, defaultValue: 0L),
+                    KeyId = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false, defaultValue: ""),
+                    MaximumAsnSoftUnits = table.Column<long>(type: "bigint", nullable: false, defaultValue: 0L),
+                    MaximumDeviceSoftUnits = table.Column<long>(type: "bigint", nullable: false, defaultValue: 0L),
+                    MaximumGlobalSoftUnits = table.Column<long>(type: "bigint", nullable: false, defaultValue: 0L),
+                    MaximumIpSoftUnits = table.Column<long>(type: "bigint", nullable: false, defaultValue: 0L),
+                    MaximumNetworkSoftUnits = table.Column<long>(type: "bigint", nullable: false, defaultValue: 0L),
+                    MaximumUserSoftUnits = table.Column<long>(type: "bigint", nullable: false, defaultValue: 0L),
+                    PayloadHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false, defaultValue: ""),
+                    ProposedBy = table.Column<Guid>(type: "uuid", nullable: false, defaultValue: new Guid("00000000-0000-0000-0000-000000000000")),
+                    ProviderCertified = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
+                    ProviderHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false, defaultValue: ""),
+                    PublishedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValue: new DateTimeOffset(1, 1, 1, 0, 0, 0, TimeSpan.Zero)),
+                    Signature = table.Column<string>(type: "text", nullable: false, defaultValue: "")
                 },
                 constraints: table =>
                 {
@@ -1028,13 +1057,13 @@ namespace GameGuild.API.Database.Migrations
                 columns: table => new
                 {
                     SessionId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ConsumedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     DeviceRiskHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    LossBudgetUsdNanos = table.Column<long>(type: "bigint", nullable: false),
                     Network = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     SoftUnits = table.Column<long>(type: "bigint", nullable: false),
-                    TenantId = table.Column<Guid>(type: "uuid", nullable: false),
-                    UserId = table.Column<Guid>(type: "uuid", nullable: false)
+                    LossBudgetUsdNanos = table.Column<long>(type: "bigint", nullable: false),
+                    ConsumedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uuid", nullable: false, defaultValue: new Guid("00000000-0000-0000-0000-000000000000"))
                 },
                 constraints: table =>
                 {
@@ -1047,15 +1076,15 @@ namespace GameGuild.API.Database.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ConsumedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    LossBudgetUsdNanos = table.Column<long>(type: "bigint", nullable: false),
-                    Scope = table.Column<int>(type: "integer", nullable: false),
-                    SessionId = table.Column<Guid>(type: "uuid", nullable: false),
-                    SoftUnits = table.Column<long>(type: "bigint", nullable: false),
-                    SubjectHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
                     TenantId = table.Column<Guid>(type: "uuid", nullable: false),
+                    SessionId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Scope = table.Column<int>(type: "integer", nullable: false),
+                    SubjectHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    WindowStartedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     WindowEndsAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    WindowStartedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    SoftUnits = table.Column<long>(type: "bigint", nullable: false),
+                    LossBudgetUsdNanos = table.Column<long>(type: "bigint", nullable: false),
+                    ConsumedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1071,32 +1100,35 @@ namespace GameGuild.API.Database.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
+            // The legacy tables are recreated with their ORIGINAL column order
+            // (the historical migrations' order, not the EF-alphabetical one)
+            // so the rollback restores a byte-identical schema.
             migrationBuilder.CreateTable(
                 name: "economy_admin_withdrawal_runs",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    AmountUnits = table.Column<long>(type: "bigint", nullable: false),
-                    ApprovedBy = table.Column<Guid>(type: "uuid", nullable: true),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    DestinationHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    DispatchSnapshotHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
-                    ExecutionEpoch = table.Column<long>(type: "bigint", nullable: false),
-                    FencingToken = table.Column<long>(type: "bigint", nullable: false),
                     IdempotencyKey = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    PeriodStart = table.Column<DateOnly>(type: "date", nullable: false),
-                    PlatformFeeWalletId = table.Column<Guid>(type: "uuid", nullable: false),
-                    PolicyVersion = table.Column<long>(type: "bigint", nullable: false),
-                    ProviderTransferId = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     RequestHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    PeriodStart = table.Column<DateOnly>(type: "date", nullable: false),
                     RequestedBy = table.Column<Guid>(type: "uuid", nullable: false),
-                    ReserveAuthorizationEpoch = table.Column<long>(type: "bigint", nullable: false),
-                    ReserveVersion = table.Column<long>(type: "bigint", nullable: false),
+                    ApprovedBy = table.Column<Guid>(type: "uuid", nullable: true),
+                    PlatformFeeWalletId = table.Column<Guid>(type: "uuid", nullable: false),
+                    AmountUnits = table.Column<long>(type: "bigint", nullable: false),
                     SourceAssetKey = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    DestinationHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
                     State = table.Column<int>(type: "integer", nullable: false),
-                    TenantId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Version = table.Column<long>(type: "bigint", nullable: false),
+                    FencingToken = table.Column<long>(type: "bigint", nullable: false),
+                    ExecutionEpoch = table.Column<long>(type: "bigint", nullable: false),
+                    ReserveVersion = table.Column<long>(type: "bigint", nullable: false),
+                    ReserveAuthorizationEpoch = table.Column<long>(type: "bigint", nullable: false),
+                    PolicyVersion = table.Column<long>(type: "bigint", nullable: false),
+                    DispatchSnapshotHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
+                    ProviderTransferId = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    Version = table.Column<long>(type: "bigint", nullable: false)
+                    TenantId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1114,12 +1146,12 @@ namespace GameGuild.API.Database.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ActorId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ConsumedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    KillSwitchEpoch = table.Column<long>(type: "bigint", nullable: false),
-                    OperationFingerprint = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
                     ReceiptId = table.Column<Guid>(type: "uuid", nullable: false),
-                    TenantId = table.Column<Guid>(type: "uuid", nullable: false)
+                    TenantId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ActorId = table.Column<Guid>(type: "uuid", nullable: false),
+                    OperationFingerprint = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    KillSwitchEpoch = table.Column<long>(type: "bigint", nullable: false),
+                    ConsumedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1136,25 +1168,25 @@ namespace GameGuild.API.Database.Migrations
                 name: "economy_marketplace_currency_policy_versions",
                 columns: table => new
                 {
-                    TenantId = table.Column<Guid>(type: "uuid", nullable: false),
                     ProductId = table.Column<Guid>(type: "uuid", nullable: false),
                     Version = table.Column<long>(type: "bigint", nullable: false),
-                    ApprovedBy = table.Column<Guid>(type: "uuid", nullable: false),
-                    CanonicalPayload = table.Column<string>(type: "text", nullable: false),
-                    EffectiveAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    ExpiresAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    HardPriceUnits = table.Column<long>(type: "bigint", nullable: false),
-                    KeyId = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    Mode = table.Column<int>(type: "integer", nullable: false),
-                    PayloadHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    PlatformFeePpm = table.Column<int>(type: "integer", nullable: false),
-                    PlatformFeeWalletId = table.Column<Guid>(type: "uuid", nullable: false),
-                    ProposedBy = table.Column<Guid>(type: "uuid", nullable: false),
-                    PublishedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    RefundHoldTicks = table.Column<long>(type: "bigint", nullable: false),
                     SellerId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Signature = table.Column<string>(type: "text", nullable: false),
-                    SoftPriceUnits = table.Column<long>(type: "bigint", nullable: false)
+                    Mode = table.Column<int>(type: "integer", nullable: false),
+                    HardPriceUnits = table.Column<long>(type: "bigint", nullable: false),
+                    SoftPriceUnits = table.Column<long>(type: "bigint", nullable: false),
+                    PlatformFeePpm = table.Column<int>(type: "integer", nullable: false),
+                    EffectiveAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uuid", nullable: false, defaultValue: new Guid("00000000-0000-0000-0000-000000000000")),
+                    ApprovedBy = table.Column<Guid>(type: "uuid", nullable: false, defaultValue: new Guid("00000000-0000-0000-0000-000000000000")),
+                    CanonicalPayload = table.Column<string>(type: "text", nullable: false, defaultValue: ""),
+                    ExpiresAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValue: new DateTimeOffset(1, 1, 1, 0, 0, 0, TimeSpan.Zero)),
+                    KeyId = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false, defaultValue: ""),
+                    PayloadHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false, defaultValue: ""),
+                    PlatformFeeWalletId = table.Column<Guid>(type: "uuid", nullable: false, defaultValue: new Guid("00000000-0000-0000-0000-000000000000")),
+                    ProposedBy = table.Column<Guid>(type: "uuid", nullable: false, defaultValue: new Guid("00000000-0000-0000-0000-000000000000")),
+                    PublishedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValue: new DateTimeOffset(1, 1, 1, 0, 0, 0, TimeSpan.Zero)),
+                    RefundHoldTicks = table.Column<long>(type: "bigint", nullable: false, defaultValue: 0L),
+                    Signature = table.Column<string>(type: "text", nullable: false, defaultValue: "")
                 },
                 constraints: table =>
                 {
@@ -1171,29 +1203,29 @@ namespace GameGuild.API.Database.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ActorId = table.Column<Guid>(type: "uuid", nullable: false),
-                    AmountUnits = table.Column<long>(type: "bigint", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    DestinationHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    DispatchSnapshotHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
-                    EligibilityHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    FencingToken = table.Column<long>(type: "bigint", nullable: false),
                     IdempotencyKey = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    KillSwitchEpoch = table.Column<long>(type: "bigint", nullable: false),
-                    PayeeId = table.Column<Guid>(type: "uuid", nullable: false),
-                    PolicyVersion = table.Column<long>(type: "bigint", nullable: false),
-                    ProviderAccountId = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
-                    ProviderBindingHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    ProviderPayoutId = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     RequestHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
-                    ReserveAuthorizationEpoch = table.Column<long>(type: "bigint", nullable: false),
-                    ReserveVersion = table.Column<long>(type: "bigint", nullable: false),
-                    RiskDecisionId = table.Column<Guid>(type: "uuid", nullable: false),
+                    ActorId = table.Column<Guid>(type: "uuid", nullable: false),
+                    PayeeId = table.Column<Guid>(type: "uuid", nullable: false),
+                    WalletId = table.Column<Guid>(type: "uuid", nullable: false),
+                    AmountUnits = table.Column<long>(type: "bigint", nullable: false),
+                    ProviderAccountId = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: false),
+                    DestinationHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    ProviderBindingHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    EligibilityHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    DispatchSnapshotHash = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: true),
+                    ProviderPayoutId = table.Column<string>(type: "character varying(256)", maxLength: 256, nullable: true),
                     State = table.Column<int>(type: "integer", nullable: false),
-                    TenantId = table.Column<Guid>(type: "uuid", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     Version = table.Column<long>(type: "bigint", nullable: false),
-                    WalletId = table.Column<Guid>(type: "uuid", nullable: false)
+                    FencingToken = table.Column<long>(type: "bigint", nullable: false),
+                    KillSwitchEpoch = table.Column<long>(type: "bigint", nullable: false),
+                    ReserveVersion = table.Column<long>(type: "bigint", nullable: false),
+                    ReserveAuthorizationEpoch = table.Column<long>(type: "bigint", nullable: false),
+                    PolicyVersion = table.Column<long>(type: "bigint", nullable: false),
+                    RiskDecisionId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
+                    TenantId = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1209,10 +1241,10 @@ namespace GameGuild.API.Database.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    ConsumedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    OperationFingerprint = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    RiskDecisionId = table.Column<Guid>(type: "uuid", nullable: false),
                     PostingGroupId = table.Column<Guid>(type: "uuid", nullable: false),
-                    RiskDecisionId = table.Column<Guid>(type: "uuid", nullable: false)
+                    OperationFingerprint = table.Column<string>(type: "character varying(128)", maxLength: 128, nullable: false),
+                    ConsumedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -1319,6 +1351,25 @@ namespace GameGuild.API.Database.Migrations
                 column: "PostingGroupId",
                 unique: true);
 
+            // Two wallet bindings existed only in the database (they predate
+            // the EF model knowledge of these tables); restore them so the
+            // rollback yields a byte-identical schema.
+            migrationBuilder.AddForeignKey(
+                name: "FK_economy_admin_withdrawal_runs_economy_wallets_PlatformFeeWal",
+                table: "economy_admin_withdrawal_runs",
+                column: "PlatformFeeWalletId",
+                principalTable: "economy_wallets",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_economy_payout_operations_economy_wallets_WalletId",
+                table: "economy_payout_operations",
+                column: "WalletId",
+                principalTable: "economy_wallets",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
+
             // --- carry every unified row back to its legacy table -----------
             migrationBuilder.Sql("""
                 INSERT INTO public.economy_capability_receipt_consumptions (
@@ -1416,8 +1467,15 @@ namespace GameGuild.API.Database.Migrations
                 DECLARE
                     definition text;
                     values_head text;
+                    values_head_crlf text;
                     unified_policy_head text;
+                    unified_policy_head_crlf text;
+                    legacy_policy_head text;
+                    legacy_policy_head_crlf text;
                     capability_join text;
+                    capability_join_crlf text;
+                    legacy_capability_join text;
+                    legacy_capability_join_crlf text;
                     function_oid oid;
                     function_name text;
                     changed boolean;
@@ -1431,17 +1489,30 @@ namespace GameGuild.API.Database.Migrations
                       AND p.prokind = 'f';
 
                     values_head := 'VALUES (' || chr(10) || '        p_id, ';
+                    values_head_crlf := 'VALUES (' || chr(13) || chr(10) || '        p_id, ';
                     unified_policy_head := 'public.economy_policy_versions policy' || chr(10) ||
                                            '    WHERE policy."PolicyDomain" = 1' || chr(10) ||
                                            '      AND policy."TenantId" = p_tenant_id';
+                    unified_policy_head_crlf := 'public.economy_policy_versions policy' || chr(13) || chr(10) ||
+                                                '    WHERE policy."PolicyDomain" = 1' || chr(13) || chr(10) ||
+                                                '      AND policy."TenantId" = p_tenant_id';
+                    legacy_policy_head := 'public.economy_marketplace_currency_policy_versions policy' || chr(10) ||
+                                          '    WHERE policy."TenantId" = p_tenant_id';
+                    legacy_policy_head_crlf := 'public.economy_marketplace_currency_policy_versions policy' || chr(13) || chr(10) ||
+                                               '    WHERE policy."TenantId" = p_tenant_id';
                     capability_join := 'JOIN public.economy_unit_consumptions consumption' || chr(10) ||
                                        '      ON consumption."ReceiptId"';
+                    capability_join_crlf := 'JOIN public.economy_unit_consumptions consumption' || chr(13) || chr(10) ||
+                                            '      ON consumption."ReceiptId"';
+                    legacy_capability_join := 'JOIN public.economy_capability_receipt_consumptions consumption' || chr(10) ||
+                                              '      ON consumption."ReceiptId"';
+                    legacy_capability_join_crlf := 'JOIN public.economy_capability_receipt_consumptions consumption' || chr(13) || chr(10) ||
+                                                   '      ON consumption."ReceiptId"';
 
                     FOREACH function_oid IN ARRAY economy_function_oids LOOP
                         SELECT p.proname INTO function_name
                         FROM pg_proc p WHERE p.oid = function_oid;
                         definition := pg_get_functiondef(function_oid);
-                        definition := replace(definition, chr(13) || chr(10), chr(10));
                         changed := false;
 
                         -- === payout-side writers ==============================
@@ -1459,8 +1530,14 @@ namespace GameGuild.API.Database.Migrations
                                 values_head || '1, p_tenant_id,',
                                 values_head || 'p_tenant_id,');
                             definition := replace(definition,
+                                values_head_crlf || '1, p_tenant_id,',
+                                values_head_crlf || 'p_tenant_id,');
+                            definition := replace(definition,
                                 values_head || '1, pg_catalog.btrim(p_idempotency_key)',
                                 values_head || 'pg_catalog.btrim(p_idempotency_key)');
+                            definition := replace(definition,
+                                values_head_crlf || '1, pg_catalog.btrim(p_idempotency_key)',
+                                values_head_crlf || 'pg_catalog.btrim(p_idempotency_key)');
                             definition := replace(definition,
                                 'public.economy_operations%ROWTYPE',
                                 'public.economy_payout_operations%ROWTYPE');
@@ -1487,8 +1564,14 @@ namespace GameGuild.API.Database.Migrations
                                 values_head || '2, p_tenant_id,',
                                 values_head || 'p_tenant_id,');
                             definition := replace(definition,
+                                values_head_crlf || '2, p_tenant_id,',
+                                values_head_crlf || 'p_tenant_id,');
+                            definition := replace(definition,
                                 values_head || '2, pg_catalog.btrim(p_idempotency_key)',
                                 values_head || 'pg_catalog.btrim(p_idempotency_key)');
+                            definition := replace(definition,
+                                values_head_crlf || '2, pg_catalog.btrim(p_idempotency_key)',
+                                values_head_crlf || 'pg_catalog.btrim(p_idempotency_key)');
                             -- Only the two create INSERT lists carry the actor
                             -- column (the audit appends expose an ActorId of
                             -- their own in RETURNS TABLE, untouched here).
@@ -1512,9 +1595,8 @@ namespace GameGuild.API.Database.Migrations
                             definition := replace(definition,
                                 'VALUES (gen_random_uuid(), 2, p_risk_decision_id',
                                 'VALUES (gen_random_uuid(), p_risk_decision_id');
-                            definition := replace(definition, unified_policy_head,
-                                'public.economy_marketplace_currency_policy_versions policy' || chr(10) ||
-                                '    WHERE policy."TenantId" = p_tenant_id');
+                            definition := replace(definition, unified_policy_head, legacy_policy_head);
+                            definition := replace(definition, unified_policy_head_crlf, legacy_policy_head_crlf);
                             definition := replace(definition,
                                 'policy."SubjectId"', 'policy."ProductId"');
                             definition := replace(definition,
@@ -1525,9 +1607,8 @@ namespace GameGuild.API.Database.Migrations
                             -- everything else still pointing at the unified
                             -- consumption table is a risk-decision read or
                             -- insert.
-                            definition := replace(definition, capability_join,
-                                'JOIN public.economy_capability_receipt_consumptions consumption' || chr(10) ||
-                                '      ON consumption."ReceiptId"');
+                            definition := replace(definition, capability_join, legacy_capability_join);
+                            definition := replace(definition, capability_join_crlf, legacy_capability_join_crlf);
                             definition := replace(definition,
                                 'public.economy_unit_consumptions',
                                 'public.economy_risk_decision_consumptions');
@@ -1647,7 +1728,7 @@ namespace GameGuild.API.Database.Migrations
                     WHERE "TenantId" = p_tenant_id AND "PayeeId" = p_payee_id
                     ORDER BY "CreatedAt" DESC, "Id" DESC
                     LIMIT p_take;
-                END;
+                END
                 $function$;
                 ALTER FUNCTION economy_private.read_payout_operations_by_payee_v2(uuid, uuid, integer)
                     OWNER TO gameguild_economy_procedure_owner;
@@ -1671,7 +1752,7 @@ namespace GameGuild.API.Database.Migrations
                     WHERE "TenantId" = p_tenant_id
                     ORDER BY "CreatedAt" DESC, "Id" DESC
                     LIMIT p_take;
-                END;
+                END
                 $function$;
                 ALTER FUNCTION economy_private.read_payout_operations_for_tenant_v2(uuid, integer)
                     OWNER TO gameguild_economy_procedure_owner;
