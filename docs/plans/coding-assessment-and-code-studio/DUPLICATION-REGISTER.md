@@ -1,10 +1,12 @@
 # Registro de duplicacoes entre coding-surface e Emception UI
 
-Status: inventario inicial; documento vivo.
+Status: parte 1 implementada; documento vivo.
 
 Data: 2026-11-06.
 
 Commit-base do inventario: `255108e0003acc55b67dbf605f57e86f9a36418d`.
+
+Baseline reconfirmada para a parte 1: `4c625d55dadedb1a699ac9028c6ad0418259b6e6`.
 
 ## Objetivo
 
@@ -70,8 +72,8 @@ target pelo path real, registrar o commit exato de origem e descrever o delta.
 
 | ID | Estado | Origem preservada | Target previsto | Parte copiada | Divergencia esperada |
 | --- | --- | --- | --- | --- | --- |
-| `DUP-PL-001` | `planned` | `ui-emception/src/assessment/types.ts`; `apps/web/src/lib/coding-assignment/types.ts` | `packages/features/coding/src/**` | conceitos de definition, files, tests e guards | novo contrato versionado, inteiro e orientado ao grading |
-| `DUP-PL-002` | `planned` | `ui-emception/src/assessment/paths.ts` | `packages/features/coding-surface/src/**` ou `coding/src/**` | normalizacao `/user` para `/home/user` | ownership sera decidido pela dependencia mais baixa que realmente precisar dela |
+| `DUP-PL-001` | `diverged` | `ui-emception/src/assessment/types.ts`; `apps/web/src/lib/coding-assignment/types.ts` | `packages/features/coding/src/contracts.ts` e `schemas.ts` | conceitos de definition, files, tests e guards | contrato novo e estrito, IDs estaveis, pesos inteiros, reports tecnicos e formas authoring/delivery/response separadas |
+| `DUP-PL-002` | `diverged` | `ui-emception/src/assessment/paths.ts` | `packages/features/coding/src/paths.ts` | normalizacao `/user` para `/home/user` | o dominio aceita paths relativos e o alias preservado `/user`, sempre retorna path canonico e rejeita colisoes, absolutos externos, segmentos ambiguos e namespace reservado |
 | `DUP-PL-003` | `planned` | `ui-emception/src/assessment/plan.ts` | `packages/features/coding-surface/src/**` | montagem de `TestPlan`, overlays e escopo public/full | usar contratos novos e manter preview sem autoridade academica |
 | `DUP-PL-004` | `planned` | `ui-emception/src/assessment/session.ts` | `packages/features/coding-surface/src/**` | controller subset, run e submission delta | modos e callbacks especificos do workflow de grading |
 | `DUP-PL-005` | `planned` | `ui-emception/src/assessment/presets.ts` | `packages/features/coding-surface/src/**` | workspace config por linguagem | catalogo limitado as capabilities aprovadas para grading |
@@ -101,6 +103,66 @@ teste foram copiados ou adaptados:
 
 Os aliases existentes nao serao removidos por este programa. O novo package
 recebe configuracao propria somente se o bundler realmente exigir.
+
+## Inventario executado na parte 1
+
+### Consumidores dos contratos preservados
+
+O baseline encontrou os seguintes consumidores diretos de
+`apps/web/src/lib/coding-assignment/types.ts`:
+
+- rota learner `learn/courses/[slug]/activities/[activityId]/page.tsx`;
+- `coding-assignment-preview.tsx` e `lesson-authoring-workspace.tsx`;
+- `coding-activity-client.tsx` e seu teste;
+- editor e testes de coding definition, inclusive functional test;
+- `resolve-seed.ts`.
+
+Os tipos de `ui-emception/src/assessment/types.ts` continuam consumidos por
+`CodingAssessmentEditor.tsx`, pelos mapeadores `plan.ts` e `session.ts`, por
+seus testes e pelos exports publicos do package. Nenhum desses imports foi
+alterado na parte 1.
+
+### Classificacao dos campos existentes
+
+| Campo ou capacidade | Classificacao | Tratamento no contrato novo |
+| --- | --- | --- |
+| environment language/tools/lib bundle | dominio + execucao | substituido por identidade estavel de toolchain; presets ficam fora do dominio |
+| workspace files | dominio | IDs e paths canonicos, encoding, mutabilidade e visibilidade explicitos |
+| public/private tests | dominio + seguranca | visibilidade por teste; delivery possui apenas `publicTests` |
+| standard/functional expectations | dominio | `stdio` e `function`, com IDs estaveis e tipos validados |
+| `Weight: number` | dominio legado | `weightUnits` inteiro positivo; nenhum peso academico fracionario novo |
+| `Grading.MaxScore` | workflow academico | removido do dominio coding; fornecido ao adapter de grading como `ScoreValue` |
+| editor mode, controller, storage e callbacks | UI/execucao | fora de `@game-guild/coding`; permanece no package preservado nesta fase |
+| score de preview browser | UI/execucao | nao e report oficial e nao entra no adapter puro |
+| aliases de casing e guards permissivos | compatibilidade legada | preservados no consumidor atual; parser novo e estrito e fail-closed |
+
+Nenhum campo foi classificado como obsoleto comprovado nesta fase. Por isso,
+nenhum contrato, import ou teste existente foi removido.
+
+### Versoes e fixtures
+
+- adapter backend `1`: artifact `4.4.0` e lock historico proprio;
+- adapter backend `2`: artifacts historicamente emitidos `4.4.1`, `4.5.0`,
+  `4.5.1` e `4.5.2`;
+- adapter backend `3`: artifact `4.5.2` atual no baseline;
+- adapter novo TypeScript: versao `4`, sem fallback para `1` a `3`.
+
+As formas congeladas estao registradas em
+`packages/features/grading-adapter-code/fixtures/code-adapter-cases-v1.json`.
+Authoring, delivery redigida, submission, report e casos invalidos estao em
+`packages/features/coding/fixtures/coding-contract-cases-v1.json`. A parte 2
+deve consumir essas fixtures para provar paridade C# sem compartilhar codigo
+entre runtimes.
+
+### Copias concretas da parte 1
+
+| ID | Origem e baseline | Destino | Motivo | Delta | Testes | Owner |
+| --- | --- | --- | --- | --- | --- | --- |
+| `DUP-NEW-001` | `apps/web/src/lib/coding-assignment/types.ts` e `ui-emception/src/assessment/types.ts` em `4c625d55da` | `packages/features/coding/src/contracts.ts` e `schemas.ts` | fonte TypeScript autoritativa para novos fluxos de grading | schema camelCase novo, IDs, inteiros, redaction estrutural e report tecnico | `@game-guild/coding` | coding/grading |
+| `DUP-NEW-002` | `ui-emception/src/assessment/paths.ts` em `4c625d55da` | `packages/features/coding/src/paths.ts` | impedir colisoes de aliases e traversal antes de snapshot/submission | aceita relativo e `/user`, sempre canonicaliza em `/home/user`; demais regras sao mais estritas e independentes | `@game-guild/coding` | coding/grading |
+
+Essas copias nao devem acompanhar silenciosamente mudancas futuras na origem.
+Qualquer convergencia depende da revisao com o responsavel pelo Emception.
 
 ## Template para novas entradas
 

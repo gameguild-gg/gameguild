@@ -1,6 +1,6 @@
 # Parte 1. Dominio coding e adapter TypeScript
 
-Status: planejado.
+Status: implementado em 2026-11-18.
 
 ## Objetivo
 
@@ -244,3 +244,33 @@ O build amplo nao substitui os testes de redacao e roundtrip.
 - `@game-guild/emception-ui` permanece inalterado e independente;
 - duplicacoes conhecidas estao registradas para revisao futura;
 - nenhuma tabela, migration ou fonte do Emception foi alterada.
+
+## Resultado da implementacao
+
+| Etapa | Estado | Evidencia |
+| --- | --- | --- |
+| `CODE-PKG-01` | concluida | inventario e classificacao em `DUPLICATION-REGISTER.md`; fixtures validas e invalidas versionadas |
+| `CODE-PKG-02` | concluida | schemas estritos, paths canonicos, `weightUnits` e alocacao Hamilton somente com inteiros |
+| `CODE-PKG-03` | concluida | `@game-guild/coding` com exports publico/testing, parsers, redaction e testes isolados |
+| `CODE-PKG-04` | concluida | `@game-guild/grading-adapter-code` com projecao, delivery, response, report mapping, capabilities e evidencias |
+| `CODE-PKG-05` | concluida no escopo desta fase | somente o novo adapter consome os contratos; apps e `emception-ui` permanecem preservados para as partes 2 e 3 |
+
+A decisao de execucao esta em
+[`ADR-20261118-coding-grading-external-execution.md`](../../architecture/ADR-20261118-coding-grading-external-execution.md).
+O adapter novo usa a versao `4`; as versoes backend `1`, `2` e `3` permanecem
+congeladas. Nenhuma porta assincrona foi adicionada ao core TypeScript de
+grading porque ainda nao existe segundo consumidor generico.
+
+Validacoes executaveis:
+
+```bash
+pnpm --filter @game-guild/coding test
+pnpm --filter @game-guild/coding typecheck
+pnpm --filter @game-guild/grading-adapter-code test
+pnpm --filter @game-guild/grading-adapter-code typecheck
+pnpm --filter @game-guild/grading test
+pnpm --filter @game-guild/grading typecheck
+```
+
+O proximo gate e a parte 2. Ela deve adotar as fixtures no backend sem alterar
+snapshots congelados e sem levar vocabulario de code ao core generico.

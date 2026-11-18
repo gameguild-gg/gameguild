@@ -1,0 +1,29 @@
+{
+  "itemId": "code",
+  "maxScore": 10000,
+  "expectedAllocation": [
+    { "testId": "public-stdio", "maxScore": 2500 },
+    { "testId": "private-function", "maxScore": 7500 }
+  ],
+  "expectedFinalScore": 2500,
+  "frozenBackendAdapters": [
+    {
+      "version": "1",
+      "artifactVersion": "4.4.0",
+      "runtimeAbi": "emception-browser-v1",
+      "toolchainLockHash": "eb7e07aacb067ae32910fbebcb3762902da756b1a7ce64746f14f77a25057720"
+    },
+    {
+      "version": "2",
+      "artifactVersions": ["4.4.1", "4.5.0", "4.5.1", "4.5.2"],
+      "runtimeAbi": "emception-browser-v1",
+      "toolchainLockHash": "405e9f1fdd936ba31e11247fa1f901eaee24c4fcf641e343505df75c3d539b37"
+    },
+    {
+      "version": "3",
+      "artifactVersion": "4.5.2",
+      "runtimeAbi": "emception-browser-v1",
+      "toolchainLockHash": "405e9f1fdd936ba31e11247fa1f901eaee24c4fcf641e343505df75c3d539b37"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../tooling/typescript/tsconfig.json",
+  "display": "Grading Adapter Code",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noEmit": true,
+    "types": ["node"],
+    "tsBuildInfoFile": "node_modules/.cache/tsconfig.tsbuildinfo",
+    "paths": {
+      "@game-guild/grading-adapter-code": ["./src/index.ts"],
+      "@game-guild/grading-adapter-code/*": ["./src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "fixtures/**/*.json"],
+  "exclude": ["node_modules", "dist"]
+}

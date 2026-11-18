@@ -1,0 +1,26 @@
+{
+  "name": "@game-guild/grading-adapter-code",
+  "version": "4.4.0",
+  "type": "module",
+  "description": "Coding integration adapter for the generic GameGuild grading contracts",
+  "license": "UNLICENSED",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit --pretty false"
+  },
+  "dependencies": {
+    "@game-guild/coding": "workspace:^",
+    "@game-guild/grading": "workspace:^"
+  },
+  "devDependencies": {
+    "@game-guild/typescript-config": "workspace:*",
+    "@types/node": "^26",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.5"
+  }
+}

@@ -1,0 +1,184 @@
+{
+  "authoring": {
+    "schemaVersion": 1,
+    "type": "coding-assignment",
+    "toolchain": {
+      "key": "cpp-clang",
+      "version": "4.5.2",
+      "runtimeAbi": "emception-browser-v1",
+      "artifactDigest": "sha256:405e9f1fdd936ba31e11247fa1f901eaee24c4fcf641e343505df75c3d539b37"
+    },
+    "files": [
+      {
+        "id": "main",
+        "path": "main.cpp",
+        "encoding": "text",
+        "content": "int main() { return 0; }",
+        "mutable": true,
+        "visibility": "public"
+      },
+      {
+        "id": "readonly-header",
+        "path": "/user/include/read_only.h",
+        "encoding": "text",
+        "content": "#define VALUE 42",
+        "mutable": false,
+        "visibility": "public"
+      },
+      {
+        "id": "private-harness",
+        "path": "/home/user/private/hidden.cpp",
+        "encoding": "text",
+        "content": "// private harness",
+        "mutable": false,
+        "visibility": "private"
+      }
+    ],
+    "tests": [
+      {
+        "id": "public-stdio",
+        "name": "Public output",
+        "kind": "stdio",
+        "visibility": "public",
+        "weightUnits": 1,
+        "stdin": "",
+        "expected": {
+          "stdout": "ready\n",
+          "exitCode": 0
+        }
+      },
+      {
+        "id": "private-function",
+        "name": "Private function cases",
+        "kind": "function",
+        "visibility": "private",
+        "weightUnits": 3,
+        "function": {
+          "name": "sum",
+          "parameters": [
+            { "name": "left", "type": "integer" },
+            { "name": "right", "type": "integer" }
+          ],
+          "returnType": "integer"
+        },
+        "cases": [
+          {
+            "id": "private-case-1",
+            "inputs": [
+              { "type": "integer", "value": 1 },
+              { "type": "integer", "value": 2 }
+            ],
+            "expected": { "type": "integer", "value": 3 }
+          }
+        ]
+      }
+    ],
+    "limits": {
+      "timeLimitMs": 5000,
+      "memoryLimitBytes": 134217728,
+      "outputLimitBytes": 1048576,
+      "maxFileCount": 10
+    },
+    "entryPoint": { "path": "/user/main.cpp" },
+    "allowLearnerCreatedFiles": true
+  },
+  "learnerDelivery": {
+    "schemaVersion": 1,
+    "type": "coding-assignment",
+    "toolchain": {
+      "key": "cpp-clang",
+      "version": "4.5.2",
+      "runtimeAbi": "emception-browser-v1",
+      "artifactDigest": "sha256:405e9f1fdd936ba31e11247fa1f901eaee24c4fcf641e343505df75c3d539b37"
+    },
+    "files": [
+      {
+        "id": "main",
+        "path": "/home/user/main.cpp",
+        "encoding": "text",
+        "content": "int main() { return 0; }",
+        "mutable": true
+      },
+      {
+        "id": "readonly-header",
+        "path": "/home/user/include/read_only.h",
+        "encoding": "text",
+        "content": "#define VALUE 42",
+        "mutable": false
+      }
+    ],
+    "publicTests": [
+      {
+        "id": "public-stdio",
+        "name": "Public output",
+        "kind": "stdio",
+        "weightUnits": 1,
+        "stdin": "",
+        "expected": {
+          "stdout": "ready\n",
+          "exitCode": 0
+        }
+      }
+    ],
+    "limits": {
+      "timeLimitMs": 5000,
+      "memoryLimitBytes": 134217728,
+      "outputLimitBytes": 1048576,
+      "maxFileCount": 10
+    },
+    "entryPoint": { "path": "/home/user/main.cpp" },
+    "allowLearnerCreatedFiles": true
+  },
+  "submission": {
+    "schemaVersion": 1,
+    "files": [
+      {
+        "fileId": "main",
+        "path": "/user/main.cpp",
+        "encoding": "text",
+        "content": "int main() { return 1; }"
+      },
+      {
+        "fileId": "learner-helper",
+        "path": "helper.cpp",
+        "encoding": "text",
+        "content": "int helper() { return 1; }"
+      }
+    ]
+  },
+  "executionReport": {
+    "schemaVersion": 1,
+    "reportId": "report-1",
+    "executionState": "completed",
+    "toolchain": {
+      "key": "cpp-clang",
+      "version": "4.5.2",
+      "runtimeAbi": "emception-browser-v1",
+      "artifactDigest": "sha256:405e9f1fdd936ba31e11247fa1f901eaee24c4fcf641e343505df75c3d539b37"
+    },
+    "receiptHash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "outcomes": [
+      {
+        "testId": "public-stdio",
+        "state": "passed",
+        "durationMs": 12,
+        "evidenceRef": "worker:test:public-stdio"
+      },
+      {
+        "testId": "private-function",
+        "state": "failed",
+        "durationMs": 9,
+        "evidenceRef": "worker:test:private-function"
+      }
+    ]
+  },
+  "invalid": {
+    "unknownSchemaVersion": {
+      "schemaVersion": 2,
+      "type": "coding-assignment"
+    },
+    "unsafePath": "/etc/passwd",
+    "aliasedPaths": ["main.cpp", "/user/main.cpp"],
+    "nonIntegerWeight": 0.5
+  }
+}

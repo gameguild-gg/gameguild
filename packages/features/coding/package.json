@@ -1,0 +1,25 @@
+{
+  "name": "@game-guild/coding",
+  "version": "4.4.0",
+  "type": "module",
+  "description": "Framework-independent coding assessment contracts and validation",
+  "license": "UNLICENSED",
+  "private": true,
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit --pretty false"
+  },
+  "dependencies": {
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@game-guild/typescript-config": "workspace:*",
+    "@types/node": "^26",
+    "typescript": "^6.0.3",
+    "vitest": "^5.0.5"
+  }
+}

@@ -310,9 +310,9 @@ review, release ou resultado learner tambem seguem
 
 ## Estado do programa
 
-| ID | Estado inicial | Evidencia de conclusao |
+| ID | Estado atual | Evidencia de conclusao |
 | --- | --- | --- |
-| `CODE-FOUNDATION` | pendente | plano 01 concluido |
+| `CODE-FOUNDATION` | concluido em 2026-11-18 | plano 01, packages, fixtures, ADR e testes isolados concluidos |
 | `CODE-BACKEND` | pendente | plano 02 concluido |
 | `CODE-SURFACE` | pendente | plano 03 concluido |
 | `CODE-E2E` | pendente | plano 04 concluido |
@@ -323,7 +323,7 @@ review, release ou resultado learner tambem seguem
 | `EMCEPTION-SQL` | bloqueado por baseline | subplano 5.4 classificado |
 | `EMCEPTION-CSHARP` | bloqueado por baseline | subplano 5.5 classificado |
 | `CODE-STUDIO-DISCOVERY` | pendente | decisao registrada pelo plano 06 |
-| `DUPLICATION-REGISTER` | inventario inicial | atualizado a cada copia e revisado na parte 5 |
+| `DUPLICATION-REGISTER` | atualizado pela parte 1 | atualizado a cada copia e revisado na parte 5 |
 
 O estado desta tabela deve ser atualizado ao final de cada fase, junto com os
 comandos executados e os blockers restantes. Um plano so recebe estado
