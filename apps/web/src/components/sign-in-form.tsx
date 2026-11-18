@@ -185,9 +185,12 @@ export function SignInForm({
                   htmlFor="rememberMe"
                   className="flex cursor-pointer items-center gap-2 text-sm text-slate-300 select-none"
                 >
+                  {/* Remember-me defaults on: an explicit opt-out covers the
+                      "private device" case; the common case stays signed in. */}
                   <Checkbox
                     id="rememberMe"
                     name="rememberMe"
+                    defaultChecked
                     disabled={isLoading}
                     aria-label="Remember me on this device"
                   />

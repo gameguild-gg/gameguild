@@ -62,7 +62,7 @@ public class OAuthAuthService(
 
         logger.LogInformation("GitHub OAuth sign-in successful for {Email}", LogRedaction.ProtectContact(email));
 
-        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "GitHub sign-in successful", "GitHub", stopwatch, request.RememberMe == true, cancellationToken).ConfigureAwait(false);
+        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "GitHub sign-in successful", "GitHub", stopwatch, request.RememberMe != false, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<SignInResponse> GoogleSignInAsync(OAuthSignInRequest request, CancellationToken cancellationToken = default)
@@ -90,7 +90,7 @@ public class OAuthAuthService(
 
         logger.LogInformation("Google OAuth sign-in successful for {Email}", LogRedaction.ProtectContact(email));
 
-        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Google sign-in successful", "Google", stopwatch, request.RememberMe == true, cancellationToken).ConfigureAwait(false);
+        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Google sign-in successful", "Google", stopwatch, request.RememberMe != false, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<SignInResponse> MicrosoftSignInAsync(OAuthSignInRequest request, CancellationToken cancellationToken = default)
@@ -126,7 +126,7 @@ public class OAuthAuthService(
         logger.LogInformation("Microsoft OAuth sign-in successful for {Email}", LogRedaction.ProtectContact(email));
 
         return await CompleteSignInAsync(
-            user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Microsoft sign-in successful", "Microsoft", stopwatch, request.RememberMe == true, cancellationToken)
+            user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Microsoft sign-in successful", "Microsoft", stopwatch, request.RememberMe != false, cancellationToken)
             .ConfigureAwait(false);
     }
 
@@ -166,7 +166,7 @@ public class OAuthAuthService(
 
         logger.LogInformation("Google ID token sign-in successful for {Email}", LogRedaction.ProtectContact(email));
 
-        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Google ID token sign-in successful", "GoogleIdToken", stopwatch, request.RememberMe == true, cancellationToken).ConfigureAwait(false);
+        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Google ID token sign-in successful", "GoogleIdToken", stopwatch, request.RememberMe != false, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<SignInResponse> DiscordSignInAsync(DiscordSignInRequest request, CancellationToken cancellationToken = default)
@@ -200,7 +200,7 @@ public class OAuthAuthService(
 
         logger.LogInformation("Discord OAuth sign-in successful for {Email}", LogRedaction.ProtectContact(email));
 
-        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Discord sign-in successful", "Discord", stopwatch, request.RememberMe == true, cancellationToken).ConfigureAwait(false);
+        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "Discord sign-in successful", "Discord", stopwatch, request.RememberMe != false, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -241,7 +241,7 @@ public class OAuthAuthService(
 
         logger.LogInformation("GitHub OAuth authorization-code sign-in successful for {Email}", LogRedaction.ProtectContact(email));
 
-        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "GitHub sign-in successful", "GitHub", stopwatch, request.RememberMe == true, cancellationToken).ConfigureAwait(false);
+        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, "GitHub sign-in successful", "GitHub", stopwatch, request.RememberMe != false, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -328,7 +328,7 @@ public class OAuthAuthService(
 
         logger.LogInformation("{Provider} OAuth authorization-code sign-in successful for {Email}", displayName, LogRedaction.ProtectContact(email));
 
-        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, $"{displayName} sign-in successful", displayName, stopwatch, rememberMe == true, cancellationToken).ConfigureAwait(false);
+        return await CompleteSignInAsync(user, tenantAccessContext, deviceInfo, ipAddress, userAgent, $"{displayName} sign-in successful", displayName, stopwatch, rememberMe != false, cancellationToken).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -389,7 +389,7 @@ public class OAuthAuthService(
             $"OIDC sign-in successful ({request.Slug})",
             authenticationMethod,
             stopwatch,
-            request.RememberMe == true,
+            request.RememberMe != false,
             cancellationToken).ConfigureAwait(false);
 
         // Map the provider's amr/acr assertions onto the sign-in surface so clients and
@@ -482,7 +482,7 @@ public class OAuthAuthService(
             $"SAML sign-in successful ({request.Slug})",
             authenticationMethod,
             stopwatch,
-            request.RememberMe == true,
+            request.RememberMe != false,
             cancellationToken).ConfigureAwait(false);
 
         // Surface the assertion's authentication context so clients and conditional

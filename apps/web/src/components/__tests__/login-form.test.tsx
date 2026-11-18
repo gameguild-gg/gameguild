@@ -112,10 +112,16 @@ describe('SignInForm', () => {
     expect(mockAuth.signIn).toHaveBeenCalledWith('credentials', {
       email: 'test@example.com',
       password: 'password123',
-      rememberMe: false,
+      rememberMe: true,
       redirectTo: '/',
       turnstileToken: null,
     });
+  });
+
+  it('defaults the remember-me checkbox to checked', () => {
+    renderWithUser(<SignInForm />);
+
+    expect(screen.getByLabelText('Remember me on this device')).toBeChecked();
   });
 
   /* ---------- Loading state ---------- */

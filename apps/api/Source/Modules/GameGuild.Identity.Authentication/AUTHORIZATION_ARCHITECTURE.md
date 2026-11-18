@@ -2564,9 +2564,23 @@ Those original criteria remain open until their separate evidence is accepted.
 
 `Jwt:RefreshTokenSlidingExpiration` defaults to `true`, retaining renewal on each
 successful refresh. With `false`, rotation preserves the predecessor's deadline
-or a shorter configured TTL. Both modes retain `SessionOptions.AbsoluteTimeoutMinutes`
+or a shorter configured TTL — except inside the final-week renewal window
+(`RefreshTokenLifetimeResolver.RenewalWindowDays`, 7 days): a refresh occurring
+with seven days or less remaining mints the full configured lifetime even when
+sliding expiration is disabled, so an actively used session is not cut down to
+the predecessor's remaining deadline in its last week. Both modes retain
+`SessionOptions.AbsoluteTimeoutMinutes`
 measured from the original session creation; rotation cannot reset that boundary.
 The existing idle timeout and active-session checks remain mandatory.
+
+Remember-me defaults ON across every issuing path (local, polymorphic, OAuth,
+OIDC/SAML, Web3, and the host sign-in endpoint): a null `RememberMe` flag is
+treated as persistent, and only an explicit `false` selects the standard
+lifetime. Sign-up issues a persistent session because the register request does
+not carry the flag. The standard refresh lifetime default is 30 days
+(`RefreshTokenLifetimeResolver.StandardDefaultDays`), matching the persistent
+default; typed `JwtOptions` and the raw-config fallbacks retain their configured
+values where present.
 
 Session binding and rotation cap the stored refresh credential at the actual
 persisted session deadline. Credential sign-in, sign-up, OAuth/Discord and Web3

@@ -13565,9 +13565,10 @@ session (session continuity); an invalid or replayed guest token never blocks
 the sign-in itself. */
   guestAccessToken?: string | null;
   password: string;
-  /** When true, the session is persistent ("remember me"): the refresh token uses the
-configurable persistent lifetime (`Jwt:PersistentRefreshTokenExpirationDays`)
-instead of the standard one. Null or false keeps the standard lifetime. */
+  /** Remember-me defaults ON: when null (omitted) or true, the session is persistent
+and the refresh token uses the configurable persistent lifetime
+(`Jwt:PersistentRefreshTokenExpirationDays`). Only an explicit false keeps
+the standard lifetime. */
   rememberMe?: boolean | null;
   /** Optional tenant ID to use for the sign-in. If not provided, will use the first available tenant for the user */
   tenantId?: string | null;
