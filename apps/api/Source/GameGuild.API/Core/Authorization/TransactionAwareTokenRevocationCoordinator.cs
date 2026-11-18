@@ -19,7 +19,10 @@ public sealed class TransactionAwareTokenRevocationCoordinator(
 {
     private readonly List<KeyValuePair<Guid, string>> _pending = [];
 
-    public Task RevokeSessionAccessTokenAsync(Guid sessionId, string reason, CancellationToken cancellationToken = default)
+    public Task RevokeSessionAccessTokenAsync(Guid sessionId, string reason)
+        => RevokeSessionAccessTokenAsync(sessionId, reason, default);
+
+    public Task RevokeSessionAccessTokenAsync(Guid sessionId, string reason, CancellationToken cancellationToken)
     {
         if (context.Database.CurrentTransaction is null)
         {
@@ -31,7 +34,10 @@ public sealed class TransactionAwareTokenRevocationCoordinator(
         return Task.CompletedTask;
     }
 
-    public async Task FlushCommittedAsync(CancellationToken cancellationToken = default)
+    public Task FlushCommittedAsync()
+        => FlushCommittedAsync(default);
+
+    public async Task FlushCommittedAsync(CancellationToken cancellationToken)
     {
         if (_pending.Count == 0)
         {

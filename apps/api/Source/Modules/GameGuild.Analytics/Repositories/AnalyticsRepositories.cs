@@ -104,7 +104,10 @@ public class DashboardRepository(IApplicationDbContext context) : IDashboardRepo
         => await context.Set<Dashboard>().Include(d => d.Widgets.OrderBy(w => w.SortOrder))
             .FirstOrDefaultAsync(d => d.Id == id && d.DeletedAt == null, ct).ConfigureAwait(false);
 
-    public async Task<Dashboard?> GetByIdForTenantAsync(Guid id, Guid? tenantId, CancellationToken ct = default)
+    public Task<Dashboard?> GetByIdForTenantAsync(Guid id, Guid? tenantId)
+        => GetByIdForTenantAsync(id, tenantId, default);
+
+    public async Task<Dashboard?> GetByIdForTenantAsync(Guid id, Guid? tenantId, CancellationToken ct)
         => await context.Set<Dashboard>().Include(d => d.Widgets.OrderBy(w => w.SortOrder))
             .FirstOrDefaultAsync(d => d.Id == id
                 && d.DeletedAt == null

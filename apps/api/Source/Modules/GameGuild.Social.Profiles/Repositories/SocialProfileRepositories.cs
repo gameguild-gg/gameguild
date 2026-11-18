@@ -9,15 +9,21 @@ public interface ISocialProfileRepository
     Task<SocialProfile?> GetByUserAsync(Guid userId, CancellationToken ct = default);
     Task<SocialProfile?> GetByHandleAsync(string handle, CancellationToken ct = default);
 
+    Task<SocialProfile?> GetVisibleByHandleAsync(string handle, Guid? viewerUserId)
+        => GetVisibleByHandleAsync(handle, viewerUserId, default);
+
     /// <summary>
     ///     Visibility-scoped read by handle (issue #1315 SP1): the predicate only matches
     ///     Public profiles plus the viewer's own profile, so Private/Connections rows never
     ///     leave the database for callers without an ownership entitlement.
     /// </summary>
-    Task<SocialProfile?> GetVisibleByHandleAsync(string handle, Guid? viewerUserId, CancellationToken ct = default);
+    Task<SocialProfile?> GetVisibleByHandleAsync(string handle, Guid? viewerUserId, CancellationToken ct);
+
+    Task<SocialProfile?> GetVisibleByUserAsync(Guid userId, Guid? viewerUserId)
+        => GetVisibleByUserAsync(userId, viewerUserId, default);
 
     /// <summary>Visibility-scoped read by user id — the same predicate as the by-handle read.</summary>
-    Task<SocialProfile?> GetVisibleByUserAsync(Guid userId, Guid? viewerUserId, CancellationToken ct = default);
+    Task<SocialProfile?> GetVisibleByUserAsync(Guid userId, Guid? viewerUserId, CancellationToken ct);
 
     Task<List<SocialProfile>> SearchAsync(string? query, int take, CancellationToken ct = default);
     Task UpdateAsync(SocialProfile profile, CancellationToken ct = default);
@@ -68,7 +74,10 @@ public sealed class SocialProfileRepository(IApplicationDbContext context) : ISo
             .ConfigureAwait(false);
     }
 
-    public async Task<SocialProfile?> GetVisibleByHandleAsync(string handle, Guid? viewerUserId, CancellationToken ct = default)
+    public Task<SocialProfile?> GetVisibleByHandleAsync(string handle, Guid? viewerUserId)
+        => GetVisibleByHandleAsync(handle, viewerUserId, default);
+
+    public async Task<SocialProfile?> GetVisibleByHandleAsync(string handle, Guid? viewerUserId, CancellationToken ct)
     {
         var normalized = SocialProfile.NormalizeHandle(handle);
         return await IncludeProfileData(context.Set<SocialProfile>())
@@ -79,7 +88,10 @@ public sealed class SocialProfileRepository(IApplicationDbContext context) : ISo
             .ConfigureAwait(false);
     }
 
-    public async Task<SocialProfile?> GetVisibleByUserAsync(Guid userId, Guid? viewerUserId, CancellationToken ct = default)
+    public Task<SocialProfile?> GetVisibleByUserAsync(Guid userId, Guid? viewerUserId)
+        => GetVisibleByUserAsync(userId, viewerUserId, default);
+
+    public async Task<SocialProfile?> GetVisibleByUserAsync(Guid userId, Guid? viewerUserId, CancellationToken ct)
         => await IncludeProfileData(context.Set<SocialProfile>())
             .FirstOrDefaultAsync(profile => profile.UserId == userId
                 && profile.DeletedAt == null

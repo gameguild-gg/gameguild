@@ -75,7 +75,10 @@ public sealed class ApiKeyMidRequestExpiryTests
         public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
 
         public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
-            => throw new NotSupportedException();
+            {
+            _ = cancellationToken;
+            throw new NotSupportedException();
+        }
     }
 
     private static (ApiKeyRepository Repository, TestApiKeyDbContext Context) CreateRepository()

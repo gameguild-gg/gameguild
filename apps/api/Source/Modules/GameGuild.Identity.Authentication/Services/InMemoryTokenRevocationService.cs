@@ -174,8 +174,11 @@ public sealed class InMemoryTokenRevocationService : ITokenRevocationService, IV
         return Task.FromResult(cleanedCount);
     }
 
+    public Task TrackSessionAccessTokenAsync(Guid sessionId, string jti, DateTime expiresAt)
+        => TrackSessionAccessTokenAsync(sessionId, jti, expiresAt, default);
+
     /// <inheritdoc />
-    public Task TrackSessionAccessTokenAsync(Guid sessionId, string jti, DateTime expiresAt, CancellationToken cancellationToken = default)
+    public Task TrackSessionAccessTokenAsync(Guid sessionId, string jti, DateTime expiresAt, CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(jti);
         cancellationToken.ThrowIfCancellationRequested();
@@ -185,8 +188,17 @@ public sealed class InMemoryTokenRevocationService : ITokenRevocationService, IV
         return Task.CompletedTask;
     }
 
+    public Task RevokeSessionAccessTokenAsync(Guid sessionId)
+        => RevokeSessionAccessTokenAsync(sessionId, null, default);
+
+    public Task RevokeSessionAccessTokenAsync(Guid sessionId, string? reason)
+        => RevokeSessionAccessTokenAsync(sessionId, reason, default);
+
+    public Task RevokeSessionAccessTokenAsync(Guid sessionId, CancellationToken cancellationToken)
+        => RevokeSessionAccessTokenAsync(sessionId, null, cancellationToken);
+
     /// <inheritdoc />
-    public Task RevokeSessionAccessTokenAsync(Guid sessionId, string? reason = null, CancellationToken cancellationToken = default)
+    public Task RevokeSessionAccessTokenAsync(Guid sessionId, string? reason, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
 

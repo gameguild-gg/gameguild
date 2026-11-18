@@ -32,18 +32,24 @@ public sealed record TenantMaintenanceState
 ///     every API instance observes the same window). Reads fail OPEN: an unavailable cache
 ///     reports "no maintenance" — the gate protects in-flight tenants from new sessions, it
 ///     must never become a total sign-in outage on its own. Windows are managed out-of-band
-///     (operator tooling or a host bridge calling <see cref="SetMaintenanceAsync" />);
+///     (operator tooling or a host bridge calling <see cref="SetMaintenanceAsync(Guid, TenantMaintenanceState, CancellationToken)" />);
 ///     there is deliberately no public endpoint in this module.
 /// </summary>
 public interface ITenantMaintenanceStateService
 {
+
+    Task<TenantMaintenanceState?> FindAsync(Guid tenantId)
+        => FindAsync(tenantId, default);
     /// <summary>
     ///     Returns the tenant's active maintenance window, or null when the tenant is not in
     ///     maintenance (including when the stored window has no scheduled resume that has
     ///     passed — an open-ended window only ends when cleared).
     /// </summary>
-    Task<TenantMaintenanceState?> FindAsync(Guid tenantId, CancellationToken cancellationToken = default);
+    Task<TenantMaintenanceState?> FindAsync(Guid tenantId, CancellationToken cancellationToken);
+
+    Task SetMaintenanceAsync(Guid tenantId, TenantMaintenanceState? state)
+        => SetMaintenanceAsync(tenantId, state, default);
 
     /// <summary>Opens (or replaces) the maintenance window for a tenant; null clears it.</summary>
-    Task SetMaintenanceAsync(Guid tenantId, TenantMaintenanceState? state, CancellationToken cancellationToken = default);
+    Task SetMaintenanceAsync(Guid tenantId, TenantMaintenanceState? state, CancellationToken cancellationToken);
 }
