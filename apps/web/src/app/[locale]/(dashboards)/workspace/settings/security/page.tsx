@@ -18,10 +18,12 @@ import React from 'react';
  * Server-rendered policy, session, security-analysis, trusted-device, MFA-configuration,
  * method and recovery-code data; the client managers perform mutations through server actions.
  *
- * Load failures render an explicit error state with a retry (issue #1298 J4, the
- * #1217/#1282 pattern): a failed read must never degrade into the managers with
- * empty data — "No active sessions" / "MFA disabled" are security-relevant
- * statements the page may only make about genuinely empty server state.
+ * Load failures render an explicit destructive-alert error state with a retry
+ * (issue #1298 J4, the #1217/#1282 pattern) IN ADDITION to the managers with
+ * whatever data did load: a failed read is never silently swallowed into an
+ * empty-looking page, and a partial failure (say, the security analysis alone)
+ * never hides the session and trusted-device lists the user came to review.
+ * Sections whose read failed degrade exactly as before; the alert explains why.
  */
 
 const SECURITY_PATH = '/workspace/settings/security';
@@ -58,7 +60,7 @@ export default async function SecuritySettingsPage({
         <p className="text-muted-foreground">{t('description')}</p>
       </header>
       <SecurityPoliciesCard locale={locale} />
-      {loadStatus !== 'ok' ? (
+      {loadStatus !== 'ok' && (
         <Alert variant="destructive" data-testid="security-load-error">
           <AlertTriangle className="size-4" aria-hidden />
           <AlertTitle>{t('loadError.title')}</AlertTitle>
@@ -76,12 +78,9 @@ export default async function SecuritySettingsPage({
             </span>
           </AlertDescription>
         </Alert>
-      ) : (
-        <>
-          <MfaMethodsManager data={mfa} />
-          <SessionsManager data={sessions} locale={locale} />
-        </>
       )}
+      <MfaMethodsManager data={mfa} />
+      <SessionsManager data={sessions} locale={locale} />
     </div>
   );
 }

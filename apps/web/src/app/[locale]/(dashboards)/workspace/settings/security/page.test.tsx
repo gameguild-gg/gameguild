@@ -64,7 +64,7 @@ describe('SecuritySettingsPage (issue #1298 J4: load failures render an explicit
     mocks.loadMfaData.mockResolvedValue(OK_MFA);
   });
 
-  it('renders the managers when both loaders succeed', async () => {
+  it('renders the managers and no error state when both loaders succeed', async () => {
     render(await SecuritySettingsPage({ params: Promise.resolve({ locale: 'en-US' }) }));
 
     expect(screen.getByTestId('security-policies-card')).toBeInTheDocument();
@@ -73,7 +73,7 @@ describe('SecuritySettingsPage (issue #1298 J4: load failures render an explicit
     expect(screen.queryByTestId('security-load-error')).not.toBeInTheDocument();
   });
 
-  it('renders the destructive load-error alert with a retry instead of the session manager when the session reads fail', async () => {
+  it('renders the destructive load-error alert with a retry when the session reads fail', async () => {
     mocks.loadSessionsData.mockResolvedValue({
       sessions: [],
       analysis: null,
@@ -87,11 +87,13 @@ describe('SecuritySettingsPage (issue #1298 J4: load failures render an explicit
     expect(screen.getByText('settings.security.loadError.title')).toBeInTheDocument();
     expect(screen.getByText('settings.security.loadError.serverError')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /settings\.security\.loadError\.retry/ })).toBeInTheDocument();
-    expect(screen.queryByTestId('sessions-manager')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('mfa-methods-manager')).not.toBeInTheDocument();
+    // The managers still render with whatever data arrived — a failed read must
+    // never hide the session/trusted-device surface the user came to review.
+    expect(screen.getByTestId('sessions-manager')).toBeInTheDocument();
+    expect(screen.getByTestId('mfa-methods-manager')).toBeInTheDocument();
   });
 
-  it('renders the contract-drift message when the generated client throws on MFA reads', async () => {
+  it('renders the contract-drift message when the generated client throws on MFA reads, keeping the session manager', async () => {
     mocks.loadMfaData.mockResolvedValue({
       configuration: null,
       methods: null,
@@ -103,8 +105,7 @@ describe('SecuritySettingsPage (issue #1298 J4: load failures render an explicit
 
     expect(screen.getByTestId('security-load-error')).toBeInTheDocument();
     expect(screen.getByText('settings.security.loadError.contractError')).toBeInTheDocument();
-    expect(screen.queryByTestId('mfa-methods-manager')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('sessions-manager')).not.toBeInTheDocument();
+    expect(screen.getByTestId('sessions-manager')).toBeInTheDocument();
   });
 
   it('prefers the unauthorized message when either loader reports an expired session', async () => {
