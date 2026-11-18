@@ -35,7 +35,7 @@ overrides:
   "@excalidraw/mermaid-to-excalidraw>mermaid": "11.16.1"
   "@excalidraw/mermaid-to-excalidraw>nanoid": "5.1.16"
   "@hono/node-server@>=2.0.0 <2.1.6": "2.1.6"
-  "@modelcontextprotocol/sdk@<1.32.0": "1.32.0"
+  "@modelcontextprotocol/sdk": "1.32.1"
   "@tootallnate/once": "2.0.1"
   "body-parser@>=2.0.0 <2.4.0": "2.4.0"
   "brace-expansion@<1.1.21": "1.1.21"
