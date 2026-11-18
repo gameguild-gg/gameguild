@@ -6,8 +6,14 @@ public interface ISocialProfileService
     Task<SocialProfileDto> GetOrCreateAsync(Guid userId, CancellationToken ct = default);
     Task<SocialProfileDto?> GetByUserAsync(Guid userId, CancellationToken ct = default);
     Task<SocialProfileDto?> GetByHandleAsync(string handle, CancellationToken ct = default);
-    Task<SocialProfileDto?> GetByHandleForViewerAsync(string handle, ProfileViewer viewer, CancellationToken ct = default);
-    Task<SocialProfileDto?> GetByUserForViewerAsync(Guid userId, ProfileViewer viewer, CancellationToken ct = default);
+
+    Task<SocialProfileDto?> GetByHandleForViewerAsync(string handle, ProfileViewer viewer)
+        => GetByHandleForViewerAsync(handle, viewer, default);
+    Task<SocialProfileDto?> GetByHandleForViewerAsync(string handle, ProfileViewer viewer, CancellationToken ct);
+
+    Task<SocialProfileDto?> GetByUserForViewerAsync(Guid userId, ProfileViewer viewer)
+        => GetByUserForViewerAsync(userId, viewer, default);
+    Task<SocialProfileDto?> GetByUserForViewerAsync(Guid userId, ProfileViewer viewer, CancellationToken ct);
     Task<List<SocialProfileDto>> SearchAsync(string? query, int take, CancellationToken ct = default);
     Task<SocialProfileDto> UpdatePrivacyAsync(UpdateProfilePrivacyCommand command, CancellationToken ct = default);
     Task<SocialProfileDto> UpdateStatsAsync(UpdateProfileStatsCommand command, CancellationToken ct = default);
@@ -71,6 +77,9 @@ public sealed class SocialProfileService(
     public async Task<SocialProfileDto?> GetByHandleAsync(string handle, CancellationToken ct = default)
         => (await profileRepository.GetByHandleAsync(handle, ct).ConfigureAwait(false))?.ToDto();
 
+    public Task<SocialProfileDto?> GetByHandleForViewerAsync(string handle, ProfileViewer viewer)
+        => GetByHandleForViewerAsync(handle, viewer, default);
+
     /// <summary>
     ///     Visibility-enforcing read by handle (issue #1315 SP1). Public profiles serve
     ///     everyone (including anonymous callers); Private/Connections profiles serve only
@@ -78,7 +87,7 @@ public sealed class SocialProfileService(
     ///     Everyone else — anonymous included — gets <c>null</c> (the API surface maps it to
     ///     404 so a Private profile is indistinguishable from a nonexistent one).
     /// </summary>
-    public async Task<SocialProfileDto?> GetByHandleForViewerAsync(string handle, ProfileViewer viewer, CancellationToken ct = default)
+    public async Task<SocialProfileDto?> GetByHandleForViewerAsync(string handle, ProfileViewer viewer, CancellationToken ct)
     {
         if (viewer.IsSystemAdmin)
         {
@@ -98,8 +107,11 @@ public sealed class SocialProfileService(
         return await LoadPrivateProfileForFollowerAsync(restrictedByHandle, viewer, ct).ConfigureAwait(false);
     }
 
+    public Task<SocialProfileDto?> GetByUserForViewerAsync(Guid userId, ProfileViewer viewer)
+        => GetByUserForViewerAsync(userId, viewer, default);
+
     /// <summary>Visibility-enforcing read by user id — the same entitlement rules as the by-handle read.</summary>
-    public async Task<SocialProfileDto?> GetByUserForViewerAsync(Guid userId, ProfileViewer viewer, CancellationToken ct = default)
+    public async Task<SocialProfileDto?> GetByUserForViewerAsync(Guid userId, ProfileViewer viewer, CancellationToken ct)
     {
         if (viewer.IsSystemAdmin)
         {

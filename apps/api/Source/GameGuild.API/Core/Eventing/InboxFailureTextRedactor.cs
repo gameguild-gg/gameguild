@@ -12,7 +12,7 @@ namespace GameGuild.API.Eventing;
 /// </summary>
 public static partial class InboxFailureTextRedactor
 {
-    public const string RedactedPlaceholder = "[redacted]";
+    public static string RedactedPlaceholder => "[redacted]";
 
     [GeneratedRegex(@"[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}", RegexOptions.IgnoreCase)]
     private static partial Regex EmailRegex();

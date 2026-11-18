@@ -13,11 +13,14 @@ namespace GameGuild.API.Authorization;
 /// </summary>
 public static class StepUpRequiredHttpResponses
 {
+
+    public static Task<IActionResult> StepUpRequiredAsync(this IStepUpRequiredResponder responder, GameGuild.Identity.Context.Actors.IActorContextAccessor actors, StepUpRequiredException exception)
+        => StepUpRequiredAsync(responder, actors, exception, default);
     public static async Task<IActionResult> StepUpRequiredAsync(
         this IStepUpRequiredResponder responder,
         GameGuild.Identity.Context.Actors.IActorContextAccessor actors,
         StepUpRequiredException exception,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(responder);
         ArgumentNullException.ThrowIfNull(actors);

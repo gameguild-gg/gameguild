@@ -49,8 +49,11 @@ public sealed class DistributedCacheWebAuthnSessionStore(
     public Task<WebAuthnSession?> FindAssertionSessionAsync(Guid userId, CancellationToken cancellationToken = default) =>
         FindAsync(AssertionKeyPrefix + userId.ToString("N"), cancellationToken);
 
+    public Task<WebAuthnSession?> FindGuestAssertionSessionAsync(string challengeToken)
+        => FindGuestAssertionSessionAsync(challengeToken, default);
+
     /// <inheritdoc />
-    public Task<WebAuthnSession?> FindGuestAssertionSessionAsync(string challengeToken, CancellationToken cancellationToken = default) =>
+    public Task<WebAuthnSession?> FindGuestAssertionSessionAsync(string challengeToken, CancellationToken cancellationToken) =>
         FindAsync(GuestKey(challengeToken), cancellationToken);
 
     /// <inheritdoc />
@@ -61,8 +64,11 @@ public sealed class DistributedCacheWebAuthnSessionStore(
     public Task RemoveAssertionSessionAsync(Guid userId, CancellationToken cancellationToken = default) =>
         cache.RemoveAsync(AssertionKeyPrefix + userId.ToString("N"), cancellationToken);
 
+    public Task RemoveGuestAssertionSessionAsync(string challengeToken)
+        => RemoveGuestAssertionSessionAsync(challengeToken, default);
+
     /// <inheritdoc />
-    public Task RemoveGuestAssertionSessionAsync(string challengeToken, CancellationToken cancellationToken = default) =>
+    public Task RemoveGuestAssertionSessionAsync(string challengeToken, CancellationToken cancellationToken) =>
         cache.RemoveAsync(GuestKey(challengeToken), cancellationToken);
 
     private async Task<string> StoreAsync(WebAuthnSession session, string key, bool requireUser, CancellationToken cancellationToken)

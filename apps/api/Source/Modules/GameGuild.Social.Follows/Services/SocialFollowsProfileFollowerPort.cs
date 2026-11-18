@@ -11,7 +11,10 @@ namespace GameGuild.Social.Follows.Services;
 /// </summary>
 public sealed class SocialFollowsProfileFollowerPort(IApplicationDbContext context) : IProfileFollowerPort
 {
-    public async Task<bool> IsFollowerAsync(Guid followerUserId, Guid profileUserId, CancellationToken ct = default)
+
+    public Task<bool> IsFollowerAsync(Guid followerUserId, Guid profileUserId)
+        => IsFollowerAsync(followerUserId, profileUserId, default);
+    public async Task<bool> IsFollowerAsync(Guid followerUserId, Guid profileUserId, CancellationToken ct)
         => await context.Set<Follow>()
             .AsNoTracking()
             .AnyAsync(follow => follow.FollowerId == followerUserId

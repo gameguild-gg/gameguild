@@ -9,16 +9,22 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 public interface IOAuthLinkStateStore
 {
+
+    Task SaveAsync(Guid userId, string provider, string state)
+        => SaveAsync(userId, provider, state, default);
     /// <summary>
     ///     Records the state issued to a user for a provider's link flow. Issuing a new state
     ///     for the same (user, provider) replaces any pending one.
     /// </summary>
-    Task SaveAsync(Guid userId, string provider, string state, CancellationToken cancellationToken = default);
+    Task SaveAsync(Guid userId, string provider, string state, CancellationToken cancellationToken);
+
+    Task<bool> ValidateAndConsumeAsync(Guid userId, string provider, string state)
+        => ValidateAndConsumeAsync(userId, provider, state, default);
 
     /// <summary>
     ///     Validates that <paramref name="state" /> is the pending state issued to the user for
     ///     the provider, and consumes it — a state value can complete at most one link.
     ///     Returns false for unknown, expired, already-used, or mismatched states.
     /// </summary>
-    Task<bool> ValidateAndConsumeAsync(Guid userId, string provider, string state, CancellationToken cancellationToken = default);
+    Task<bool> ValidateAndConsumeAsync(Guid userId, string provider, string state, CancellationToken cancellationToken);
 }

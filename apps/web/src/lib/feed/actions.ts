@@ -48,8 +48,27 @@ function createClient() {
 }
 
 async function request<T>(input: Parameters<ReturnType<typeof createClient>["request"]>[0]) {
+  // Session-expired guard: an anonymous (expired) server context must surface
+  // the same typed AUTHENTICATION_ERROR as ensureCurrentSocialProfile, not a
+  // raw API payload — clients key off it to re-authenticate.
+  if (!(await getToken())) {
+    throw new FeedMutationError({
+      status: 401,
+      code: "AUTHENTICATION_ERROR",
+      message: "Your session has expired. Please sign in again.",
+    });
+  }
   const result = await createClient().request<T>(input);
-  if (!result.ok) throw new FeedMutationError(result.error);
+  if (!result.ok) {
+    if (result.error.status === 401) {
+      throw new FeedMutationError({
+        status: 401,
+        code: "AUTHENTICATION_ERROR",
+        message: "Your session has expired. Please sign in again.",
+      });
+    }
+    throw new FeedMutationError(result.error);
+  }
   return result.data;
 }
 
