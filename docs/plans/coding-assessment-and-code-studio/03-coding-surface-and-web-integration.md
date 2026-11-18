@@ -9,6 +9,12 @@ e especifica para coding assessment e grading. A superficie deve compor as APIs
 publicas do Emception, os contratos de coding e o adapter de grading sem assumir
 responsabilidade por rota, sessao, autorizacao ou persistencia academica.
 
+A superficie nao sera uma IDE generica exibida do mesmo modo para todo
+exercicio. Ela fornecera uma base comum de editor, arquivos, terminal, resultados
+de testes e preview visual, composta por um perfil tipado para cada formato de
+exercicio suportado, como funcao no modelo LeetCode, entrada e saida, projeto,
+depuracao ou resultado visual.
+
 `@game-guild/emception-ui` nao sera a base compartilhada nem sera movido para o
 novo package. Quando for util, seu codigo sera copiado para `coding-surface` e a
 duplicacao sera mantida intencionalmente ate revisao futura com seu responsavel.
@@ -34,6 +40,10 @@ Pre-requisitos:
 
 - novo package `packages/features/coding-surface`;
 - componentes e controllers para `author`, `author-test`, `learner` e `grader`;
+- shell comum para enunciado, editor, arquivos, terminal, testes e preview;
+- registro exaustivo de perfis de exercicio, sem condicionais espalhadas pela
+  arvore React;
+- experiencias de autoria, resolucao e inspecao adequadas ao tipo de exercicio;
 - composicao sobre exports publicos do Emception;
 - migracao coordenada dos fluxos de grading selecionados: autoria de
   assessment, learner, assessment grader e SpeedGrader;
@@ -50,6 +60,10 @@ Pre-requisitos:
 - remover seus aliases, testes ou consumidores fora do escopo de grading;
 - criar outro editor, terminal, filesystem, canvas ou runner;
 - novas linguagens;
+- implementar antecipadamente tipos de exercicio sem contrato e capability
+  executavel;
+- expor na UI tipos futuros ou indisponiveis como opcoes desabilitadas;
+- definir ou duplicar politicas de review pertencentes a `@game-guild/grading`;
 - definir a UX futura do Code Studio;
 - manter collections/assets do Code Studio antigo;
 - alterar tabelas ou migrations;
@@ -86,6 +100,65 @@ divergencia sejam registradas e o package original nao seja modificado.
 nao pode exigir que o Emception remova capabilities, altere defaults ou assuma
 conceitos academicos para simplificar o fluxo de grading.
 
+## Tipos de exercicio
+
+### Eixos independentes
+
+O tipo de exercicio determina a experiencia de autoria e resolucao. Ele nao deve
+ser confundido com:
+
+- **toolchain ou linguagem:** C++, JavaScript, TypeScript, Ruby, SQL ou C#;
+- **capability de execucao:** terminal, test runner, preview web, canvas ou
+  result set;
+- **politica de review:** pertence integralmente a `@game-guild/grading` e nao
+  integra o catalogo nem o estado da `coding-surface`.
+
+Uma mesma experiencia de funcao pode aceitar mais de uma toolchain. Da mesma
+forma, um preview visual pode ser usado por exercicios diferentes sem se tornar
+um novo workflow de grading.
+
+### Catalogo alvo
+
+| Tipo | Experiencia principal | Evidencia apresentada pela superficie |
+| --- | --- | --- |
+| `function` | funcao com assinatura e casos de teste, no modelo LeetCode | casos publicos, resultado por caso e diagnostics |
+| `standard-io` | programa que recebe entrada e produz saida | stdin, stdout, stderr, exit code e testes |
+| `project` | workspace com multiplos arquivos e suite de testes | terminal, diagnostics e arvore de resultados |
+| `debugging` | codigo inicial com falha que deve ser corrigido | falha inicial, execucoes e testes de regressao |
+| `visual` | programa com saida web, DOM ou canvas | preview isolado, console e validacoes disponiveis |
+| `sql-query` | consulta sobre schema e dados controlados | result set, diagnostics e comparacao esperada |
+
+Esse catalogo e uma direcao de extensao, nao uma lista que deve aparecer inteira
+na primeira entrega. As primitivas de teste `function` e `stdio` ja existem nos
+contratos V1 e sustentam o corte inicial obrigatorio de exercicios `function` e
+`standard-io`. Elas nao constituem, por si so, o tipo do exercicio. Cada tipo
+adicional so se torna selecionavel quando possuir contrato canonico versionado,
+renderer de autoria, renderer learner, evidencia de execucao e testes
+end-to-end. Tipos ainda nao implementados nao aparecem na interface.
+
+### Contrato de extensao
+
+- dados persistidos ou enviados pela API pertencem a unions discriminadas e
+  versionadas em `@game-guild/coding`, nunca a um schema privado da UI;
+- o tipo do exercicio e um discriminante explicito da definicao e da delivery;
+  ele nao e inferido de `tests[].kind`, extensao de arquivo, linguagem ou
+  toolchain;
+- tipos de teste descrevem como uma expectativa e executada e podem ser
+  combinados quando o contrato do exercicio permitir; tipos de exercicio
+  descrevem a experiencia oferecida ao autor e ao learner;
+- `coding-surface` mantem um registro exaustivo que associa cada tipo suportado
+  aos seus componentes `author`, `author-test`, `learner` e `grader`, paineis e
+  capabilities publicas requeridas;
+- novos tipos nao podem ser representados por uma estrutura unica com muitos
+  campos opcionais nem por verificacoes de string espalhadas nos componentes;
+- um tipo conhecido pelo contrato, mas sem renderer registrado, falha de forma
+  explicita e nao recua para a experiencia de outro tipo;
+- terminal, test results e preview visual sao paineis compostos conforme as
+  capabilities do tipo; a superficie nao recria runners nem considera o output
+  do browser uma nota oficial;
+- a superficie produz submission e evidencia tipadas. A conversao dessas
+  evidencias em item e score continua em `@game-guild/grading-adapter-code`.
+
 ## Contrato da superficie
 
 ### Modos
@@ -99,6 +172,11 @@ conceitos academicos para simplificar o fluxo de grading.
 
 O modo visual nao concede permissao. A aplicacao entrega apenas os dados que a
 API autorizou para a persona.
+
+Os modos e os tipos de exercicio sao ortogonais. Selecionar `learner`, por
+exemplo, muda os dados e comandos permitidos, enquanto selecionar `function` ou
+`visual` muda a composicao da experiencia. Nenhum dos dois escolhe uma politica
+de review.
 
 ### Callbacks e commands
 
@@ -147,6 +225,8 @@ Implementacao:
 - usar os tipos canonicos de `@game-guild/coding`;
 - separar controllers puros, componentes React, presets e exports de testing;
 - oferecer extensoes visuais para resultados e comandos de assessment;
+- criar o shell estavel de enunciado, workspace, terminal, resultados e
+  preview, ativando somente os paineis requeridos pelo perfil atual;
 - manter dimensoes estaveis, acessibilidade de teclado e estados de loading,
   erro, vazio e read-only;
 - registrar o arquivo de origem e o commit-base de cada copia.
@@ -161,7 +241,43 @@ Gate:
 - o diff em `packages/infrastructure/ui-emception/**` permanece vazio;
 - API publica tem teste de exports.
 
-### `CODE-UI-03`. Fechar as fronteiras por persona
+### `CODE-UI-03`. Implementar o catalogo extensivel de exercicios
+
+Implementacao:
+
+- evoluir de forma versionada os contratos de `@game-guild/coding` para carregar
+  o discriminante explicito do exercicio, sem fallback heuristico sobre os
+  testes existentes;
+- definir o registro tipado e exaustivo de perfis suportados;
+- implementar `function` com UX orientada a enunciado, assinatura, casos
+  publicos, editor focado e resultados por caso;
+- implementar `standard-io` com UX orientada a stdin, stdout, stderr, exit code
+  e comparacao de testes;
+- caracterizar `project`, `debugging`, `visual` e `sql-query` contra os contratos
+  e capabilities existentes, sem expor os que ainda nao estiverem completos;
+- compor terminal e resultados para os dois tipos iniciais;
+- compor preview web ou canvas somente quando o perfil e a API publica do
+  Emception declararem a capability correspondente;
+- manter fixtures separadas por tipo e modo;
+- registrar qualquer necessidade de novo contrato em `@game-guild/coding` e de
+  capability publica no `EMCEPTION-GATE` antes de implementar o tipo.
+
+Gate:
+
+- fixtures provam que o tipo do exercicio sobrevive ao roundtrip
+  definition-delivery-submission sem ser deduzido da toolchain ou dos testes;
+- `function` e `standard-io` possuem testes de autoria, author test, learner e
+  grader;
+- trocar o tipo nao troca toolchain, persona ou politica de review
+  implicitamente;
+- tipos nao registrados falham com diagnostico explicito;
+- o bundle nao inclui renderers futuros por uma lista de opcoes desabilitadas;
+- nenhum renderer le ou emite `AIReview`, `InstructorReview`, `PeerReview` ou
+  outra politica de grading;
+- adicionar um tipo suportado exige um novo membro tipado, renderer, fixture e
+  teste, sem editar um switch central em varios componentes.
+
+### `CODE-UI-04`. Fechar as fronteiras por persona
 
 Implementacao:
 
@@ -181,11 +297,13 @@ Gate:
 - refresh da rota reidrata a fonte do servidor, nao um grade local;
 - UI nao permite inferir permissao por simples escolha de modo.
 
-### `CODE-UI-04`. Migrar `apps/web`
+### `CODE-UI-05`. Migrar `apps/web`
 
 Implementacao:
 
 - migrar o editor de definicao e preview autoral pertencente ao grading;
+- substituir a experiencia atual de IDE generica pelo perfil correspondente ao
+  tipo do exercicio;
 - migrar a atividade learner de coding assessment;
 - migrar assessment grader e SpeedGrader de code;
 - manter rotas responsaveis por auth, tenant, fetch, mutation e navegacao;
@@ -201,7 +319,7 @@ Gate:
 - server components nao importam modulo browser-only por acidente;
 - `dev:fast` e build web resolvem os entrypoints sem alias privado.
 
-### `CODE-UI-05`. Estabilizar as superficies paralelas
+### `CODE-UI-06`. Estabilizar as superficies paralelas
 
 Implementacao:
 
@@ -221,7 +339,7 @@ Gate:
 - testes unitarios e browser dos consumidores de ambas as superficies passam;
 - nenhuma abstracao compartilhada foi introduzida sem a revisao futura.
 
-### `CODE-UI-06`. Classificar a nova superficie no CI
+### `CODE-UI-07`. Classificar a nova superficie no CI
 
 Implementacao:
 
@@ -273,6 +391,9 @@ usar personas separadas quando cruzar author, learner e grader.
 ## Criterios de conclusao
 
 - autoria, author test, learner e grader usam `coding-surface`;
+- `function` e `standard-io` oferecem experiencias proprias sobre o mesmo shell;
+- o catalogo aceita novos tipos sem acoplar linguagem, persona ou review;
+- tipos indisponiveis nao sao exibidos nem tratados como outro tipo;
 - nenhuma informacao privada aparece no contexto learner;
 - Emception e consumido somente por APIs publicas;
 - app mantem ownership de API, auth e navegacao;

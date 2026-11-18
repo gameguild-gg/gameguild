@@ -25,6 +25,12 @@ fornece evidencia para uma revisao posterior com o responsavel pelo Emception,
 iniciada no subplano 5.0 e retomada quando uma linguagem criar nova copia. O
 responsavel decidira o que permanece separado e o que pode convergir.
 
+O registro cobre sobreposicao tecnica, nao preservacao da experiencia de
+produto atual. A composicao exibida hoje como `Coding assignment` em Learning e
+um consumidor que sera substituido nos fluxos selecionados. Seu layout de IDE
+generica, sua hierarquia visual e seu workflow nao sao baseline da nova
+`coding-surface`.
+
 ## Regra de preservacao
 
 Durante as partes 1 a 4:
@@ -35,10 +41,38 @@ Durante as partes 1 a 4:
   `coding-surface` ou vice-versa;
 - nao extrair helper compartilhado apenas para reduzir linhas duplicadas;
 - copiar somente o que for necessario ao grading;
+- copiar mecanicas de integracao, nunca presumir que o layout ou workflow atual
+  de `Coding assignment` deve ser reproduzido;
 - registrar cada copia no mesmo commit que a introduzir;
 - corrigir e testar divergencias no novo package sem sincronizacao silenciosa;
 - levar falhas de seguranca que tambem afetem a origem ao responsavel antes de
   editar o package preservado.
+
+## Limite da duplicacao de UI
+
+Podem ser copiados ou reimplementados, quando realmente necessarios:
+
+- bridges sobre APIs publicas do Emception;
+- montagem de workspace, overlays e planos de execucao;
+- controllers de preview, run e submission delta;
+- integracao com terminal, diagnostics, resultados e preview visual;
+- regras de read-only, storage namespaced, mocks e fixtures;
+- estilos estritamente necessarios aos componentes copiados.
+
+Nao devem ser copiados como definicao da nova experiencia:
+
+- o layout atual de IDE completa usado para todo `Coding assignment`;
+- a composicao de autoria que mistura definicao, testes e IDE sem considerar o
+  tipo do exercicio;
+- a mesma arvore visual para `function`, `standard-io`, projeto, depuracao ou
+  saida visual;
+- navegacao, paineis, dimensoes ou controles apenas porque existem no editor
+  atual;
+- politicas ou estados de review pertencentes a `@game-guild/grading`.
+
+A nova superficie possui shell e perfis tipados proprios. Uma copia de codigo
+de `CodingAssessmentEditor.tsx`, quando inevitavel, deve ser reduzida a mecanica
+de composicao com o Emception e registrada como divergente desde sua criacao.
 
 ## Estados
 
@@ -74,23 +108,24 @@ target pelo path real, registrar o commit exato de origem e descrever o delta.
 | --- | --- | --- | --- | --- | --- |
 | `DUP-PL-001` | `diverged` | `ui-emception/src/assessment/types.ts`; `apps/web/src/lib/coding-assignment/types.ts` | `packages/features/coding/src/contracts.ts` e `schemas.ts` | conceitos de definition, files, tests e guards | contrato novo e estrito, IDs estaveis, pesos inteiros, reports tecnicos e formas authoring/delivery/response separadas |
 | `DUP-PL-002` | `diverged` | `ui-emception/src/assessment/paths.ts` | `packages/features/coding/src/paths.ts` | normalizacao `/user` para `/home/user` | o dominio aceita paths relativos e o alias preservado `/user`, sempre retorna path canonico e rejeita colisoes, absolutos externos, segmentos ambiguos e namespace reservado |
-| `DUP-PL-003` | `planned` | `ui-emception/src/assessment/plan.ts` | `packages/features/coding-surface/src/**` | montagem de `TestPlan`, overlays e escopo public/full | usar contratos novos e manter preview sem autoridade academica |
-| `DUP-PL-004` | `planned` | `ui-emception/src/assessment/session.ts` | `packages/features/coding-surface/src/**` | controller subset, run e submission delta | modos e callbacks especificos do workflow de grading |
+| `DUP-PL-003` | `planned` | `ui-emception/src/assessment/plan.ts` | `packages/features/coding-surface/src/**` | montagem estritamente necessaria de `TestPlan`, overlays e escopo public/full | usar contratos e perfis de exercicio novos; preview permanece sem autoridade academica |
+| `DUP-PL-004` | `planned` | `ui-emception/src/assessment/session.ts` | `packages/features/coding-surface/src/**` | controller subset, run e submission delta | controllers orientados ao shell e ao perfil do exercicio, sem herdar o workflow visual atual |
 | `DUP-PL-005` | `planned` | `ui-emception/src/assessment/presets.ts` | `packages/features/coding-surface/src/**` | workspace config por linguagem | catalogo limitado as capabilities aprovadas para grading |
 | `DUP-PL-006` | `planned` | `ui-emception/src/assessment/samples.ts` | `packages/features/coding-surface/src/testing/**` ou fixtures de app | samples de arquivos e toolchains | fixtures orientadas a testes, sem se tornarem contrato de dominio |
 | `DUP-PL-007` | `planned` | `ui-emception/src/assessment/workspace-storage.ts` | `packages/features/coding-surface/src/**` | chave e restauracao de workspace | namespace deve incluir tenant, actor, revisao e attempt quando aplicavel |
-| `DUP-PL-008` | `planned` | `ui-emception/src/components/CodingAssessmentEditor.tsx` | `packages/features/coding-surface/src/**` | composicao de `Ide`, extensoes, read-only e run controls | UI voltada aos modos author-test, learner e grader de grading |
-| `DUP-PL-009` | `planned` | `ui-emception/src/components/TestResultsPanel.tsx` | `packages/features/coding-surface/src/**` | apresentacao de report e score | estados academicos, release e erro tecnico permanecem distintos |
-| `DUP-PL-010` | `planned` | `ui-emception/src/styles/theme.css` e `css.d.ts` | `packages/features/coding-surface/src/styles/**` | estilos necessarios a composicao | identidade visual pode divergir sem alterar a origem |
+| `DUP-PL-008` | `planned` | `ui-emception/src/components/CodingAssessmentEditor.tsx` | bridge e controllers especificos sob `packages/features/coding-surface/src/**` | somente mecanica indispensavel de composicao de `Ide`, extensoes, read-only e run controls | nao copiar layout, hierarquia ou workflow; novo shell e renderers por tipo substituem a experiencia atual |
+| `DUP-PL-009` | `planned` | `ui-emception/src/components/TestResultsPanel.tsx` | paineis de evidencia sob `packages/features/coding-surface/src/**` | apresentacao reutilizavel de diagnostics e report | composicao varia por tipo; estados academicos, release e erro tecnico permanecem distintos |
+| `DUP-PL-010` | `planned` | `ui-emception/src/styles/theme.css` e `css.d.ts` | `packages/features/coding-surface/src/styles/**` | somente estilos exigidos pelos componentes efetivamente copiados | nao clonar a aparencia da IDE atual; identidade e layout da nova superficie sao proprios |
 | `DUP-PL-011` | `planned` | `ui-emception/src/index.ts` e `assessment/editor.ts` | exports de `coding-surface` | organizacao da API publica | nova API nao preserva aliases por compatibilidade |
 | `DUP-PL-012` | `planned` | testes sob `ui-emception/src/assessment` e `src/components` | testes dos novos packages | cenarios de privacy, overlays, session, editor e results | testes originais permanecem; copias passam a validar a nova semantica |
 | `DUP-PL-013` | `planned` | mocks sob `ui-emception/src/__mocks__` | mocks de `coding-surface` | fronteiras publicas do Emception | manter apenas mocks necessarios, sem copiar internals |
 
 ## Composicoes web afetadas
 
-Estes arquivos sao consumidores, nao fontes a serem movidas automaticamente.
-Quando um deles migrar para `coding-surface`, registrar no PR quais cenarios de
-teste foram copiados ou adaptados:
+Estes arquivos sao consumidores a serem migrados ou substituidos, nao fontes de
+UX nem arquivos a serem movidos automaticamente. Quando um deles migrar para
+`coding-surface`, registrar no PR quais cenarios de teste foram copiados ou
+adaptados e qual perfil de exercicio passou a atender aquele fluxo:
 
 | Area | Consumidores conhecidos |
 | --- | --- |
@@ -198,6 +233,10 @@ outro desenvolvedor.
 
 - toda copia criada possui uma entrada com origem e target reais;
 - cada entrada informa divergencia e testes;
+- nenhuma entrada trata o layout ou workflow atual de `Coding assignment` como
+  requisito de compatibilidade da nova superficie;
+- copias de composicao visual identificam a mecanica reaproveitada e provam que
+  shell e perfis de exercicio pertencem a `coding-surface`;
 - `packages/infrastructure/ui-emception/**` permanece sem diff;
 - suites da origem e do destino podem executar independentemente;
 - nenhum helper compartilhado foi criado sem decisao dos owners;
