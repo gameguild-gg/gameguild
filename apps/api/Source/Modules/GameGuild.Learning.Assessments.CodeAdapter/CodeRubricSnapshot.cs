@@ -6,8 +6,8 @@ using GameGuild.Learning.Assessments.Grading.Runtime;
 using GameGuild.Learning.Grading.Contracts;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Learning.Assessments.Grading.Code;
-public static class CodeRubricSnapshot
+namespace GameGuild.Learning.Assessments.CodeAdapter;
+internal static class CodeRubricSnapshot
 {
     public static async Task<AssessmentAuthoringProjectionV1> MaterializeAsync(IApplicationDbContext context, Assessment assessment, AssessmentAuthoringProjectionV1 projection, CancellationToken cancellationToken)
     {

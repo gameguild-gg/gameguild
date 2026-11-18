@@ -10,7 +10,7 @@ using GameGuild.Identity.Users;
 using GameGuild.Learning.Assessments;
 using GameGuild.Learning.Assessments.Grading.Authoring;
 using GameGuild.Learning.Assessments.Grading.Contracts;
-using GameGuild.Learning.Assessments.Grading.Code;
+using GameGuild.Learning.Assessments.CodeAdapter;
 using GameGuild.Learning.Assessments.Grading.Persistence;
 using GameGuild.Learning.Assessments.Grading.Runtime;
 using GameGuild.Learning.Courses;

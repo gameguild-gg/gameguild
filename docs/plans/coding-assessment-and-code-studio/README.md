@@ -1,10 +1,10 @@
 # Coding assessment, grading adapter e refundacao do Code Studio
 
-Status: planejado.
+Status: em implementacao; partes 1 e 2 concluidas.
 
 Data: 2026-11-06.
 
-Atualizado: 2026-11-09.
+Atualizado: 2026-11-18.
 
 ## Objetivo
 

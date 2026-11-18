@@ -122,6 +122,7 @@ public sealed class AssessmentAuthoringService(
     IReviewStageHandlerResolver stageHandlers,
     IAIReviewProviderRegistry aiReviewProviders,
     IEnumerable<IReviewStageHandler> registeredStageHandlers,
+    IEnumerable<IAssessmentAuthoringProjectionEnricher> projectionEnrichers,
     IAcademicOutboxWriter outbox,
     ILogger<AssessmentAuthoringService> logger) : IAssessmentAuthoringService
 {
@@ -688,8 +689,15 @@ public sealed class AssessmentAuthoringService(
         }
 
         var projection = adapter.ProjectAuthoring(contentDocument.RootElement);
-        projection = await Code.CodeRubricSnapshot.MaterializeAsync(context, assessment, projection, cancellationToken)
-            .ConfigureAwait(false);
+        var projectionEnricher = AssessmentContentExtensionResolver.ResolveOptional(
+            projectionEnrichers,
+            projection.ContentType,
+            "assessment authoring projection enricher");
+        if (projectionEnricher is not null)
+        {
+            projection = await projectionEnricher.EnrichAsync(assessment, projection, cancellationToken)
+                .ConfigureAwait(false);
+        }
         if (projection.Grading is null)
         {
             return Result.Failure<MaterializedAuthoring>(Error.Validation("AssessmentRevision.GradingDisabled", "Grading is not enabled for this content."));

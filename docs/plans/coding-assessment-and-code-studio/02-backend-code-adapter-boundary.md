@@ -1,6 +1,6 @@
 # Parte 2. Fronteira backend do adapter de code
 
-Status: planejado.
+Status: implementado em 2026-11-18; validacao dirigida concluida.
 
 ## Objetivo
 
@@ -201,6 +201,7 @@ Nao atualizar snapshot EF nem apagar migration para simplificar o corte.
 ## Validacao
 
 ```bash
+dotnet test apps/api/tests/GameGuild.Learning.Assessments.CodeAdapter.UnitTests/GameGuild.Learning.Assessments.CodeAdapter.UnitTests.csproj
 dotnet build apps/api/GameGuild.sln
 dotnet test apps/api/tests/GameGuild.Learning.Assessments.UnitTests/GameGuild.Learning.Assessments.UnitTests.csproj
 dotnet test apps/api/tests/GameGuild.API.UnitTests/GameGuild.API.UnitTests.csproj
@@ -223,3 +224,44 @@ autorizado sem criar infraestrutura paralela no adapter.
 - academic outbox, dead letter e replay permanecem genericos e funcionais;
 - build e suites afetadas passam sem warnings;
 - nenhuma migration ou fonte do Emception foi alterada.
+
+## Resultado da implementacao
+
+| Etapa | Estado | Evidencia |
+| --- | --- | --- |
+| `CODE-BE-01` | concluida | testes historicos de adapter, worker, rubric, publication/delete e fixtures foram movidos para o projeto proprio do adapter |
+| `CODE-BE-02` | concluida | core recebeu portas genericas de authoring, payload e instructor review; registros duplicados falham fechado |
+| `CODE-BE-03` | concluida | criado `GameGuild.Learning.Assessments.CodeAdapter`, referenciado pelo host e pela solution somente na direcao adapter para core |
+| `CODE-BE-04` | concluida | limites, redaction, timeout, cancelamento, versoes congeladas e execucao autoritativa permanecem cobertos pelos testes do adapter e de integracao |
+| `CODE-BE-05` | concluida | registros concretos sairam de `AssessmentsModule`; o core nao importa namespace ou implementacao de code |
+
+O corte preservou `code-assessment-type` e `code-wasm-review` nas versoes
+backend `1`, `2` e `3`; somente a versao `3` permanece atual para autoria. A
+fixture TypeScript da versao `4` continua independente e nao reinterpreta
+snapshots backend congelados.
+
+`SubmissionModality.Code` e o campo persistido `CodePayload` permanecem no
+contrato generico de modalidades de submission, ao lado de text, file, URL,
+media e project. Eles nao executam nem interpretam coding. Renomear esse
+contrato exigiria uma mudanca publica e de schema sem necessidade para este
+corte, portanto ficou corretamente fora do `SCHEMA-GATE`.
+
+Validacoes executadas:
+
+```text
+CodeAdapter.UnitTests: 92 aprovados
+Assessments.UnitTests: 453 aprovados
+API.UnitTests: 1.882 aprovados
+API.IntegrationTests filtrados por Assessment: 25 aprovados
+Build dirigido de GameGuild.API: 0 warnings, 0 erros
+git diff --check: aprovado
+```
+
+As integracoes utilizaram um certificado de Data Protection efemero, exportado
+somente para o processo de teste. Sem as duas variaveis de certificado, o host
+falha fechado antes de iniciar os cenarios, conforme sua politica de seguranca.
+
+O build integral da solution foi concluido com `-m:1`, node reuse e shared
+compilation desativados, com afinidade limitada a 10 das 12 CPUs disponiveis.
+O resultado foi `0 warnings` e `0 errors` em 10m59s. Nenhuma migration,
+snapshot EF ou fonte sob Emception foi alterada.

@@ -8,7 +8,7 @@ using GameGuild.Learning.Assessments.Grading.Contracts;
 using GameGuild.Learning.Courses;
 using GameGuild.Learning.Grading.Contracts;
 
-namespace GameGuild.Learning.Assessments.Grading.Code;
+namespace GameGuild.Learning.Assessments.CodeAdapter;
 public static class CodeAssessmentContracts
 {
     public static string ContentType { get; } = "coding-assignment";

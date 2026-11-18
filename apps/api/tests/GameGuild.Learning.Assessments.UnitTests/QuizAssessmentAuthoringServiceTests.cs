@@ -363,6 +363,7 @@ public sealed class QuizAssessmentAuthoringServiceTests
                 stageHandlers,
                 new AIReviewProviderRegistry([]),
                 [handler],
+                [],
                 new AcademicOutboxWriter(context, []),
                 NullLogger<AssessmentAuthoringService>.Instance);
             return new AuthoringHarness(context, service, adapters, executionPolicies, stageHandlers, courseId, contentId, actorId);

@@ -28,7 +28,7 @@ using GameGuild.LaunchPad;
 using GameGuild.TrustSafety;
 using GameGuild.Learning.Assessments;
 using GameGuild.Learning.Assessments.Grading.Abstractions;
-using GameGuild.Learning.Assessments.Grading.Code;
+using GameGuild.Learning.Assessments.CodeAdapter;
 using GameGuild.Learning.Assessments.QuizAdapter;
 using GameGuild.Learning.Certificates;
 using GameGuild.Learning.Cohorts;
@@ -189,6 +189,7 @@ internal sealed class ApiProductComposition : IApiProductComposition
         }
         builder.Services.Configure<CodeGradingWorkerOptions>(builder.Configuration.GetSection(CodeGradingWorkerOptions.Section));
         builder.Services.AddSingleton<ICodeAssessmentExecutor, CodeGradingWorker>();
+        builder.Services.AddCodeGradingAdapter();
         builder.Services.AddQuizGradingAdapter();
         builder.Services.AddLearningEnrollmentsModule();
         builder.Services.AddCohortsModule();

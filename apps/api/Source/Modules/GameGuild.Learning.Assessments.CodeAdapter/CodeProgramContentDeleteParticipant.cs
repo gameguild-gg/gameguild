@@ -1,7 +1,7 @@
 using GameGuild.Learning.Courses;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Learning.Assessments.Grading.Code;
+namespace GameGuild.Learning.Assessments.CodeAdapter;
 /// <summary>Removes the linked assessment inside the existing content deletion transaction.</summary>
 public sealed class CodeProgramContentDeleteParticipant(IApplicationDbContext context) : IProgramContentDeleteParticipant
 {

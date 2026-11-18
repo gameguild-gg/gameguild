@@ -3,11 +3,12 @@ using System.Text.Json;
 using GameGuild.Learning.Assessments.Grading.Abstractions;
 using GameGuild.Learning.Assessments.Grading.Contracts;
 using GameGuild.Learning.Courses;
-using GameGuild.Learning.Assessments.Grading.Code;
+using GameGuild.Learning.Assessments.CodeAdapter;
+using GameGuild.Learning.Grading.Contracts;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace GameGuild.Learning.Assessments.Tests;
+namespace GameGuild.Learning.Assessments.CodeAdapter.Tests;
 
 public sealed class CodeGradingAdapterContractTests
 {
@@ -16,6 +17,7 @@ public sealed class CodeGradingAdapterContractTests
     {
         var services = new ServiceCollection();
         services.AddAssessmentsModule();
+        services.AddCodeGradingAdapter();
         using var provider = services.BuildServiceProvider();
         var resolver = provider.GetRequiredService<IAssessmentTypeAdapterResolver>();
 
@@ -184,6 +186,7 @@ public sealed class CodeGradingAdapterContractTests
     {
         var services = new ServiceCollection();
         services.AddAssessmentsModule();
+        services.AddCodeGradingAdapter();
         using var provider = services.BuildServiceProvider();
         var adapters = provider.GetRequiredService<IAssessmentTypeAdapterResolver>();
         var handlers = provider.GetRequiredService<IReviewStageHandlerResolver>();
@@ -236,6 +239,7 @@ public sealed class CodeGradingAdapterContractTests
         var services = new ServiceCollection();
         services.AddSingleton<ICodeAssessmentExecutor>(executor);
         services.AddAssessmentsModule();
+        services.AddCodeGradingAdapter();
         using var provider = services.BuildServiceProvider();
         var adapter = provider.GetRequiredService<IAssessmentTypeAdapterResolver>().Resolve(
             CodeAssessmentContracts.ContentType, CodeAssessmentContracts.AdapterKey, "2",
@@ -271,6 +275,7 @@ public sealed class CodeGradingAdapterContractTests
         var services = new ServiceCollection();
         services.AddSingleton<ICodeAssessmentExecutor>(executor);
         services.AddAssessmentsModule();
+        services.AddCodeGradingAdapter();
         using var provider = services.BuildServiceProvider();
         var adapter = provider.GetRequiredService<IAssessmentTypeAdapterResolver>().Resolve(
             CodeAssessmentContracts.ContentType, CodeAssessmentContracts.AdapterKey, "2",

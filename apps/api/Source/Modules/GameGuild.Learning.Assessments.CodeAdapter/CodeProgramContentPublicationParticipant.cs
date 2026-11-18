@@ -6,7 +6,7 @@ using GameGuild.Learning.Assessments.Grading.Contracts;
 using GameGuild.Learning.Courses;
 using Microsoft.EntityFrameworkCore;
 
-namespace GameGuild.Learning.Assessments.Grading.Code;
+namespace GameGuild.Learning.Assessments.CodeAdapter;
 public sealed class CodeProgramContentPublicationParticipant(IApplicationDbContext context, CodeAssessmentTypeAdapter adapter, IAssessmentGradingSync gradingSync, IAssessmentAuthoringService authoring, IActorContextAccessor actors) : IProgramContentPublicationParticipant
 {
     public bool CanHandle(ProgramContent content) => content.Type == ProgramContentType.Code;

@@ -1,12 +1,12 @@
 using System.Text.Json;
 using GameGuild.Learning.Assessments.Grading.Abstractions;
-using GameGuild.Learning.Assessments.Grading.Code;
 using GameGuild.Learning.Assessments.Grading.Contracts;
 using GameGuild.Learning.Grading.Contracts;
 
 namespace GameGuild.Learning.Assessments.Grading.Runtime;
 
-public sealed class InstructorReviewStageHandler : IReviewStageHandler
+public sealed class InstructorReviewStageHandler(
+    IEnumerable<IAssessmentInstructorReviewExtension>? assessmentExtensions = null) : IReviewStageHandler
 {
     private static readonly IReadOnlySet<ReviewExecutionContext> SupportedContexts =
         new HashSet<ReviewExecutionContext>
@@ -78,19 +78,17 @@ public sealed class InstructorReviewStageHandler : IReviewStageHandler
             }
         }
 
-        CodeRubricSnapshot.ValidateResolution(request.Snapshot, resolution);
-        var previousCodeFeedback = request.Snapshot.AuthoringSource.ContentType == CodeAssessmentContracts.ContentType
-            ? request.PreviousStageResult?.Items.SingleOrDefault(item =>
-                item.ItemId == CodeAssessmentContracts.ItemId &&
-                item.ReviewMethod == ReviewMethod.AutomatedReview &&
-                item.HandlerKey == CodeAssessmentContracts.HandlerKey &&
-                (item.HandlerVersion == CodeAssessmentContracts.Version ||
-                 item.HandlerVersion == CodeAssessmentContracts.Version2))?.Feedback
-            : null;
-        string? ResolveFeedback(string? supplied) =>
-            previousCodeFeedback is not null && string.IsNullOrWhiteSpace(supplied)
-                ? previousCodeFeedback
-                : supplied;
+        var assessmentExtension = AssessmentContentExtensionResolver.ResolveOptional(
+            assessmentExtensions ?? [],
+            request.Snapshot.AuthoringSource.ContentType,
+            "instructor review extension");
+        assessmentExtension?.ValidateResolution(request.Snapshot, resolution);
+        string? ResolveFeedback(string? itemId, string? supplied) =>
+            assessmentExtension?.ResolveFeedback(
+                request.Snapshot,
+                request.PreviousStageResult,
+                itemId,
+                supplied) ?? supplied;
 
         var changedPreviousScore = request.PreviousStageResult is not null &&
             request.PreviousStageResult.Items.Any(previousItem =>
@@ -113,7 +111,7 @@ public sealed class InstructorReviewStageHandler : IReviewStageHandler
             ReviewMethod.InstructorReview,
             Key,
             Version,
-            ResolveFeedback(resolutions[item.ItemId].Feedback))).ToArray();
+            ResolveFeedback(item.ItemId, resolutions[item.ItemId].Feedback))).ToArray();
         var result = new GradeResultV1(
             GradingContractVersions.GradeResult,
             "final",
@@ -121,7 +119,7 @@ public sealed class InstructorReviewStageHandler : IReviewStageHandler
             ScoreValue.Sum(itemResults.Select(item => item.MaxScore)),
             itemResults,
             [evidence.EvidenceKey],
-            ResolveFeedback(resolution.Feedback));
+            ResolveFeedback(null, resolution.Feedback));
         GradingContractValidator.Validate(result);
         return ValueTask.FromResult(ReviewStageTransitionV1.Completed(result));
     }

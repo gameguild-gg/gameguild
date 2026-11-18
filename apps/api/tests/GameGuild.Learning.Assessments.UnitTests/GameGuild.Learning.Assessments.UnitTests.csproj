@@ -36,6 +36,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Assets\GameGuild.Assets.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Learning.Assessments\GameGuild.Learning.Assessments.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Learning.Assessments.CodeAdapter\GameGuild.Learning.Assessments.CodeAdapter.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.Learning.Assessments.QuizAdapter\GameGuild.Learning.Assessments.QuizAdapter.csproj" />
         <ProjectReference Include="..\..\Source\Modules\GameGuild.SharedKernel\GameGuild.SharedKernel.csproj" />
     </ItemGroup>

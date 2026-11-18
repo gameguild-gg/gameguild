@@ -8,7 +8,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
-namespace GameGuild.Learning.Assessments.Grading.Code;
+namespace GameGuild.Learning.Assessments.CodeAdapter;
 public sealed class CodeGradingHistoricalAssets
 {
     public string? RuntimeDirectory { get; set; }

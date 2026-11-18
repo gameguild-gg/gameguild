@@ -1,7 +1,7 @@
 using System.Text.Json;
 using FluentAssertions;
 using GameGuild.Learning.Assessments.Grading.Abstractions;
-using GameGuild.Learning.Assessments.Grading.Code;
+using GameGuild.Learning.Assessments.CodeAdapter;
 using GameGuild.Learning.Assessments.Grading.Contracts;
 using GameGuild.Learning.Assessments.Grading.Runtime;
 using GameGuild.Learning.Grading.Contracts;
@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Xunit;
 
-namespace GameGuild.Learning.Assessments.Tests;
+namespace GameGuild.Learning.Assessments.CodeAdapter.Tests;
 public sealed class CodeRubricSnapshotTests
 {
     [Fact]

@@ -1,11 +1,11 @@
 using System.Text.Json;
 using FluentAssertions;
-using GameGuild.Learning.Assessments.Grading.Code;
+using GameGuild.Learning.Assessments.CodeAdapter;
 using GameGuild.Learning.Courses;
 using Microsoft.Extensions.Options;
 using Xunit;
 
-namespace GameGuild.Learning.Assessments.Tests;
+namespace GameGuild.Learning.Assessments.CodeAdapter.Tests;
 
 public sealed class CodeGradingWorkerConfigurationTests
 {

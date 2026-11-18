@@ -3,7 +3,7 @@ using FluentAssertions;
 using GameGuild.Learning.Assessments.Grading.Abstractions;
 using GameGuild.Learning.Assessments.Grading.Authoring;
 using GameGuild.Learning.Assessments.Grading.Capabilities;
-using GameGuild.Learning.Assessments.Grading.Code;
+using GameGuild.Learning.Assessments.CodeAdapter;
 using GameGuild.Learning.Assessments.Grading.Contracts;
 using GameGuild.Learning.Assessments.Grading.Persistence;
 using GameGuild.Learning.Assessments.Grading.Runtime;
@@ -2253,7 +2253,8 @@ public sealed class AssessmentGradingRuntimeTests
                 new QuizDeliveryGenerator(),
                 new QuizAnswerDecoder(),
                 new QuizDeterministicReviewAlgorithm());
-            var instructorHandler = new InstructorReviewStageHandler();
+            var codeInstructorExtension = new CodeAssessmentInstructorReviewExtension();
+            var instructorHandler = new InstructorReviewStageHandler([codeInstructorExtension]);
             var automatedHandler = new QuizAutomatedReviewStageHandler(quizAdapter);
             var codeAdapter = new CodeAssessmentTypeAdapter(new PassingCodeExecutor());
             var aiProvider = new ControlledAIReviewProvider();
@@ -2280,6 +2281,7 @@ public sealed class AssessmentGradingRuntimeTests
                 stages,
                 aiProviders,
                 handlers,
+                [new CodeAssessmentAuthoringProjectionEnricher(context)],
                 outbox,
                 NullLogger<AssessmentAuthoringService>.Instance);
             var saved = await authoring.SaveDraftAsync(
@@ -2355,7 +2357,13 @@ public sealed class AssessmentGradingRuntimeTests
             var gradebook = new AssessmentGradebookProjectionService(context, outbox);
             var sink = new OfficialGradingFinalizationSink(context, outbox, gradebook);
             var orchestrator = new GradingExecutionOrchestrator(context, adapters, stages, sink, outbox);
-            var runtime = new AssessmentGradingRuntimeService(context, orchestrator, authoring, sink);
+            var runtime = new AssessmentGradingRuntimeService(
+                context,
+                orchestrator,
+                authoring,
+                sink,
+                [new CodeAssessmentSubmissionPayloadProjector()],
+                [codeInstructorExtension]);
             var release = new GradeReleaseService(context, outbox, sink);
             var clock = new MutableTimeProvider(DateTimeOffset.UtcNow.AddHours(-1));
             var releaseSchedules = new GradeResultReleaseScheduleService(

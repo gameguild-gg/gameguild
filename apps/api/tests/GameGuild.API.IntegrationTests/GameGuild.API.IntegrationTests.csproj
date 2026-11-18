@@ -29,6 +29,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\..\Source\GameGuild.API\GameGuild.API.csproj" />
+        <ProjectReference Include="..\..\Source\Modules\GameGuild.Learning.Assessments.CodeAdapter\GameGuild.Learning.Assessments.CodeAdapter.csproj" />
         <ProjectReference Include="..\GameGuild.TestSupport.Finance.Economy\GameGuild.TestSupport.Finance.Economy.csproj" />
     </ItemGroup>
 
