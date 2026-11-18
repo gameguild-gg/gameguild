@@ -81,13 +81,13 @@
     "@game-guild/prettier-config": "workspace:*",
     "@game-guild/typescript-config": "workspace:*",
     "dotenv-cli": "^11.1.0",
-    "eslint": "^10.14.0",
+    "eslint": "^10.15.0",
     "npm-run-all": "4.1.5",
-    "playwright": "1.64.1",
-    "prettier": "3.9.10",
-    "rimraf": "^6.0.0",
+    "playwright": "1.65.1",
+    "prettier": "3.10.1",
+    "rimraf": "^6.1.4",
     "syncpack": "^15.3.2",
-    "turbo": "^2.11.10",
+    "turbo": "^2.11.11",
     "typescript": "^6.0.3"
   }
 }
