@@ -71,6 +71,78 @@ public class MfaServiceTests
 
     #endregion
 
+    #region VerifyEmailSignInCodeAsync Tests
+
+    [Fact]
+    public async Task VerifyEmailSignInCodeAsync_WithValidCode_ShouldDelegateAndReportSuccess()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var emailMfaServiceMock = new Mock<IEmailMfaService>();
+        emailMfaServiceMock
+            .Setup(x => x.VerifySignInCodeAsync(userId, "123456", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var service = CreateService(emailMfaServiceMock.Object);
+
+        // Act
+        var result = await service.VerifyEmailSignInCodeAsync(userId, "123456");
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Message.Should().Be("MFA verification successful");
+        emailMfaServiceMock.Verify(
+            x => x.VerifySignInCodeAsync(userId, "123456", It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task VerifyEmailSignInCodeAsync_WithInvalidCode_ShouldDelegateAndReportFailure()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var emailMfaServiceMock = new Mock<IEmailMfaService>();
+        emailMfaServiceMock
+            .Setup(x => x.VerifySignInCodeAsync(userId, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        var service = CreateService(emailMfaServiceMock.Object);
+
+        // Act
+        var result = await service.VerifyEmailSignInCodeAsync(userId, "000000");
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().Be("Invalid MFA code");
+        emailMfaServiceMock.Verify(
+            x => x.VerifySignInCodeAsync(userId, "000000", It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task VerifyEmailSignInCodeAsync_WithoutEmailService_ShouldFailClosed()
+    {
+        // Arrange — the email factor sub-service is optional in the orchestrator; a missing
+        // registration must deny rather than throw.
+
+        // Act
+        var result = await _service.VerifyEmailSignInCodeAsync(Guid.NewGuid(), "123456");
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().Be("Invalid MFA code");
+    }
+
+    private MfaService CreateService(IEmailMfaService emailMfaService) =>
+        new(_loggerMock.Object,
+            _totpMfaServiceMock.Object,
+            _backupCodeMfaServiceMock.Object,
+            _attemptTrackingServiceMock.Object,
+            _userRepositoryMock.Object,
+            _passwordHasherMock.Object,
+            emailMfaService: emailMfaService,
+            eventPublisher: _publisherMock.Object);
+
+    #endregion
+
     #region InitiateMfaSetupAsync Tests
 
     [Fact]

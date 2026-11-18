@@ -21,6 +21,7 @@ public sealed class PostgreSqlSignInMfaSubjectReader(IApplicationDbContext conte
             if (!string.IsNullOrWhiteSpace(enrollment.TotpSecretKey)) { methods.Add(MfaMethod.Totp); }
             if (BackupCodeSet.Read(enrollment.BackupCodes).Hashes.Count > 0) { methods.Add(MfaMethod.BackupCode); }
             if (!string.IsNullOrWhiteSpace(enrollment.SmsPhoneNumber)) { methods.Add(MfaMethod.Sms); }
+            if (!string.IsNullOrWhiteSpace(enrollment.EmailMfaAddress)) { methods.Add(MfaMethod.Email); }
         }
         return new SignInMfaSubjectState(user, enrolled, enrollment?.LockedOutUntil, methods);
     }

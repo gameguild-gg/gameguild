@@ -36,4 +36,10 @@ public interface IEmailMfaService
 
     /// <summary>Verifies a submitted email-MFA code (constant-time, single-use).</summary>
     Task<bool> VerifyCodeAsync(Guid userId, string code, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    ///     Verifies a sign-in email code against the enrolled address while feeding the shared
+    ///     account-level MFA lockout budget (mirrors <see cref="ISmsMfaService.VerifySignInCodeAsync"/>).
+    /// </summary>
+    Task<bool> VerifySignInCodeAsync(Guid userId, string code, CancellationToken cancellationToken = default);
 }
