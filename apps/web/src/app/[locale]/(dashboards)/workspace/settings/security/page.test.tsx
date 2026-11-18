@@ -8,7 +8,11 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('next-intl/server', () => ({
-  getTranslations: async (namespace: string) => (key: string) => `${namespace}.${key}`,
+  // The page calls getTranslations({ locale, namespace }); support both forms.
+  getTranslations: async (opts: string | { namespace?: string }) => {
+    const namespace = typeof opts === 'string' ? opts : (opts.namespace ?? '');
+    return (key: string) => `${namespace}.${key}`;
+  },
 }));
 
 vi.mock('@/i18n/navigation', () => ({
