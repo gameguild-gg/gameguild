@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS project-files
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS project-files
 WORKDIR /metadata
 COPY apps/api/Source/ Source/
 RUN find Source -type f \
@@ -9,7 +9,7 @@ RUN find Source -type f \
       ! -name '*.targets' \
       -delete
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /src
 COPY apps/api/GameGuild.sln apps/api/Directory.Build.props apps/api/Directory.Packages.props apps/api/global.json ./
 # Analyzer severity overrides (Sonar S-rules → none) live in the root
