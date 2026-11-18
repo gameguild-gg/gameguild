@@ -1,58 +1,31 @@
-import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
-import {
-  EmailCodeFlow,
-  type EmailCodeMessages,
-} from "@/components/email-code-flow";
-import { resolveAllowedAuthRedirect } from "@/lib/auth/cross-domain-auth";
+import { redirect } from '@/i18n/navigation';
+import { resolveAllowedAuthRedirect } from '@/lib/auth/cross-domain-auth';
 
-export const metadata: Metadata = {
-  referrer: "no-referrer",
-  robots: { index: false, follow: false },
-};
-
-export default async function Page({
+// Email-code is no longer a sign-in method (issue #1236): a typed code and a
+// magic link both require mailbox access, so offering both at sign-in was
+// redundant — the email link is the single passwordless entry. Typed codes
+// remain the mechanism for re-verification flows (step-up #1191, password
+// change) and the EmailCodeFlow component is preserved for a future
+// revalidation surface. This route now lands legacy links and bookmarks on
+// the surviving passwordless entry.
+export default async function LegacyEmailCodeRedirectPage({
+  params,
   searchParams,
-}: PageProps<"/[locale]/email-code">): Promise<React.JSX.Element> {
-  const [query, t] = await Promise.all([
-    searchParams,
-    getTranslations("emailCode"),
-  ]);
+}: {
+  params: Promise<{ locale: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}): Promise<never> {
+  const [{ locale }, query] = await Promise.all([params, searchParams]);
   const rawRedirect = Array.isArray(query?.redirectTo)
     ? query.redirectTo[0]
     : query?.redirectTo;
   const redirectTo = resolveAllowedAuthRedirect(
-    typeof rawRedirect === "string" ? rawRedirect : undefined,
+    typeof rawRedirect === 'string' ? rawRedirect : undefined,
   );
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
-
-  const messages: EmailCodeMessages = {
-    request: {
-      title: t("request.title"),
-      description: t("request.description"),
-      emailLabel: t("request.emailLabel"),
-      emailPlaceholder: t("request.emailPlaceholder"),
-      submit: t("request.submit"),
-      pending: t("request.pending"),
-      successTitle: t("request.successTitle"),
-      successDescription: t("request.successDescription"),
-      error: t("request.error"),
-    },
-    consume: {
-      title: t("consume.title"),
-      description: t("consume.description"),
-      codeLabel: t("consume.codeLabel"),
-      codePlaceholder: t("consume.codePlaceholder"),
-      submit: t("consume.submit"),
-      pending: t("consume.pending"),
-      useDifferentEmail: t("consume.useDifferentEmail"),
-      errorTitle: t("consume.errorTitle"),
-      error: t("consume.error"),
-    },
-    backToSignIn: t("backToSignIn"),
-  };
-
-  return (
-    <EmailCodeFlow redirectTo={redirectTo} apiUrl={apiUrl} messages={messages} />
-  );
+  const href =
+    redirectTo && redirectTo !== '/'
+      ? `/magic-link?redirectTo=${encodeURIComponent(redirectTo)}`
+      : '/magic-link';
+  redirect({ href, locale });
+  throw new Error('unreachable');
 }
