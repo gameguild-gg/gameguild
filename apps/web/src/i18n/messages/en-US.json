@@ -10,8 +10,7 @@
   },
   "signIn": {
     "continueWithDiscord": "Continue with Discord",
-    "magicLink": "Sign in with an email link",
-    "emailCode": "Sign in with an email code",
+    "passwordless": "Sign in without a password",
     "continueWithWallet": "Continue with",
     "walletConnecting": "Connecting…",
     "walletSigning": "Signing…",

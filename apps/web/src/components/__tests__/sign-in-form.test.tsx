@@ -77,10 +77,7 @@ describe('SignInForm', () => {
 
   it('renders navigation links', () => {
     renderWithUser(
-      <SignInForm
-        magicLinkLabel="Sign in with an email link"
-        emailCodeLabel="Sign in with an email code"
-      />,
+      <SignInForm passwordlessLabel="Sign in without a password" />,
     );
 
     expect(screen.getByText('Sign up')).toHaveAttribute('href', '/sign-up?redirectTo=%2F');
@@ -88,26 +85,25 @@ describe('SignInForm', () => {
       'href',
       '/forgot-password'
     );
-    expect(screen.getByText('Sign in with an email link')).toHaveAttribute(
+    // Single passwordless entry (#1236): email-code is not a sign-in method —
+    // a typed code and a magic link both require mailbox access.
+    expect(screen.getByText('Sign in without a password')).toHaveAttribute(
       'href',
       '/magic-link?redirectTo=%2F'
     );
-    expect(screen.getByText('Sign in with an email code')).toHaveAttribute(
-      'href',
-      '/email-code'
-    );
+    expect(screen.queryByText('Sign in with an email code')).not.toBeInTheDocument();
     // Terms of Service / Privacy Policy moved to the shared (auth) layout footer.
   });
 
-  it('preserves the redirect destination in the magic-link request link', () => {
+  it('preserves the redirect destination in the passwordless link', () => {
     renderWithUser(
       <SignInForm
-        magicLinkLabel="Sign in with an email link"
+        passwordlessLabel="Sign in without a password"
         redirectTo="/workspace?tab=files"
       />
     );
 
-    expect(screen.getByText('Sign in with an email link')).toHaveAttribute(
+    expect(screen.getByText('Sign in without a password')).toHaveAttribute(
       'href',
       '/magic-link?redirectTo=%2Fworkspace%3Ftab%3Dfiles'
     );
