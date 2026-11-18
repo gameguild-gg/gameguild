@@ -27,7 +27,7 @@ public interface IMfaService
     Task<MfaVerificationResult> VerifySmsSignInCodeAsync(Guid userId, Guid signInChallengeId, string code, CancellationToken cancellationToken);
 
     /// <summary>Verifies an email proof for the server-resolved first-factor continuation (lockout-tracked).</summary>
-    Task<MfaVerificationResult> VerifyEmailSignInCodeAsync(Guid userId, string code, CancellationToken cancellationToken);
+    Task<MfaVerificationResult> VerifyEmailSignInCodeAsync(Guid userId, string code, CancellationToken cancellationToken = default);
 
     /// <summary>
     ///     Disables MFA after re-verifying the account password (issue #244). The confirmation

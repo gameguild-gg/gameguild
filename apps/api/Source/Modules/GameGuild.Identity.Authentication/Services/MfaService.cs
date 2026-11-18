@@ -53,7 +53,7 @@ public sealed class MfaService(
     }
 
     /// <inheritdoc />
-    public async Task<MfaVerificationResult> VerifyEmailSignInCodeAsync(Guid userId, string code, CancellationToken cancellationToken)
+    public async Task<MfaVerificationResult> VerifyEmailSignInCodeAsync(Guid userId, string code, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var valid = emailMfaService is not null &&
