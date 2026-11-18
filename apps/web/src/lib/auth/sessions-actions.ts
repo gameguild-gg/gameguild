@@ -37,6 +37,19 @@ export interface SessionsPageData {
   trustedDevices: IdentityAuthenticationTrustedDeviceOutput[];
 }
 
+/**
+ * Outcome of loading the security page's server data (issue #1298 J4): every
+ * failure mode the old `safeLoad` swallowed into an empty render is surfaced so
+ * the page can show an explicit error state with a retry instead of a silently
+ * blank page. `'ok'` means every read succeeded.
+ */
+export type SecurityLoadStatus = 'ok' | 'unauthorized' | 'notFound' | 'serverError' | 'contractError';
+
+/** {@link SessionsPageData} plus the aggregate load outcome of its three reads. */
+export interface SessionsLoadResult extends SessionsPageData {
+  loadStatus: SecurityLoadStatus;
+}
+
 export type SessionActionStatus = 'success' | 'notFound' | 'unauthorized' | 'error';
 
 export interface SessionActionResult {
@@ -61,43 +74,74 @@ function resultFrom(success: boolean, error?: { status?: number }): SessionActio
     : { success: false, status: statusFromError(error) };
 }
 
-/**
- * Defensive read for page loaders (issue #864): the generated client's
- * safeParse THROWS on zod contract mismatch, and a throw inside a server
- * component render crashes the page with React #441. Any failure — thrown
- * validation/network error or a non-ok result — must degrade to `fallback`
- * so the security page renders with empty data instead of erroring.
- */
-async function safeLoad<T>(call: () => Promise<{ ok: boolean; data?: T }>, fallback: T | null): Promise<T | null> {
-  try {
-    const result = await call();
-    return result.ok ? (result.data ?? fallback) : fallback;
-  } catch {
-    // Contract drift between the deployed API and the generated client (issue #864):
-    // render the page with degraded data rather than crashing the RSC render.
-    return fallback;
+function loadStatusFromError(error: { status?: number } | undefined): SecurityLoadStatus {
+  switch (error?.status) {
+    case 401:
+      return 'unauthorized';
+    case 404:
+      return 'notFound';
+    default:
+      return 'serverError';
   }
 }
 
 /**
- * Loads the session list, the current-session security analysis, and the trusted
- * device list in one pass for the settings/security page.
+ * Load wrapper that surfaces failures instead of degrading to a fallback
+ * (issue #1298 J4). The generated client's safeParse THROWS on zod contract
+ * mismatch (issue #864) and the transport throws when the API is unreachable;
+ * a non-ok result carries the HTTP status. Both become a load status the page
+ * renders as an explicit error state — never as an empty session/device list
+ * that looks like "nothing to review".
  */
-export async function loadSessionsData(): Promise<SessionsPageData> {
+async function attemptLoad<T>(call: () => Promise<{ ok: boolean; data?: T; error?: { status?: number } }>): Promise<{
+  data: T | null;
+  status: SecurityLoadStatus;
+}> {
+  try {
+    const result = await call();
+    if (!result.ok) {
+      return { data: null, status: loadStatusFromError(result.error) };
+    }
+    return { data: result.data ?? null, status: 'ok' };
+  } catch {
+    // Contract drift between the deployed API and the generated client (issue
+    // #864), or an unreachable API: report it instead of blanking the page.
+    return { data: null, status: 'contractError' };
+  }
+}
+
+/** Most user-actionable status wins, so the retry state explains the failure. */
+function worstStatus(statuses: SecurityLoadStatus[]): SecurityLoadStatus {
+  const priority: SecurityLoadStatus[] = ['unauthorized', 'notFound', 'serverError', 'contractError'];
+  for (const candidate of priority) {
+    if (statuses.includes(candidate)) {
+      return candidate;
+    }
+  }
+  return 'ok';
+}
+
+/**
+ * Loads the session list, the current-session security analysis, and the trusted
+ * device list in one pass for the settings/security page, reporting the aggregate
+ * load outcome so the page can render an explicit error state with retry.
+ */
+export async function loadSessionsData(): Promise<SessionsLoadResult> {
   const client = getApiClient();
   const sessionsModule = new GeneratedApi.AuthSessionsModule(client);
   const trustedDevicesModule = new GeneratedApi.AuthTrustedDevicesModule(client);
 
   const [sessions, analysis, trustedDevices] = await Promise.all([
-    safeLoad(() => sessionsModule.getAuthSessions(), []),
-    safeLoad(() => sessionsModule.getAuthSessionsAnalyzeSecurity(), null),
-    safeLoad(() => trustedDevicesModule.getAuthTrustedDevices(), []),
+    attemptLoad(() => sessionsModule.getAuthSessions()),
+    attemptLoad(() => sessionsModule.getAuthSessionsAnalyzeSecurity()),
+    attemptLoad(() => trustedDevicesModule.getAuthTrustedDevices()),
   ]);
 
   return {
-    sessions: sessions ?? [],
-    analysis,
-    trustedDevices: trustedDevices ?? [],
+    sessions: sessions.data ?? [],
+    analysis: analysis.data,
+    trustedDevices: trustedDevices.data ?? [],
+    loadStatus: worstStatus([sessions.status, analysis.status, trustedDevices.status]),
   };
 }
 

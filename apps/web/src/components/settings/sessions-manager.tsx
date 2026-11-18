@@ -7,6 +7,8 @@ import {
   terminateOtherSessionsAction,
   terminateSessionAction,
   trustCurrentDeviceAction,
+  type SessionActionResult,
+  type SessionActionStatus,
   type SessionsPageData,
 } from '@/lib/auth/sessions-actions';
 import { Badge } from '@game-guild/ui/components/badge';
@@ -43,7 +45,9 @@ import { toast } from 'sonner';
  * refreshes the server-rendered data after every action, and router.refresh()
  * guarantees the client re-renders even when the route has no cache entry for
  * revalidatePath to invalidate (dynamic routes in dev — see the session-state
- * browser acceptance flake).
+ * browser acceptance flake). Failed actions toast a specific, actionable message
+ * per action and outcome (issue #1298 J4): expired-session and already-gone
+ * targets explain what happened instead of a single generic "request failed".
  */
 
 const RISK_TONE: Record<string, 'default' | 'secondary' | 'destructive'> = {
@@ -104,14 +108,36 @@ export function SessionsManager({ data, locale }: { data: SessionsPageData; loca
   const [renameValue, setRenameValue] = React.useState('');
   const [confirmTerminateAll, setConfirmTerminateAll] = React.useState(false);
 
-  function run(action: () => Promise<{ success: boolean }>, successMessage: string) {
+  /**
+   * Failure copy per action outcome (issue #1298 J4): status-specific causes win
+   * over the action-specific message because they say what to do next — an
+   * expired session means "sign in again", a missing target means "the list is
+   * stale" (and gets refreshed so the stale row disappears), anything else
+   * falls back to the action's own retry guidance.
+   */
+  function failureMessage(status: SessionActionStatus, actionFailureKey: string): string {
+    if (status === 'unauthorized') {
+      return t('errors.sessionExpired');
+    }
+    if (status === 'notFound') {
+      return t('errors.targetMissing');
+    }
+    return t(actionFailureKey);
+  }
+
+  function run(action: () => Promise<SessionActionResult>, successMessage: string, failureKey: string) {
     startTransition(async () => {
       const result = await action();
       if (result.success) {
         router.refresh();
         toast.success(successMessage);
       } else {
-        toast.error(t('actionFailed'));
+        // A gone-already target also means the rendered list is stale: resync it
+        // so the row the user just acted on disappears instead of erroring again.
+        if (result.status === 'notFound') {
+          router.refresh();
+        }
+        toast.error(failureMessage(result.status, failureKey));
       }
     });
   }
@@ -127,7 +153,7 @@ export function SessionsManager({ data, locale }: { data: SessionsPageData; loca
       return;
     }
     setRenamingId(null);
-    run(() => renameSessionAction(sessionId, name), t('rename.success'));
+    run(() => renameSessionAction(sessionId, name), t('rename.success'), 'errors.renameFailed');
   }
 
   const analysis = data.analysis;
@@ -259,7 +285,7 @@ export function SessionsManager({ data, locale }: { data: SessionsPageData; loca
                         size="sm"
                         variant="destructive"
                         disabled={isUnavailable}
-                        onClick={() => run(() => terminateSessionAction(session.id!), t('sessions.terminated'))}
+                        onClick={() => run(() => terminateSessionAction(session.id!), t('sessions.terminated'), 'errors.terminateFailed')}
                         aria-label={t('sessions.terminateAria', { name })}
                       >
                         {t('sessions.terminate')}
@@ -274,7 +300,7 @@ export function SessionsManager({ data, locale }: { data: SessionsPageData; loca
             <Button
               variant="outline"
               disabled={isUnavailable || data.sessions.length <= 1}
-              onClick={() => run(() => terminateOtherSessionsAction(), t('sessions.othersTerminated'))}
+              onClick={() => run(() => terminateOtherSessionsAction(), t('sessions.othersTerminated'), 'errors.terminateOthersFailed')}
             >
               {t('sessions.terminateOthers')}
             </Button>
@@ -325,7 +351,7 @@ export function SessionsManager({ data, locale }: { data: SessionsPageData; loca
                   size="sm"
                   variant="outline"
                   disabled={isUnavailable}
-                  onClick={() => run(() => revokeTrustedDeviceAction(device.id!), t('trustedDevices.revoked'))}
+                  onClick={() => run(() => revokeTrustedDeviceAction(device.id!), t('trustedDevices.revoked'), 'errors.revokeFailed')}
                 >
                   {t('trustedDevices.revoke')}
                 </Button>
@@ -342,7 +368,7 @@ export function SessionsManager({ data, locale }: { data: SessionsPageData; loca
                 size="sm"
                 variant="outline"
                 disabled={isUnavailable}
-                onClick={() => run(() => trustCurrentDeviceAction(), t('trustedDevices.trustedCurrent'))}
+                  onClick={() => run(() => trustCurrentDeviceAction(), t('trustedDevices.trustedCurrent'), 'errors.trustFailed')}
               >
                 {t('trustedDevices.trustCurrentButton')}
               </Button>
@@ -361,7 +387,7 @@ export function SessionsManager({ data, locale }: { data: SessionsPageData; loca
             <AlertDialogCancel disabled={isUnavailable}>{t('sessions.confirmCancel')}</AlertDialogCancel>
             <AlertDialogAction
               disabled={isUnavailable}
-              onClick={() => run(() => terminateAllSessionsAction(), t('sessions.allTerminated'))}
+              onClick={() => run(() => terminateAllSessionsAction(), t('sessions.allTerminated'), 'errors.terminateAllFailed')}
             >
               {t('sessions.confirmTerminateAll')}
             </AlertDialogAction>
