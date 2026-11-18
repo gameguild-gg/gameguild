@@ -37,7 +37,7 @@ overrides:
   handlebars: "4.7.10"
   icu-minify: "4.9.2"
   ip-address: "10.7.4"
-  next: "16.4.3"
+  next: "16.4.5"
   postcss: "8.5.23"
   qs: "6.16.1"
   sharp: "0.35.5"
@@ -64,12 +64,12 @@ overrides:
   "proxy-addr@<2.0.8": "2.0.8"
   "postcss-selector-parser@<7.1.6": "7.1.6"
   "snowflake-sdk@<3.3.0": "3.3.0"
+  "fast-xml-parser@<5.12.0": "5.12.0"
   "sprintf-js@<1.1.3": "1.1.3"
   "systeminformation@<5.33.16": "5.33.16"
   "shell-quote@<1.11.0": "1.11.0"
   "zod@<4.6.6": "4.6.7"
   "@coinbase/cdp-sdk>abitype": "1.2.3"
-  "fast-xml-parser@<5.12.0": "5.12.0"
 
 onlyBuiltDependencies:
   - braces
@@ -80,6 +80,7 @@ onlyBuiltDependencies:
   - sprintf-js
 
 patchedDependencies:
+  "picomatch@4.0.7": "patches/picomatch@4.0.7.patch"
   "braces@3.0.3": "patches/braces@3.0.3.patch"
   "deepmerge@4.3.1": "patches/deepmerge@4.3.1.patch"
   "eslint-plugin-import@2.32.0": "patches/eslint-plugin-import@2.32.0.patch"

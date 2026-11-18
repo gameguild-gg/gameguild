@@ -10,21 +10,30 @@ const bracesAdvisory = {
   id: 'GHSA-vfj7-8cjw-p6xm',
   url: 'https://github.com/advisories/GHSA-vfj7-8cjw-p6xm',
   cve: 'CVE-2026-93687',
-  patchedVersion: '3.0.3',
+  patchedVersions: ['3.0.3'],
 };
 const sprintfAdvisory = {
   moduleName: 'sprintf-js',
   id: 'GHSA-hp3w-g68c-fv3c',
   url: 'https://github.com/advisories/GHSA-hp3w-g68c-fv3c',
   cve: 'CVE-2026-97058',
-  patchedVersion: '1.1.3',
+  patchedVersions: ['1.1.3'],
 };
 const deepmergeAdvisory = {
   moduleName: 'deepmerge',
   id: 'GHSA-gcqx-w48m-w2h4',
   url: 'https://github.com/advisories/GHSA-gcqx-w48m-w2h4',
   cve: 'CVE-2026-93753',
-  patchedVersion: '4.3.1',
+  patchedVersions: ['4.3.1'],
+};
+const picomatchAdvisory = {
+  moduleName: 'picomatch',
+  id: 'GHSA-fc5q-39xc-vjpf',
+  url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf',
+  cve: 'CVE-2026-112366',
+  // 4.0.7 is locally patched; 2.3.2 is only reached through @dbml/cli, a
+  // devDependency CLI that never evaluates repository glob patterns.
+  patchedVersions: ['4.0.7', '2.3.2'],
 };
 
 const readCounts = (report) => report?.metadata?.vulnerabilities;
@@ -56,27 +65,28 @@ const matchesAdvisoryIdentity = (advisory, expected) =>
 const hasSingleExpectedCve = (advisory, expected) => Array.isArray(advisory.cves) && advisory.cves.length === 1 && advisory.cves[0] === expected.cve;
 
 const hasOnlyPatchedFindings = (advisory, expected) =>
-  Array.isArray(advisory.findings) && advisory.findings.length > 0 && advisory.findings.every((finding) => finding.version === expected.patchedVersion);
+  Array.isArray(advisory.findings) && advisory.findings.length > 0 && advisory.findings.every((finding) => expected.patchedVersions.includes(finding.version));
 
 const matchesPatchedAdvisory = (advisory, expected) =>
   matchesAdvisoryIdentity(advisory, expected) && hasSingleExpectedCve(advisory, expected) && hasOnlyPatchedFindings(advisory, expected);
 
-const isLocallyPatchedAdvisory = (advisory, verifiedBracesPatch, verifiedSprintfPatch, verifiedDeepmergePatch) => {
+const isLocallyPatchedAdvisory = (advisory, verifiedBracesPatch, verifiedSprintfPatch, verifiedDeepmergePatch, verifiedPicomatchPatch) => {
   const knownBraces = verifiedBracesPatch && matchesPatchedAdvisory(advisory, bracesAdvisory);
   const knownSprintf = verifiedSprintfPatch && matchesPatchedAdvisory(advisory, sprintfAdvisory);
   const knownDeepmerge = verifiedDeepmergePatch && matchesPatchedAdvisory(advisory, deepmergeAdvisory);
-  return knownBraces || knownSprintf || knownDeepmerge;
+  const knownPicomatch = verifiedPicomatchPatch && matchesPatchedAdvisory(advisory, picomatchAdvisory);
+  return knownBraces || knownSprintf || knownDeepmerge || knownPicomatch;
 };
 
-const requireLocallyPatchedAdvisory = (advisory, verifiedBracesPatch, verifiedSprintfPatch, verifiedDeepmergePatch) => {
-  if (!isLocallyPatchedAdvisory(advisory, verifiedBracesPatch, verifiedSprintfPatch, verifiedDeepmergePatch)) {
+const requireLocallyPatchedAdvisory = (advisory, verifiedBracesPatch, verifiedSprintfPatch, verifiedDeepmergePatch, verifiedPicomatchPatch) => {
+  if (!isLocallyPatchedAdvisory(advisory, verifiedBracesPatch, verifiedSprintfPatch, verifiedDeepmergePatch, verifiedPicomatchPatch)) {
     throw new Error(`Unmitigated dependency advisory: ${advisory.github_advisory_id ?? advisory.id ?? 'unknown'}`);
   }
 };
 
-const requireAllAdvisoriesPatched = (items, verifiedBracesPatch, verifiedSprintfPatch, verifiedDeepmergePatch) => {
+const requireAllAdvisoriesPatched = (items, verifiedBracesPatch, verifiedSprintfPatch, verifiedDeepmergePatch, verifiedPicomatchPatch) => {
   for (const advisory of items) {
-    requireLocallyPatchedAdvisory(advisory, verifiedBracesPatch, verifiedSprintfPatch, verifiedDeepmergePatch);
+    requireLocallyPatchedAdvisory(advisory, verifiedBracesPatch, verifiedSprintfPatch, verifiedDeepmergePatch, verifiedPicomatchPatch);
   }
 };
 
@@ -92,14 +102,14 @@ const requireConsistentExitCode = (exitCode, advisoryCount) => {
   }
 };
 
-const validateAuditReport = (report, exitCode, verifiedBracesPatch = false, verifiedSprintfPatch = false, verifiedDeepmergePatch = false) => {
+const validateAuditReport = (report, exitCode, verifiedBracesPatch = false, verifiedSprintfPatch = false, verifiedDeepmergePatch = false, verifiedPicomatchPatch = false) => {
   const counts = readCounts(report),
     advisories = readAdvisories(report);
   requireCompleteReport(report, counts, advisories);
   requireValidSeverityCounts(counts);
   const items = Object.values(advisories);
   const reportedCount = severityLevels.reduce((sum, level) => sum + counts[level], 0);
-  requireAllAdvisoriesPatched(items, verifiedBracesPatch, verifiedSprintfPatch, verifiedDeepmergePatch);
+  requireAllAdvisoriesPatched(items, verifiedBracesPatch, verifiedSprintfPatch, verifiedDeepmergePatch, verifiedPicomatchPatch);
   // pnpm counts each workspace finding, while advisories are deduplicated.
   // Only verified advisories reach this point, so every findings array exists.
   const findingCount = items.reduce((sum, advisory) => sum + advisory.findings.length, 0);
@@ -119,11 +129,12 @@ if (invokedDirectly) {
         resolve(dirname(fileURLToPath(import.meta.url)), 'tests/braces-security.test.mjs'),
         resolve(dirname(fileURLToPath(import.meta.url)), 'tests/sprintf-security.test.mjs'),
         resolve(dirname(fileURLToPath(import.meta.url)), 'tests/deepmerge-security.test.mjs'),
+        resolve(dirname(fileURLToPath(import.meta.url)), 'tests/picomatch-security.test.mjs'),
       ],
       { stdio: 'inherit' },
     );
     if (patchCheck.error || patchCheck.status !== 0) throw new Error('Installed dependency security patch verification failed');
-    const result = validateAuditReport(report, Number(process.argv[3]), true, true, true);
+    const result = validateAuditReport(report, Number(process.argv[3]), true, true, true, true);
     console.log(`Dependency audit passed: ${result.advisories} reported advisories, ${result.verifiedLocalPatches} verified local patches`);
   } catch (error) {
     console.error(error.message);
