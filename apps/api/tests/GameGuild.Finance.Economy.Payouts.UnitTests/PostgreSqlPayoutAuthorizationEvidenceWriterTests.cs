@@ -35,15 +35,15 @@ public sealed class PostgreSqlPayoutAuthorizationEvidenceWriterTests
         var receiptHash = new string('b', 64);
         await context.Database.ExecuteSqlInterpolatedAsync($"""
             SET session_replication_role = replica;
-            INSERT INTO public.economy_payout_operations (
-                "Id", "TenantId", "IdempotencyKey", "RequestHash", "ActorId", "PayeeId",
+            INSERT INTO public.economy_operations (
+                "Id", "OperationKind", "TenantId", "IdempotencyKey", "RequestHash", "ActorId", "PayeeId",
                 "WalletId", "AmountUnits", "ProviderAccountId", "DestinationHash",
                 "ProviderBindingHash", "EligibilityHash", "DispatchSnapshotHash",
                 "ProviderPayoutId", "State", "Version", "FencingToken", "KillSwitchEpoch",
                 "ReserveVersion", "ReserveAuthorizationEpoch", "PolicyVersion", "RiskDecisionId",
                 "CreatedAt", "UpdatedAt")
             VALUES (
-                {operationId}, {tenantId}, {'p' + operationId.ToString("N")}, {'r' + operationId.ToString("N")},
+                {operationId}, 1, {tenantId}, {'p' + operationId.ToString("N")}, {'r' + operationId.ToString("N")},
                 {actorId}, {payeeId}, {walletId}, 100, 'acct_test', {new string('d', 64)},
                 {new string('e', 64)}, {new string('f', 64)}, NULL, NULL, 1, 1, 1, 3,
                 1, 1, 1, {riskDecisionId}, {Time}, {Time});
@@ -58,11 +58,11 @@ public sealed class PostgreSqlPayoutAuthorizationEvidenceWriterTests
                 1, 1, {riskDecisionId}, 3, {new string('1', 64)}, {new string('d', 64)},
                 '[]'::jsonb, '[]'::jsonb, {Time}, {Time.AddMinutes(5)}, {receiptHash},
                 'test-key', 'test-signature');
-            INSERT INTO public.economy_capability_receipt_consumptions (
-                "Id", "ReceiptId", "TenantId", "ActorId", "OperationFingerprint",
+            INSERT INTO public.economy_unit_consumptions (
+                "Id", "ConsumptionKind", "ReceiptId", "TenantId", "ActorId", "OperationFingerprint",
                 "KillSwitchEpoch", "ConsumedAt")
             VALUES (
-                {Guid.NewGuid()}, {receiptId}, {tenantId}, {actorId}, {operationFingerprint},
+                {Guid.NewGuid()}, 1, {receiptId}, {tenantId}, {actorId}, {operationFingerprint},
                 3, {Time.AddSeconds(1)});
             SET session_replication_role = origin;
             """);

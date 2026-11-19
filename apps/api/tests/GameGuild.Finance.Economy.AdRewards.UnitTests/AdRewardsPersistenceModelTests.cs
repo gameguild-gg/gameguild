@@ -15,15 +15,14 @@ public sealed class AdRewardsPersistenceModelTests
         var entities = context.GetService<IDesignTimeModel>().Model.GetEntityTypes().ToArray();
 
         entities.Select(entity => entity.GetTableName()).Should().BeEquivalentTo(
-            "economy_ad_network_policy_versions",
+            "economy_policy_versions",
             "economy_ad_reward_sessions",
             "economy_ad_reward_session_timeline",
             "economy_inbox",
             "economy_ad_reward_pending_claims",
-            "economy_ad_reward_cap_consumptions",
+            "economy_unit_consumptions",
             "economy_ad_reward_completions",
             "economy_ad_reward_accumulators",
-            "economy_ad_reward_budget_consumptions",
             "economy_ad_reward_attributions",
             "economy_ad_provider_reports",
             "economy_ad_reward_provider_batch_claims",

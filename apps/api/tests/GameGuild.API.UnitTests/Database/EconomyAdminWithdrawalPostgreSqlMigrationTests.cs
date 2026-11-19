@@ -42,7 +42,7 @@ public sealed class EconomyAdminWithdrawalPostgreSqlMigrationTests
         var directInsert = await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsRoleAsync(
             connection,
             "gameguild_economy_writer",
-            $"INSERT INTO public.economy_admin_withdrawal_runs (\"Id\") VALUES ('{RunId}');"));
+            $"INSERT INTO public.economy_operations (\"Id\") VALUES ('{RunId}');"));
         directInsert.SqlState.Should().Be(PostgresErrorCodes.InsufficientPrivilege);
 
         await ExecuteAsRoleAsync(connection, "gameguild_economy_writer", $"""
@@ -111,8 +111,8 @@ public sealed class EconomyAdminWithdrawalPostgreSqlMigrationTests
         await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         (await ScalarAsync<string?>(connection,
-            "SELECT to_regclass('public.economy_admin_withdrawal_runs')::text;"))
-            .Should().Be("economy_admin_withdrawal_runs");
+            "SELECT to_regclass('public.economy_operations')::text;"))
+            .Should().Be("economy_operations");
 
         await migrator.MigrateAsync("20260803050213_HardenEconomyPostingWriter");
 

@@ -41,7 +41,8 @@ public sealed class PostgreSqlAdminWithdrawalAuditIntegrityTests
                 INSERT INTO public.economy_admin_withdrawal_audit_events
                     ("TenantId", "RunId", "Sequence", "Kind", "ActorId", "Evidence", "OccurredAt", "PreviousHash", "Hash")
                 SELECT "TenantId", {runId}, {sequence}, {"integrity"}, {null}, {"evidence"}, {now}, {previousHash}, {hash}
-                FROM public.economy_admin_withdrawal_runs WHERE "Id" = {runId};
+                FROM public.economy_operations
+                WHERE "OperationKind" = 2 AND "Id" = {runId};
                 """);
 
         var valid = await AddRunAsync(8);

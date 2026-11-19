@@ -6,6 +6,7 @@ using FluentAssertions;
 using GameGuild;
 using GameGuild.API.Database;
 using GameGuild.Finance.Economy.Contracts;
+using GameGuild.Finance.Economy.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Options;
@@ -289,7 +290,7 @@ public sealed class StripeConnectPayoutProviderTests
         json = invalid switch
         {
             "operation-format" => json.Replace(operation.Id.ToString("N"), "not-a-guid"),
-            "account" => json.Replace(operation.ProviderAccountId, "acct_other"),
+            "account" => json.Replace(operation.ProviderAccountId!, "acct_other"),
             "destination" => json.Replace(operation.DestinationHash, "other-destination"),
             "event-id" => json.Replace("\"id\":\"evt_1\"", "\"id\":\"\""),
             "type" => json.Replace("\"type\":\"payout.paid\"", "\"type\":\"\""),
@@ -473,11 +474,13 @@ public sealed class StripeConnectPayoutProviderTests
         await context.SaveChangesAsync();
     }
 
-    private static async Task<PayoutOperationRow> SeedOperationAsync(ApplicationDbContext context)
+    private static async Task<EconomyOperationRow> SeedOperationAsync(ApplicationDbContext context)
     {
-        var row = new PayoutOperationRow
+        var row = new EconomyOperationRow
         {
             Id = Guid.NewGuid(),
+            OperationKind = EconomyOperationKind.Payout,
+            TenantId = Guid.NewGuid(),
             IdempotencyKey = "operation",
             RequestHash = "request",
             ActorId = Guid.NewGuid(),
@@ -488,7 +491,7 @@ public sealed class StripeConnectPayoutProviderTests
             DestinationHash = "destination-hash",
             ProviderBindingHash = "provider-binding",
             EligibilityHash = "eligibility",
-            State = PayoutOperationState.Dispatching,
+            State = (int)PayoutOperationState.Dispatching,
             Version = 3,
             FencingToken = 7,
             KillSwitchEpoch = 9,
@@ -499,7 +502,7 @@ public sealed class StripeConnectPayoutProviderTests
             CreatedAt = Now.AddMinutes(-2),
             UpdatedAt = Now.AddMinutes(-1)
         };
-        context.Set<PayoutOperationRow>().Add(row);
+        context.Set<EconomyOperationRow>().Add(row);
         await context.SaveChangesAsync();
         return row;
     }
@@ -533,7 +536,7 @@ public sealed class StripeConnectPayoutProviderTests
         return JsonSerializer.Serialize(values);
     }
 
-    private static string WebhookJson(PayoutOperationRow operation, string type, string status) =>
+    private static string WebhookJson(EconomyOperationRow operation, string type, string status) =>
         JsonSerializer.Serialize(new
         {
             id = "evt_1",

@@ -15,7 +15,7 @@ public sealed class MarketplacePersistenceModelTests
         var entities = context.GetService<IDesignTimeModel>().Model.GetEntityTypes().ToArray();
 
         entities.Select(entity => entity.GetTableName()).Should().BeEquivalentTo(
-            "economy_marketplace_currency_policy_versions",
+            "economy_policy_versions",
             "economy_marketplace_settlements",
             "economy_marketplace_value_legs",
             "economy_marketplace_funding_fragments",

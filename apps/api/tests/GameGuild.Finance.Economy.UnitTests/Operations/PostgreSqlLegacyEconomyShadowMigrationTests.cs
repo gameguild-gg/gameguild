@@ -185,8 +185,9 @@ public sealed class PostgreSqlLegacyEconomyShadowMigrationTests
         lot.RootSourceStampId.Should().Be(item.SourceStampId);
         lot.AmountUnits.Should().Be(1234);
         lot.Provenance.Should().Be(ProvenanceKind.PurchasedHard);
-        (await context.Set<EconomyRiskDecisionConsumptionRow>()
-            .CountAsync(row => row.RiskDecisionId == riskDecisionId)).Should().Be(1);
+        (await context.Set<EconomyUnitConsumptionRow>()
+            .CountAsync(row => row.ConsumptionKind == EconomyUnitConsumptionKind.RiskDecision &&
+                               row.RiskDecisionId == riskDecisionId)).Should().Be(1);
     }
 
     [Fact]
@@ -504,9 +505,10 @@ public sealed class PostgreSqlLegacyEconomyShadowMigrationTests
             KeyId = receipt.KeyId,
             Signature = receipt.Signature
         });
-        context.Set<EconomyCapabilityReceiptConsumptionRow>().Add(new EconomyCapabilityReceiptConsumptionRow
+        context.Set<EconomyUnitConsumptionRow>().Add(new EconomyUnitConsumptionRow
         {
             Id = Guid.NewGuid(),
+            ConsumptionKind = EconomyUnitConsumptionKind.CapabilityReceipt,
             ReceiptId = receipt.Id,
             TenantId = receipt.TenantId,
             ActorId = receipt.ActorId,

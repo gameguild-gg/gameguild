@@ -391,9 +391,10 @@ public sealed class DurableAdRewardCompletionService : IDurableAdRewardCompletio
         CancellationToken cancellationToken)
     {
         var startsAfter = consumedAt - policy.Budget.Window;
-        var existing = await _db.Set<AdRewardCapConsumptionRow>()
+        var existing = await _db.Set<EconomyUnitConsumptionRow>()
             .AsNoTracking()
-            .Where(row => row.TenantId == claims.TenantId && row.ConsumedAt > startsAfter)
+            .Where(row => row.ConsumptionKind == EconomyUnitConsumptionKind.AdRewardCap &&
+                          row.TenantId == claims.TenantId && row.ConsumedAt > startsAfter)
             .ToArrayAsync(cancellationToken);
         var scopes = new[]
         {
@@ -407,15 +408,15 @@ public sealed class DurableAdRewardCompletionService : IDurableAdRewardCompletio
         var lossBudget = SoftFaceValueUsdNanos(softUnits);
         foreach (var (scope, subject, maximum) in scopes)
         {
-            var used = existing.Where(row => row.Scope == scope && row.SubjectHash == subject)
-                .Sum(row => row.SoftUnits);
+            var used = existing.Where(row => row.Scope == (int)scope && row.SubjectHash == subject)
+                .Sum(row => row.SoftUnits!.Value);
             if (softUnits > maximum - used)
             {
                 throw new AdRewardBudgetExceededException($"Ad reward {scope} cap was exceeded.");
             }
         }
-        var usedLossBudget = existing.Where(row => row.Scope == AdRewardCapScope.Global)
-            .Sum(row => row.LossBudgetUsdNanos);
+        var usedLossBudget = existing.Where(row => row.Scope == (int)AdRewardCapScope.Global)
+            .Sum(row => row.LossBudgetUsdNanos!.Value);
         if (lossBudget > policy.Budget.FundedLossBudgetUsdNanos - usedLossBudget)
         {
             throw new AdRewardBudgetExceededException("Ad reward funded loss budget was exceeded.");
@@ -423,12 +424,13 @@ public sealed class DurableAdRewardCompletionService : IDurableAdRewardCompletio
 
         foreach (var (scope, subject, _) in scopes)
         {
-            _db.Set<AdRewardCapConsumptionRow>().Add(new AdRewardCapConsumptionRow
+            _db.Set<EconomyUnitConsumptionRow>().Add(new EconomyUnitConsumptionRow
             {
                 Id = Guid.NewGuid(),
+                ConsumptionKind = EconomyUnitConsumptionKind.AdRewardCap,
                 TenantId = claims.TenantId,
                 SessionId = claims.SessionId,
-                Scope = scope,
+                Scope = (int)scope,
                 SubjectHash = subject,
                 WindowStartedAt = startsAfter,
                 WindowEndsAt = consumedAt.Add(policy.Budget.Window),
@@ -443,8 +445,10 @@ public sealed class DurableAdRewardCompletionService : IDurableAdRewardCompletio
         DurableAdRewardSessionClaims claims,
         long softUnits,
         DateTimeOffset consumedAt) =>
-        _db.Set<AdRewardBudgetConsumptionRow>().Add(new AdRewardBudgetConsumptionRow
+        _db.Set<EconomyUnitConsumptionRow>().Add(new EconomyUnitConsumptionRow
         {
+            Id = Guid.NewGuid(),
+            ConsumptionKind = EconomyUnitConsumptionKind.AdRewardBudget,
             SessionId = claims.SessionId,
             TenantId = claims.TenantId,
             UserId = claims.UserId,

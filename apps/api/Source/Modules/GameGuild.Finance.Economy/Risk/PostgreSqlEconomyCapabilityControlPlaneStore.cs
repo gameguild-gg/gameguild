@@ -267,9 +267,10 @@ public sealed class PostgreSqlEconomyCapabilityControlPlaneStore : IEconomyCapab
                              row.Coverage == ReserveCoverageState.Covered &&
                              row.ObservedAt <= consumedAt &&
                              row.ExpiresAt > consumedAt, cancellationToken);
-        var alreadyConsumed = await _db.Set<EconomyCapabilityReceiptConsumptionRow>()
+        var alreadyConsumed = await _db.Set<EconomyUnitConsumptionRow>()
             .AsNoTracking()
-            .AnyAsync(row => row.ReceiptId == receiptId, cancellationToken);
+            .AnyAsync(row => row.ConsumptionKind == EconomyUnitConsumptionKind.CapabilityReceipt &&
+                             row.ReceiptId == receiptId, cancellationToken);
         var activeComplianceHold = await _db.Set<EconomyComplianceHoldRow>()
             .AsNoTracking()
             .AnyAsync(row => row.TenantId == tenantId &&
@@ -303,9 +304,10 @@ public sealed class PostgreSqlEconomyCapabilityControlPlaneStore : IEconomyCapab
             throw new CapabilityReceiptConsumptionException("The capability receipt is not consumable.");
         }
 
-        _db.Set<EconomyCapabilityReceiptConsumptionRow>().Add(new EconomyCapabilityReceiptConsumptionRow
+        _db.Set<EconomyUnitConsumptionRow>().Add(new EconomyUnitConsumptionRow
         {
             Id = Guid.NewGuid(),
+            ConsumptionKind = EconomyUnitConsumptionKind.CapabilityReceipt,
             ReceiptId = receiptId,
             TenantId = tenantId,
             ActorId = actorId,

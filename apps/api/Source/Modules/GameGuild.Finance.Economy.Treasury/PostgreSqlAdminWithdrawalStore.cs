@@ -7,31 +7,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Finance.Economy.Treasury;
 
-internal sealed class AdminWithdrawalRunRow
-{
-    public Guid Id { get; set; }
-    public Guid TenantId { get; set; }
-    public string IdempotencyKey { get; set; } = string.Empty;
-    public string RequestHash { get; set; } = string.Empty;
-    public DateOnly PeriodStart { get; set; }
-    public Guid RequestedBy { get; set; }
-    public Guid? ApprovedBy { get; set; }
-    public Guid PlatformFeeWalletId { get; set; }
-    public long AmountUnits { get; set; }
-    public string SourceAssetKey { get; set; } = string.Empty;
-    public string DestinationHash { get; set; } = string.Empty;
-    public AdminWithdrawalRunState State { get; set; }
-    public long Version { get; set; }
-    public long FencingToken { get; set; }
-    public long ExecutionEpoch { get; set; }
-    public long ReserveVersion { get; set; }
-    public long ReserveAuthorizationEpoch { get; set; }
-    public long PolicyVersion { get; set; }
-    public string? DispatchSnapshotHash { get; set; }
-    public string? ProviderTransferId { get; set; }
-    public DateTimeOffset CreatedAt { get; set; }
-    public DateTimeOffset UpdatedAt { get; set; }
-}
+// #1092 Tier 2.4: AdminWithdrawalRunRow merged into the shared
+// EconomyOperationRow (OperationKind = AdminWithdrawal). The unified
+// registration lives in the Economy module; this configuration re-asserts it
+// and re-points the run bindings (provider events, dispatch outbox, audit
+// chain) at the merged table.
 
 internal sealed class AdminWithdrawalAuditEventRow
 {
@@ -52,39 +32,24 @@ public sealed class TreasuryModelConfiguration : IModelConfiguration
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
 
-        modelBuilder.Entity<AdminWithdrawalRunRow>(builder =>
+        // #1092 Tier 2.4: economy_admin_withdrawal_runs merged into the
+        // shared economy_operations table (OperationKind = 2 =
+        // AdminWithdrawal). The module re-asserts the unified table so
+        // contexts composing only this configuration address the merged
+        // table; the withdrawal kind keeps its idempotency and active-period
+        // dedupe through the partial indexes declared with the unified
+        // registration in the Economy module.
+        modelBuilder.Entity<EconomyOperationRow>(builder =>
         {
-            builder.ToTable("economy_admin_withdrawal_runs", table =>
-            {
-                table.HasCheckConstraint("ck_economy_admin_withdrawal_runs_state", "\"State\" BETWEEN 1 AND 7");
-                table.HasCheckConstraint(
-                    "ck_economy_admin_withdrawal_runs_positive_versions",
-                    "\"Version\" > 0 AND \"FencingToken\" > 0 AND \"ExecutionEpoch\" > 0 AND \"ReserveVersion\" > 0 AND \"ReserveAuthorizationEpoch\" > 0 AND \"PolicyVersion\" > 0");
-                table.HasCheckConstraint("ck_economy_admin_withdrawal_runs_amount_positive", "\"AmountUnits\" > 0");
-                table.HasCheckConstraint(
-                    "ck_economy_admin_withdrawal_runs_approval",
-                    "(\"State\" = 1 AND \"ApprovedBy\" IS NULL) OR (\"State\" BETWEEN 2 AND 7 AND \"ApprovedBy\" IS NOT NULL)");
-                table.HasCheckConstraint(
-                    "ck_economy_admin_withdrawal_runs_dispatch_snapshot",
-                    "(\"State\" IN (1, 2) AND \"DispatchSnapshotHash\" IS NULL) OR (\"State\" BETWEEN 3 AND 7 AND \"DispatchSnapshotHash\" IS NOT NULL)");
-                table.HasCheckConstraint("ck_economy_admin_withdrawal_runs_timestamps", "\"UpdatedAt\" >= \"CreatedAt\"");
-            });
+            builder.ToTable("economy_operations");
             builder.HasKey(row => row.Id);
-            builder.Property(row => row.Id).ValueGeneratedNever();
-            builder.Property(row => row.IdempotencyKey).HasMaxLength(256);
-            builder.Property(row => row.RequestHash).HasMaxLength(128);
-            builder.Property(row => row.SourceAssetKey).HasMaxLength(256);
-            builder.Property(row => row.DestinationHash).HasMaxLength(128);
-            builder.Property(row => row.DispatchSnapshotHash).HasMaxLength(128);
-            builder.Property(row => row.ProviderTransferId).HasMaxLength(256);
-            builder.Property(row => row.Version).IsConcurrencyToken();
-            builder.HasIndex(row => new { row.TenantId, row.IdempotencyKey }).IsUnique()
-                .HasDatabaseName("ux_economy_admin_withdrawal_runs_idempotency");
-            builder.HasIndex(row => new { row.TenantId, row.PeriodStart }).IsUnique()
-                .HasFilter("\"State\" NOT IN (6, 7)")
-                .HasDatabaseName("ux_economy_admin_withdrawal_runs_active_period");
-            builder.HasIndex(row => new { row.State, row.UpdatedAt })
-                .HasDatabaseName("ix_economy_admin_withdrawal_runs_state_updated");
+            builder.HasIndex(row => new { row.OperationKind, row.TenantId, row.IdempotencyKey })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_operations_kind_tenant_idempotency");
+            builder.HasIndex(row => new { row.TenantId, row.PeriodStart })
+                .IsUnique()
+                .HasFilter("\"OperationKind\" = 2 AND \"State\" NOT IN (6, 7)")
+                .HasDatabaseName("ux_economy_operations_active_period");
         });
 
         // #1092 Tier 1.4: economy_admin_withdrawal_provider_events merged into
@@ -93,7 +58,7 @@ public sealed class TreasuryModelConfiguration : IModelConfiguration
         // binding of its replay-dedupe rows.
         modelBuilder.Entity<EconomyProviderEventRow>(builder =>
         {
-            builder.HasOne<AdminWithdrawalRunRow>()
+            builder.HasOne<EconomyOperationRow>()
                 .WithMany()
                 .HasForeignKey(row => row.RunId)
                 .OnDelete(DeleteBehavior.Restrict);
@@ -112,7 +77,7 @@ public sealed class TreasuryModelConfiguration : IModelConfiguration
             builder.Property(row => row.Hash).HasMaxLength(128);
             builder.HasIndex(row => row.Hash).IsUnique()
                 .HasDatabaseName("ux_economy_admin_withdrawal_audit_events_hash");
-            builder.HasOne<AdminWithdrawalRunRow>()
+            builder.HasOne<EconomyOperationRow>()
                 .WithMany()
                 .HasForeignKey(row => row.RunId)
                 .OnDelete(DeleteBehavior.Restrict);
@@ -124,7 +89,7 @@ public sealed class TreasuryModelConfiguration : IModelConfiguration
         // run binding of its queue rows.
         modelBuilder.Entity<EconomyOutboxRow>(builder =>
         {
-            builder.HasOne<AdminWithdrawalRunRow>()
+            builder.HasOne<EconomyOperationRow>()
                 .WithMany()
                 .HasForeignKey(row => row.RunId)
                 .OnDelete(DeleteBehavior.Restrict);
@@ -162,8 +127,9 @@ public sealed class PostgreSqlAdminWithdrawalStore : IAdminWithdrawalStore
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
         ArgumentException.ThrowIfNullOrWhiteSpace(requestHash);
-        var query = _db.Set<AdminWithdrawalRunRow>().AsNoTracking()
-            .Where(row => row.IdempotencyKey == key.Trim());
+        var query = _db.Set<EconomyOperationRow>().AsNoTracking()
+            .Where(row => row.OperationKind == EconomyOperationKind.AdminWithdrawal &&
+                          row.IdempotencyKey == key.Trim());
         if (tenantId.HasValue)
         {
             query = query.Where(row => row.TenantId == tenantId.Value);
@@ -178,7 +144,7 @@ public sealed class PostgreSqlAdminWithdrawalStore : IAdminWithdrawalStore
         if (!string.Equals(row.RequestHash, requestHash, StringComparison.Ordinal))
         {
             throw new AdminWithdrawalStaleCommandException(
-            "The withdrawal idempotency key is bound to a different request.");
+                "The withdrawal idempotency key is bound to a different request.");
         }
 
         return ToContract(row);
@@ -199,10 +165,11 @@ public sealed class PostgreSqlAdminWithdrawalStore : IAdminWithdrawalStore
 
     private AdminWithdrawalRun? FindPeriodCore(Guid? tenantId, DateOnly periodStart)
     {
-        var query = _db.Set<AdminWithdrawalRunRow>().AsNoTracking()
-            .Where(row => row.PeriodStart == periodStart &&
-                          row.State != AdminWithdrawalRunState.Failed &&
-                          row.State != AdminWithdrawalRunState.Cancelled);
+        var query = _db.Set<EconomyOperationRow>().AsNoTracking()
+            .Where(row => row.OperationKind == EconomyOperationKind.AdminWithdrawal &&
+                          row.PeriodStart == periodStart &&
+                          row.State != (int)AdminWithdrawalRunState.Failed &&
+                          row.State != (int)AdminWithdrawalRunState.Cancelled);
         if (tenantId.HasValue)
         {
             query = query.Where(row => row.TenantId == tenantId.Value);
@@ -262,7 +229,8 @@ public sealed class PostgreSqlAdminWithdrawalStore : IAdminWithdrawalStore
             throw new ArgumentException("Run ID is required.", nameof(runId));
         }
 
-        var query = _db.Set<AdminWithdrawalRunRow>().AsNoTracking().Where(row => row.Id == runId);
+        var query = _db.Set<EconomyOperationRow>().AsNoTracking()
+            .Where(row => row.OperationKind == EconomyOperationKind.AdminWithdrawal && row.Id == runId);
         if (tenantId.HasValue)
         {
             query = query.Where(row => row.TenantId == tenantId.Value);
@@ -317,8 +285,9 @@ public sealed class PostgreSqlAdminWithdrawalStore : IAdminWithdrawalStore
             throw new ArgumentOutOfRangeException(nameof(limit));
         }
 
-        return _db.Set<AdminWithdrawalRunRow>().AsNoTracking()
-            .Where(row => row.TenantId == tenantId)
+        return _db.Set<EconomyOperationRow>().AsNoTracking()
+            .Where(row => row.OperationKind == EconomyOperationKind.AdminWithdrawal &&
+                          row.TenantId == tenantId)
             .OrderByDescending(row => row.CreatedAt).ThenBy(row => row.Id)
             .Take(limit)
             .AsEnumerable()
@@ -422,22 +391,22 @@ public sealed class PostgreSqlAdminWithdrawalStore : IAdminWithdrawalStore
         return new AdminWithdrawalStaleCommandException(message);
     }
 
-    private static AdminWithdrawalRun ToContract(AdminWithdrawalRunRow row) => new(
+    private static AdminWithdrawalRun ToContract(EconomyOperationRow row) => new(
         row.Id,
         row.TenantId,
         new IdempotencyKey(row.IdempotencyKey),
         row.RequestHash,
-        row.PeriodStart,
-        row.RequestedBy,
+        row.PeriodStart!.Value,
+        row.ActorId,
         row.ApprovedBy,
-        new WalletId(row.PlatformFeeWalletId),
+        new WalletId(row.PlatformFeeWalletId!.Value),
         new CoinAmount(CurrencyCode.HardCoin, row.AmountUnits),
-        row.SourceAssetKey,
+        row.SourceAssetKey!,
         row.DestinationHash,
-        row.State,
+        (AdminWithdrawalRunState)row.State,
         row.Version,
         row.FencingToken,
-        row.ExecutionEpoch,
+        row.ExecutionEpoch!.Value,
         new ReserveVersion(row.ReserveVersion),
         row.ReserveAuthorizationEpoch,
         new PolicyVersion(row.PolicyVersion),
@@ -474,8 +443,8 @@ public sealed class PostgreSqlAdminWithdrawalAuditTrail : IAdminWithdrawalAuditT
 
         ArgumentException.ThrowIfNullOrWhiteSpace(kind);
         ArgumentException.ThrowIfNullOrWhiteSpace(evidence);
-        var tenantId = _db.Set<AdminWithdrawalRunRow>().AsNoTracking()
-            .Where(row => row.Id == runId)
+        var tenantId = _db.Set<EconomyOperationRow>().AsNoTracking()
+            .Where(row => row.OperationKind == EconomyOperationKind.AdminWithdrawal && row.Id == runId)
             .Select(row => row.TenantId)
             .SingleOrDefault();
         if (tenantId == Guid.Empty)
@@ -523,8 +492,8 @@ public sealed class PostgreSqlAdminWithdrawalAuditTrail : IAdminWithdrawalAuditT
             return [];
         }
 
-        var tenantId = _db.Set<AdminWithdrawalRunRow>().AsNoTracking()
-            .Where(row => row.Id == runId)
+        var tenantId = _db.Set<EconomyOperationRow>().AsNoTracking()
+            .Where(row => row.OperationKind == EconomyOperationKind.AdminWithdrawal && row.Id == runId)
             .Select(row => row.TenantId)
             .SingleOrDefault();
         return tenantId == Guid.Empty ? [] : Events(tenantId, runId);

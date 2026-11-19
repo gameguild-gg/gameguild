@@ -281,15 +281,15 @@ public sealed class PostgreSqlMarketplaceLedgerGatewayTests
                  "ReceiptHash", "KeyId", "Signature") VALUES
                 ('{ids.SettlementReceipt}', '{ids.Tenant}', '{ids.Actor}', 'buyer', 'US', 8, 'marketplace-settlement-risk', 1, 1, '{ids.SettlementRisk}', 0, 'provider', 'destination', '["root"]', '["settlement-evidence"]', '{Now.AddMinutes(-1):O}', '{Now.AddMinutes(5):O}', 'settlement-receipt', 'test-key', 'signature'),
                 ('{ids.RefundReceipt}', '{ids.Tenant}', '{ids.Actor}', 'buyer', 'US', 11, 'marketplace-refund-risk', 1, 1, '{ids.RefundRisk}', 0, 'provider', 'destination', '["root"]', '["refund-evidence"]', '{Now.AddMinutes(-1):O}', '{Now.AddMinutes(5):O}', 'refund-receipt', 'test-key', 'signature');
-            INSERT INTO public.economy_capability_receipt_consumptions
-                ("Id", "ReceiptId", "TenantId", "ActorId", "OperationFingerprint", "KillSwitchEpoch", "ConsumedAt") VALUES
-                ('{Guid.NewGuid()}', '{ids.SettlementReceipt}', '{ids.Tenant}', '{ids.Actor}', 'marketplace-settlement-risk', 0, '{Now:O}'),
-                ('{Guid.NewGuid()}', '{ids.RefundReceipt}', '{ids.Tenant}', '{ids.Actor}', 'marketplace-refund-risk', 0, '{Now.AddMinutes(2):O}');
-            INSERT INTO public.economy_marketplace_currency_policy_versions
-                ("TenantId", "ProductId", "Version", "SellerId", "Mode", "HardPriceUnits", "SoftPriceUnits",
+            INSERT INTO public.economy_unit_consumptions
+                ("Id", "ConsumptionKind", "ReceiptId", "TenantId", "ActorId", "OperationFingerprint", "KillSwitchEpoch", "ConsumedAt") VALUES
+                ('{Guid.NewGuid()}', 1, '{ids.SettlementReceipt}', '{ids.Tenant}', '{ids.Actor}', 'marketplace-settlement-risk', 0, '{Now:O}'),
+                ('{Guid.NewGuid()}', 1, '{ids.RefundReceipt}', '{ids.Tenant}', '{ids.Actor}', 'marketplace-refund-risk', 0, '{Now.AddMinutes(2):O}');
+            INSERT INTO public.economy_policy_versions
+                ("PolicyDomain", "TenantId", "SubjectId", "Version", "SellerId", "Mode", "HardPriceUnits", "SoftPriceUnits",
                  "PlatformFeePpm", "EffectiveAt", "ExpiresAt", "PlatformFeeWalletId", "RefundHoldTicks",
                  "CanonicalPayload", "PayloadHash", "KeyId", "Signature", "ProposedBy", "ApprovedBy", "PublishedAt")
-            VALUES ('{ids.Tenant}', '{ids.Product}', 1, '{ids.Seller}', 1, 100, 0, 100000, '{Now.AddDays(-1):O}',
+            VALUES (1, '{ids.Tenant}', '{ids.Product}', 1, '{ids.Seller}', 1, 100, 0, 100000, '{Now.AddDays(-1):O}',
                 '{Now.AddDays(30):O}', '{ids.FeeWallet}', {TimeSpan.FromDays(7).Ticks}, 'policy', 'policy-hash',
                 'kms-key', 'signature', '{ids.PolicyProposer}', '{ids.PolicyApprover}', '{Now.AddDays(-1):O}');
             INSERT INTO public.economy_source_stamps

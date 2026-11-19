@@ -2,6 +2,7 @@ using System.Security.Cryptography;
 using System.Text;
 using GameGuild.Finance.Economy.Contracts;
 using GameGuild.Finance.Economy.AdRewards.Persistence;
+using GameGuild.Finance.Economy.Persistence;
 using GameGuild.Finance.Economy.Risk;
 using Microsoft.EntityFrameworkCore;
 
@@ -32,10 +33,11 @@ public sealed class PostgreSqlDurableAdRewardPolicyReader : IDurableAdRewardPoli
     {
         ValidateScope(tenantId, network);
         var normalizedNetwork = network.Trim();
-        var row = await _db.Set<AdNetworkPolicyVersionRow>()
+        var row = await _db.Set<EconomyPolicyVersionRow>()
             .AsNoTracking()
-            .Where(policy => policy.TenantId == tenantId &&
-                             policy.Network == normalizedNetwork &&
+            .Where(policy => policy.PolicyDomain == EconomyPolicyDomain.AdNetwork &&
+                             policy.TenantId == tenantId &&
+                             policy.SubjectKey == normalizedNetwork &&
                              policy.EffectiveAt <= at && at < policy.ExpiresAt)
             .OrderByDescending(policy => policy.Version)
             .FirstOrDefaultAsync(cancellationToken);
@@ -50,18 +52,19 @@ public sealed class PostgreSqlDurableAdRewardPolicyReader : IDurableAdRewardPoli
     {
         ValidateScope(tenantId, network);
         var normalizedNetwork = network.Trim();
-        var row = await _db.Set<AdNetworkPolicyVersionRow>()
+        var row = await _db.Set<EconomyPolicyVersionRow>()
             .AsNoTracking()
             .SingleOrDefaultAsync(
-                policy => policy.TenantId == tenantId &&
-                          policy.Network == normalizedNetwork &&
+                policy => policy.PolicyDomain == EconomyPolicyDomain.AdNetwork &&
+                          policy.TenantId == tenantId &&
+                          policy.SubjectKey == normalizedNetwork &&
                           policy.Version == version.Value,
                 cancellationToken);
         return await ValidateAndMapAsync(row, tenantId, normalizedNetwork, cancellationToken);
     }
 
     private async ValueTask<AdRewardNetworkPolicySnapshot> ValidateAndMapAsync(
-        AdNetworkPolicyVersionRow? row,
+        EconomyPolicyVersionRow? row,
         Guid tenantId,
         string network,
         CancellationToken cancellationToken)
@@ -73,40 +76,40 @@ public sealed class PostgreSqlDurableAdRewardPolicyReader : IDurableAdRewardPoli
         var signatureValid = string.Equals(payloadHash, row.PayloadHash, StringComparison.Ordinal) &&
                              await _signatureVerifier.VerifyAsync(
                                  row.CanonicalPayload, row.KeyId, row.Signature, cancellationToken);
-        if (!signatureValid || row.ProposedBy == row.ApprovedBy)
+        if (!signatureValid || row.ProposedBy == row.ApprovedBy || row.SubjectKey != network)
             throw new AdNetworkPolicyUnavailableException("The ad network policy is invalid or not effective.");
 
         var policy = new AdNetworkPolicy(
-            row.Network,
+            row.SubjectKey!,
             new PolicyVersion(row.Version),
             row.EffectiveAt,
             row.ExpiresAt,
-            row.IssuanceMode,
-            row.YieldState,
-            row.EstimatedNetEcpmUsdNanos,
-            row.ContractedRevenueSharePpm,
-            row.SafetyBufferPpm,
-            row.MinimumVisiblePpm,
-            TimeSpan.FromTicks(row.MaximumFocusLossTicks),
-            row.MaximumRewardSoftUnits,
-            row.ReportsCurrentThrough,
-            TimeSpan.FromTicks(row.ReportStaleAfterTicks),
-            row.Ranking);
+            (AdRewardIssuanceMode)row.IssuanceMode!.Value,
+            (AdNetworkYieldState)row.YieldState!.Value,
+            row.EstimatedNetEcpmUsdNanos!.Value,
+            row.ContractedRevenueSharePpm!.Value,
+            row.SafetyBufferPpm!.Value,
+            row.MinimumVisiblePpm!.Value,
+            TimeSpan.FromTicks(row.MaximumFocusLossTicks!.Value),
+            row.MaximumRewardSoftUnits!.Value,
+            row.ReportsCurrentThrough!.Value,
+            TimeSpan.FromTicks(row.ReportStaleAfterTicks!.Value),
+            row.Ranking!.Value);
         var budget = new AdRewardBudgetPolicy(
-            row.MaximumUserSoftUnits,
-            row.MaximumDeviceSoftUnits,
-            row.MaximumNetworkSoftUnits,
-            row.MaximumGlobalSoftUnits,
-            row.FundedLossBudgetUsdNanos,
-            TimeSpan.FromTicks(row.BudgetWindowTicks));
+            row.MaximumUserSoftUnits!.Value,
+            row.MaximumDeviceSoftUnits!.Value,
+            row.MaximumNetworkSoftUnits!.Value,
+            row.MaximumGlobalSoftUnits!.Value,
+            row.FundedLossBudgetUsdNanos!.Value,
+            TimeSpan.FromTicks(row.BudgetWindowTicks!.Value));
         return new AdRewardNetworkPolicySnapshot(
             tenantId,
             policy,
             budget,
-            row.MaximumIpSoftUnits,
-            row.MaximumAsnSoftUnits,
-            row.ProviderHash,
-            row.ProviderCertified,
+            row.MaximumIpSoftUnits!.Value,
+            row.MaximumAsnSoftUnits!.Value,
+            row.ProviderHash!,
+            row.ProviderCertified!.Value,
             row.PayloadHash,
             row.KeyId,
             row.Signature);
