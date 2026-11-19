@@ -599,9 +599,22 @@ namespace GameGuild.API.Database.Migrations
                             definition := replace(definition,
                                 'public.economy_risk_decision_consumptions',
                                 'public.economy_unit_consumptions');
-                            definition := replace(definition,
-                                '("Id", "RiskDecisionId", "PostingGroupId"',
-                                '("Id", "ConsumptionKind", "RiskDecisionId", "PostingGroupId"');
+                            -- The risk-burn INSERT column lists appear in two
+                            -- layouts across the live writer bodies: the list
+                            -- starting on the paren's line, and the paren
+                            -- alone followed by a newline + indent (the live
+                            -- post_registered_posting_v1/v2 bodies and the
+                            -- aggregate-component writer). A literal needle
+                            -- only caught the first layout, which left the
+                            -- VALUES rewrite (that needle always matches)
+                            -- adding the kind expression to a column list that
+                            -- never gained the kind column. The regex tolerates
+                            -- any whitespace run between the paren and "Id"
+                            -- and mirrors the captured run byte for byte, so
+                            -- the mirrored Down restore stays exact.
+                            definition := regexp_replace(definition,
+                                '\((\s*)"Id", "RiskDecisionId", "PostingGroupId"',
+                                '(\1"Id", "ConsumptionKind", "RiskDecisionId", "PostingGroupId"', 'g');
                             definition := replace(definition,
                                 'VALUES (gen_random_uuid(), p_risk_decision_id',
                                 'VALUES (gen_random_uuid(), 2, p_risk_decision_id');
@@ -1589,9 +1602,14 @@ namespace GameGuild.API.Database.Migrations
                         -- === posting writers + risk counter ===================
                         IF definition LIKE '%public.economy_unit_consumptions%'
                            OR definition LIKE '%public.economy_policy_versions%' THEN
-                            definition := replace(definition,
-                                '("Id", "ConsumptionKind", "RiskDecisionId", "PostingGroupId"',
-                                '("Id", "RiskDecisionId", "PostingGroupId"');
+                            -- Mirrors the Up regex: tolerates the whitespace
+                            -- run between the paren and "Id" (same-line and
+                            -- paren-newline layouts) and re-emits it byte for
+                            -- byte, so the restored body matches the original
+                            -- writer definition exactly.
+                            definition := regexp_replace(definition,
+                                '\((\s*)"Id", "ConsumptionKind", "RiskDecisionId", "PostingGroupId"',
+                                '(\1"Id", "RiskDecisionId", "PostingGroupId"', 'g');
                             definition := replace(definition,
                                 'VALUES (gen_random_uuid(), 2, p_risk_decision_id',
                                 'VALUES (gen_random_uuid(), p_risk_decision_id');

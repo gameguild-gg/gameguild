@@ -290,7 +290,7 @@ public sealed class StripeConnectPayoutProviderTests
         json = invalid switch
         {
             "operation-format" => json.Replace(operation.Id.ToString("N"), "not-a-guid"),
-            "account" => json.Replace(operation.ProviderAccountId, "acct_other"),
+            "account" => json.Replace(operation.ProviderAccountId!, "acct_other"),
             "destination" => json.Replace(operation.DestinationHash, "other-destination"),
             "event-id" => json.Replace("\"id\":\"evt_1\"", "\"id\":\"\""),
             "type" => json.Replace("\"type\":\"payout.paid\"", "\"type\":\"\""),
