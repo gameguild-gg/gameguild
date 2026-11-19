@@ -225,6 +225,7 @@ public sealed class CodingAssignmentEndpointsTests
 
     private static CodingAssignmentContent BuildFullContent() => new()
     {
+        ExerciseType = "standard-io",
         Environment = new CodingEnvironment { Language = "cpp", Tools = "clang" },
         Data = new WorkspaceData
         {

@@ -1,4 +1,4 @@
-import type { CodingAuthoringDefinitionV2, CodingLearnerDeliveryV2 } from '@game-guild/coding';
+import type { CodingAuthoringDefinition, CodingLearnerDelivery } from '@game-guild/coding';
 import { PRESETS, type WorkspaceConfig } from '@gameguild/emception-ide';
 
 export type CodingWorkspaceLanguage = 'cpp' | 'c' | 'sdl-cpp' | 'raylib-cpp' | 'allegro-cpp';
@@ -46,7 +46,7 @@ export function createCodingWorkspaceConfig(
 }
 
 export function workspaceConfigFromDefinition(
-  definition: CodingAuthoringDefinitionV2 | CodingLearnerDeliveryV2,
+  definition: CodingAuthoringDefinition | CodingLearnerDelivery,
 ): WorkspaceConfig {
   const files = Object.fromEntries(
     definition.files.map((file) => [file.path, { encoding: file.encoding, content: file.content }]),

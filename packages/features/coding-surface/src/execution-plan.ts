@@ -1,9 +1,9 @@
 import type {
-  CodingAuthoringDefinitionV2,
-  CodingFunctionTestV1,
-  CodingLearnerDeliveryV2,
-  CodingScalarValueV1,
-  CodingTestV1,
+  CodingAuthoringDefinition,
+  CodingFunctionTest,
+  CodingLearnerDelivery,
+  CodingScalarValue,
+  CodingTest,
 } from '@game-guild/coding';
 import type { TestCase, TestPlan } from 'emception';
 import {
@@ -20,13 +20,13 @@ export interface CodingExecutionPlan {
 }
 
 export function buildCodingExecutionPlan(
-  definition: CodingAuthoringDefinitionV2 | CodingLearnerDeliveryV2,
+  definition: CodingAuthoringDefinition | CodingLearnerDelivery,
   scope: 'public' | 'full',
 ): CodingExecutionPlan {
   if (scope === 'full' && !('tests' in definition)) {
     throw new TypeError('Full coding previews require an authoring definition.');
   }
-  const tests: readonly (CodingTestV1 | CodingLearnerDeliveryV2['publicTests'][number])[] = 'tests' in definition
+  const tests: readonly (CodingTest | CodingLearnerDelivery['publicTests'][number])[] = 'tests' in definition
     ? definition.tests.filter((test) => scope === 'full' || test.visibility === 'public')
     : definition.publicTests;
   const overlay: WorkspaceOverlayFile[] = [];
@@ -46,7 +46,7 @@ export function buildCodingExecutionPlan(
   return { plan: { build: { sources }, cases }, overlay };
 }
 
-function toPlanCase(test: CodingTestV1 | CodingLearnerDeliveryV2['publicTests'][number], index: number, overlay: WorkspaceOverlayFile[]): TestCase {
+function toPlanCase(test: CodingTest | CodingLearnerDelivery['publicTests'][number], index: number, overlay: WorkspaceOverlayFile[]): TestCase {
   if (test.kind === 'stdio') {
     return {
       kind: 'stdio',
@@ -61,7 +61,7 @@ function toPlanCase(test: CodingTestV1 | CodingLearnerDeliveryV2['publicTests'][
   return functionCase(test, index, overlay);
 }
 
-function functionCase(test: CodingFunctionTestV1 | Omit<CodingFunctionTestV1, 'visibility'>, index: number, overlay: WorkspaceOverlayFile[]): TestCase {
+function functionCase(test: CodingFunctionTest | Omit<CodingFunctionTest, 'visibility'>, index: number, overlay: WorkspaceOverlayFile[]): TestCase {
   const signature: FunctionalTestSignature = {
     functionName: test.function.name,
     parameters: test.function.parameters.map((parameter) => ({
@@ -81,10 +81,10 @@ function functionCase(test: CodingFunctionTestV1 | Omit<CodingFunctionTestV1, 'v
   return { kind: 'doctest', sourceFiles: [path], weight: test.weightUnits, name: test.name };
 }
 
-function harnessType(type: CodingFunctionTestV1['function']['returnType']): FunctionParameter['type'] {
+function harnessType(type: CodingFunctionTest['function']['returnType']): FunctionParameter['type'] {
   return `${type.charAt(0).toUpperCase()}${type.slice(1)}` as FunctionParameter['type'];
 }
 
-function harnessValue(value: CodingScalarValueV1): FunctionParameter {
+function harnessValue(value: CodingScalarValue): FunctionParameter {
   return { type: harnessType(value.type), content: value.value };
 }

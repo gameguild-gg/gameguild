@@ -1,9 +1,9 @@
 # Coding surface implementation state
 
-Ultima atualizacao: 2026-11-18.
+Ultima atualizacao: 2026-11-19.
 
-Status geral: implementacao funcional concluida; consolidacao canonica 3.5
-planejada antes do gate browser final no CI.
+Status geral: implementacao funcional e consolidacao canonica 3.5 concluidas
+localmente; gate browser final pendente no lane `coding` do CI.
 
 Este e o handoff mutavel da parte 3. Atualize-o com fatos observados. Nao marque
 um gate como concluido sem registrar a evidencia executada.
@@ -11,10 +11,10 @@ um gate como concluido sem registrar a evidencia executada.
 ## Baseline de execucao
 
 - Branch: `feature/coding-grading`.
-- Commit-base: `41932100b2031c0ad78d7c02545a73addc6364b3`.
-- Worktree preexistente: limpo; branch um commit a frente de origin.
-- Worktree atual: contem somente a implementacao e a documentacao da parte 3
-  sobre o commit-base registrado.
+- Commit-base da consolidacao: `810c2a0764`.
+- Worktree preexistente: limpo; branch dois commits a frente de origin.
+- Worktree atual: consolidacao 3.5 implementada e validada localmente sobre a
+  implementacao funcional da parte 3.
 - Ultimo merge relevante: nenhum merge em andamento.
 - Observacao: a criacao destes planos nao caracteriza a implementacao.
 
@@ -26,15 +26,15 @@ um gate como concluido sem registrar a evidencia executada.
 | Parte 02, boundary backend de code | concluida | plano 02, build integral e suites registradas nele |
 | Parte 3.1 | concluida | buscas de consumidores, contratos e exports publicos registradas em 2026-11-18 |
 | Parte 3.2 | concluida | package isolado, 14 testes e typecheck verdes |
-| Parte 3.3 | concluida | dois perfis, quatro modos e privacy cobertos; contrato sera consolidado em 3.5 |
+| Parte 3.3 | concluida | dois perfis, quatro modos, privacy e contrato canonico cobertos |
 | Parte 3.4 | em validacao final | consumidores e CI migrados; browser E2E depende do artifact schema 2 exato |
-| Parte 3.5 | planejada | remover compatibilidade artificial de code antes do browser E2E final |
+| Parte 3.5 | concluida localmente | `CANON-01` a `CANON-06` concluidos; regressao local de `CANON-07` verde, aguardando somente browser CI |
 
 ## Etapa ativa
 
-- Subplano: 3.5, consolidacao do contrato canonico de coding.
-- Gate atual: `CANON-01`, inventario de contratos e adapters versionados.
-- Estado: planejado; implementacao ainda nao iniciada.
+- Subplano: 3.4, validacao browser final apos a consolidacao 3.5.
+- Gate atual: `CODE-UI-07`, browser coding cycle no lane com artifact exato.
+- Estado: implementacao local concluida; evidencia externa pendente.
 - Responsavel: Codex.
 
 ## Fatos confirmados
@@ -47,23 +47,37 @@ um gate como concluido sem registrar a evidencia executada.
 - nenhuma mudanca de tabela ou migration esta prevista na parte 3.
 - `CodingAssignmentContent.ExerciseType` permanece no JSON ja persistido; nao
   cria coluna, tabela ou migration.
-- `@game-guild/emception-ui` nao foi alterado; a unica mudanca sob
-  `tools/emception` corrige um teste de binding para o path do adapter extraido
-  na parte 2.
+- o diff atual de `@game-guild/emception-ui` e `tools/emception` permanece vazio;
+- `@game-guild/coding` possui um unico contrato, parser por payload e fixture
+  canonica, com `exerciseType` obrigatorio;
+- backend e TypeScript registram apenas `code-assessment-type` e
+  `code-wasm-review` na versao `1`, com payload schema `code-files`;
+- qualquer adapter, handler, payload schema ou toolchain diferente da identidade
+  corrente falha fechado;
+- nomes `V1` importados de `@game-guild/grading` pertencem ao protocolo
+  generico e permanecem fora da consolidacao de code.
 
 ## Decisoes abertas
 
-Nenhuma decisao aberta. A decisao V2 foi substituida pela consolidacao canonica
-registrada em `DECISIONS.md`; bridge do host, artifact verificado e ajuste
-test-only permanecem validos.
+Nenhuma decisao aberta. A proposta de formatos paralelos foi substituida pela
+consolidacao canonica registrada em `DECISIONS.md`; bridge do host, artifact
+verificado e ajuste test-only permanecem validos.
 
 ## Bloqueios
 
-O CDN local ainda contem um manifest legado schema 1. O browser E2E V3 exige o
-artifact schema 2 com identidade congelada correspondente ao commit e falha
+O CDN local contem o manifest operacional `version: 1`. O browser E2E oficial
+exige o artifact de grading `schemaVersion: 2` com identidade congelada
+correspondente ao commit e falha
 fechado antes de iniciar API ou banco. Isso nao e gap de capability nem motivo
 para relaxar a verificacao: o lane `coding` agora adquire e valida o artifact
 exato antes do ciclo browser.
+
+A suite `GameGuild.Identity.Authentication.UnitTests` possui uma falha externa
+reproduzida tambem de forma isolada em
+`EmailCodeServiceTests.GenerateEmailCodeAsync_ThrottlesResendsWithinSixtySeconds`
+(`4572/4573` testes verdes). Nao ha diff no modulo de Authentication e a falha
+nao pertence ao contrato de coding; ela deve ser tratada pelo responsavel desse
+modulo sem ampliar o escopo da parte 3.
 
 ## Evidencias de validacao da etapa ativa
 
@@ -88,24 +102,41 @@ permanece reservado ao CI enquanto o artifact exato nao estiver no workspace.
 | 2026-11-18 | browser coding cycle integral local | interrompido fail-closed: CDN local schema 1 nao satisfaz manifest V3 schema 2 | 3.4 |
 | 2026-11-18 | publish da API com `-m:2`, captura OpenAPI e gerador oficial de `@game-guild/client` | `exerciseType` presente no contrato; diff gerado restrito a tipos/schema e metadata | 3.4 |
 | 2026-11-18 | `@game-guild/client typecheck` e `@game-guild/client build` | verdes | 3.4 |
+| 2026-11-19 | inventario `rg` de contratos, parsers, fixtures, adapters, toolchains e payload schemas | `CANON-01` concluido; escopo restrito a coding, adapter, surface, backend CodeAdapter, web e testes | 3.5 |
+| 2026-11-19 | suites e typechecks de `coding`, `grading-adapter-code`, `coding-surface` e `grading` | 15 + 15 + 14 + 16 testes verdes; quatro typechecks verdes | 3.5 |
+| 2026-11-19 | testes focados dos consumidores web | 11 arquivos e 195 testes verdes com um worker | 3.5 |
+| 2026-11-19 | TypeScript integral de `apps/web` com heap de 8 GiB | verde apos regeneracao do client | 3.5 |
+| 2026-11-19 | publish da API, captura OpenAPI e geracao oficial de `@game-guild/client` | `exerciseType` requerido; client typecheck e build verdes | 3.5 |
+| 2026-11-19 | `CodeAdapter.UnitTests`, `Assessments.UnitTests` e `Courses.UnitTests` | 72 + 453 + 898 testes verdes | 3.5 |
+| 2026-11-19 | `AssessmentGradingPostgreSqlHttpTests` com certificado local de Data Protection | 14 testes de integracao PostgreSQL verdes | 3.5 |
+| 2026-11-19 | `@game-guild/emception-ui test` | 7 suites e 27 testes verdes; package preservado | 3.5 |
+| 2026-11-19 | preflight do coding cycle fora do sandbox | 45 testes verdes, incluindo toolchain, browser observer e processos | 3.5 |
+| 2026-11-19 | build de producao web | compilacao, TypeScript e 337 paginas verdes com `cpus: 1` | 3.5 |
+| 2026-11-19 | `dotnet build apps/api/GameGuild.sln --no-restore --nologo -m:2 -p:TreatWarningsAsErrors=true` | sucesso em 5m40s, zero warnings e zero erros | 3.5 |
+| 2026-11-19 | `CodingAssignmentJsonBodyMigrationTests` | 8 testes verdes; snapshot test-only preserva a saida historica sem enfraquecer `ExerciseType` no contrato atual | 3.5 |
+| 2026-11-19 | `GameGuild.API.UnitTests` integral | 1882 testes verdes | 3.5 |
+| 2026-11-19 | `GameGuild.Identity.Authorization.UnitTests` integral | 2815 testes verdes | 3.5 |
+| 2026-11-19 | `GameGuild.Identity.Authentication.UnitTests` integral e caso isolado | 4572/4573 verdes; falha externa de throttle de email reproduzida isoladamente, sem diff no modulo | 3.5 |
 
 ## Arquivos alterados pela implementacao
 
-- contratos de coding ainda duplicados em V1/V2, a consolidar na parte 3.5;
-- compatibilidade de adapter backend e TypeScript a remover na parte 3.5;
+- contrato canonico unico de coding, sem aliases de compatibilidade;
+- identidade unica e concordante do adapter backend e TypeScript;
 - novo `packages/features/coding-surface`;
 - campo JSON `ExerciseType` e validacao no modelo de Learning Courses;
 - contrato OpenAPI e cliente TypeScript gerado para `ExerciseType`;
 - bridge e cinco consumidores de grading em `apps/web`;
 - lane `coding`, classificacao e required gate no CI;
 - testes, fixtures e documentos de checkpoint associados.
+- ajuste exclusivamente test-only para ler a saida historica da migration; a
+  migration, snapshots de banco e schema permanecem inalterados.
 
 ## Proxima acao exata
 
-Executar `CANON-01` da parte 3.5 e consolidar coding em um unico contrato e
-adapter. Depois repetir as suites e deixar o lane `coding` adquirir o artifact
-schema 2 exato. Com o browser E2E verde, registrar a evidencia, concluir
-`CODE-UI-07` e iniciar a parte 4.
+Deixar o lane `coding` adquirir o artifact schema 2 exato e executar o browser
+E2E oficial. Com essa evidencia verde, registrar o resultado, concluir
+`CODE-UI-07` e iniciar a parte 4. Nao relaxar a verificacao nem substituir o
+artifact por um manifest local fabricado.
 
 ## Checklist de checkpoint
 

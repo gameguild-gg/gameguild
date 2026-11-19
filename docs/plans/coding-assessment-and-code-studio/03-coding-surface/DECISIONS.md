@@ -68,35 +68,33 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
 - Evidencia: protocolo de contexto persistente do indice.
 - Afeta: todos os subplanos.
 
-## `CS-ADR-005`. Contrato V2 aditivo para o tipo de exercicio
+## `CS-ADR-005`. Proposta inicial de formato paralelo para o tipo de exercicio
 
 - Data: 2026-11-18.
 - Status: substituida por `CS-ADR-008` antes de release.
-- Contexto: o contrato canonico V1 nao possui um discriminante de experiencia,
-  enquanto o payload de Learning possui apenas os testes e a toolchain. Inferir
-  a experiencia por linguagem ou por `tests[].kind` violaria a separacao dos
-  eixos definida em `CS-ADR-003`.
-- Decisao: preservar V1 e adicionar contratos authoring e delivery V2 com
-  `exerciseType: function | standard-io`. O payload de Learning persiste o
-  mesmo discriminante no JSON existente; snapshots sem o campo usam apenas um
-  fallback de compatibilidade explicito na bridge do host.
-- Alternativa rejeitada: alterar V1 ou inferir o tipo a cada renderizacao.
-- Consequencias: nao ha tabela ou migration; o host converte entre o wire DTO e
-  o contrato V2, e novos drafts sempre persistem o discriminante.
-- Evidencia: contratos V1 de `@game-guild/coding` e DTO
-  `CodingAssignmentContent` observados no commit-base.
+- Contexto: o formato inicial nao possuia um discriminante de experiencia,
+  enquanto o payload de Learning continha apenas testes e toolchain. Inferir a
+  experiencia por linguagem ou por `tests[].kind` violaria `CS-ADR-003`.
+- Decisao historica: preservar o formato incompleto e adicionar outro formato
+  com `exerciseType: function | standard-io` e fallback na bridge do host.
+- Motivo da substituicao: nao havia dado oficial que justificasse dois formatos;
+  a proposta criava compatibilidade artificial dentro do mesmo desenvolvimento.
+- Consequencias atuais: `CS-ADR-008` tornou `exerciseType` obrigatorio no unico
+  contrato canonico. Nao ha fallback, tabela ou migration.
+- Evidencia: inventario e consolidacao da parte 3.5.
 - Afeta: 3.3 e 3.4.
 
 ## `CS-ADR-008`. Um unico contrato canonico para code antes do lancamento
 
 - Data: 2026-11-18.
 - Status: aceita.
-- Contexto: os contratos V1/V2 e adapters historicos foram criados durante o
+- Contexto: contratos paralelos e adapters historicos foram criados durante o
   mesmo programa de implementacao. Nao ha dados, revisoes ou submissions
   publicados que exijam compatibilidade.
 - Decisao: consolidar o formato completo atual como o primeiro contrato
   canonico de code. `exerciseType` e obrigatorio; tipos de propriedade de code
-  nao usam sufixos V1/V2; existe somente um adapter e uma toolchain corrente.
+  nao usam sufixos numericos preventivos; existe somente um adapter e uma
+  toolchain corrente.
   `schemaVersion: 1` e a identidade `adapterVersion: "1"` permanecem como
   discriminantes estritos, sem parser ou registro alternativo.
 - Alternativa rejeitada: preservar caminhos criados apenas durante o
@@ -142,7 +140,7 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   `.github/workflows/pr-verify.yml`.
 - Afeta: 3.4.
 
-## `CS-ADR-008`. Correcao test-only do binding do adapter extraido
+## `CS-ADR-009`. Correcao test-only do binding do adapter extraido
 
 - Data: 2026-11-18.
 - Status: aceita.

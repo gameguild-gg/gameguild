@@ -1,16 +1,16 @@
 import { addScoreValues, parseScoreValue, type GradeItemResultV1, type GradeResultV1, type ScoreValue } from '@game-guild/grading';
-import { parseCodingExecutionReport, type CodingExecutionReportV1 } from '@game-guild/coding';
+import { parseCodingExecutionReport, type CodingExecutionReport } from '@game-guild/coding';
 import {
   CODE_AUTOMATED_REVIEW_HANDLER,
   CODE_EXECUTION_EVIDENCE_SCHEMA_VERSION,
-  type CodeExecutionEvidenceTestV1,
-  type CodeExecutionEvidenceV1,
-  type CodeGradeMappingV1,
-  type CodeItemProjectionV1,
+  type CodeExecutionEvidenceTest,
+  type CodeExecutionEvidence,
+  type CodeGradeMapping,
+  type CodeItemProjection,
 } from './contracts';
 import { requireSingleItem } from './delivery';
 
-export function mapCodeExecutionReportToGrade(items: readonly CodeItemProjectionV1[], reportValue: CodingExecutionReportV1): CodeGradeMappingV1 {
+export function mapCodeExecutionReportToGrade(items: readonly CodeItemProjection[], reportValue: CodingExecutionReport): CodeGradeMapping {
   const item = requireSingleItem(items);
   const report = parseCodingExecutionReport(reportValue);
   assertToolchain(item.definition.toolchain, report.toolchain);
@@ -23,7 +23,7 @@ export function mapCodeExecutionReportToGrade(items: readonly CodeItemProjection
   }
 
   const evidenceId = `code-execution:${report.reportId}`;
-  const evidenceTests: CodeExecutionEvidenceTestV1[] = report.outcomes.map((outcome) => {
+  const evidenceTests: CodeExecutionEvidenceTest[] = report.outcomes.map((outcome) => {
     const maxScore = allocation.get(outcome.testId)!;
     return {
       testId: outcome.testId,
@@ -33,7 +33,7 @@ export function mapCodeExecutionReportToGrade(items: readonly CodeItemProjection
       ...(outcome.evidenceRef ? { evidenceRef: outcome.evidenceRef } : {}),
     };
   });
-  const evidence: CodeExecutionEvidenceV1 = {
+  const evidence: CodeExecutionEvidence = {
     schemaVersion: CODE_EXECUTION_EVIDENCE_SCHEMA_VERSION,
     kind: 'code-execution-report',
     evidenceId,
@@ -66,7 +66,7 @@ export function mapCodeExecutionReportToGrade(items: readonly CodeItemProjection
 }
 
 function createResult(
-  item: CodeItemProjectionV1,
+  item: CodeItemProjection,
   state: GradeResultV1['state'],
   itemState: GradeItemResultV1['state'],
   score: ScoreValue | null,
@@ -95,7 +95,7 @@ function createResult(
   };
 }
 
-function assertCompleteOutcomes(tests: ReadonlyMap<string, unknown>, report: CodingExecutionReportV1): void {
+function assertCompleteOutcomes(tests: ReadonlyMap<string, unknown>, report: CodingExecutionReport): void {
   if (report.outcomes.length !== tests.size || report.outcomes.some(({ state }) => state !== 'passed' && state !== 'failed')) {
     throw new TypeError('Completed code execution report must contain one final outcome for every frozen test.');
   }
@@ -106,7 +106,7 @@ function assertCompleteOutcomes(tests: ReadonlyMap<string, unknown>, report: Cod
   }
 }
 
-function assertToolchain(expected: CodeItemProjectionV1['definition']['toolchain'], actual: CodingExecutionReportV1['toolchain']): void {
+function assertToolchain(expected: CodeItemProjection['definition']['toolchain'], actual: CodingExecutionReport['toolchain']): void {
   if (
     expected.key !== actual.key ||
     expected.version !== actual.version ||

@@ -1,15 +1,15 @@
 import {
-  CODING_AUTHORING_SCHEMA_VERSION_V2,
+  CODING_AUTHORING_SCHEMA_VERSION,
   CODING_CONTENT_TYPE,
-  parseCodingAuthoringDefinitionV2,
-  projectCodingDefinitionForLearnerV2,
-  type CodingAuthoringDefinitionV2,
-  type CodingExerciseTypeV2,
-  type CodingFunctionTestV1,
-  type CodingScalarValueV1,
-  type CodingStdioTestV1,
-  type CodingSubmissionV1,
-  type CodingTestV1,
+  parseCodingAuthoringDefinition,
+  projectCodingDefinitionForLearner,
+  type CodingAuthoringDefinition,
+  type CodingExerciseType,
+  type CodingFunctionTest,
+  type CodingScalarValue,
+  type CodingStdioTest,
+  type CodingSubmission,
+  type CodingTest,
 } from '@game-guild/coding';
 import type {
   CodingAssignmentContent,
@@ -22,14 +22,14 @@ const TOOLCHAIN_DIGEST = 'sha256:405e9f1fdd936ba31e11247fa1f901eaee24c4fcf641e34
 
 export function codingAssignmentToAuthoringDefinition(
   content: CodingAssignmentContent,
-): CodingAuthoringDefinitionV2 {
-  return parseCodingAuthoringDefinitionV2(codingAssignmentToDraftDefinition(content));
+): CodingAuthoringDefinition {
+  return parseCodingAuthoringDefinition(codingAssignmentToDraftDefinition(content));
 }
 
 /** Builds an authoring workspace before the draft satisfies publication rules. */
 export function codingAssignmentToDraftDefinition(
   content: CodingAssignmentContent,
-): CodingAuthoringDefinitionV2 {
+): CodingAuthoringDefinition {
   const files = Object.entries(content.Data.Files).map(([path, file]) => ({
     id: stableIdentifier('file', path),
     path,
@@ -47,7 +47,7 @@ export function codingAssignmentToDraftDefinition(
   const draftEntryPoint = entryPoint ?? files[0];
   if (!draftEntryPoint) {
     return {
-      schemaVersion: CODING_AUTHORING_SCHEMA_VERSION_V2,
+      schemaVersion: CODING_AUTHORING_SCHEMA_VERSION,
       type: CODING_CONTENT_TYPE,
       exerciseType: explicitExerciseType(content.ExerciseType),
       toolchain: toolchainIdentity(content.Environment.Language),
@@ -60,7 +60,7 @@ export function codingAssignmentToDraftDefinition(
   }
 
   return {
-    schemaVersion: CODING_AUTHORING_SCHEMA_VERSION_V2,
+    schemaVersion: CODING_AUTHORING_SCHEMA_VERSION,
     type: CODING_CONTENT_TYPE,
     exerciseType: explicitExerciseType(content.ExerciseType),
     toolchain: toolchainIdentity(content.Environment.Language),
@@ -73,13 +73,13 @@ export function codingAssignmentToDraftDefinition(
 }
 
 export function codingAssignmentToLearnerDelivery(content: CodingAssignmentContent) {
-  return projectCodingDefinitionForLearnerV2(codingAssignmentToAuthoringDefinition(content));
+  return projectCodingDefinitionForLearner(codingAssignmentToAuthoringDefinition(content));
 }
 
 export function applySubmissionToDefinition(
-  definition: CodingAuthoringDefinitionV2,
+  definition: CodingAuthoringDefinition,
   submissionFiles: readonly { path: string; content: string }[],
-): CodingAuthoringDefinitionV2 {
+): CodingAuthoringDefinition {
   const submitted = new Map(submissionFiles.map((file) => [canonicalPath(file.path), file.content]));
   const authoredPaths = new Set(definition.files.map((file) => canonicalPath(file.path)));
   const learnerCreatedFiles = definition.allowLearnerCreatedFiles
@@ -94,7 +94,7 @@ export function applySubmissionToDefinition(
           visibility: 'public' as const,
         }))
     : [];
-  return parseCodingAuthoringDefinitionV2({
+  return parseCodingAuthoringDefinition({
     ...definition,
     files: [
       ...definition.files.map((file) => file.visibility === 'public' && submitted.has(canonicalPath(file.path))
@@ -105,17 +105,18 @@ export function applySubmissionToDefinition(
   });
 }
 
-export function codingSubmissionToFileRecord(submission: CodingSubmissionV1): Record<string, { content: string; encoding: 'text' }> {
+export function codingSubmissionToFileRecord(submission: CodingSubmission): Record<string, { content: string; encoding: 'text' }> {
   return Object.fromEntries(submission.files.map((file) => [file.path, { content: file.content, encoding: 'text' as const }]));
 }
 
-function explicitExerciseType(value: CodingAssignmentContent['ExerciseType']): CodingExerciseTypeV2 {
-  // Frozen V1 content predates the product-axis discriminator. This is a
-  // compatibility default only; new authoring always persists the field.
-  return value ?? 'standard-io';
+function explicitExerciseType(value: CodingAssignmentContent['ExerciseType']): CodingExerciseType {
+  if (value !== 'function' && value !== 'standard-io') {
+    throw new TypeError('Coding assignment exercise type is required.');
+  }
+  return value;
 }
 
-function toCanonicalTest(test: Test, visibility: 'public' | 'private', index: number): CodingTestV1 {
+function toCanonicalTest(test: Test, visibility: 'public' | 'private', index: number): CodingTest {
   const common = {
     id: stableIdentifier('test', `${visibility}:${index}:${JSON.stringify(test)}`),
     name: test.Name ?? undefined,
@@ -132,7 +133,7 @@ function toCanonicalTest(test: Test, visibility: 'public' | 'private', index: nu
         ...(test.Stderr == null ? {} : { stderr: test.Stderr }),
         ...(test.ExitCode == null ? {} : { exitCode: test.ExitCode }),
       },
-    } satisfies CodingStdioTestV1;
+    } satisfies CodingStdioTest;
   }
   return {
     ...common,
@@ -147,10 +148,10 @@ function toCanonicalTest(test: Test, visibility: 'public' | 'private', index: nu
       inputs: testCase.Inputs.map((input) => scalarValue(input.Type, input.Content)),
       expected: scalarValue(testCase.Expected.Type, testCase.Expected.Content),
     })),
-  } satisfies CodingFunctionTestV1;
+  } satisfies CodingFunctionTest;
 }
 
-function scalarValue(type: FunctionParameterType, value: FunctionParameterValue): CodingScalarValueV1 {
+function scalarValue(type: FunctionParameterType, value: FunctionParameterValue): CodingScalarValue {
   switch (type) {
     case 'string': return { type, value: String(value) };
     case 'boolean': return { type, value: Boolean(value) };

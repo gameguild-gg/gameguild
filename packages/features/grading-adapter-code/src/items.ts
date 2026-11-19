@@ -1,18 +1,16 @@
 import { createContentGradingDefinition, parseScoreValue, type ContentGradingDefinitionV2 } from '@game-guild/grading';
-import { parseCodingAuthoringDefinition, parseCodingAuthoringDefinitionV2 } from '@game-guild/coding';
+import { parseCodingAuthoringDefinition } from '@game-guild/coding';
 import { allocateCodeTestScores } from './allocation';
-import { CODE_CONTENT_TYPE, CODE_ITEM_PROJECTION_SCHEMA_VERSION, type CodeGradingItemInputV1, type CodeItemProjectionV1 } from './contracts';
+import { CODE_CONTENT_TYPE, CODE_ITEM_PROJECTION_SCHEMA_VERSION, type CodeGradingItemInput, type CodeItemProjection } from './contracts';
 
-export function createCodeGradingDefinition(input: CodeGradingItemInputV1): ContentGradingDefinitionV2 {
+export function createCodeGradingDefinition(input: CodeGradingItemInput): ContentGradingDefinitionV2 {
   assertItemId(input.itemId);
   return createContentGradingDefinition([input.itemId]);
 }
 
-export function projectCodeGradingItems(input: CodeGradingItemInputV1): readonly [CodeItemProjectionV1] {
+export function projectCodeGradingItems(input: CodeGradingItemInput): readonly [CodeItemProjection] {
   assertItemId(input.itemId);
-  const definition = input.definition.schemaVersion === 2
-    ? parseCodingAuthoringDefinitionV2(input.definition)
-    : parseCodingAuthoringDefinition(input.definition);
+  const definition = parseCodingAuthoringDefinition(input.definition);
   const maxScore = parseScoreValue(input.maxScore);
   return [
     {

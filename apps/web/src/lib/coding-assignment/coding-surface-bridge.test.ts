@@ -30,8 +30,11 @@ describe('coding surface wire bridge', () => {
     expect(codingAssignmentToAuthoringDefinition(fixture('standard-io')).exerciseType).toBe('standard-io');
   });
 
-  it('uses a documented compatibility default rather than test inference', () => {
-    expect(codingAssignmentToAuthoringDefinition(fixture(undefined)).exerciseType).toBe('standard-io');
+  it('rejects a missing exercise type instead of inferring a profile', () => {
+    expect(() => codingAssignmentToAuthoringDefinition({
+      ...fixture(),
+      ExerciseType: undefined,
+    } as unknown as CodingAssignmentContent)).toThrow('exercise type is required');
   });
 
   it('redacts private files and tests structurally for learner delivery', () => {

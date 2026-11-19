@@ -145,7 +145,7 @@ describe('official grading runtime actions', () => {
       const response: AssessmentResponseEnvelopeV1 = {
         schemaVersion: 1,
         contentType: 'coding-assignment',
-        payloadSchema: 'code-files/v1',
+        payloadSchema: 'code-files',
         payload: { files: {} },
       };
       await submit('attempt', response, 'submit-key');

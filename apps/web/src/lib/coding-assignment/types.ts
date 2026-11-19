@@ -106,8 +106,7 @@ export interface GradingConfig {
 export interface CodingAssignmentContent {
   readonly Type: 'coding-assignment';
   readonly Version: 1;
-  /** Missing only on frozen definitions authored before explicit profiles. */
-  readonly ExerciseType?: CodingExerciseType;
+  readonly ExerciseType: CodingExerciseType;
   readonly Environment: CodingEnvironment;
   readonly Data: WorkspaceData;
   readonly Tests: TestSuite;
@@ -415,10 +414,10 @@ export function narrowCodingAssignmentContent(
   // Environment / Data / Grading are not polymorphic — trust the wire shape,
   // the server validates via FluentValidation.
   const exerciseType = source.ExerciseType;
-  if (exerciseType !== undefined && exerciseType !== 'function' && exerciseType !== 'standard-io') return null;
+  if (exerciseType !== 'function' && exerciseType !== 'standard-io') return null;
   return {
     ...(source as unknown as CodingAssignmentContent),
-    ExerciseType: exerciseType ?? 'standard-io',
+    ExerciseType: exerciseType,
     Tests: tests,
   };
 }

@@ -1,7 +1,7 @@
 # Parte 3. Coding surface e integracao web
 
-Status: implementacao funcional concluida; consolidacao do contrato canonico
-pendente na parte 3.5 antes da validacao browser final no CI.
+Status: implementacao funcional e consolidacao canonica concluidas localmente;
+validacao browser final pendente no lane `coding` do CI.
 
 ## Objetivo
 
@@ -54,10 +54,10 @@ concluido em
 evidencias reproduziveis. Marcar uma tarefa em um texto sem executar seu gate
 nao autoriza o avanco.
 
-A parte 3.5 e uma excecao corretiva inserida durante a validacao da 3.4: a
-implementacao de `CODE-UI-05` e `CODE-UI-06` esta pronta, mas `CODE-UI-07`
-permanece aberto. A 3.5 deve ser concluida agora; depois o fluxo retorna ao
-browser E2E de `CODE-UI-07`. Ela nao autoriza iniciar a parte 4 antecipadamente.
+A parte 3.5 foi uma excecao corretiva inserida durante a validacao da 3.4. Sua
+implementacao e regressao local estao concluidas; `CODE-UI-07` permanece aberto
+somente ate o lane `coding` executar o browser E2E com o artifact schema 2
+exato. Isso nao autoriza iniciar a parte 4 antecipadamente.
 
 ## Protocolo de contexto persistente
 

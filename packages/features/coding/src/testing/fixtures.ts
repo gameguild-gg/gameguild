@@ -1,28 +1,19 @@
-import fixture from '../../fixtures/coding-contract-cases-v1.json';
-import { parseCodingAuthoringDefinition, parseCodingExecutionReport, parseCodingLearnerDelivery, parseCodingSubmission } from '../schemas';
-import { projectCodingDefinitionForLearnerV2 } from '../projection';
-import { parseCodingAuthoringDefinitionV2 } from '../schemas';
+import fixture from '../../fixtures/coding-contract-cases.json';
+import { projectCodingDefinitionForLearner } from '../projection';
+import {
+  parseCodingAuthoringDefinition,
+  parseCodingExecutionReport,
+  parseCodingLearnerDelivery,
+  parseCodingSubmission,
+} from '../schemas';
 
-export const codingContractFixtureV1 = Object.freeze({
-  authoring: parseCodingAuthoringDefinition(fixture.authoring),
-  learnerDelivery: parseCodingLearnerDelivery(fixture.learnerDelivery),
-  submission: parseCodingSubmission(fixture.submission),
-  executionReport: parseCodingExecutionReport(fixture.executionReport),
-  invalid: structuredClone(fixture.invalid),
-});
+const authoring = parseCodingAuthoringDefinition(fixture.authoring);
 
-const authoringV2 = parseCodingAuthoringDefinitionV2({
-  ...codingContractFixtureV1.authoring,
-  schemaVersion: 2,
-  exerciseType: 'standard-io',
-});
-
-const functionAuthoringV2 = parseCodingAuthoringDefinitionV2({
-  ...codingContractFixtureV1.authoring,
-  schemaVersion: 2,
+const functionAuthoring = parseCodingAuthoringDefinition({
+  ...authoring,
   exerciseType: 'function',
   entryPoint: {
-    ...codingContractFixtureV1.authoring.entryPoint,
+    ...authoring.entryPoint,
     symbol: 'sum',
   },
   tests: [
@@ -79,11 +70,12 @@ const functionAuthoringV2 = parseCodingAuthoringDefinitionV2({
   ],
 });
 
-export const codingContractFixtureV2 = Object.freeze({
-  authoring: authoringV2,
-  learnerDelivery: projectCodingDefinitionForLearnerV2(authoringV2),
-  functionAuthoring: functionAuthoringV2,
-  functionLearnerDelivery: projectCodingDefinitionForLearnerV2(functionAuthoringV2),
-  submission: codingContractFixtureV1.submission,
-  executionReport: codingContractFixtureV1.executionReport,
+export const codingContractFixture = Object.freeze({
+  authoring,
+  learnerDelivery: parseCodingLearnerDelivery(fixture.learnerDelivery),
+  functionAuthoring,
+  functionLearnerDelivery: projectCodingDefinitionForLearner(functionAuthoring),
+  submission: parseCodingSubmission(fixture.submission),
+  executionReport: parseCodingExecutionReport(fixture.executionReport),
+  invalid: structuredClone(fixture.invalid),
 });

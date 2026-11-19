@@ -1,0 +1,9 @@
+{
+  "itemId": "code",
+  "maxScore": 10000,
+  "expectedAllocation": [
+    { "testId": "public-stdio", "maxScore": 2500 },
+    { "testId": "private-function", "maxScore": 7500 }
+  ],
+  "expectedFinalScore": 2500
+}

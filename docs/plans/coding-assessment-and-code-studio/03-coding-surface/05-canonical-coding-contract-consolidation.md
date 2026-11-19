@@ -1,6 +1,7 @@
 # Parte 3.5. Consolidacao do contrato canonico de coding
 
-Status: planejado.
+Status: implementado e validado localmente em 2026-11-19; browser E2E pendente
+no lane `coding` do CI.
 
 ID: `CODE-CONTRACT-CANONICALIZATION`.
 
@@ -255,4 +256,3 @@ aliases pertencentes a code nao sao permitidos.
 - nenhuma tabela ou migration foi criada ou alterada;
 - `IMPLEMENTATION-STATE.md` registra a evidencia e aponta a parte 4 como
   proxima acao.
-

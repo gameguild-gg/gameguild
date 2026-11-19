@@ -236,7 +236,7 @@ function CodingActivitySession({
       const outcome = await submitRuntimeSubmission(runtime.submissionId, {
         schemaVersion: 1,
         contentType: "coding-assignment",
-        payloadSchema: "code-files/v1",
+        payloadSchema: "code-files",
         payload: { files: codingSubmissionToFileRecord(submission) },
       }, submitKey.current);
       setResult(outcome.success ? { success: true } : { success: false, error: outcome.error });

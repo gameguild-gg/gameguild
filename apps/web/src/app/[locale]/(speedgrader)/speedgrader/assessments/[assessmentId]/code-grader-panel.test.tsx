@@ -103,7 +103,7 @@ describe("CodeGraderPanel", () => {
 
     expect(assessmentEditorMock.props?.mode).toBe("grader");
     expect(assessmentEditorMock.props?.definition).toMatchObject({
-      schemaVersion: 2,
+      schemaVersion: 1,
       exerciseType: "standard-io",
       files: expect.arrayContaining([
         expect.objectContaining({ path: "/home/user/main.cpp", content: "// submission" }),

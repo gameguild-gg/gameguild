@@ -478,6 +478,7 @@ describe("CodingDefinitionEditor", () => {
     const initialContent: CodingAssignmentContent = {
       Type: "coding-assignment",
       Version: 1,
+      ExerciseType: "standard-io",
       Environment: {
         Language: "cpp",
         Tools: "clang",
@@ -802,6 +803,7 @@ describe("CodingDefinitionEditor", () => {
     const oversizedContent: CodingAssignmentContent = {
       Type: "coding-assignment",
       Version: 1,
+      ExerciseType: "standard-io",
       Environment: {
         Language: "cpp",
         Tools: "clang",
@@ -843,6 +845,7 @@ describe("CodingDefinitionEditor", () => {
     const initialContent = {
       Type: "coding-assignment",
       Version: 1,
+      ExerciseType: "standard-io",
       Environment: {
         Language: "cpp",
         Tools: "clang",
@@ -896,6 +899,7 @@ describe("CodingDefinitionEditor", () => {
     const malformedContent = {
       Type: "coding-assignment",
       Version: 1,
+      ExerciseType: "standard-io",
       Environment: {
         Language: "cpp",
         Tools: "clang",

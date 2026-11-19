@@ -12,19 +12,22 @@ depende de toolchain congelada, isolamento, limites operacionais, cancelamento
 e um executor confiavel. Fazer o browser produzir a nota oficial ou encaixar
 um worker externo em uma funcao sincrona tornaria o contrato enganoso.
 
-O backend ja preserva as versoes congeladas `1`, `2` e `3` do adapter de code.
-Snapshots que referenciam essas versoes precisam continuar executaveis e nao
-podem ser reinterpretados por um novo contrato TypeScript.
+Coding ainda nao foi lancado e nao possui snapshots oficiais que exijam
+compatibilidade entre implementacoes criadas durante o desenvolvimento. Manter
+varias identidades agora criaria um historico artificial e aumentaria o risco de
+divergencia entre TypeScript, backend e web.
 
 ## Decisao
 
-`@game-guild/grading-adapter-code` e um adapter puro e usa a versao `4` para os
-novos contratos. Ele:
+`@game-guild/grading-adapter-code` e um adapter puro. O dominio de code possui
+um unico contrato canonico com `schemaVersion: 1`; adapter e handler usam a
+primeira identidade efetiva `version: "1"`, e submissions usam o payload schema
+`code-files`. O adapter:
 
 1. projeta o authoring versionado para o snapshot privado de grading;
 2. produz uma delivery learner-safe;
 3. valida e normaliza somente arquivos permitidos da resposta;
-4. recebe um `CodingExecutionReportV1` produzido por executor confiavel no
+4. recebe um `CodingExecutionReport` produzido por executor confiavel no
    servidor;
 5. traduz o report em `GradeResultV1` e evidencia versionada.
 
@@ -37,9 +40,10 @@ ja pode ser atendida mantendo o report como entrada do adapter puro. Uma porta
 generica futura exige outro consumidor real e deve usar somente submission,
 capability, report e cancellation, sem vocabulario de code.
 
-As versoes backend `1`, `2` e `3` permanecem congeladas. A versao `4` nao e
-fallback para snapshots anteriores; sua adocao backend pertence ao plano
-`02-backend-code-adapter-boundary.md`.
+Backend e TypeScript registram somente essa identidade corrente. Versao,
+handler, payload schema ou toolchain desconhecidos falham fechado. Uma versao
+futura exige mudanca real de contrato e dados oficiais que justifiquem sua
+introducao; ela nao deve ser criada preventivamente.
 
 ## Semantica de falha
 
@@ -65,5 +69,5 @@ fallback para snapshots anteriores; sua adocao backend pertence ao plano
 - executar code no browser como autoridade oficial;
 - fazer `evaluateDeterministic` disparar trabalho externo escondido;
 - adicionar uma porta assincrona generica sem segundo consumidor;
-- reutilizar a versao `3` e reinterpretar snapshots congelados;
+- manter adapters paralelos sem snapshot oficial que exija compatibilidade;
 - importar contratos privados do Emception no adapter de grading.

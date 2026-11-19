@@ -700,6 +700,7 @@ public sealed class AssessmentGradingPostgreSqlHttpTests(ApiPostgreSqlFixture fi
 
     private static JsonElement CodeDefinition(string source) => JsonSerializer.SerializeToElement(new CodingAssignmentContent
     {
+        ExerciseType = "standard-io",
         Environment = new CodingEnvironment { Language = "cpp", Tools = "clang" },
         Data = new WorkspaceData { Files = new Dictionary<string, BundleFileMeta>
         {

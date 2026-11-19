@@ -1,44 +1,42 @@
 import type {
   CodingAuthoringDefinition,
-  CodingExecutionReportV1,
+  CodingExecutionReport,
   CodingLearnerDelivery,
-  CodingSubmissionV1,
-  CodingTestOutcomeStateV1,
-  CodingToolchainIdentityV1,
+  CodingSubmission,
+  CodingTestOutcomeState,
+  CodingToolchainIdentity,
 } from '@game-guild/coding';
 import type { AssessmentItemProjectionV1, AssessmentResponseEnvelopeV1, GradeResultV1, ScoreValue } from '@game-guild/grading';
 
 export const CODE_CONTENT_TYPE = 'coding-assignment' as const;
-export const CODE_RESPONSE_PAYLOAD_SCHEMA = 'coding-response/v1' as const;
+export const CODE_RESPONSE_PAYLOAD_SCHEMA = 'code-files' as const;
 export const CODE_ITEM_PROJECTION_SCHEMA_VERSION = 1 as const;
 export const CODE_EXECUTION_EVIDENCE_SCHEMA_VERSION = 1 as const;
 export const CODE_EXECUTION_MODE = 'server-external' as const;
 
-/** Frozen backend adapter versions that remain executable but are not rewritten here. */
-export const FROZEN_CODE_ADAPTER_VERSIONS = ['1', '2', '3'] as const;
 export const CODE_ASSESSMENT_TYPE_ADAPTER = {
   key: 'code-assessment-type',
-  version: '4',
+  version: '1',
 } as const;
 export const CODE_AUTOMATED_REVIEW_HANDLER = {
-  key: 'code-automated-review',
-  version: '4',
+  key: 'code-wasm-review',
+  version: '1',
 } as const;
 
 export const CODE_SUPPORTED_REVIEW_METHODS = ['AutomatedReview', 'InstructorReview'] as const;
 
-export interface CodeGradingItemInputV1 {
+export interface CodeGradingItemInput {
   itemId: string;
   maxScore: ScoreValue;
   definition: CodingAuthoringDefinition;
 }
 
-export interface CodeTestScoreAllocationV1 {
+export interface CodeTestScoreAllocation {
   testId: string;
   maxScore: ScoreValue;
 }
 
-export interface CodeItemProjectionV1 extends AssessmentItemProjectionV1 {
+export interface CodeItemProjection extends AssessmentItemProjectionV1 {
   schemaVersion: typeof CODE_ITEM_PROJECTION_SCHEMA_VERSION;
   itemType: 'code';
   source: {
@@ -46,46 +44,55 @@ export interface CodeItemProjectionV1 extends AssessmentItemProjectionV1 {
     itemId: string;
   };
   definition: CodingAuthoringDefinition;
-  testScoreAllocation: CodeTestScoreAllocationV1[];
+  testScoreAllocation: CodeTestScoreAllocation[];
 }
 
-export interface CodeLearnerDeliveryItemV1 {
+export interface CodeLearnerDeliveryItem {
   itemId: string;
   definition: CodingLearnerDelivery;
 }
 
-export interface CodeSubmissionPayloadV1 {
-  submission: CodingSubmissionV1;
+export interface CodeResponseFile {
+  content: string;
+  encoding: 'text';
 }
 
-export type CodeSubmissionEnvelopeV1 = AssessmentResponseEnvelopeV1<CodeSubmissionPayloadV1> & {
+export interface CodeResponsePayload {
+  files: Record<string, CodeResponseFile>;
+}
+
+export interface CodeSubmissionPayload {
+  submission: CodingSubmission;
+}
+
+export type CodeSubmissionEnvelope = AssessmentResponseEnvelopeV1<CodeResponsePayload> & {
   contentType: typeof CODE_CONTENT_TYPE;
   payloadSchema: typeof CODE_RESPONSE_PAYLOAD_SCHEMA;
 };
 
-export interface CodeExecutionEvidenceTestV1 {
+export interface CodeExecutionEvidenceTest {
   testId: string;
-  state: CodingTestOutcomeStateV1;
+  state: CodingTestOutcomeState;
   awardedScore: ScoreValue | null;
   maxScore: ScoreValue;
   evidenceRef?: string;
 }
 
-export interface CodeExecutionEvidenceV1 {
+export interface CodeExecutionEvidence {
   schemaVersion: typeof CODE_EXECUTION_EVIDENCE_SCHEMA_VERSION;
   kind: 'code-execution-report';
   evidenceId: string;
   reportId: string;
-  executionState: CodingExecutionReportV1['executionState'];
-  toolchain: CodingToolchainIdentityV1;
+  executionState: CodingExecutionReport['executionState'];
+  toolchain: CodingToolchainIdentity;
   receiptHash?: string;
-  tests: CodeExecutionEvidenceTestV1[];
+  tests: CodeExecutionEvidenceTest[];
   failureCode?: string;
 }
 
-export interface CodeGradeMappingV1 {
+export interface CodeGradeMapping {
   result: GradeResultV1;
-  evidence: CodeExecutionEvidenceV1;
+  evidence: CodeExecutionEvidence;
 }
 
-export type CodeReviewCapabilityV1 = 'automated-review-after-trusted-execution' | 'instructor-review' | 'unsupported';
+export type CodeReviewCapability = 'automated-review-after-trusted-execution' | 'instructor-review' | 'unsupported';

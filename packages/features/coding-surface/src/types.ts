@@ -1,8 +1,8 @@
 import type {
-  CodingAuthoringDefinitionV2,
-  CodingExerciseTypeV2,
-  CodingLearnerDeliveryV2,
-  CodingSubmissionV1,
+  CodingAuthoringDefinition,
+  CodingExerciseType,
+  CodingLearnerDelivery,
+  CodingSubmission,
 } from '@game-guild/coding';
 import type { IdeController, IdeExtension, WorkspaceConfig } from '@gameguild/emception-ide';
 import type { TestReport } from 'emception';
@@ -11,7 +11,7 @@ import type { ComponentType, ReactNode } from 'react';
 
 export type CodingSurfaceMode = 'author' | 'author-test' | 'learner' | 'grader';
 export type CodingSurfaceStatus = 'ready' | 'loading' | 'empty' | 'error' | 'unavailable';
-export type CodingSurfaceDefinition = CodingAuthoringDefinitionV2 | CodingLearnerDeliveryV2;
+export type CodingSurfaceDefinition = CodingAuthoringDefinition | CodingLearnerDelivery;
 
 export interface CodingPreviewResult {
   readonly scope: 'public' | 'full';
@@ -21,7 +21,7 @@ export interface CodingPreviewResult {
 }
 
 export interface CodingSurfaceProfile {
-  readonly type: CodingExerciseTypeV2;
+  readonly type: CodingExerciseType;
   readonly label: string;
   readonly description: string;
   readonly capabilities: {
@@ -35,11 +35,11 @@ export interface CodingSurfaceProfile {
 }
 
 export interface CodingFullProfileRendererProps {
-  readonly definition: CodingAuthoringDefinitionV2;
+  readonly definition: CodingAuthoringDefinition;
 }
 
 export interface CodingLearnerProfileRendererProps {
-  readonly definition: CodingLearnerDeliveryV2;
+  readonly definition: CodingLearnerDelivery;
 }
 
 export interface CodingSurfaceProfileRenderers {
@@ -69,24 +69,24 @@ interface CodingSurfaceCommonProps {
 
 export interface CodingAuthorSurfaceProps extends CodingSurfaceCommonProps {
   readonly mode: 'author';
-  readonly definition: CodingAuthoringDefinitionV2;
-  readonly onDefinitionChange?: (definition: CodingAuthoringDefinitionV2) => void;
+  readonly definition: CodingAuthoringDefinition;
+  readonly onDefinitionChange?: (definition: CodingAuthoringDefinition) => void;
 }
 
 export interface CodingAuthorTestSurfaceProps extends CodingSurfaceCommonProps {
   readonly mode: 'author-test';
-  readonly definition: CodingAuthoringDefinitionV2;
+  readonly definition: CodingAuthoringDefinition;
 }
 
 export interface CodingLearnerSurfaceProps extends CodingSurfaceCommonProps {
   readonly mode: 'learner';
-  readonly definition: CodingLearnerDeliveryV2;
-  readonly onSubmit?: (submission: CodingSubmissionV1) => void | Promise<void>;
+  readonly definition: CodingLearnerDelivery;
+  readonly onSubmit?: (submission: CodingSubmission) => void | Promise<void>;
 }
 
 export interface CodingGraderSurfaceProps extends CodingSurfaceCommonProps {
   readonly mode: 'grader';
-  readonly definition: CodingAuthoringDefinitionV2;
+  readonly definition: CodingAuthoringDefinition;
   readonly onReviewDecision?: (decision: 'approve' | 'request-changes') => void;
 }
 
@@ -100,5 +100,5 @@ export interface CodingSurfaceSession {
   readonly status: 'ready' | 'running' | 'failed';
   readonly result: CodingPreviewResult | null;
   run(options?: { readonly signal?: AbortSignal }): Promise<CodingPreviewResult>;
-  getSubmission(): Promise<CodingSubmissionV1>;
+  getSubmission(): Promise<CodingSubmission>;
 }

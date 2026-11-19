@@ -1,7 +1,5 @@
 export const CODING_AUTHORING_SCHEMA_VERSION = 1 as const;
 export const CODING_DELIVERY_SCHEMA_VERSION = 1 as const;
-export const CODING_AUTHORING_SCHEMA_VERSION_V2 = 2 as const;
-export const CODING_DELIVERY_SCHEMA_VERSION_V2 = 2 as const;
 export const CODING_SUBMISSION_SCHEMA_VERSION = 1 as const;
 export const CODING_EXECUTION_REPORT_SCHEMA_VERSION = 1 as const;
 export const CODING_CONTENT_TYPE = 'coding-assignment' as const;
@@ -14,50 +12,53 @@ export const MAX_CODING_FILE_CONTENT_BYTES = 2_000_000;
 export const MAX_CODING_DEFINITION_BYTES = 10_000_000;
 export const MAX_CODING_SUBMISSION_BYTES = 2_000_000;
 
-export type CodingFileEncodingV1 = 'text' | 'base64';
-export type CodingVisibilityV1 = 'public' | 'private';
-export type CodingScalarTypeV1 = 'string' | 'boolean' | 'integer' | 'float';
-export type CodingExerciseTypeV2 = 'function' | 'standard-io';
+export type CodingFileEncoding = 'text' | 'base64';
+export type CodingVisibility = 'public' | 'private';
+export type CodingScalarType = 'string' | 'boolean' | 'integer' | 'float';
+export type CodingExerciseType = 'function' | 'standard-io';
 
-export interface CodingToolchainIdentityV1 {
+export interface CodingToolchainIdentity {
   key: string;
   version: string;
   runtimeAbi: string;
   artifactDigest: `sha256:${string}`;
 }
 
-export interface CodingAuthoringFileV1 {
+export interface CodingAuthoringFile {
   id: string;
   path: string;
-  encoding: CodingFileEncodingV1;
+  encoding: CodingFileEncoding;
   content: string;
   mutable: boolean;
-  visibility: CodingVisibilityV1;
+  visibility: CodingVisibility;
 }
 
-export interface CodingLimitsV1 {
+export interface CodingLimits {
   timeLimitMs: number;
   memoryLimitBytes: number;
   outputLimitBytes: number;
   maxFileCount: number;
 }
 
-export interface CodingEntryPointV1 {
+export interface CodingEntryPoint {
   path: string;
   symbol?: string;
 }
 
-export type CodingScalarValueV1 =
-  { type: 'string'; value: string } | { type: 'boolean'; value: boolean } | { type: 'integer'; value: number } | { type: 'float'; value: string };
+export type CodingScalarValue =
+  | { type: 'string'; value: string }
+  | { type: 'boolean'; value: boolean }
+  | { type: 'integer'; value: number }
+  | { type: 'float'; value: string };
 
-interface CodingTestBaseV1 {
+interface CodingTestBase {
   id: string;
   name?: string;
-  visibility: CodingVisibilityV1;
+  visibility: CodingVisibility;
   weightUnits: number;
 }
 
-export interface CodingStdioTestV1 extends CodingTestBaseV1 {
+export interface CodingStdioTest extends CodingTestBase {
   kind: 'stdio';
   stdin: string;
   expected: {
@@ -67,108 +68,93 @@ export interface CodingStdioTestV1 extends CodingTestBaseV1 {
   };
 }
 
-export interface CodingFunctionParameterV1 {
+export interface CodingFunctionParameter {
   name: string;
-  type: CodingScalarTypeV1;
+  type: CodingScalarType;
 }
 
-export interface CodingFunctionTestCaseV1 {
+export interface CodingFunctionTestCase {
   id: string;
-  inputs: CodingScalarValueV1[];
-  expected: CodingScalarValueV1;
+  inputs: CodingScalarValue[];
+  expected: CodingScalarValue;
 }
 
-export interface CodingFunctionTestV1 extends CodingTestBaseV1 {
+export interface CodingFunctionTest extends CodingTestBase {
   kind: 'function';
   function: {
     name: string;
-    parameters: CodingFunctionParameterV1[];
-    returnType: CodingScalarTypeV1;
+    parameters: CodingFunctionParameter[];
+    returnType: CodingScalarType;
   };
-  cases: CodingFunctionTestCaseV1[];
+  cases: CodingFunctionTestCase[];
 }
 
-export type CodingTestV1 = CodingStdioTestV1 | CodingFunctionTestV1;
+export type CodingTest = CodingStdioTest | CodingFunctionTest;
 
-export interface CodingAuthoringDefinitionV1 {
+export interface CodingAuthoringDefinition {
   schemaVersion: typeof CODING_AUTHORING_SCHEMA_VERSION;
   type: typeof CODING_CONTENT_TYPE;
-  toolchain: CodingToolchainIdentityV1;
-  files: CodingAuthoringFileV1[];
-  tests: CodingTestV1[];
-  limits: CodingLimitsV1;
-  entryPoint: CodingEntryPointV1;
+  exerciseType: CodingExerciseType;
+  toolchain: CodingToolchainIdentity;
+  files: CodingAuthoringFile[];
+  tests: CodingTest[];
+  limits: CodingLimits;
+  entryPoint: CodingEntryPoint;
   allowLearnerCreatedFiles: boolean;
 }
 
-/**
- * Current authoring contract. V1 remains parseable for frozen adapter
- * snapshots; V2 adds the product experience as an explicit independent axis.
- */
-export interface CodingAuthoringDefinitionV2 extends Omit<CodingAuthoringDefinitionV1, 'schemaVersion'> {
-  schemaVersion: typeof CODING_AUTHORING_SCHEMA_VERSION_V2;
-  exerciseType: CodingExerciseTypeV2;
-}
-
-export interface CodingLearnerFileV1 {
+export interface CodingLearnerFile {
   id: string;
   path: string;
-  encoding: CodingFileEncodingV1;
+  encoding: CodingFileEncoding;
   content: string;
   mutable: boolean;
 }
 
-export type CodingLearnerTestV1 = Omit<CodingStdioTestV1, 'visibility'> | Omit<CodingFunctionTestV1, 'visibility'>;
+export type CodingLearnerTest = Omit<CodingStdioTest, 'visibility'> | Omit<CodingFunctionTest, 'visibility'>;
 
-export interface CodingLearnerDeliveryV1 {
+export interface CodingLearnerDelivery {
   schemaVersion: typeof CODING_DELIVERY_SCHEMA_VERSION;
   type: typeof CODING_CONTENT_TYPE;
-  toolchain: CodingToolchainIdentityV1;
-  files: CodingLearnerFileV1[];
-  publicTests: CodingLearnerTestV1[];
-  limits: CodingLimitsV1;
-  entryPoint: CodingEntryPointV1;
+  exerciseType: CodingExerciseType;
+  toolchain: CodingToolchainIdentity;
+  files: CodingLearnerFile[];
+  publicTests: CodingLearnerTest[];
+  limits: CodingLimits;
+  entryPoint: CodingEntryPoint;
   allowLearnerCreatedFiles: boolean;
 }
 
-export interface CodingLearnerDeliveryV2 extends Omit<CodingLearnerDeliveryV1, 'schemaVersion'> {
-  schemaVersion: typeof CODING_DELIVERY_SCHEMA_VERSION_V2;
-  exerciseType: CodingExerciseTypeV2;
-}
-
-export type CodingAuthoringDefinition = CodingAuthoringDefinitionV1 | CodingAuthoringDefinitionV2;
-export type CodingLearnerDelivery = CodingLearnerDeliveryV1 | CodingLearnerDeliveryV2;
-
-export interface CodingSubmissionFileV1 {
+export interface CodingSubmissionFile {
   fileId: string;
   path: string;
   encoding: 'text';
   content: string;
 }
 
-export interface CodingSubmissionV1 {
+export interface CodingSubmission {
   schemaVersion: typeof CODING_SUBMISSION_SCHEMA_VERSION;
-  files: CodingSubmissionFileV1[];
+  files: CodingSubmissionFile[];
 }
 
-export type CodingExecutionStateV1 = 'completed' | 'partial' | 'executor-error' | 'cancelled' | 'timed-out';
+export type CodingExecutionState = 'completed' | 'partial' | 'executor-error' | 'cancelled' | 'timed-out';
 
-export type CodingTestOutcomeStateV1 = 'passed' | 'failed' | 'error' | 'not-run';
+export type CodingTestOutcomeState = 'passed' | 'failed' | 'error' | 'not-run';
 
-export interface CodingTestOutcomeV1 {
+export interface CodingTestOutcome {
   testId: string;
-  state: CodingTestOutcomeStateV1;
+  state: CodingTestOutcomeState;
   durationMs: number;
   evidenceRef?: string;
   feedback?: string;
 }
 
-export interface CodingExecutionReportV1 {
+export interface CodingExecutionReport {
   schemaVersion: typeof CODING_EXECUTION_REPORT_SCHEMA_VERSION;
   reportId: string;
-  executionState: CodingExecutionStateV1;
-  toolchain: CodingToolchainIdentityV1;
+  executionState: CodingExecutionState;
+  toolchain: CodingToolchainIdentity;
   receiptHash?: string;
-  outcomes: CodingTestOutcomeV1[];
+  outcomes: CodingTestOutcome[];
   failureCode?: string;
 }

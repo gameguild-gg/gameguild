@@ -11,9 +11,7 @@ export function readCodeRuntimeDefinition(
     throw new Error('The Code attempt has an invalid delivery.');
   }
   const item = delivery.items.code;
-  // Retained V1/V2 and current V3 use content Version 1; executable identities differ.
-  if (!item || item.adapterKey !== 'code-assessment-type' ||
-      (item.adapterVersion !== '1' && item.adapterVersion !== '2' && item.adapterVersion !== '3')) {
+  if (!item || item.adapterKey !== 'code-assessment-type' || item.adapterVersion !== '1') {
     throw new Error('The Code attempt requires an unavailable adapter version.');
   }
   const payload = item.learnerPayload as { definition?: CodingAssignmentContent };
@@ -21,6 +19,7 @@ export function readCodeRuntimeDefinition(
     ? submission.execution.instructorVisibleContent as CodingAssignmentContent | null | undefined
     : payload.definition;
   if (!definition || definition.Type !== 'coding-assignment' || definition.Version !== 1 ||
+      (definition.ExerciseType !== 'function' && definition.ExerciseType !== 'standard-io') ||
       !definition.Environment || !definition.Data?.Files || !definition.Tests || !definition.Grading) {
     throw new Error('The frozen Code definition is unavailable.');
   }

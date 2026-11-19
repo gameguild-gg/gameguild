@@ -65,6 +65,7 @@ const functionalTestGroup: FunctionalTestGroup = {
 const fullContent: CodingAssignmentContent = {
   Type: 'coding-assignment',
   Version: 1,
+  ExerciseType: 'standard-io',
   Environment: {
     Language: 'cpp',
     Tools: 'clang',
@@ -252,6 +253,9 @@ describe('coding-assignment type guards', () => {
     expect(
       narrowCodingAssignmentContent({ ...fullContent, Tests: undefined }),
     ).toBeNull();
+    expect(
+      narrowCodingAssignmentContent({ ...fullContent, ExerciseType: undefined }),
+    ).toBeNull();
     // unknown garbage
     expect(narrowCodingAssignmentContent(null)).toBeNull();
     expect(narrowCodingAssignmentContent(42)).toBeNull();
@@ -281,6 +285,7 @@ describe('coding-assignment type guards', () => {
 const camelCaseWirePayload = {
   type: 'coding-assignment',
   version: 1,
+  exerciseType: 'standard-io',
   environment: {
     language: 'cpp',
     tools: 'clang',
@@ -377,6 +382,7 @@ describe('narrowCodingAssignmentContent wire-casing normalization', () => {
     const payloadWithPascalEnums = {
       type: 'coding-assignment',
       version: 1,
+      exerciseType: 'function',
       environment: {
         language: 'cpp',
         tools: 'clang',

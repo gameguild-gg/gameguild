@@ -63,6 +63,7 @@ function assignment(language: string | undefined = "cpp") {
   return {
     Type: 'coding-assignment',
     Version: 1,
+    ExerciseType: 'standard-io',
     Environment: { Language: language },
     Data: { Files: {} },
     Tests: { Public: [], Private: [] },
@@ -115,8 +116,8 @@ describe("CodingActivityClient", () => {
     mocks.storageKey.mockImplementation((scope) => JSON.stringify(scope));
     mocks.toDelivery.mockImplementation((content) => ({
       ...content,
-      schemaVersion: 2,
-      exerciseType: content.ExerciseType ?? "standard-io",
+      schemaVersion: 1,
+      exerciseType: content.ExerciseType,
       publicTests: content.Tests.Public,
     }));
     mocks.toFileRecord.mockImplementation((submission) => Object.fromEntries(
@@ -229,7 +230,7 @@ describe("CodingActivityClient", () => {
     expect(session.getSubmission).toHaveBeenCalledOnce();
     expect(mocks.toFileRecord).toHaveBeenCalledWith(submission);
     expect(mocks.submit).toHaveBeenCalledWith('official-submission-1', {
-      schemaVersion: 1, contentType: 'coding-assignment', payloadSchema: 'code-files/v1',
+      schemaVersion: 1, contentType: 'coding-assignment', payloadSchema: 'code-files',
       payload: { files: { 'main.cpp': { content: 'int main(){}', encoding: 'text' } } },
     }, expect.any(String));
     expect(mocks.push).toHaveBeenCalledWith(
@@ -265,7 +266,8 @@ describe("CodingActivityClient", () => {
     expect(mocks.start).toHaveBeenCalledWith('assessment-1', 'enrollment-1', expect.any(String));
   });
 
-  it.each(['1', '2', '3'])('uses the frozen official definition instead of the current authoring draft for adapter %s', async (adapterVersion) => {
+  it('uses the frozen official definition instead of the current authoring draft', async () => {
+    const adapterVersion = '1';
     const frozen = assignment();
     frozen.Grading.MaxScore = 80;
     mocks.start.mockResolvedValue({ success: true, data: {
@@ -282,7 +284,7 @@ describe("CodingActivityClient", () => {
     mocks.start.mockResolvedValue({ success: true, data: {
       submissionId: 'official-submission-1',
       execution: { delivery: { itemOrder: ['code'], items: { code: {
-        adapterKey: 'code-assessment-type', adapterVersion: '4', learnerPayload: { definition: assignment() },
+        adapterKey: 'code-assessment-type', adapterVersion: '2', learnerPayload: { definition: assignment() },
       } } } },
     } });
     renderActivity();

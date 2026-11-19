@@ -14,8 +14,10 @@ namespace GameGuild.API.UnitTests.Database;
 [Collection(PostgreSqlTestCollection.Name)]
 public sealed class CodingAssignmentJsonBodyMigrationTests
 {
-    // v1 DTOs serialize PascalCase (per Learning.Courses convention — no naming policy).
-    private static readonly JsonSerializerOptions s_v1Default = new() { WriteIndented = false };
+    // The historical migration serialized PascalCase before ExerciseType became
+    // mandatory. Read its immutable output through a test-owned snapshot rather
+    // than weakening the current authoring contract.
+    private static readonly JsonSerializerOptions s_historicalV1Default = new() { WriteIndented = false };
 
     [Fact]
     public async Task Up_BackfillsV2CodingDefinition_AsV1CodingAssignmentContent()
@@ -303,11 +305,21 @@ public sealed class CodingAssignmentJsonBodyMigrationTests
         }
     }
 
-    private static async Task<CodingAssignmentContent> ReadV1ContentAsync(NpgsqlConnection connection, Guid contentId)
+    private static async Task<HistoricalCodingAssignmentContent> ReadV1ContentAsync(NpgsqlConnection connection, Guid contentId)
     {
         var raw = await ReadJsonBodyRawAsync(connection, contentId);
         raw.Should().NotBeNull("backfill must populate JsonBody for v2 coding assessments");
-        return JsonSerializer.Deserialize<CodingAssignmentContent>(raw!, s_v1Default)!;
+        return JsonSerializer.Deserialize<HistoricalCodingAssignmentContent>(raw!, s_historicalV1Default)!;
+    }
+
+    private sealed record HistoricalCodingAssignmentContent
+    {
+        public required string Type { get; init; }
+        public required int Version { get; init; }
+        public required CodingEnvironment Environment { get; init; }
+        public required WorkspaceData Data { get; init; }
+        public required TestSuite Tests { get; init; }
+        public required GradingConfig Grading { get; init; }
     }
 
     private static async Task<string?> ReadJsonBodyRawAsync(NpgsqlConnection connection, Guid contentId)

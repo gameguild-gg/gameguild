@@ -1,7 +1,7 @@
 import type {
-  CodingAuthoringDefinitionV2,
-  CodingLearnerTestV1,
-  CodingTestV1,
+  CodingAuthoringDefinition,
+  CodingLearnerTest,
+  CodingTest,
 } from '@game-guild/coding';
 import type {
   CodingFullProfileRendererProps,
@@ -125,7 +125,7 @@ function ProfileBand({
 }
 
 function functionSignature(
-  tests: readonly (CodingTestV1 | CodingLearnerTestV1)[],
+  tests: readonly (CodingTest | CodingLearnerTest)[],
   fallbackSymbol: string | undefined,
 ): string {
   const test = tests.find((candidate) => candidate.kind === 'function');
@@ -137,7 +137,7 @@ function functionSignature(
 }
 
 function fullTestSummary(
-  definition: CodingAuthoringDefinitionV2,
+  definition: CodingAuthoringDefinition,
   kind: 'function' | 'stdio',
 ): string {
   const matching = definition.tests.filter((test) => test.kind === kind);
@@ -147,7 +147,7 @@ function fullTestSummary(
 }
 
 function countTests(
-  tests: readonly CodingLearnerTestV1[],
+  tests: readonly CodingLearnerTest[],
   kind: 'function' | 'stdio',
 ): number {
   return tests.filter((test) => test.kind === kind).length;

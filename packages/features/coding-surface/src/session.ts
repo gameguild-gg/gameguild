@@ -2,8 +2,8 @@ import {
   CODING_SUBMISSION_SCHEMA_VERSION,
   normalizeCodingPath,
   parseCodingSubmission,
-  type CodingAuthoringDefinitionV2,
-  type CodingLearnerDeliveryV2,
+  type CodingAuthoringDefinition,
+  type CodingLearnerDelivery,
 } from '@game-guild/coding';
 import type { IdeController, WorkspaceFile } from '@gameguild/emception-ide';
 import { computeScore, withWorkspaceOverlay } from 'emception/testing';
@@ -17,7 +17,7 @@ export interface CreateCodingSurfaceSessionOptions {
       readonly runTests: IdeController['api']['runTests'];
     };
   };
-  readonly definition: CodingAuthoringDefinitionV2 | CodingLearnerDeliveryV2;
+  readonly definition: CodingAuthoringDefinition | CodingLearnerDelivery;
   readonly mode: CodingSurfaceMode;
   readonly maxScore?: number;
   readonly passingScore?: number;

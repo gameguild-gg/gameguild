@@ -25,7 +25,7 @@ public sealed class CodeAdapterArchitectureTests
     }
 
     [Fact]
-    public void Module_RegistersEachFrozenVersionExactlyOnce()
+    public void Module_RegistersTheCanonicalVersionExactlyOnce()
     {
         var services = new ServiceCollection();
         services.AddAssessmentsModule();
@@ -41,47 +41,33 @@ public sealed class CodeAdapterArchitectureTests
             .OrderBy(handler => handler.Version)
             .ToArray();
 
-        adapters.Select(adapter => adapter.Version).Should().Equal("1", "2", "3");
-        handlers.Select(handler => handler.Version).Should().Equal("1", "2", "3");
-        adapters.Should().ContainSingle(adapter => adapter.IsCurrentForAuthoring && adapter.Version == "3");
+        adapters.Select(adapter => adapter.Version).Should().Equal(CodeAssessmentContracts.Version);
+        handlers.Select(handler => handler.Version).Should().Equal(CodeAssessmentContracts.Version);
+        adapters.Should().ContainSingle(adapter => adapter.IsCurrentForAuthoring);
     }
 
     [Fact]
-    public void FrozenBackendFixture_MatchesRegisteredToolchainIdentities()
+    public void CanonicalFixture_MatchesTheRegisteredToolchainIdentity()
     {
-        using var document = ReadFixture("GameGuild.Coding.Fixtures.code-adapter-cases-v1.json");
-        var frozen = document.RootElement.GetProperty("frozenBackendAdapters").EnumerateArray().ToArray();
+        using var document = ReadFixture("GameGuild.Coding.Fixtures.coding-contract-cases.json");
+        var toolchain = document.RootElement.GetProperty("authoring").GetProperty("toolchain");
+        var identity = CodeToolchainIdentity.Current;
 
-        frozen.Select(value => value.GetProperty("version").GetString()).Should().Equal("1", "2", "3");
-        foreach (var entry in frozen)
-        {
-            var version = entry.GetProperty("version").GetString()!;
-            var identity = CodeToolchainIdentity.ForAdapterVersion(version);
-            entry.GetProperty("runtimeAbi").GetString().Should().Be(identity.RuntimeAbi);
-            entry.GetProperty("toolchainLockHash").GetString().Should().Be(identity.ToolchainLockHash);
-            if (entry.TryGetProperty("artifactVersion", out var artifactVersion))
-            {
-                artifactVersion.GetString().Should().Be(identity.ArtifactVersion);
-            }
-            else
-            {
-                entry.GetProperty("artifactVersions").EnumerateArray()
-                    .Select(value => value.GetString())
-                    .Should().Contain(identity.ArtifactVersion);
-            }
-        }
+        toolchain.GetProperty("version").GetString().Should().Be(identity.ArtifactVersion);
+        toolchain.GetProperty("runtimeAbi").GetString().Should().Be(identity.RuntimeAbi);
+        toolchain.GetProperty("artifactDigest").GetString().Should().Be("sha256:" + identity.ToolchainLockHash);
     }
 
     [Fact]
-    public void VersionFourFixture_RemainsIndependentFromFrozenBackendSnapshots()
+    public void CanonicalContractRejectsAnyOtherAdapterVersion()
     {
-        using var document = ReadFixture("GameGuild.Coding.Fixtures.coding-contract-cases-v1.json");
+        using var document = ReadFixture("GameGuild.Coding.Fixtures.coding-contract-cases.json");
         var authoring = document.RootElement.GetProperty("authoring");
 
         authoring.GetProperty("schemaVersion").GetInt32().Should().Be(1);
         authoring.GetProperty("type").GetString().Should().Be(CodeAssessmentContracts.ContentType);
-        CodeAssessmentContracts.IsSupportedVersion("4").Should().BeFalse(
-            "the TypeScript v4 contract must not reinterpret frozen backend snapshots");
+        CodeAssessmentContracts.IsSupportedVersion("1").Should().BeTrue();
+        CodeAssessmentContracts.IsSupportedVersion("2").Should().BeFalse();
     }
 
     private static JsonDocument ReadFixture(string name)

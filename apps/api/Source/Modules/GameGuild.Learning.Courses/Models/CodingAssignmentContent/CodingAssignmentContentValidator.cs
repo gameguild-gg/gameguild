@@ -43,6 +43,10 @@ public sealed class CodingAssignmentContentValidator : AbstractValidator<CodingA
             .Equal(1).WithErrorCode("invalid_version");
 
         RuleFor(x => x.ExerciseType)
+            .Cascade(CascadeMode.Stop)
+            .NotEmpty()
+            .WithMessage("ExerciseType is required")
+            .WithErrorCode("exercise_type_required")
             .Must(type => s_validExerciseTypes.Contains(type ?? string.Empty))
             .WithMessage("ExerciseType must be one of: function, standard-io")
             .WithErrorCode("invalid_exercise_type");

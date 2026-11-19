@@ -128,6 +128,7 @@ function makeAssignment() {
   return {
     Type: 'coding-assignment',
     Version: 1,
+    ExerciseType: 'standard-io',
     Environment: {
       Language: 'cpp',
       Tools: '',

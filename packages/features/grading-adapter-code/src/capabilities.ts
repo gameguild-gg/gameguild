@@ -1,9 +1,9 @@
 import type { AssessmentReviewMethod, IReviewCapabilityRegistry, ReviewExecutionContext } from '@game-guild/grading';
-import { CODE_ASSESSMENT_TYPE_ADAPTER, CODE_AUTOMATED_REVIEW_HANDLER, type CodeReviewCapabilityV1 } from './contracts';
+import { CODE_ASSESSMENT_TYPE_ADAPTER, CODE_AUTOMATED_REVIEW_HANDLER, type CodeReviewCapability } from './contracts';
 
 const DEFAULT_CONTEXTS = ['author-test', 'official-submission'] as const satisfies readonly ReviewExecutionContext[];
 
-export function classifyCodeReviewCapability(method: AssessmentReviewMethod): CodeReviewCapabilityV1 {
+export function classifyCodeReviewCapability(method: AssessmentReviewMethod): CodeReviewCapability {
   if (method === 'AutomatedReview') return 'automated-review-after-trusted-execution';
   if (method === 'InstructorReview') return 'instructor-review';
   return 'unsupported';

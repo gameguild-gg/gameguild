@@ -1,6 +1,6 @@
 # Parte 2. Fronteira backend do adapter de code
 
-Status: implementado em 2026-11-18; validacao dirigida concluida.
+Status: implementado em 2026-11-18; identidade canonicalizada em 2026-11-19.
 
 ## Objetivo
 
@@ -35,7 +35,7 @@ deve depender do modulo separado.
 - contratos e extension points genericos necessarios no core;
 - adapter, worker, review handler, rubric e participants de code no novo modulo;
 - registro no composition root da API;
-- preservacao das versoes congeladas de adapter e handler;
+- uma unica identidade corrente de adapter e handler, resolvida fail-closed;
 - testes de contrato, seguranca, publicacao, execucao e arquitetura.
 
 ## Fora do escopo
@@ -70,12 +70,12 @@ flowchart LR
 O host conhece modulos concretos para compor o produto. O core resolve adapters
 e stages por registry, chave e versao; ele nao usa `if (contentType == code)`.
 
-## Regras de compatibilidade
+## Regras de identidade e historico
 
-- versoes de adapter/handler ja gravadas continuam resolviveis;
-- a versao atual de autoria e unica, mas versoes `1`, `2` e `3` congeladas nao
-  sao reescritas retroativamente;
-- manifests, snapshots e evidencias existentes preservam chaves e semantica;
+- adapter e handler de code possuem somente a identidade corrente `"1"`;
+- versoes desconhecidas sao rejeitadas e nao recebem fallback;
+- o contrato foi consolidado antes do lancamento, sem snapshot oficial que
+  exija manter variantes criadas durante o desenvolvimento;
 - a mudanca de assembly nao muda o contrato persistido por conveniencia;
 - nao existe dual registration ambigua entre o modulo antigo e o novo;
 - dead letter, retry e replay do academic outbox permanecem implementacoes
@@ -91,7 +91,8 @@ e stages por registry, chave e versao; ele nao usa `if (contentType == code)`.
 Implementacao:
 
 - mapear todos os tipos sob `Grading/Code` e seus consumidores;
-- registrar testes por versao de adapter, publicacao, delete, rubric e worker;
+- registrar testes da identidade corrente, rejeicao de versao desconhecida,
+  publicacao, delete, rubric e worker;
 - criar testes de arquitetura que hoje detectem referencias de code no core;
 - capturar fixtures de authoring, delivery, response e grade result;
 - caracterizar enqueue, retry, dead letter e replay dos eventos academicos
@@ -102,7 +103,8 @@ Gate:
 
 - o corte de assembly esta provado como seguro para dados persistidos;
 - toda referencia direta possui destino definido;
-- comportamento de versoes congeladas tem teste antes da movimentacao.
+- a identidade corrente e a rejeicao de versao desconhecida possuem testes
+  antes da movimentacao.
 
 ### `CODE-BE-02`. Criar extension points estritamente genericos
 
@@ -179,7 +181,8 @@ Implementacao:
 Gate:
 
 - uma busca no core generico nao encontra vocabulario ou namespaces de code;
-- todas as versoes congeladas resolvem pelo novo modulo;
+- a identidade corrente resolve pelo novo modulo e qualquer outra falha
+  fechado;
 - quiz e outros adapters continuam passando sem alteracao comportamental;
 - retry, dead letter e replay continuam operacionais para eventos de code pelo
   servico generico existente.
@@ -194,7 +197,7 @@ fase e produzir uma proposta separada contendo:
 - entidade, coluna, indice e constraints afetados;
 - migration incremental;
 - teste de banco vazio e upgrade com historico;
-- impacto em rollback, manifests e versoes congeladas.
+- impacto em rollback, manifests e identidades persistidas.
 
 Nao atualizar snapshot EF nem apagar migration para simplificar o corte.
 
@@ -218,7 +221,7 @@ autorizado sem criar infraestrutura paralela no adapter.
 
 - code vive em modulo adapter separado;
 - o core nao conhece tipos concretos de coding;
-- host composition e registry resolvem todas as versoes necessarias;
+- host composition e registry resolvem exatamente a identidade corrente;
 - worker continua autoritativo e fail-closed;
 - publicacao, delete, rubric e instructor review mantem comportamento;
 - academic outbox, dead letter e replay permanecem genericos e funcionais;
@@ -229,16 +232,15 @@ autorizado sem criar infraestrutura paralela no adapter.
 
 | Etapa | Estado | Evidencia |
 | --- | --- | --- |
-| `CODE-BE-01` | concluida | testes historicos de adapter, worker, rubric, publication/delete e fixtures foram movidos para o projeto proprio do adapter |
+| `CODE-BE-01` | concluida | testes de adapter, worker, rubric, publication/delete e fixtures foram movidos para o projeto proprio do adapter |
 | `CODE-BE-02` | concluida | core recebeu portas genericas de authoring, payload e instructor review; registros duplicados falham fechado |
 | `CODE-BE-03` | concluida | criado `GameGuild.Learning.Assessments.CodeAdapter`, referenciado pelo host e pela solution somente na direcao adapter para core |
-| `CODE-BE-04` | concluida | limites, redaction, timeout, cancelamento, versoes congeladas e execucao autoritativa permanecem cobertos pelos testes do adapter e de integracao |
+| `CODE-BE-04` | concluida | limites, redaction, timeout, cancelamento, rejeicao de identidade desconhecida e execucao autoritativa permanecem cobertos pelos testes do adapter e de integracao |
 | `CODE-BE-05` | concluida | registros concretos sairam de `AssessmentsModule`; o core nao importa namespace ou implementacao de code |
 
-O corte preservou `code-assessment-type` e `code-wasm-review` nas versoes
-backend `1`, `2` e `3`; somente a versao `3` permanece atual para autoria. A
-fixture TypeScript da versao `4` continua independente e nao reinterpreta
-snapshots backend congelados.
+O corte preserva as chaves `code-assessment-type` e `code-wasm-review` com a
+identidade canonica backend e TypeScript `version: "1"`. O payload schema e
+`code-files`; outra versao, handler, payload schema ou toolchain e rejeitado.
 
 `SubmissionModality.Code` e o campo persistido `CodePayload` permanecem no
 contrato generico de modalidades de submission, ao lado de text, file, URL,
@@ -249,7 +251,7 @@ corte, portanto ficou corretamente fora do `SCHEMA-GATE`.
 Validacoes executadas:
 
 ```text
-CodeAdapter.UnitTests: 92 aprovados
+CodeAdapter.UnitTests: 72 aprovados apos a consolidacao canonica
 Assessments.UnitTests: 453 aprovados
 API.UnitTests: 1.882 aprovados
 API.IntegrationTests filtrados por Assessment: 25 aprovados
@@ -261,7 +263,6 @@ As integracoes utilizaram um certificado de Data Protection efemero, exportado
 somente para o processo de teste. Sem as duas variaveis de certificado, o host
 falha fechado antes de iniciar os cenarios, conforme sua politica de seguranca.
 
-O build integral da solution foi concluido com `-m:1`, node reuse e shared
-compilation desativados, com afinidade limitada a 10 das 12 CPUs disponiveis.
-O resultado foi `0 warnings` e `0 errors` em 10m59s. Nenhuma migration,
-snapshot EF ou fonte sob Emception foi alterada.
+O build integral da solution foi repetido apos a consolidacao com `-m:2` e
+warnings tratados como erros. O resultado foi `0 warnings` e `0 errors` em
+5m40s. Nenhuma migration, snapshot EF ou fonte sob Emception foi alterada.

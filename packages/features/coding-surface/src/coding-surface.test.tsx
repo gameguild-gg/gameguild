@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { useEffect, type ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { codingContractFixtureV2 } from '@game-guild/coding/testing';
+import { codingContractFixture } from '@game-guild/coding/testing';
 import { CodingSurface } from './coding-surface';
 import { getCodingSurfaceProfile } from './profile-registry';
 import { codingWorkspaceStorageKey } from './storage';
@@ -63,12 +63,12 @@ afterEach(cleanup);
 
 describe('CodingSurface', () => {
   const authoringByType = {
-    'standard-io': codingContractFixtureV2.authoring,
-    function: codingContractFixtureV2.functionAuthoring,
+    'standard-io': codingContractFixture.authoring,
+    function: codingContractFixture.functionAuthoring,
   };
   const learnerByType = {
-    'standard-io': codingContractFixtureV2.learnerDelivery,
-    function: codingContractFixtureV2.functionLearnerDelivery,
+    'standard-io': codingContractFixture.learnerDelivery,
+    function: codingContractFixture.functionLearnerDelivery,
   };
 
   it.each([
@@ -125,8 +125,8 @@ describe('CodingSurface', () => {
 
   it('selects the C workspace from its canonical toolchain key', () => {
     const workspace = workspaceConfigFromDefinition({
-      ...codingContractFixtureV2.authoring,
-      toolchain: { ...codingContractFixtureV2.authoring.toolchain, key: 'c-emception' },
+      ...codingContractFixture.authoring,
+      toolchain: { ...codingContractFixture.authoring.toolchain, key: 'c-emception' },
     });
     expect(workspace.id).toBe('gameguild-coding-c');
   });

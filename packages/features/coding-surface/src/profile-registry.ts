@@ -1,4 +1,4 @@
-import type { CodingExerciseTypeV2 } from '@game-guild/coding';
+import type { CodingExerciseType } from '@game-guild/coding';
 import type { CodingSurfaceProfile } from './types';
 import {
   FunctionAuthorProfile,
@@ -48,9 +48,9 @@ const profiles = Object.freeze({
       grader: StdioGraderProfile,
     }),
   }),
-} satisfies Record<CodingExerciseTypeV2, CodingSurfaceProfile>);
+} satisfies Record<CodingExerciseType, CodingSurfaceProfile>);
 
-export function getCodingSurfaceProfile(type: CodingExerciseTypeV2): CodingSurfaceProfile {
+export function getCodingSurfaceProfile(type: CodingExerciseType): CodingSurfaceProfile {
   const profile = profiles[type];
   if (!profile) throw new TypeError(`Coding exercise type "${String(type)}" has no registered surface.`);
   return profile;

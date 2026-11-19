@@ -1,6 +1,6 @@
 # Parte 1. Dominio coding e adapter TypeScript
 
-Status: implementado em 2026-11-18.
+Status: implementado em 2026-11-18; contrato canonicalizado em 2026-11-19.
 
 ## Objetivo
 
@@ -127,8 +127,8 @@ Implementacao:
 - registrar cada sobreposicao conhecida em
   [`DUPLICATION-REGISTER.md`](./DUPLICATION-REGISTER.md);
 - capturar fixtures validas e invalidas atualmente aceitas;
-- registrar versoes `1`, `2` e `3` que ja possam aparecer em snapshots ou
-  manifests backend;
+- registrar identidades observadas e provar se alguma delas pertence a dado
+  oficial; variantes apenas de desenvolvimento nao recebem compatibilidade;
 - registrar diferencas reais entre DTO web, definicao backend e plano do
   Emception;
 - adicionar testes que comprovem redacao de testes privados e normalizacao de
@@ -150,7 +150,7 @@ Implementacao:
 - definir limites, overflow, arredondamento e distribuicao de score;
 - definir IDs estaveis de arquivo, teste, item e evidencia;
 - documentar quais campos podem aparecer para author, learner e grader;
-- definir a politica de leitura das versoes congeladas existentes.
+- definir a identidade canonica corrente e rejeitar versoes desconhecidas.
 
 Gate:
 
@@ -257,9 +257,11 @@ O build amplo nao substitui os testes de redacao e roundtrip.
 
 A decisao de execucao esta em
 [`ADR-20261118-coding-grading-external-execution.md`](../../architecture/ADR-20261118-coding-grading-external-execution.md).
-O adapter novo usa a versao `4`; as versoes backend `1`, `2` e `3` permanecem
-congeladas. Nenhuma porta assincrona foi adicionada ao core TypeScript de
-grading porque ainda nao existe segundo consumidor generico.
+O adapter e o handler usam a identidade canonica `version: "1"`, e o payload
+de submission usa `code-files`. Nao existem variantes historicas de code porque
+nao ha snapshot oficial que exija compatibilidade. Nenhuma porta assincrona foi
+adicionada ao core TypeScript de grading porque ainda nao existe segundo
+consumidor generico.
 
 Validacoes executaveis:
 
@@ -272,5 +274,6 @@ pnpm --filter @game-guild/grading test
 pnpm --filter @game-guild/grading typecheck
 ```
 
-O proximo gate e a parte 2. Ela deve adotar as fixtures no backend sem alterar
-snapshots congelados e sem levar vocabulario de code ao core generico.
+A parte 2 adotou as fixtures no backend sem levar vocabulario de code ao core
+generico. A consolidacao corretiva da parte 3.5 tornou o contrato resultante a
+primeira versao efetiva do fluxo antes do lancamento.

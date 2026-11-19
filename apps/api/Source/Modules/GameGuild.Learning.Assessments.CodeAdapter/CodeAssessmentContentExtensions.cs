@@ -59,8 +59,7 @@ public sealed class CodeAssessmentInstructorReviewExtension : IAssessmentInstruc
             item.ItemId == CodeAssessmentContracts.ItemId &&
             item.ReviewMethod == ReviewMethod.AutomatedReview &&
             item.HandlerKey == CodeAssessmentContracts.HandlerKey &&
-            (item.HandlerVersion == CodeAssessmentContracts.Version ||
-             item.HandlerVersion == CodeAssessmentContracts.Version2))?.Feedback;
+            item.HandlerVersion == CodeAssessmentContracts.Version)?.Feedback;
         return previousFeedback ?? suppliedFeedback;
     }
 

@@ -199,7 +199,7 @@ describe("runtime SubmissionViewer", () => {
   it.each([true, false])('restores the Code response using only the private frozen definition (available=%s)', async (available) => {
     const value = runtimeSubmission();
     const privateDefinition = {
-      Type: 'coding-assignment', Version: 1, Environment: { Language: 'cpp' },
+      Type: 'coding-assignment', Version: 1, ExerciseType: 'standard-io', Environment: { Language: 'cpp' },
       Data: { Files: {} }, Tests: { Public: [], Private: [{ Name: 'Frozen private test' }] },
       Grading: { MaxScore: 100 },
     };
@@ -209,7 +209,7 @@ describe("runtime SubmissionViewer", () => {
       learnerPayload: { definition: { ...privateDefinition, Tests: { Public: [], Private: [] } } },
     } };
     value.execution.submittedResponse = {
-      schemaVersion: 1, contentType: 'coding-assignment', payloadSchema: 'code-files/v1',
+      schemaVersion: 1, contentType: 'coding-assignment', payloadSchema: 'code-files',
       payload: { files: { '/home/user/main.cpp': { content: '// immutable response', encoding: 'text' } } },
     };
     value.execution.instructorVisibleContent = available ? privateDefinition : null;

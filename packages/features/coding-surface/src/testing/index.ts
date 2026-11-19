@@ -1,1 +1,1 @@
-export { codingContractFixtureV2 } from '@game-guild/coding/testing';
+export { codingContractFixture } from '@game-guild/coding/testing';

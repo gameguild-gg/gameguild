@@ -155,6 +155,7 @@ public class CodingAssignmentContentTests
         {
           "Type": "coding-assignment",
           "Version": 1,
+          "ExerciseType": "standard-io",
           "Environment": { "Language": "cpp", "Tools": "clang" },
           "Data": { "Files": { "main.cpp": { "Content": "int main(){}", "Visibility": "Public", "Modifiable": true } } },
           "Tests": {
@@ -517,7 +518,6 @@ public class CodingAssignmentContentTests
     }
 
     [Theory]
-    [InlineData("")]
     [InlineData("project")]
     [InlineData("Standard-IO")]
     public void Validator_Rejects_UnknownExerciseType(string exerciseType)
@@ -525,6 +525,14 @@ public class CodingAssignmentContentTests
         var errors = Validate(CreateMinimalValid() with { ExerciseType = exerciseType });
 
         errors.Should().Contain(e => e.ErrorCode == "invalid_exercise_type");
+    }
+
+    [Fact]
+    public void Validator_Rejects_MissingExerciseType()
+    {
+        var errors = Validate(CreateMinimalValid() with { ExerciseType = null! });
+
+        errors.Should().Contain(e => e.ErrorCode == "exercise_type_required");
     }
 
     // ── total assignment size: sum of file Content lengths ≤ 10MB ─────────────────────────────────────
@@ -579,6 +587,7 @@ public class CodingAssignmentContentTests
 
     private static CodingAssignmentContent CreateMinimalValid() => new()
     {
+        ExerciseType = "standard-io",
         Environment = new CodingEnvironment { Language = "cpp", Tools = "clang" },
         Data = new WorkspaceData
         {
@@ -596,6 +605,7 @@ public class CodingAssignmentContentTests
 
     private static CodingAssignmentContent CreateMinimalValidWithFunctional(string functionName) => new()
     {
+        ExerciseType = "function",
         Environment = new CodingEnvironment { Language = "cpp", Tools = "clang" },
         Data = new WorkspaceData(),
         Tests = new TestSuite
@@ -633,6 +643,7 @@ public class CodingAssignmentContentTests
 
     private static CodingAssignmentContent CreateValid() => new()
     {
+        ExerciseType = "standard-io",
         Environment = new CodingEnvironment { Language = "cpp", Tools = "clang", LibBundle = "sdl3" },
         Data = new WorkspaceData
         {

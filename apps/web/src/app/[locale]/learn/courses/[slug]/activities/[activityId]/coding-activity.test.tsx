@@ -255,7 +255,7 @@ describe('coding activity page', () => {
     expect(session.run).not.toHaveBeenCalled();
     expect(session.getSubmission).toHaveBeenCalledTimes(1);
     expect(mocks.submitRuntimeSubmission).toHaveBeenCalledWith('official-submission-1', {
-      schemaVersion: 1, contentType: 'coding-assignment', payloadSchema: 'code-files/v1',
+      schemaVersion: 1, contentType: 'coding-assignment', payloadSchema: 'code-files',
       payload: { files: { 'main.cpp': { content: 'int main(){}', encoding: 'text' } } },
     }, expect.any(String));
     expect(mocks.submitAssessment).not.toHaveBeenCalled();

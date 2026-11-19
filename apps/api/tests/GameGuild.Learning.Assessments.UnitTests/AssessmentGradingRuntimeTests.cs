@@ -2032,6 +2032,7 @@ public sealed class AssessmentGradingRuntimeTests
 
     private static JsonElement CodeDefinition() => JsonSerializer.SerializeToElement(new CodingAssignmentContent
     {
+        ExerciseType = "standard-io",
         Environment = new CodingEnvironment { Language = "cpp", Tools = "clang" },
         Data = new WorkspaceData { Files = new Dictionary<string, BundleFileMeta>
         {
@@ -2059,7 +2060,7 @@ public sealed class AssessmentGradingRuntimeTests
             CodeToolchainIdentity toolchain, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            toolchain.Should().Be(CodeToolchainIdentity.Version3);
+            toolchain.Should().Be(CodeToolchainIdentity.Current);
             definition.Tests.Private.Should().ContainSingle().Which.Should().BeOfType<StandardTest>()
                 .Which.Stdout.Should().Be("private-code-secret");
             files.GetProperty("main.cpp").GetProperty("content").GetString().Should().Contain("submitted-code");

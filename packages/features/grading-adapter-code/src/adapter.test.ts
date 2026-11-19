@@ -1,25 +1,25 @@
 import { describe, expect, it } from 'vitest';
 import { ReviewCapabilityRegistry, parseScoreValue } from '@game-guild/grading';
-import { codingContractFixtureV2 } from '@game-guild/coding/testing';
+import { codingContractFixture } from '@game-guild/coding/testing';
 import { parseCodingExecutionReport, parseCodingSubmission } from '@game-guild/coding';
-import { codeAdapterFixtureV1 } from './testing';
+import { codeAdapterFixture } from './testing';
 import { allocateCodeTestScores } from './allocation';
 import { codeAssessmentTypeAdapter } from './adapter';
 import { classifyCodeReviewCapability, registerCodeGradingCapabilities } from './capabilities';
-import { CODE_ASSESSMENT_TYPE_ADAPTER, CODE_AUTOMATED_REVIEW_HANDLER, CODE_EXECUTION_MODE, FROZEN_CODE_ADAPTER_VERSIONS } from './contracts';
+import { CODE_ASSESSMENT_TYPE_ADAPTER, CODE_AUTOMATED_REVIEW_HANDLER, CODE_EXECUTION_MODE, CODE_RESPONSE_PAYLOAD_SCHEMA } from './contracts';
 import { createCodeSubmissionEnvelope } from './responses';
 
 describe('code grading adapter', () => {
-  it('pins a new adapter version while preserving the frozen backend version inventory', () => {
-    expect(FROZEN_CODE_ADAPTER_VERSIONS).toEqual(['1', '2', '3']);
-    expect(CODE_ASSESSMENT_TYPE_ADAPTER.version).toBe('4');
+  it('uses the single canonical adapter, handler, and payload identities', () => {
+    expect(CODE_ASSESSMENT_TYPE_ADAPTER).toEqual({ key: 'code-assessment-type', version: '1' });
+    expect(CODE_AUTOMATED_REVIEW_HANDLER).toEqual({ key: 'code-wasm-review', version: '1' });
+    expect(CODE_RESPONSE_PAYLOAD_SCHEMA).toBe('code-files');
     expect(CODE_EXECUTION_MODE).toBe('server-external');
-    expect(codeAdapterFixtureV1.frozenBackendAdapters.map(({ version }) => version)).toEqual(['1', '2', '3']);
   });
 
   it('allocates score with integers, exact conservation, and stable ID remainder ties', () => {
-    const projected = codeAssessmentTypeAdapter.projectAuthoring(codeAdapterFixtureV1.input)[0]!;
-    expect(projected.testScoreAllocation).toEqual(codeAdapterFixtureV1.expectedAllocation);
+    const projected = codeAssessmentTypeAdapter.projectAuthoring(codeAdapterFixture.input)[0]!;
+    expect(projected.testScoreAllocation).toEqual(codeAdapterFixture.expectedAllocation);
     expect(projected.testScoreAllocation.reduce((sum, item) => sum + item.maxScore, 0)).toBe(projected.maxScore);
 
     expect(
@@ -39,7 +39,7 @@ describe('code grading adapter', () => {
   });
 
   it('creates a learner delivery without private files, tests, or answer keys', () => {
-    const projected = codeAssessmentTypeAdapter.projectAuthoring(codeAdapterFixtureV1.input);
+    const projected = codeAssessmentTypeAdapter.projectAuthoring(codeAdapterFixture.input);
     const delivery = codeAssessmentTypeAdapter.createDelivery('revision-1', 'a'.repeat(64), projected);
     const serialized = JSON.stringify(delivery);
 
@@ -50,21 +50,21 @@ describe('code grading adapter', () => {
     expect(serialized).not.toContain('visibility');
   });
 
-  it('preserves the explicit exercise type in a V2 learner delivery', () => {
+  it('preserves the explicit exercise type in the canonical learner delivery', () => {
     const projected = codeAssessmentTypeAdapter.projectAuthoring({
-      ...codeAdapterFixtureV1.input,
-      definition: codingContractFixtureV2.authoring,
+      ...codeAdapterFixture.input,
+      definition: codingContractFixture.authoring,
     });
     const delivery = codeAssessmentTypeAdapter.createDelivery('revision-2', 'b'.repeat(64), projected);
 
     expect(delivery.items.code?.learnerPayload.definition).toMatchObject({
-      schemaVersion: 2,
+      schemaVersion: 1,
       exerciseType: 'standard-io',
     });
   });
 
   it('decodes only learner-permitted source files and rejects forged scores', () => {
-    const projected = codeAssessmentTypeAdapter.projectAuthoring(codeAdapterFixtureV1.input);
+    const projected = codeAssessmentTypeAdapter.projectAuthoring(codeAdapterFixture.input);
     const envelope = createCodeSubmissionEnvelope(
       parseCodingSubmission({
         schemaVersion: 1,
@@ -91,14 +91,14 @@ describe('code grading adapter', () => {
   });
 
   it('maps failed tests to a valid final score without exposing private expectations', () => {
-    const projected = codeAssessmentTypeAdapter.projectAuthoring(codeAdapterFixtureV1.input);
-    const mapped = codeAssessmentTypeAdapter.mapExecutionReport(projected, codeAdapterFixtureV1.report);
+    const projected = codeAssessmentTypeAdapter.projectAuthoring(codeAdapterFixture.input);
+    const mapped = codeAssessmentTypeAdapter.mapExecutionReport(projected, codeAdapterFixture.report);
 
     expect(mapped.result.state).toBe('final');
-    expect(mapped.result.score).toBe(codeAdapterFixtureV1.expectedFinalScore);
+    expect(mapped.result.score).toBe(codeAdapterFixture.expectedFinalScore);
     expect(mapped.result.items[0]).toMatchObject({
       state: 'graded',
-      score: codeAdapterFixtureV1.expectedFinalScore,
+      score: codeAdapterFixture.expectedFinalScore,
       reviewMethod: 'AutomatedReview',
       handlerKey: CODE_AUTOMATED_REVIEW_HANDLER.key,
     });
@@ -108,25 +108,25 @@ describe('code grading adapter', () => {
 
   it.each(['partial', 'executor-error', 'cancelled', 'timed-out'] as const)('keeps %s execution pending instead of converting it to zero', (executionState) => {
     const report = parseCodingExecutionReport({
-      ...codeAdapterFixtureV1.report,
+      ...codeAdapterFixture.report,
       executionState,
-      receiptHash: executionState === 'partial' ? codeAdapterFixtureV1.report.receiptHash : undefined,
-      outcomes: executionState === 'partial' ? [{ ...codeAdapterFixtureV1.report.outcomes[0]!, state: 'passed' }] : [],
+      receiptHash: executionState === 'partial' ? codeAdapterFixture.report.receiptHash : undefined,
+      outcomes: executionState === 'partial' ? [{ ...codeAdapterFixture.report.outcomes[0]!, state: 'passed' }] : [],
       failureCode: executionState === 'partial' ? undefined : 'worker-unavailable',
     });
-    const mapped = codeAssessmentTypeAdapter.mapExecutionReport(codeAssessmentTypeAdapter.projectAuthoring(codeAdapterFixtureV1.input), report);
+    const mapped = codeAssessmentTypeAdapter.mapExecutionReport(codeAssessmentTypeAdapter.projectAuthoring(codeAdapterFixture.input), report);
     expect(mapped.result).toMatchObject({ state: 'partial', score: null });
     expect(mapped.result.items[0]).toMatchObject({ state: 'pending', score: null });
   });
 
   it('rejects incomplete completed reports and reports from another toolchain', () => {
-    const projected = codeAssessmentTypeAdapter.projectAuthoring(codeAdapterFixtureV1.input);
+    const projected = codeAssessmentTypeAdapter.projectAuthoring(codeAdapterFixture.input);
     expect(() =>
       codeAssessmentTypeAdapter.mapExecutionReport(
         projected,
         parseCodingExecutionReport({
-          ...codeAdapterFixtureV1.report,
-          outcomes: [codeAdapterFixtureV1.report.outcomes[0]],
+          ...codeAdapterFixture.report,
+          outcomes: [codeAdapterFixture.report.outcomes[0]],
         }),
       ),
     ).toThrow(/every frozen test/);
@@ -134,8 +134,8 @@ describe('code grading adapter', () => {
       codeAssessmentTypeAdapter.mapExecutionReport(
         projected,
         parseCodingExecutionReport({
-          ...codeAdapterFixtureV1.report,
-          toolchain: { ...codeAdapterFixtureV1.report.toolchain, version: 'other' },
+          ...codeAdapterFixture.report,
+          toolchain: { ...codeAdapterFixture.report.toolchain, version: 'other' },
         }),
       ),
     ).toThrow(/frozen toolchain/);

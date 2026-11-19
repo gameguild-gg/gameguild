@@ -84,6 +84,7 @@ public sealed class EndpointCommandHandlerCoverageTests
         var order = new List<(Guid contentId, int sortOrder)> { (contentId, 3) };
         var coding = new CodingAssignmentContent
         {
+            ExerciseType = "standard-io",
             Environment = new CodingEnvironment { Language = "csharp", Tools = "dotnet" },
             Data = new WorkspaceData(),
             Tests = new TestSuite(),

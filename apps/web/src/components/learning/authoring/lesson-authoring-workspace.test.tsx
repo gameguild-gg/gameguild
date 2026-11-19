@@ -208,6 +208,7 @@ vi.mock(
           onSaved?.({
             Type: "coding-assignment",
             Version: 1,
+            ExerciseType: "standard-io",
             Environment: { Language: "cpp" },
             Data: { Files: {} },
             Tests: { Public: [], Private: [] },
@@ -1074,6 +1075,7 @@ describe("LessonAuthoringWorkspace", () => {
     const codingAssignment = {
       Type: "coding-assignment",
       Version: 1,
+      ExerciseType: "standard-io",
       Environment: {
         Language: "cpp",
         Tools: "clang",
@@ -1284,6 +1286,7 @@ describe("LessonAuthoringWorkspace", () => {
     const assignment = {
       Type: "coding-assignment",
       Version: 1,
+      ExerciseType: "standard-io",
       Environment: { Language: "cpp", Tools: "", AllowStudentCreateFiles: false },
       Data: { Files: {} },
       Tests: { Public: [{}], Private: [{}] },
@@ -1335,6 +1338,7 @@ describe("LessonAuthoringWorkspace", () => {
     const assignment = {
       Type: "coding-assignment",
       Version: 1,
+      ExerciseType: "standard-io",
       Environment: { Language: "cpp", Tools: "", AllowStudentCreateFiles: false },
       Data: { Files: {} },
       Tests: { Public: [{}], Private: [{}, {}] },

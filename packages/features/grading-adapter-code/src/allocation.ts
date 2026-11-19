@@ -1,12 +1,12 @@
 import { parseScoreValue, type ScoreValue } from '@game-guild/grading';
-import type { CodingTestV1 } from '@game-guild/coding';
-import type { CodeTestScoreAllocationV1 } from './contracts';
+import type { CodingTest } from '@game-guild/coding';
+import type { CodeTestScoreAllocation } from './contracts';
 
 /**
  * Hamilton allocation over integer units. Floors are assigned first, then
  * remaining units follow descending fractional remainder and stable test ID.
  */
-export function allocateCodeTestScores(tests: readonly Pick<CodingTestV1, 'id' | 'weightUnits'>[], maxScore: ScoreValue): CodeTestScoreAllocationV1[] {
+export function allocateCodeTestScores(tests: readonly Pick<CodingTest, 'id' | 'weightUnits'>[], maxScore: ScoreValue): CodeTestScoreAllocation[] {
   if (tests.length === 0) throw new TypeError('Code score allocation requires at least one test.');
   const totalScore = BigInt(parseScoreValue(maxScore));
   const seen = new Set<string>();

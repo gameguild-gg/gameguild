@@ -3,8 +3,6 @@ import {
   CODING_AUTHORING_SCHEMA_VERSION,
   CODING_CONTENT_TYPE,
   CODING_DELIVERY_SCHEMA_VERSION,
-  CODING_AUTHORING_SCHEMA_VERSION_V2,
-  CODING_DELIVERY_SCHEMA_VERSION_V2,
   CODING_EXECUTION_REPORT_SCHEMA_VERSION,
   CODING_SUBMISSION_SCHEMA_VERSION,
   MAX_CODING_DEFINITION_BYTES,
@@ -12,12 +10,10 @@ import {
   MAX_CODING_FILES,
   MAX_CODING_SUBMISSION_BYTES,
   MAX_CODING_TESTS,
-  type CodingAuthoringDefinitionV1,
-  type CodingAuthoringDefinitionV2,
-  type CodingExecutionReportV1,
-  type CodingLearnerDeliveryV1,
-  type CodingLearnerDeliveryV2,
-  type CodingSubmissionV1,
+  type CodingAuthoringDefinition,
+  type CodingExecutionReport,
+  type CodingLearnerDelivery,
+  type CodingSubmission,
 } from './contracts';
 import { CodingValidationError } from './errors';
 import { normalizeCodingPath } from './paths';
@@ -202,60 +198,6 @@ const authoringSchema = z
   .object({
     schemaVersion: z.literal(CODING_AUTHORING_SCHEMA_VERSION),
     type: z.literal(CODING_CONTENT_TYPE),
-    toolchain: toolchainSchema,
-    files: z.array(authoringFileSchema).min(1).max(MAX_CODING_FILES),
-    tests: z.array(testSchema).min(1).max(MAX_CODING_TESTS),
-    limits: limitsSchema,
-    entryPoint: entryPointSchema,
-    allowLearnerCreatedFiles: z.boolean(),
-  })
-  .strict()
-  .superRefine((definition, context) => {
-    addDuplicateIssues(
-      definition.files.map(({ id }) => id),
-      context,
-      ['files'],
-      'file ID',
-    );
-    addDuplicateIssues(
-      definition.files.map(({ path }) => path),
-      context,
-      ['files'],
-      'file path',
-    );
-    addDuplicateIssues(
-      definition.tests.map(({ id }) => id),
-      context,
-      ['tests'],
-      'test ID',
-    );
-    if (definition.files.length > definition.limits.maxFileCount) {
-      context.addIssue({
-        code: 'custom',
-        message: 'Authored files exceed limits.maxFileCount.',
-        path: ['limits', 'maxFileCount'],
-      });
-    }
-    if (byteLength(JSON.stringify(definition)) > MAX_CODING_DEFINITION_BYTES) {
-      context.addIssue({
-        code: 'custom',
-        message: 'Coding definition exceeds its byte budget.',
-      });
-    }
-    const entryPoint = definition.files.find(({ path }) => path === definition.entryPoint.path);
-    if (!entryPoint || entryPoint.encoding !== 'text' || entryPoint.visibility !== 'public') {
-      context.addIssue({
-        code: 'custom',
-        message: 'Entry point must reference a public text file.',
-        path: ['entryPoint', 'path'],
-      });
-    }
-  });
-
-const authoringSchemaV2 = z
-  .object({
-    schemaVersion: z.literal(CODING_AUTHORING_SCHEMA_VERSION_V2),
-    type: z.literal(CODING_CONTENT_TYPE),
     exerciseType: exerciseTypeSchema,
     toolchain: toolchainSchema,
     files: z.array(authoringFileSchema).min(1).max(MAX_CODING_FILES),
@@ -294,54 +236,6 @@ const learnerTestSchema = z.discriminatedUnion('kind', [learnerStdioTestSchema, 
 const learnerDeliverySchema = z
   .object({
     schemaVersion: z.literal(CODING_DELIVERY_SCHEMA_VERSION),
-    type: z.literal(CODING_CONTENT_TYPE),
-    toolchain: toolchainSchema,
-    files: z.array(learnerFileSchema).min(1).max(MAX_CODING_FILES),
-    publicTests: z.array(learnerTestSchema).max(MAX_CODING_TESTS),
-    limits: limitsSchema,
-    entryPoint: entryPointSchema,
-    allowLearnerCreatedFiles: z.boolean(),
-  })
-  .strict()
-  .superRefine((delivery, context) => {
-    addDuplicateIssues(
-      delivery.files.map(({ id }) => id),
-      context,
-      ['files'],
-      'file ID',
-    );
-    addDuplicateIssues(
-      delivery.files.map(({ path }) => path),
-      context,
-      ['files'],
-      'file path',
-    );
-    addDuplicateIssues(
-      delivery.publicTests.map(({ id }) => id),
-      context,
-      ['publicTests'],
-      'test ID',
-    );
-    if (delivery.files.length > delivery.limits.maxFileCount) {
-      context.addIssue({
-        code: 'custom',
-        message: 'Learner files exceed limits.maxFileCount.',
-        path: ['limits', 'maxFileCount'],
-      });
-    }
-    const entryPoint = delivery.files.find(({ path }) => path === delivery.entryPoint.path);
-    if (!entryPoint || entryPoint.encoding !== 'text') {
-      context.addIssue({
-        code: 'custom',
-        message: 'Entry point must reference a learner-visible text file.',
-        path: ['entryPoint', 'path'],
-      });
-    }
-  });
-
-const learnerDeliverySchemaV2 = z
-  .object({
-    schemaVersion: z.literal(CODING_DELIVERY_SCHEMA_VERSION_V2),
     type: z.literal(CODING_CONTENT_TYPE),
     exerciseType: exerciseTypeSchema,
     toolchain: toolchainSchema,
@@ -438,28 +332,20 @@ const executionReportSchema = z
     }
   });
 
-export function parseCodingAuthoringDefinition(value: unknown): CodingAuthoringDefinitionV1 {
-  return parse(authoringSchema, value, 'Coding authoring definition') as CodingAuthoringDefinitionV1;
+export function parseCodingAuthoringDefinition(value: unknown): CodingAuthoringDefinition {
+  return parse(authoringSchema, value, 'Coding authoring definition') as CodingAuthoringDefinition;
 }
 
-export function parseCodingAuthoringDefinitionV2(value: unknown): CodingAuthoringDefinitionV2 {
-  return parse(authoringSchemaV2, value, 'Coding authoring definition V2') as CodingAuthoringDefinitionV2;
+export function parseCodingLearnerDelivery(value: unknown): CodingLearnerDelivery {
+  return parse(learnerDeliverySchema, value, 'Coding learner delivery') as CodingLearnerDelivery;
 }
 
-export function parseCodingLearnerDelivery(value: unknown): CodingLearnerDeliveryV1 {
-  return parse(learnerDeliverySchema, value, 'Coding learner delivery') as CodingLearnerDeliveryV1;
+export function parseCodingSubmission(value: unknown): CodingSubmission {
+  return parse(submissionSchema, value, 'Coding submission') as CodingSubmission;
 }
 
-export function parseCodingLearnerDeliveryV2(value: unknown): CodingLearnerDeliveryV2 {
-  return parse(learnerDeliverySchemaV2, value, 'Coding learner delivery V2') as CodingLearnerDeliveryV2;
-}
-
-export function parseCodingSubmission(value: unknown): CodingSubmissionV1 {
-  return parse(submissionSchema, value, 'Coding submission') as CodingSubmissionV1;
-}
-
-export function parseCodingExecutionReport(value: unknown): CodingExecutionReportV1 {
-  return parse(executionReportSchema, value, 'Coding execution report') as CodingExecutionReportV1;
+export function parseCodingExecutionReport(value: unknown): CodingExecutionReport {
+  return parse(executionReportSchema, value, 'Coding execution report') as CodingExecutionReport;
 }
 
 function parse(schema: z.ZodType, value: unknown, label: string): unknown {

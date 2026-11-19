@@ -6,6 +6,7 @@ import type { CodingAssignmentContent } from './types';
 function definition(): CodingAssignmentContent {
   return {
     Type: 'coding-assignment', Version: 1,
+    ExerciseType: 'standard-io',
     Environment: { Language: 'cpp', Tools: 'clang', AllowStudentCreateFiles: false },
     Data: { Files: {} }, Tests: { Public: [], Private: [] },
     Grading: { MaxScore: 100 },
@@ -38,21 +39,21 @@ function read(value: unknown, instructor = false) {
 }
 
 describe('readCodeRuntimeDefinition', () => {
-  it.each(['1', '2', '3'])('reads only the frozen definition for supported adapter %s', (version) => {
-    const fixture = submission(version);
+  it('reads only the frozen definition for the canonical adapter', () => {
+    const fixture = submission('1');
     expect(read(fixture.value)).toBe(fixture.learner);
     expect(read(fixture.value, true)).toBe(fixture.instructor);
     expect(read(fixture.value).Tests.Private).toEqual([]);
   });
 
-  it.each(['', '0', '4', 'latest'])('rejects unsupported adapter %s', (version) => {
+  it.each(['', '0', '2', '3', 'latest'])('rejects unsupported adapter %s', (version) => {
     const { value } = submission(version);
     expect(() => read(value)).toThrow('unavailable adapter version');
     expect(() => read(value, true)).toThrow('unavailable adapter version');
   });
 
-  it.each(['1', '2', '3'])('rejects an unsupported content version for adapter %s', (version) => {
-    const { value, learner, instructor } = submission(version);
+  it('rejects an unsupported content version', () => {
+    const { value, learner, instructor } = submission('1');
     const invalidLearner = { execution: { ...value.execution, delivery: {
       ...value.execution.delivery,
       items: { code: { ...value.execution.delivery.items.code,
@@ -65,33 +66,33 @@ describe('readCodeRuntimeDefinition', () => {
   });
 
   it('rejects a different adapter even when its version is supported', () => {
-    const { value } = submission('2');
+    const { value } = submission('1');
     value.execution.delivery.items.code.adapterKey = 'quiz-assessment-type';
     expect(() => read(value)).toThrow('unavailable adapter version');
   });
 
   it.each([{ order: [] }, { order: ['other'] }, { order: ['code', 'other'] }])(
     'rejects invalid delivery order $order', ({ order }) => {
-      const { value } = submission('2');
+      const { value } = submission('1');
       value.execution.delivery.itemOrder = order;
       expect(() => read(value)).toThrow('invalid delivery');
     });
 
   it('rejects a missing frozen Code item', () => {
-    const { value } = submission('2');
+    const { value } = submission('1');
     const missing = { execution: { ...value.execution,
       delivery: { itemOrder: ['code'], items: {} } } };
     expect(() => read(missing)).toThrow('unavailable adapter version');
   });
 
   it('requires the instructor definition without falling back to learner content', () => {
-    const { value } = submission('2');
+    const { value } = submission('1');
     const unavailable = { execution: { ...value.execution, instructorVisibleContent: null } };
     expect(() => read(unavailable, true)).toThrow('frozen Code definition is unavailable');
   });
 
   it('requires frozen learner content without falling back to instructor content', () => {
-    const { value } = submission('2');
+    const { value } = submission('1');
     const unavailable = { execution: { ...value.execution, delivery: {
       ...value.execution.delivery,
       items: { code: { ...value.execution.delivery.items.code, learnerPayload: {} } },
