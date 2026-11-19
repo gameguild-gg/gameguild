@@ -1777,55 +1777,6 @@ Table "DynamicRole" {
   }
 }
 
-Table "economy_ad_network_policy_versions" {
-  "TenantId" uuid [not null]
-  "Network" "character varying(100)" [not null]
-  "Version" bigint [not null]
-  "EffectiveAt" timestamp [not null]
-  "ExpiresAt" timestamp [not null]
-  "IssuanceMode" integer [not null]
-  "YieldState" integer [not null]
-  "EstimatedNetEcpmUsdNanos" bigint [not null]
-  "ContractedRevenueSharePpm" integer [not null]
-  "SafetyBufferPpm" integer [not null]
-  "MinimumVisiblePpm" integer [not null]
-  "MaximumFocusLossTicks" bigint [not null]
-  "MaximumRewardSoftUnits" bigint [not null]
-  "ReportsCurrentThrough" timestamp [not null]
-  "ReportStaleAfterTicks" bigint [not null]
-  "Ranking" integer [not null]
-  "MaximumUserSoftUnits" bigint [not null]
-  "MaximumDeviceSoftUnits" bigint [not null]
-  "MaximumIpSoftUnits" bigint [not null]
-  "MaximumAsnSoftUnits" bigint [not null]
-  "MaximumNetworkSoftUnits" bigint [not null]
-  "MaximumGlobalSoftUnits" bigint [not null]
-  "FundedLossBudgetUsdNanos" bigint [not null]
-  "BudgetWindowTicks" bigint [not null]
-  "ProviderHash" "character varying(128)" [not null]
-  "ProviderCertified" boolean [not null]
-  "CanonicalPayload" text [not null]
-  "PayloadHash" "character varying(128)" [not null]
-  "KeyId" "character varying(256)" [not null]
-  "Signature" text [not null]
-  "ProposedBy" uuid [not null]
-  "ApprovedBy" uuid [not null]
-  "PublishedAt" timestamp [not null]
-
-  Checks {
-    `"MaximumUserSoftUnits" > 0 AND "MaximumDeviceSoftUnits" > 0 AND "MaximumIpSoftUnits" > 0 AND "MaximumAsnSoftUnits" > 0 AND "MaximumNetworkSoftUnits" > 0 AND "MaximumGlobalSoftUnits" > 0 AND "FundedLossBudgetUsdNanos" > 0` [name: 'ck_economy_ad_network_policy_versions_caps']
-    `"ProposedBy" <> "ApprovedBy"` [name: 'ck_economy_ad_network_policy_versions_dual_control']
-    `"ContractedRevenueSharePpm" BETWEEN 0 AND 1000000 AND "SafetyBufferPpm" BETWEEN 0 AND 999999 AND "MinimumVisiblePpm" BETWEEN 0 AND 1000000` [name: 'ck_economy_ad_network_policy_versions_ppm']
-    `"Version" > 0 AND "EstimatedNetEcpmUsdNanos" > 0 AND "MaximumRewardSoftUnits" > 0 AND "MaximumFocusLossTicks" >= 0 AND "ReportStaleAfterTicks" > 0 AND "Ranking" >= 0 AND "BudgetWindowTicks" > 0` [name: 'ck_economy_ad_network_policy_versions_values']
-    `"ExpiresAt" > "EffectiveAt"` [name: 'ck_economy_ad_network_policy_versions_window']
-  }
-
-  Indexes {
-    (TenantId, Network, Version) [pk, name: "PK_economy_ad_network_policy_versions"]
-    (TenantId, Network, EffectiveAt, ExpiresAt) [name: "IX_economy_ad_network_policy_versions_TenantId_Network_Effecti~"]
-  }
-}
-
 Table "economy_ad_provider_reports" {
   "Id" uuid [not null]
   "TenantId" uuid [not null]
@@ -1896,28 +1847,6 @@ Table "economy_ad_reward_attributions" {
   Indexes {
     SessionId [pk, name: "PK_economy_ad_reward_attributions"]
     (Network, ProviderBatchId, CompletedAt) [name: "IX_economy_ad_reward_attributions_Network_ProviderBatchId_Comp~"]
-  }
-}
-
-Table "economy_ad_reward_budget_consumptions" {
-  "SessionId" uuid [not null]
-  "TenantId" uuid [not null]
-  "UserId" uuid [not null]
-  "DeviceRiskHash" "character varying(128)" [not null]
-  "Network" "character varying(100)" [not null]
-  "SoftUnits" bigint [not null]
-  "LossBudgetUsdNanos" bigint [not null]
-  "ConsumedAt" timestamp [not null]
-
-  Checks {
-    `"SoftUnits" > 0 AND "LossBudgetUsdNanos" > 0` [name: 'ck_economy_ad_reward_budget_consumptions_positive']
-  }
-
-  Indexes {
-    SessionId [pk, name: "PK_economy_ad_reward_budget_consumptions"]
-    (DeviceRiskHash, ConsumedAt) [name: "IX_economy_ad_reward_budget_consumptions_DeviceRiskHash_Consum~"]
-    (Network, ConsumedAt) [name: "IX_economy_ad_reward_budget_consumptions_Network_ConsumedAt"]
-    (UserId, ConsumedAt) [name: "IX_economy_ad_reward_budget_consumptions_UserId_ConsumedAt"]
   }
 }
 
@@ -1996,47 +1925,6 @@ Table "economy_ad_reward_sessions" {
     (TenantId, NonceHash) [unique, name: "IX_economy_ad_reward_sessions_TenantId_NonceHash"]
     (TenantId, StartIdempotencyKeyHash) [unique, name: "IX_economy_ad_reward_sessions_TenantId_StartIdempotencyKeyHash"]
     (TenantId, UserId, IssuedAt) [name: "IX_economy_ad_reward_sessions_TenantId_UserId_IssuedAt"]
-  }
-}
-
-Table "economy_admin_withdrawal_runs" {
-  "Id" uuid [not null]
-  "TenantId" uuid [not null]
-  "IdempotencyKey" "character varying(256)" [not null]
-  "RequestHash" "character varying(128)" [not null]
-  "PeriodStart" date [not null]
-  "RequestedBy" uuid [not null]
-  "ApprovedBy" uuid
-  "PlatformFeeWalletId" uuid [not null]
-  "AmountUnits" bigint [not null]
-  "SourceAssetKey" "character varying(256)" [not null]
-  "DestinationHash" "character varying(128)" [not null]
-  "State" integer [not null]
-  "Version" bigint [not null]
-  "FencingToken" bigint [not null]
-  "ExecutionEpoch" bigint [not null]
-  "ReserveVersion" bigint [not null]
-  "ReserveAuthorizationEpoch" bigint [not null]
-  "PolicyVersion" bigint [not null]
-  "DispatchSnapshotHash" "character varying(128)"
-  "ProviderTransferId" "character varying(256)"
-  "CreatedAt" timestamp [not null]
-  "UpdatedAt" timestamp [not null]
-
-  Checks {
-    `"AmountUnits" > 0` [name: 'ck_economy_admin_withdrawal_runs_amount_positive']
-    `("State" = 1 AND "ApprovedBy" IS NULL) OR ("State" BETWEEN 2 AND 7 AND "ApprovedBy" IS NOT NULL)` [name: 'ck_economy_admin_withdrawal_runs_approval']
-    `("State" IN (1, 2) AND "DispatchSnapshotHash" IS NULL) OR ("State" BETWEEN 3 AND 7 AND "DispatchSnapshotHash" IS NOT NULL)` [name: 'ck_economy_admin_withdrawal_runs_dispatch_snapshot']
-    `"Version" > 0 AND "FencingToken" > 0 AND "ExecutionEpoch" > 0 AND "ReserveVersion" > 0 AND "ReserveAuthorizationEpoch" > 0 AND "PolicyVersion" > 0` [name: 'ck_economy_admin_withdrawal_runs_positive_versions']
-    `"State" BETWEEN 1 AND 7` [name: 'ck_economy_admin_withdrawal_runs_state']
-    `"UpdatedAt" >= "CreatedAt"` [name: 'ck_economy_admin_withdrawal_runs_timestamps']
-  }
-
-  Indexes {
-    Id [pk, name: "PK_economy_admin_withdrawal_runs"]
-    (State, UpdatedAt) [name: "ix_economy_admin_withdrawal_runs_state_updated"]
-    (TenantId, PeriodStart) [unique, name: "ux_economy_admin_withdrawal_runs_active_period"]
-    (TenantId, IdempotencyKey) [unique, name: "ux_economy_admin_withdrawal_runs_idempotency"]
   }
 }
 
@@ -2405,41 +2293,6 @@ Table "economy_legacy_shadow_batches" {
   }
 }
 
-Table "economy_marketplace_currency_policy_versions" {
-  "TenantId" uuid [not null]
-  "ProductId" uuid [not null]
-  "Version" bigint [not null]
-  "SellerId" uuid [not null]
-  "Mode" integer [not null]
-  "HardPriceUnits" bigint [not null]
-  "SoftPriceUnits" bigint [not null]
-  "PlatformFeePpm" integer [not null]
-  "EffectiveAt" timestamp [not null]
-  "ExpiresAt" timestamp [not null]
-  "PlatformFeeWalletId" uuid [not null]
-  "RefundHoldTicks" bigint [not null]
-  "CanonicalPayload" text [not null]
-  "PayloadHash" "character varying(128)" [not null]
-  "KeyId" "character varying(256)" [not null]
-  "Signature" text [not null]
-  "ProposedBy" uuid [not null]
-  "ApprovedBy" uuid [not null]
-  "PublishedAt" timestamp [not null]
-
-  Checks {
-    `"ProposedBy" <> "ApprovedBy"` [name: 'ck_economy_marketplace_currency_policy_versions_dual_control']
-    `"PlatformFeePpm" BETWEEN 0 AND 999999` [name: 'ck_economy_marketplace_currency_policy_versions_fee']
-    `("Mode" = 1 AND "HardPriceUnits" > 0 AND "SoftPriceUnits" = 0) OR ("Mode" = 2 AND "HardPriceUnits" = 0 AND "SoftPriceUnits" > 0) OR ("Mode" IN (3, 4) AND "HardPriceUnits" > 0 AND "SoftPriceUnits" > 0)` [name: 'ck_economy_marketplace_currency_policy_versions_prices']
-    `"Version" > 0` [name: 'ck_economy_marketplace_currency_policy_versions_version']
-    `"ExpiresAt" > "EffectiveAt" AND "RefundHoldTicks" > 0` [name: 'ck_economy_marketplace_currency_policy_versions_window']
-  }
-
-  Indexes {
-    (TenantId, ProductId, Version) [pk, name: "PK_economy_marketplace_currency_policy_versions"]
-    (TenantId, ProductId, EffectiveAt, ExpiresAt) [name: "IX_economy_marketplace_currency_policy_versions_TenantId_Produ~"]
-  }
-}
-
 Table "economy_marketplace_settlements" {
   "Id" uuid [not null]
   "TenantId" uuid [not null]
@@ -2497,6 +2350,57 @@ Table "economy_marketplace_settlements" {
   }
 }
 
+Table "economy_operations" {
+  "Id" uuid [not null]
+  "OperationKind" integer [not null]
+  "TenantId" uuid [not null]
+  "IdempotencyKey" "character varying(256)" [not null]
+  "RequestHash" "character varying(128)" [not null]
+  "ActorId" uuid [not null]
+  "AmountUnits" bigint [not null]
+  "DestinationHash" "character varying(128)" [not null]
+  "DispatchSnapshotHash" "character varying(128)"
+  "State" integer [not null]
+  "Version" bigint [not null]
+  "FencingToken" bigint [not null]
+  "ReserveVersion" bigint [not null]
+  "ReserveAuthorizationEpoch" bigint [not null]
+  "PolicyVersion" bigint [not null]
+  "CreatedAt" timestamp [not null]
+  "UpdatedAt" timestamp [not null]
+  "PayeeId" uuid
+  "WalletId" uuid
+  "ProviderAccountId" "character varying(256)"
+  "ProviderBindingHash" "character varying(128)"
+  "EligibilityHash" "character varying(128)"
+  "ProviderPayoutId" "character varying(256)"
+  "KillSwitchEpoch" bigint
+  "RiskDecisionId" uuid
+  "PeriodStart" date
+  "ApprovedBy" uuid
+  "PlatformFeeWalletId" uuid
+  "SourceAssetKey" "character varying(256)"
+  "ProviderTransferId" "character varying(256)"
+  "ExecutionEpoch" bigint
+
+  Checks {
+    `("OperationKind" = 1 AND "ApprovedBy" IS NULL) OR ("OperationKind" = 2 AND (("State" = 1 AND "ApprovedBy" IS NULL) OR ("State" BETWEEN 2 AND 7 AND "ApprovedBy" IS NOT NULL)))` [name: 'ck_economy_operations_approval']
+    `("OperationKind" = 1 AND (("State" = 1 AND "DispatchSnapshotHash" IS NULL) OR ("State" BETWEEN 2 AND 6 AND "DispatchSnapshotHash" IS NOT NULL))) OR ("OperationKind" = 2 AND (("State" IN (1, 2) AND "DispatchSnapshotHash" IS NULL) OR ("State" BETWEEN 3 AND 7 AND "DispatchSnapshotHash" IS NOT NULL)))` [name: 'ck_economy_operations_dispatch']
+    `"AmountUnits" > 0 AND "Version" > 0 AND "FencingToken" > 0 AND "ReserveVersion" > 0 AND "ReserveAuthorizationEpoch" > 0 AND "PolicyVersion" > 0 AND (("OperationKind" = 1 AND "KillSwitchEpoch" >= 0) OR ("OperationKind" = 2 AND "KillSwitchEpoch" IS NULL AND "ExecutionEpoch" > 0))` [name: 'ck_economy_operations_positive_values']
+    `("OperationKind" = 1 AND "State" BETWEEN 1 AND 6) OR ("OperationKind" = 2 AND "State" BETWEEN 1 AND 7)` [name: 'ck_economy_operations_state']
+    `("OperationKind" = 1 AND "PayeeId" IS NOT NULL AND "WalletId" IS NOT NULL AND "ProviderAccountId" IS NOT NULL AND "ProviderBindingHash" IS NOT NULL AND "EligibilityHash" IS NOT NULL AND "RiskDecisionId" IS NOT NULL AND "PeriodStart" IS NULL AND "PlatformFeeWalletId" IS NULL AND "SourceAssetKey" IS NULL AND "ExecutionEpoch" IS NULL) OR ("OperationKind" = 2 AND "PayeeId" IS NULL AND "WalletId" IS NULL AND "ProviderAccountId" IS NULL AND "ProviderBindingHash" IS NULL AND "EligibilityHash" IS NULL AND "RiskDecisionId" IS NULL AND "KillSwitchEpoch" IS NULL AND "PeriodStart" IS NOT NULL AND "PlatformFeeWalletId" IS NOT NULL AND "SourceAssetKey" IS NOT NULL AND "ExecutionEpoch" IS NOT NULL)` [name: 'ck_economy_operations_subject_shape']
+    `"UpdatedAt" >= "CreatedAt"` [name: 'ck_economy_operations_timestamps']
+  }
+
+  Indexes {
+    Id [pk, name: "PK_economy_operations"]
+    (OperationKind, State, UpdatedAt) [name: "ix_economy_operations_kind_state_updated"]
+    (TenantId, OperationKind, State, UpdatedAt) [name: "ix_economy_operations_tenant_kind_state_updated"]
+    (TenantId, PeriodStart) [unique, name: "ux_economy_operations_active_period"]
+    (OperationKind, TenantId, IdempotencyKey) [unique, name: "ux_economy_operations_kind_tenant_idempotency"]
+  }
+}
+
 Table "economy_payout_connect_accounts" {
   "PayeeId" uuid [not null]
   "Provider" "character varying(50)" [not null]
@@ -2524,44 +2428,65 @@ Table "economy_payout_connect_accounts" {
   }
 }
 
-Table "economy_payout_operations" {
-  "Id" uuid [not null]
+Table "economy_policy_versions" {
+  "Id" uuid [not null, default: `gen_random_uuid()`]
+  "PolicyDomain" integer [not null]
   "TenantId" uuid [not null]
-  "IdempotencyKey" "character varying(256)" [not null]
-  "RequestHash" "character varying(128)" [not null]
-  "ActorId" uuid [not null]
-  "PayeeId" uuid [not null]
-  "WalletId" uuid [not null]
-  "AmountUnits" bigint [not null]
-  "ProviderAccountId" "character varying(256)" [not null]
-  "DestinationHash" "character varying(128)" [not null]
-  "ProviderBindingHash" "character varying(128)" [not null]
-  "EligibilityHash" "character varying(128)" [not null]
-  "DispatchSnapshotHash" "character varying(128)"
-  "ProviderPayoutId" "character varying(256)"
-  "State" integer [not null]
   "Version" bigint [not null]
-  "FencingToken" bigint [not null]
-  "KillSwitchEpoch" bigint [not null]
-  "ReserveVersion" bigint [not null]
-  "ReserveAuthorizationEpoch" bigint [not null]
-  "PolicyVersion" bigint [not null]
-  "RiskDecisionId" uuid [not null]
-  "CreatedAt" timestamp [not null]
-  "UpdatedAt" timestamp [not null]
+  "SubjectId" uuid
+  "SubjectKey" "character varying(100)"
+  "EffectiveAt" timestamp [not null]
+  "ExpiresAt" timestamp [not null]
+  "Mode" integer
+  "SellerId" uuid
+  "HardPriceUnits" bigint
+  "SoftPriceUnits" bigint
+  "PlatformFeePpm" integer
+  "PlatformFeeWalletId" uuid
+  "RefundHoldTicks" bigint
+  "IssuanceMode" integer
+  "YieldState" integer
+  "EstimatedNetEcpmUsdNanos" bigint
+  "ContractedRevenueSharePpm" integer
+  "SafetyBufferPpm" integer
+  "MinimumVisiblePpm" integer
+  "MaximumFocusLossTicks" bigint
+  "MaximumRewardSoftUnits" bigint
+  "ReportsCurrentThrough" timestamp
+  "ReportStaleAfterTicks" bigint
+  "Ranking" integer
+  "MaximumUserSoftUnits" bigint
+  "MaximumDeviceSoftUnits" bigint
+  "MaximumIpSoftUnits" bigint
+  "MaximumAsnSoftUnits" bigint
+  "MaximumNetworkSoftUnits" bigint
+  "MaximumGlobalSoftUnits" bigint
+  "FundedLossBudgetUsdNanos" bigint
+  "BudgetWindowTicks" bigint
+  "ProviderHash" text
+  "ProviderCertified" boolean
+  "CanonicalPayload" text [not null]
+  "PayloadHash" "character varying(128)" [not null]
+  "KeyId" "character varying(256)" [not null]
+  "Signature" text [not null]
+  "ProposedBy" uuid [not null]
+  "ApprovedBy" uuid [not null]
+  "PublishedAt" timestamp [not null]
 
   Checks {
-    `("State" = 1 AND "DispatchSnapshotHash" IS NULL) OR ("State" BETWEEN 2 AND 6 AND "DispatchSnapshotHash" IS NOT NULL)` [name: 'ck_economy_payout_operations_dispatch']
-    `"AmountUnits" > 0 AND "Version" > 0 AND "FencingToken" > 0 AND "KillSwitchEpoch" >= 0 AND "ReserveVersion" > 0 AND "ReserveAuthorizationEpoch" > 0 AND "PolicyVersion" > 0` [name: 'ck_economy_payout_operations_positive_values']
-    `"State" BETWEEN 1 AND 6` [name: 'ck_economy_payout_operations_state']
-    `"UpdatedAt" >= "CreatedAt"` [name: 'ck_economy_payout_operations_timestamps']
+    `("PolicyDomain" = 1) OR ("SubjectKey" IS NOT NULL AND "IssuanceMode" IS NOT NULL AND "YieldState" IS NOT NULL AND "ReportsCurrentThrough" IS NOT NULL AND "ProviderHash" IS NOT NULL AND "ProviderCertified" IS NOT NULL AND "ContractedRevenueSharePpm" BETWEEN 0 AND 1000000 AND "SafetyBufferPpm" BETWEEN 0 AND 999999 AND "MinimumVisiblePpm" BETWEEN 0 AND 1000000 AND "EstimatedNetEcpmUsdNanos" > 0 AND "MaximumRewardSoftUnits" > 0 AND "MaximumFocusLossTicks" >= 0 AND "ReportStaleAfterTicks" > 0 AND "Ranking" >= 0 AND "BudgetWindowTicks" > 0 AND "MaximumUserSoftUnits" > 0 AND "MaximumDeviceSoftUnits" > 0 AND "MaximumIpSoftUnits" > 0 AND "MaximumAsnSoftUnits" > 0 AND "MaximumNetworkSoftUnits" > 0 AND "MaximumGlobalSoftUnits" > 0 AND "FundedLossBudgetUsdNanos" > 0)` [name: 'ck_economy_policy_versions_adnetwork_shape']
+    `"ProposedBy" <> "ApprovedBy"` [name: 'ck_economy_policy_versions_dual_control']
+    `("PolicyDomain" = 2) OR ("SubjectId" IS NOT NULL AND "SellerId" IS NOT NULL AND "Mode" IS NOT NULL AND "PlatformFeeWalletId" IS NOT NULL AND "RefundHoldTicks" IS NOT NULL AND "PlatformFeePpm" BETWEEN 0 AND 999999 AND "RefundHoldTicks" > 0 AND (("Mode" = 1 AND "HardPriceUnits" > 0 AND "SoftPriceUnits" = 0) OR ("Mode" = 2 AND "HardPriceUnits" = 0 AND "SoftPriceUnits" > 0) OR ("Mode" IN (3, 4) AND "HardPriceUnits" > 0 AND "SoftPriceUnits" > 0)))` [name: 'ck_economy_policy_versions_marketplace_shape']
+    `"Version" > 0` [name: 'ck_economy_policy_versions_version']
+    `"ExpiresAt" > "EffectiveAt"` [name: 'ck_economy_policy_versions_window']
   }
 
   Indexes {
-    Id [pk, name: "PK_economy_payout_operations"]
-    (State, UpdatedAt) [name: "ix_economy_payout_operations_state_updated"]
-    (TenantId, State, UpdatedAt) [name: "ix_economy_payout_operations_tenant_state_updated"]
-    (TenantId, IdempotencyKey) [unique, name: "ux_economy_payout_operations_tenant_idempotency"]
+    Id [pk, name: "PK_economy_policy_versions"]
+    (TenantId, SubjectKey, EffectiveAt, ExpiresAt) [name: "ix_economy_policy_versions_adnetwork_window"]
+    (TenantId, SubjectId, EffectiveAt, ExpiresAt) [name: "ix_economy_policy_versions_marketplace_window"]
+    (TenantId, SubjectKey, Version) [unique, name: "ux_economy_policy_versions_adnetwork_version"]
+    (TenantId, SubjectId, Version) [unique, name: "ux_economy_policy_versions_marketplace_version"]
   }
 }
 
@@ -7601,31 +7526,6 @@ Table "economy_ad_reward_reconciliations" {
   }
 }
 
-Table "economy_ad_reward_cap_consumptions" {
-  "Id" uuid [not null]
-  "TenantId" uuid [not null]
-  "SessionId" uuid [not null]
-  "Scope" integer [not null]
-  "SubjectHash" "character varying(128)" [not null]
-  "WindowStartedAt" timestamp [not null]
-  "WindowEndsAt" timestamp [not null]
-  "SoftUnits" bigint [not null]
-  "LossBudgetUsdNanos" bigint [not null]
-  "ConsumedAt" timestamp [not null]
-
-  Checks {
-    `"SoftUnits" > 0 AND "LossBudgetUsdNanos" >= 0` [name: 'ck_economy_ad_reward_cap_consumptions_positive']
-    `"Scope" BETWEEN 1 AND 6` [name: 'ck_economy_ad_reward_cap_consumptions_scope']
-    `"WindowEndsAt" > "WindowStartedAt" AND "ConsumedAt" >= "WindowStartedAt" AND "ConsumedAt" < "WindowEndsAt"` [name: 'ck_economy_ad_reward_cap_consumptions_window']
-  }
-
-  Indexes {
-    Id [pk, name: "PK_economy_ad_reward_cap_consumptions"]
-    (SessionId, Scope) [unique, name: "IX_economy_ad_reward_cap_consumptions_SessionId_Scope"]
-    (TenantId, Scope, SubjectHash, ConsumedAt) [name: "IX_economy_ad_reward_cap_consumptions_TenantId_Scope_SubjectHa~"]
-  }
-}
-
 Table "economy_ad_reward_pending_claims" {
   "SessionId" uuid [not null]
   "TenantId" uuid [not null]
@@ -7680,27 +7580,6 @@ Table "economy_ad_reward_session_timeline" {
     Id [pk, name: "PK_economy_ad_reward_session_timeline"]
     SessionId [name: "IX_economy_ad_reward_session_timeline_SessionId"]
     (TimelineKind, SessionId, Sequence) [unique, name: "ux_economy_ad_reward_session_timeline_kind_session_sequence"]
-  }
-}
-
-Table "economy_admin_withdrawal_audit_events" {
-  "RunId" uuid [not null]
-  "Sequence" bigint [not null]
-  "TenantId" uuid [not null]
-  "Kind" "character varying(100)" [not null]
-  "ActorId" uuid
-  "Evidence" text [not null]
-  "OccurredAt" timestamp [not null]
-  "PreviousHash" "character varying(128)" [not null]
-  "Hash" "character varying(128)" [not null]
-
-  Checks {
-    `"Sequence" > 0` [name: 'ck_economy_admin_withdrawal_audit_events_sequence']
-  }
-
-  Indexes {
-    (RunId, Sequence) [pk, name: "PK_economy_admin_withdrawal_audit_events"]
-    Hash [unique, name: "ux_economy_admin_withdrawal_audit_events_hash"]
   }
 }
 
@@ -7972,6 +7851,27 @@ Table "economy_marketplace_settlement_credits" {
     CreditLotId [unique, name: "IX_economy_marketplace_settlement_credits_CreditLotId"]
     SettlementId [name: "IX_economy_marketplace_settlement_credits_SettlementId"]
     SourceStampId [unique, name: "IX_economy_marketplace_settlement_credits_SourceStampId"]
+  }
+}
+
+Table "economy_admin_withdrawal_audit_events" {
+  "RunId" uuid [not null]
+  "Sequence" bigint [not null]
+  "TenantId" uuid [not null]
+  "Kind" "character varying(100)" [not null]
+  "ActorId" uuid
+  "Evidence" text [not null]
+  "OccurredAt" timestamp [not null]
+  "PreviousHash" "character varying(128)" [not null]
+  "Hash" "character varying(128)" [not null]
+
+  Checks {
+    `"Sequence" > 0` [name: 'ck_economy_admin_withdrawal_audit_events_sequence']
+  }
+
+  Indexes {
+    (RunId, Sequence) [pk, name: "PK_economy_admin_withdrawal_audit_events"]
+    Hash [unique, name: "ux_economy_admin_withdrawal_audit_events_hash"]
   }
 }
 
@@ -10613,20 +10513,6 @@ Table "economy_risk_counter_reservations" {
   }
 }
 
-Table "economy_risk_decision_consumptions" {
-  "Id" uuid [not null]
-  "RiskDecisionId" uuid [not null]
-  "PostingGroupId" uuid [not null]
-  "OperationFingerprint" "character varying(128)" [not null]
-  "ConsumedAt" timestamp [not null]
-
-  Indexes {
-    Id [pk, name: "PK_economy_risk_decision_consumptions"]
-    RiskDecisionId [unique, name: "ux_economy_risk_decision_consumptions_decision"]
-    PostingGroupId [unique, name: "ux_economy_risk_decision_consumptions_posting"]
-  }
-}
-
 Table "economy_risk_review_cases" {
   "Id" uuid [not null]
   "TenantId" uuid [not null]
@@ -11732,18 +11618,43 @@ Table "economy_dispute_fragment_ranges" {
   }
 }
 
-Table "economy_capability_receipt_consumptions" {
+Table "economy_unit_consumptions" {
   "Id" uuid [not null]
-  "ReceiptId" uuid [not null]
-  "TenantId" uuid [not null]
-  "ActorId" uuid [not null]
-  "OperationFingerprint" "character varying(128)" [not null]
-  "KillSwitchEpoch" bigint [not null]
+  "ConsumptionKind" integer [not null]
+  "TenantId" uuid
+  "ReceiptId" uuid
+  "RiskDecisionId" uuid
+  "PostingGroupId" uuid
+  "SessionId" uuid
+  "ActorId" uuid
+  "OperationFingerprint" "character varying(128)"
+  "KillSwitchEpoch" bigint
+  "Scope" integer
+  "SubjectHash" "character varying(128)"
+  "WindowStartedAt" timestamp
+  "WindowEndsAt" timestamp
+  "SoftUnits" bigint
+  "LossBudgetUsdNanos" bigint
+  "UserId" uuid
+  "Network" "character varying(100)"
+  "DeviceRiskHash" "character varying(128)"
   "ConsumedAt" timestamp [not null]
 
+  Checks {
+    `("ConsumptionKind" = 1 AND "ReceiptId" IS NOT NULL AND "TenantId" IS NOT NULL AND "ActorId" IS NOT NULL AND "OperationFingerprint" IS NOT NULL AND "KillSwitchEpoch" IS NOT NULL AND "RiskDecisionId" IS NULL AND "PostingGroupId" IS NULL AND "SessionId" IS NULL AND "Scope" IS NULL AND "SubjectHash" IS NULL) OR ("ConsumptionKind" = 2 AND "RiskDecisionId" IS NOT NULL AND "PostingGroupId" IS NOT NULL AND "OperationFingerprint" IS NOT NULL AND "ReceiptId" IS NULL AND "ActorId" IS NULL AND "KillSwitchEpoch" IS NULL AND "SessionId" IS NULL AND "Scope" IS NULL AND "SubjectHash" IS NULL) OR ("ConsumptionKind" = 3 AND "SessionId" IS NOT NULL AND "TenantId" IS NOT NULL AND "Scope" IS NOT NULL AND "SubjectHash" IS NOT NULL AND "WindowStartedAt" IS NOT NULL AND "WindowEndsAt" IS NOT NULL AND "SoftUnits" IS NOT NULL AND "LossBudgetUsdNanos" IS NOT NULL AND "ReceiptId" IS NULL AND "RiskDecisionId" IS NULL AND "PostingGroupId" IS NULL AND "WindowEndsAt" > "WindowStartedAt" AND "ConsumedAt" >= "WindowStartedAt" AND "ConsumedAt" < "WindowEndsAt" AND "SoftUnits" > 0 AND "LossBudgetUsdNanos" >= 0 AND "Scope" BETWEEN 1 AND 6) OR ("ConsumptionKind" = 4 AND "SessionId" IS NOT NULL AND "TenantId" IS NOT NULL AND "UserId" IS NOT NULL AND "Network" IS NOT NULL AND "DeviceRiskHash" IS NOT NULL AND "SoftUnits" IS NOT NULL AND "LossBudgetUsdNanos" IS NOT NULL AND "ReceiptId" IS NULL AND "RiskDecisionId" IS NULL AND "PostingGroupId" IS NULL AND "SoftUnits" > 0 AND "LossBudgetUsdNanos" > 0)` [name: 'ck_economy_unit_consumptions_kind_shape']
+  }
+
   Indexes {
-    Id [pk, name: "PK_economy_capability_receipt_consumptions"]
-    ReceiptId [unique, name: "ux_economy_capability_receipt_consumptions_receipt"]
+    Id [pk, name: "PK_economy_unit_consumptions"]
+    (DeviceRiskHash, ConsumedAt) [name: "ix_economy_unit_consumptions_budget_device"]
+    (Network, ConsumedAt) [name: "ix_economy_unit_consumptions_budget_network"]
+    (UserId, ConsumedAt) [name: "ix_economy_unit_consumptions_budget_user"]
+    (TenantId, Scope, SubjectHash, ConsumedAt) [name: "ix_economy_unit_consumptions_tenant_scope_subject"]
+    SessionId [unique, name: "ux_economy_unit_consumptions_budget_session"]
+    PostingGroupId [unique, name: "ux_economy_unit_consumptions_posting"]
+    ReceiptId [unique, name: "ux_economy_unit_consumptions_receipt"]
+    RiskDecisionId [unique, name: "ux_economy_unit_consumptions_risk_decision"]
+    (SessionId, Scope) [unique, name: "ux_economy_unit_consumptions_session_scope"]
   }
 }
 
@@ -13041,8 +12952,6 @@ Ref "FK_DynamicRoleAssignment_DynamicRole_RoleId":"DynamicRole"."Id" <? "Dynamic
 
 Ref "FK_economy_ad_reward_reconciliations_economy_ad_provider_repor~":"economy_ad_provider_reports"."Id" <? "economy_ad_reward_reconciliations"."ProviderReportId" [delete: restrict]
 
-Ref "FK_economy_ad_reward_cap_consumptions_economy_ad_reward_sessio~":"economy_ad_reward_sessions"."Id" <? "economy_ad_reward_cap_consumptions"."SessionId" [delete: restrict]
-
 Ref "FK_economy_ad_reward_pending_claims_economy_ad_provider_report~":"economy_ad_provider_reports"."Id" ?<? "economy_ad_reward_pending_claims"."ProviderReportId" [delete: restrict]
 
 Ref "FK_economy_ad_reward_pending_claims_economy_ad_reward_sessions~":"economy_ad_reward_sessions"."Id" <? "economy_ad_reward_pending_claims"."SessionId" [delete: restrict]
@@ -13052,8 +12961,6 @@ Ref "FK_economy_ad_reward_provider_batch_claims_economy_ad_provider~":"economy_a
 Ref "FK_economy_ad_reward_provider_batch_claims_economy_ad_reward_s~":"economy_ad_reward_sessions"."Id" <? "economy_ad_reward_provider_batch_claims"."SessionId" [delete: restrict]
 
 Ref "FK_economy_ad_reward_session_timeline_economy_ad_reward_sessio~":"economy_ad_reward_sessions"."Id" <? "economy_ad_reward_session_timeline"."SessionId" [delete: restrict]
-
-Ref "FK_economy_admin_withdrawal_audit_events_economy_admin_withdra~":"economy_admin_withdrawal_runs"."Id" <? "economy_admin_withdrawal_audit_events"."RunId" [delete: restrict]
 
 Ref "FK_economy_bounty_escrow_fragments_economy_bounties_BountyId":"economy_bounties"."Id" <? "economy_bounty_escrow_fragments"."BountyId" [delete: restrict]
 
@@ -13079,11 +12986,13 @@ Ref "FK_economy_marketplace_refunds_economy_marketplace_settlements~":"economy_m
 
 Ref "FK_economy_marketplace_settlement_credits_economy_marketplace_~":"economy_marketplace_settlements"."Id" <? "economy_marketplace_settlement_credits"."SettlementId" [delete: restrict]
 
-Ref "FK_economy_payout_authorization_evidence_economy_payout_operat~":"economy_payout_operations"."Id" <? "economy_payout_authorization_evidence"."OperationId" [delete: restrict]
+Ref "FK_economy_admin_withdrawal_audit_events_economy_operations_Ru~":"economy_operations"."Id" <? "economy_admin_withdrawal_audit_events"."RunId" [delete: restrict]
 
-Ref "FK_economy_provider_events_economy_admin_withdrawal_runs_RunId":"economy_admin_withdrawal_runs"."Id" ?<? "economy_provider_events"."RunId" [delete: restrict]
+Ref "FK_economy_payout_authorization_evidence_economy_operations_Op~":"economy_operations"."Id" <? "economy_payout_authorization_evidence"."OperationId" [delete: restrict]
 
-Ref "FK_economy_provider_events_economy_payout_operations_Operation~":"economy_payout_operations"."Id" ?<? "economy_provider_events"."OperationId" [delete: restrict]
+Ref "FK_economy_provider_events_economy_operations_OperationId":"economy_operations"."Id" ?<? "economy_provider_events"."OperationId" [delete: restrict]
+
+Ref "FK_economy_provider_events_economy_operations_RunId":"economy_operations"."Id" ?<? "economy_provider_events"."RunId" [delete: restrict]
 
 Ref "FK_economy_reserve_asset_allocations_economy_reserve_heads_Res~":"economy_reserve_heads"."Version" <? "economy_reserve_asset_allocations"."ReserveVersion" [delete: restrict]
 
@@ -13355,13 +13264,13 @@ Ref "FK_economy_idempotency_records_economy_posting_groups_PostingG~":"economy_p
 
 Ref "FK_economy_journal_entries_economy_posting_groups_PostingGroup~":"economy_posting_groups"."Id" <? "economy_journal_entries"."PostingGroupId" [delete: restrict]
 
-Ref "FK_economy_outbox_economy_admin_withdrawal_runs_RunId":"economy_admin_withdrawal_runs"."Id" ?<? "economy_outbox"."RunId" [delete: restrict]
-
 Ref "FK_economy_outbox_economy_compliance_evidence_EvidenceId":"economy_compliance_evidence"."Id" ?<? "economy_outbox"."EvidenceId" [delete: restrict]
 
 Ref "FK_economy_outbox_economy_marketplace_settlements_SettlementId":"economy_marketplace_settlements"."Id" ?<? "economy_outbox"."SettlementId" [delete: restrict]
 
-Ref "FK_economy_outbox_economy_payout_operations_OperationId":"economy_payout_operations"."Id" ?<? "economy_outbox"."OperationId" [delete: restrict]
+Ref "FK_economy_outbox_economy_operations_OperationId":"economy_operations"."Id" ?<? "economy_outbox"."OperationId" [delete: restrict]
+
+Ref "FK_economy_outbox_economy_operations_RunId":"economy_operations"."Id" ?<? "economy_outbox"."RunId" [delete: restrict]
 
 Ref "FK_economy_outbox_economy_posting_groups_PostingGroupId":"economy_posting_groups"."Id" ?<? "economy_outbox"."PostingGroupId" [delete: restrict]
 
@@ -13402,10 +13311,6 @@ Ref "FK_economy_risk_audit_evidence_economy_risk_decisions_RiskDeci~":"economy_r
 Ref "FK_economy_risk_counter_reservations_economy_risk_counters_Ris~":"economy_risk_counters"."Id" <? "economy_risk_counter_reservations"."RiskCounterId" [delete: restrict]
 
 Ref "FK_economy_risk_counter_reservations_economy_risk_decisions_Ri~":"economy_risk_decisions"."Id" <? "economy_risk_counter_reservations"."RiskDecisionId" [delete: restrict]
-
-Ref "FK_economy_risk_decision_consumptions_economy_posting_groups_P~":"economy_posting_groups"."Id" <? "economy_risk_decision_consumptions"."PostingGroupId" [delete: restrict]
-
-Ref "FK_economy_risk_decision_consumptions_economy_risk_decisions_R~":"economy_risk_decisions"."Id" <? "economy_risk_decision_consumptions"."RiskDecisionId" [delete: restrict]
 
 Ref "FK_economy_risk_review_cases_economy_risk_decisions_RiskDecisi~":"economy_risk_decisions"."Id" <? "economy_risk_review_cases"."RiskDecisionId" [delete: restrict]
 
@@ -13569,7 +13474,13 @@ Ref "FK_economy_journal_lines_economy_wallets_WalletId":"economy_wallets"."Id" ?
 
 Ref "FK_economy_dispute_fragment_ranges_economy_dispute_fragment_fr~":"economy_dispute_fragment_freezes"."Id" <? "economy_dispute_fragment_ranges"."DisputeFragmentFreezeId" [delete: restrict]
 
-Ref "FK_economy_capability_receipt_consumptions_economy_capability_~":"economy_capability_receipts"."Id" <? "economy_capability_receipt_consumptions"."ReceiptId" [delete: restrict]
+Ref "FK_economy_unit_consumptions_economy_ad_reward_sessions_Sessio~":"economy_ad_reward_sessions"."Id" ?<? "economy_unit_consumptions"."SessionId" [delete: restrict]
+
+Ref "FK_economy_unit_consumptions_economy_capability_receipts_Recei~":"economy_capability_receipts"."Id" ?<? "economy_unit_consumptions"."ReceiptId" [delete: restrict]
+
+Ref "FK_economy_unit_consumptions_economy_posting_groups_PostingGro~":"economy_posting_groups"."Id" ?<? "economy_unit_consumptions"."PostingGroupId" [delete: restrict]
+
+Ref "FK_economy_unit_consumptions_economy_risk_decisions_RiskDecisi~":"economy_risk_decisions"."Id" ?<? "economy_unit_consumptions"."RiskDecisionId" [delete: restrict]
 
 Ref "FK_economy_risk_review_events_economy_risk_review_cases_RiskRe~":"economy_risk_review_cases"."Id" <? "economy_risk_review_events"."RiskReviewCaseId" [delete: restrict]
 
