@@ -24,6 +24,7 @@ export type FunctionParameterType = 'string' | 'boolean' | 'integer' | 'float';
 export type TestKind = 'standard' | 'functional';
 export type FileVisibility = 'Public' | 'Private';
 export type FileEncoding = 'text' | 'base64';
+export type CodingExerciseType = 'function' | 'standard-io';
 
 export const TEST_KIND = {
   Standard: 'standard',
@@ -105,6 +106,8 @@ export interface GradingConfig {
 export interface CodingAssignmentContent {
   readonly Type: 'coding-assignment';
   readonly Version: 1;
+  /** Missing only on frozen definitions authored before explicit profiles. */
+  readonly ExerciseType?: CodingExerciseType;
   readonly Environment: CodingEnvironment;
   readonly Data: WorkspaceData;
   readonly Tests: TestSuite;
@@ -353,7 +356,7 @@ export function narrowSuite(raw: unknown): TestSuite | null {
  * deliberately absent (passes through).
  */
 const WIRE_KEY_MAP: Record<string, string> = {
-  type: 'Type', version: 'Version',
+  type: 'Type', version: 'Version', exerciseType: 'ExerciseType',
   environment: 'Environment', data: 'Data', tests: 'Tests', grading: 'Grading',
   files: 'Files',
   language: 'Language', tools: 'Tools', libBundle: 'LibBundle', allowStudentCreateFiles: 'AllowStudentCreateFiles',
@@ -411,5 +414,11 @@ export function narrowCodingAssignmentContent(
   if (!tests) return null;
   // Environment / Data / Grading are not polymorphic — trust the wire shape,
   // the server validates via FluentValidation.
-  return { ...(source as unknown as CodingAssignmentContent), Tests: tests };
+  const exerciseType = source.ExerciseType;
+  if (exerciseType !== undefined && exerciseType !== 'function' && exerciseType !== 'standard-io') return null;
+  return {
+    ...(source as unknown as CodingAssignmentContent),
+    ExerciseType: exerciseType ?? 'standard-io',
+    Tests: tests,
+  };
 }

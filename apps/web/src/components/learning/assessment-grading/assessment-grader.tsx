@@ -2,17 +2,19 @@
 
 import React, { useCallback, useMemo, useState } from 'react';
 import {
-  CodingAssessmentEditor,
-  type AssessmentRunResult,
-} from '@game-guild/emception-ui';
-import {
-  createAssessmentWorkspaceConfig,
-  type CodingLanguage,
-} from '@game-guild/emception-ui/assessment/presets';
+  CodingSurface,
+  createCodingWorkspaceConfig,
+  type CodingPreviewResult,
+  type CodingWorkspaceLanguage,
+} from '@game-guild/coding-surface';
 
 import { formatFeedback } from '@/lib/emception/scoring';
 import type { CodeFile } from '@/lib/coding-assignment/code-payload';
 import type { CodingAssignmentContent } from '@/lib/coding-assignment/client';
+import {
+  applySubmissionToDefinition,
+  codingAssignmentToAuthoringDefinition,
+} from '@/lib/coding-assignment/coding-surface-bridge';
 
 export interface ComputedScore {
   score: number;
@@ -70,13 +72,19 @@ export function AssessmentGrader({
   submittedFiles,
   maxScore,
   manifestUrl,
-  submissionId,
   onComputedScore,
 }: AssessmentGraderProps): React.JSX.Element {
   const [computed, setComputed] = useState<ComputedScore | null>(null);
   const mergedFiles = useMemo(
     () => mergeWorkspaceWithSubmission(assignment, submittedFiles),
     [assignment, submittedFiles],
+  );
+  const definition = useMemo(
+    () => applySubmissionToDefinition(
+      codingAssignmentToAuthoringDefinition(assignment),
+      mergedFiles,
+    ),
+    [assignment, mergedFiles],
   );
   const workspaceConfig = useMemo(() => {
     const privatePaths = buildPrivatePaths(assignment);
@@ -91,13 +99,13 @@ export function AssessmentGrader({
           },
         ]),
     );
-    const language = (assignment.Environment.Language || 'cpp') as CodingLanguage;
-    return createAssessmentWorkspaceConfig(language, files);
+    const language = (assignment.Environment.Language || 'cpp') as CodingWorkspaceLanguage;
+    return createCodingWorkspaceConfig(language, files);
   }, [assignment, mergedFiles]);
   const noStudentCode = submittedFiles.length === 0;
 
   const handleRunResult = useCallback(
-    (result: AssessmentRunResult) => {
+    (result: CodingPreviewResult) => {
       const next = {
         score: result.score.score,
         autoFeedback: formatFeedback(result.report, result.score.score),
@@ -126,17 +134,17 @@ export function AssessmentGrader({
       ) : null}
 
       <div className="min-h-[400px] flex-1 border">
-        <CodingAssessmentEditor
+        <CodingSurface
           mode="grader"
-          definition={assignment}
+          definition={definition}
           manifestUrl={manifestUrl}
           title="Grade submission"
           workspaceConfig={workspaceConfig}
-          workspaceStorageKey={submissionId ? `emception:grader:${submissionId}` : undefined}
           enableWorkspace={false}
+          readOnly
           maxScore={maxScore}
           passingScore={0}
-          onRunResult={handleRunResult}
+          onPreviewRun={handleRunResult}
         />
       </div>
     </div>

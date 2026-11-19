@@ -17,6 +17,7 @@ function evaluate(overrides = {}) {
       ...process.env,
       CLASSIFY: 'success', SECRET_SCAN: 'success', REPOSITORY_POLICY: 'success', WEB: 'success',
       API_SELECTED: 'true', API: 'success', ECONOMY_SELECTED: 'false',
+      CODING_SELECTED: 'false', CODING: 'skipped',
       ECONOMY: 'skipped', ECONOMY_API: 'skipped', ECONOMY_CLIENT: 'skipped',
       ECONOMY_COVERAGE: 'skipped', ECONOMY_REGRESSION: 'skipped',
       ...overrides,
@@ -31,6 +32,19 @@ test('workflow passes the classifier API selection into the actual gate', () => 
 
 test('workflow passes the classifier Web selection into the actual gate', () => {
   assert.match(requiredGate, /WEB_SELECTED: \$\{\{ needs\.classify\.outputs\.web \}\}/);
+});
+
+test('workflow passes the classifier coding selection into the actual gate', () => {
+  assert.match(requiredGate, /CODING_SELECTED: \$\{\{ needs\.classify\.outputs\.coding \}\}/);
+});
+
+test('a selected coding gate must complete successfully', () => {
+  assert.equal(evaluate({ CODING_SELECTED: 'true', CODING: 'success' }).status, 0);
+  for (const result of ['failure', 'cancelled', 'skipped', '']) {
+    const outcome = evaluate({ CODING_SELECTED: 'true', CODING: result });
+    assert.equal(outcome.status, 1);
+    assert.match(outcome.stderr, /coding=/);
+  }
 });
 
 for (const selected of ['true', 'false']) {

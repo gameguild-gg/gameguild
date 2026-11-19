@@ -60,6 +60,19 @@ const assignmentSamplesMock = vi.hoisted(() => ({
       build: { sources: ["/user/main.cpp"] },
     },
   },
+  c: {
+    workspaceConfig: {
+      id: "c",
+      label: "C Assignment",
+      version: 1,
+      files: {
+        "/user/main.c": {
+          encoding: "text",
+          content: "// C assignment starter",
+        },
+      },
+    },
+  },
   "allegro-cpp": {
     workspaceConfig: {
       id: "allegro-cpp",
@@ -115,15 +128,15 @@ vi.mock("next/navigation", () => ({
   useRouter: () => routerMocks,
 }));
 
-vi.mock("@game-guild/emception-ui", async () => {
+vi.mock("@game-guild/coding-surface", async () => {
   const React = await import("react");
 
-  function CodingAssessmentEditor(props: {
+  function CodingSurface(props: {
     mode?: string;
     manifestUrl?: string;
     definition?: {
-      Environment?: { AllowStudentCreateFiles?: boolean };
-      Tests?: { Public?: unknown[]; Private?: unknown[] };
+      allowLearnerCreatedFiles?: boolean;
+      exerciseType?: string;
     };
     workspaceConfig?: { id?: string; files?: Record<string, unknown> };
     extensions?: readonly {
@@ -143,7 +156,7 @@ vi.mock("@game-guild/emception-ui", async () => {
     lastAssessmentEditorProps = props;
     lastIdeProps = {
       workspaceConfig: props.workspaceConfig,
-      allowCreateFiles: props.definition?.Environment?.AllowStudentCreateFiles,
+      allowCreateFiles: props.definition?.allowLearnerCreatedFiles,
     };
     const { onReady } = props;
     React.useEffect(() => {
@@ -177,20 +190,17 @@ vi.mock("@game-guild/emception-ui", async () => {
   }
 
   return {
-    CodingAssessmentEditor,
-  };
-});
-
-vi.mock("@game-guild/emception-ui/assessment/presets", () => ({
-  ASSIGNMENT_SAMPLES: assignmentSamplesMock,
-  createAssessmentWorkspaceConfig: (
+    CodingSurface,
+    CODING_WORKSPACE_SAMPLES: assignmentSamplesMock,
+    createCodingWorkspaceConfig: (
     language: keyof typeof assignmentSamplesMock,
     files: Record<string, unknown>,
   ) => ({
     ...assignmentSamplesMock[language].workspaceConfig,
     files,
   }),
-}));
+  };
+});
 
 vi.mock("@/lib/coding-assignment/actions", async () => {
   const actual = await vi.importActual<
@@ -203,7 +213,7 @@ vi.mock("@/lib/coding-assignment/actions", async () => {
 });
 
 import { CodingDefinitionEditor } from "./coding-definition-editor";
-import { ASSIGNMENT_SAMPLES } from "@game-guild/emception-ui/assessment/presets";
+import { CODING_WORKSPACE_SAMPLES } from "@game-guild/coding-surface";
 import { putCodingAssignmentAction } from "@/lib/coding-assignment/actions";
 import type { CodingAssignmentContent } from "@/lib/coding-assignment/client";
 
@@ -272,7 +282,7 @@ describe("CodingDefinitionEditor", () => {
   it("auto-seeds the C++ sample on mount when initialContent is null", async () => {
     render(<CodingDefinitionEditor {...baseProps} initialContent={null} />);
 
-    const sample = ASSIGNMENT_SAMPLES.cpp;
+    const sample = CODING_WORKSPACE_SAMPLES.cpp;
 
     // The IDE only renders once the seed useEffect populates fileRows.
     await screen.findByTestId("mock-assessment-surface");
@@ -402,6 +412,7 @@ describe("CodingDefinitionEditor", () => {
     expect(contentIdArg).toBe("content-1");
     expect(payloadArg.Type).toBe("coding-assignment");
     expect(payloadArg.Version).toBe(1);
+    expect(payloadArg.ExerciseType).toBe("standard-io");
     expect(payloadArg.Environment.Language).toBe("cpp");
     expect(payloadArg.Tests.Public).toHaveLength(1);
     expect(payloadArg.Tests.Public[0]).toMatchObject({
@@ -694,14 +705,17 @@ describe("CodingDefinitionEditor", () => {
     expect(await screen.findByText("Saved.")).toBeInTheDocument();
   });
 
-  it("hides the IDE when a selected preset has no assignment sample", async () => {
+  it("loads the selected C workspace from the public preset registry", async () => {
     const user = userEvent.setup();
     render(<CodingDefinitionEditor {...baseProps} />);
 
     await user.selectOptions(await screen.findByTestId("preset-picker"), "c");
 
-    expect(await screen.findByText("c")).toBeInTheDocument();
-    expect(screen.queryByTestId("ide-mount")).not.toBeInTheDocument();
+    expect(await screen.findByTestId("ide-mount")).toBeInTheDocument();
+    expect(lastIdeProps.workspaceConfig?.id).toBe("c");
+    expect(Object.keys(lastIdeProps.workspaceConfig?.files ?? {})).toContain(
+      "/user/main.c",
+    );
   });
 
   it.each([

@@ -10,6 +10,12 @@ public sealed record CodingAssignmentContent
 
     public int Version { get; init; } = 1;
 
+    /// <summary>
+    /// Product experience rendered for this definition. This axis is
+    /// independent from language, toolchain, test kind, and review policy.
+    /// </summary>
+    public string ExerciseType { get; init; } = "standard-io";
+
     public required CodingEnvironment Environment { get; init; }
 
     public required WorkspaceData Data { get; init; }

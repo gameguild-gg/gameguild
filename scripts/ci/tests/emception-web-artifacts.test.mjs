@@ -48,8 +48,10 @@ function pullRequestBranches(source) {
 }
 
 const web = job(pr, 'web');
+const coding = job(pr, 'coding');
 const producer = job(emception, 'build-test-package');
 const acquire = step(web, 'Acquire verified Toolchain release for Web');
+const codingAcquire = step(coding, 'Acquire verified Toolchain release for coding');
 
 const clientGateName = 'Test client credentials, MFA, auth factory, transport and generator contracts';
 const clientSuites = [
@@ -109,6 +111,23 @@ test('the acquired release must pass frozen identity verification before Web dep
   assert.ok(web.indexOf('Verify acquired frozen Toolchain identity') < web.indexOf('Build Web runtime dependencies'));
 });
 
+test('the coding lane independently acquires and verifies the exact Toolchain release', () => {
+  assert.match(coding, /timeout-minutes: 360/);
+  assert.match(codingAcquire, /id: emception-coding-release/);
+  assert.ok(codingAcquire.includes('SOURCE_TREE_SHA="$(git rev-parse \'HEAD^{tree}\')" python3 scripts/ci/acquire-emception-release.py --wait-seconds 19800'));
+  assert.ok(codingAcquire.includes('SOURCE_HEAD_SHA: ${{ needs.classify.outputs.headSha }}'));
+  assert.ok(codingAcquire.includes('CHANGED_PATHS: ${{ needs.classify.outputs.changedFiles }}'));
+  assert.ok(codingAcquire.includes('GH_TOKEN: ${{ github.token }}'));
+  assert.match(coding, /permissions:\n {6}contents: read\n {6}actions: read/);
+
+  const verify = step(coding, 'Verify acquired frozen Toolchain identity');
+  assert.match(verify, /if: steps\.emception-coding-release\.outputs\.required == 'true'/);
+  assert.match(verify, /await verifyCodingCycleToolchain/);
+  assert.ok(coding.indexOf('Acquire verified Toolchain release for coding') < coding.indexOf('Build coding runtime dependencies'));
+  assert.ok(coding.indexOf('Verify acquired frozen Toolchain identity') < coding.indexOf('Build coding runtime dependencies'));
+  assert.doesNotMatch(codingAcquire + verify, /continue-on-error|allow-failure|\|\| true|--no-sandbox/);
+});
+
 test('the producer publishes only after release gates and before the independent browser cycle', () => {
   const prepare = step(producer, 'Prepare verified Toolchain CDN provenance');
   const upload = step(producer, 'Upload verified Toolchain CDN for Web');
@@ -133,6 +152,7 @@ test('producer detection covers every source or workflow change that requires de
     assert.ok(matches.test(path), 'Producer does not run for: ' + path);
   }
   assert.equal(matches.test('docs/readme.md'), false);
+  assert.equal(matches.test('packages/features/coding-surface/src/coding-surface.tsx'), false);
   for (const helper of ['web-runtime', 'grading-transport', 'grading-observer']) {
     for (const suffix of ['.mjs', '.test.mjs']) {
       assert.ok(matches.test(`apps/web/scripts/coding-cycle-${helper}${suffix}`));

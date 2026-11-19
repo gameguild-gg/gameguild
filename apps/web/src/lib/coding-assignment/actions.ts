@@ -9,19 +9,7 @@
  */
 
 import { putCodingAssignment as putCodingAssignmentClient } from "./client";
-import type {
-  CodingAssignmentContent,
-  CodingEnvironment,
-  FileVisibility,
-  FunctionParameter,
-  FunctionParameterWithName,
-  FunctionParameterType,
-  FunctionParameterValue,
-  StandardTest,
-  FunctionalTestGroup,
-  FunctionalTestCase,
-  Test,
-} from "./types";
+import type { CodingAssignmentContent } from "./types";
 import { revalidatePath } from "next/cache";
 
 export type {
@@ -36,6 +24,7 @@ export type {
   FunctionalTestGroup,
   FunctionalTestCase,
   Test,
+  CodingExerciseType,
 } from "./types";
 
 export type PutCodingAssignmentActionResult =

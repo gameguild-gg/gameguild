@@ -7,22 +7,22 @@ const assessmentEditorMock = vi.hoisted(() => ({
     mode?: string;
     definition?: unknown;
     workspaceConfig?: { files?: Record<string, unknown> };
-    onRunResult?: (result: {
+    onPreviewRun?: (result: {
       report: { cases: unknown[] };
       score: { score: number };
     }) => void;
   } | null,
 }));
 
-vi.mock("@game-guild/emception-ui", () => ({
-  CodingAssessmentEditor: (props: typeof assessmentEditorMock.props) => {
+vi.mock("@game-guild/coding-surface", () => ({
+  CodingSurface: (props: typeof assessmentEditorMock.props) => {
     assessmentEditorMock.props = props;
     return (
       <button
         data-testid="mock-run-full-tests"
         type="button"
         onClick={() =>
-          props?.onRunResult?.({
+          props?.onPreviewRun?.({
             report: { cases: [] },
             score: { score: 67 },
           })
@@ -32,10 +32,7 @@ vi.mock("@game-guild/emception-ui", () => ({
       </button>
     );
   },
-}));
-
-vi.mock("@game-guild/emception-ui/assessment/presets", () => ({
-  createAssessmentWorkspaceConfig: vi.fn(
+  createCodingWorkspaceConfig: vi.fn(
     (_language: string, files: Record<string, unknown>) => ({
       id: "cpp",
       label: "C++",
@@ -56,6 +53,7 @@ import type { CodingAssignmentContent } from "@/lib/coding-assignment/client";
 const assignment: CodingAssignmentContent = {
   Type: "coding-assignment",
   Version: 1,
+  ExerciseType: "standard-io",
   Environment: {
     Language: "cpp",
     Tools: "clang",
@@ -77,7 +75,12 @@ const assignment: CodingAssignmentContent = {
       },
     },
   },
-  Tests: { Public: [], Private: [] },
+  Tests: {
+    Public: [
+      { kind: "standard", Name: "echo", Weight: 1, Stdin: "", Stdout: "" },
+    ],
+    Private: [],
+  },
   Grading: { MaxScore: 100 },
 };
 
@@ -99,7 +102,14 @@ describe("CodeGraderPanel", () => {
     );
 
     expect(assessmentEditorMock.props?.mode).toBe("grader");
-    expect(assessmentEditorMock.props?.definition).toBe(assignment);
+    expect(assessmentEditorMock.props?.definition).toMatchObject({
+      schemaVersion: 2,
+      exerciseType: "standard-io",
+      files: expect.arrayContaining([
+        expect.objectContaining({ path: "/home/user/main.cpp", content: "// submission" }),
+        expect.objectContaining({ path: "/home/user/secret.cpp", content: "// instructor only", visibility: "private" }),
+      ]),
+    });
     expect(assessmentEditorMock.props?.workspaceConfig?.files).toEqual({
       "/home/user/main.cpp": { encoding: "text", content: "// submission" },
     });

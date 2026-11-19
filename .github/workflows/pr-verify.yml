@@ -83,6 +83,7 @@ jobs:
     outputs:
       api: ${{ steps.changes.outputs.api }}
       web: ${{ steps.changes.outputs.web }}
+      coding: ${{ steps.changes.outputs.coding }}
       testingLab: ${{ steps.changes.outputs.testingLab }}
       economyCritical: ${{ steps.changes.outputs.economyCritical }}
       openApi: ${{ steps.changes.outputs.openApi }}
@@ -368,6 +369,61 @@ jobs:
           name: testing-lab-${{ github.event.pull_request.head.sha }}
           path: artifacts/test-results
           if-no-files-found: error
+
+  coding:
+    name: Coding assessment critical flow
+    needs: [runner-pool, classify]
+    if: needs.classify.outputs.coding == 'true'
+    runs-on: ${{ fromJSON(needs.runner-pool.outputs.docker-pool) }}
+    timeout-minutes: 360
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: ./.github/actions/setup-node-workspace
+      - uses: ./.github/actions/setup-dotnet
+      - uses: ./.github/actions/setup-playwright
+      - name: Acquire verified Toolchain release for coding
+        id: emception-coding-release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_HEAD_SHA: ${{ needs.classify.outputs.headSha }}
+          CHANGED_PATHS: ${{ needs.classify.outputs.changedFiles }}
+        run: SOURCE_TREE_SHA="$(git rev-parse 'HEAD^{tree}')" python3 scripts/ci/acquire-emception-release.py --wait-seconds 19800
+      - name: Verify acquired frozen Toolchain identity
+        if: steps.emception-coding-release.outputs.required == 'true'
+        run: |
+          node --input-type=module -e "import { verifyCodingCycleToolchain } from './apps/web/scripts/coding-cycle-toolchain-support.mjs'; await verifyCodingCycleToolchain('./tools/emception/artifacts/toolchain/release/cdn/manifest.json');"
+      - name: Build coding runtime dependencies
+        run: |
+          pnpm --filter @game-guild/client build
+          pnpm --filter @game-guild/web run build:emception-dependencies
+          pnpm --filter @game-guild/web run sync:emception
+      - name: Verify coding contracts and surfaces
+        run: |
+          pnpm --filter @game-guild/coding test
+          pnpm --filter @game-guild/coding typecheck
+          pnpm --filter @game-guild/grading-adapter-code test
+          pnpm --filter @game-guild/grading-adapter-code typecheck
+          pnpm --filter @game-guild/coding-surface test
+          pnpm --filter @game-guild/coding-surface typecheck
+      - name: Prepare certificate for disposable API test storage
+        run: bash scripts/ci/prepare-data-protection-test-certificate.sh
+      - name: Pull pinned coding-cycle PostgreSQL image
+        shell: bash
+        run: |
+          source scripts/ci/pull-ci-image.sh
+          pull_ci_image "$GAMEGUILD_TEST_POSTGRES_17_IMAGE"
+      - name: Run coding assessment browser cycle
+        run: pnpm --filter @game-guild/web test:browser:coding-cycle
+      - name: Upload coding assessment evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: coding-assessment-${{ github.event.pull_request.head.sha }}
+          path: apps/web/test-results/coding-cycle
+          if-no-files-found: warn
 
   openapi:
     name: OpenAPI client consistency
@@ -660,6 +716,7 @@ jobs:
         repository-policy,
         web,
         api,
+        coding,
         testing-lab,
         openapi,
         migration,
@@ -683,6 +740,8 @@ jobs:
           WEB_SELECTED: ${{ needs.classify.outputs.web }}
           API: ${{ needs.api.result }}
           API_SELECTED: ${{ needs.classify.outputs.api }}
+          CODING: ${{ needs.coding.result }}
+          CODING_SELECTED: ${{ needs.classify.outputs.coding }}
           TESTING_LAB: ${{ needs.testing-lab.result }}
           OPENAPI: ${{ needs.openapi.result }}
           MIGRATION: ${{ needs.migration.result }}
@@ -700,6 +759,7 @@ jobs:
             'repository-policy': process.env.REPOSITORY_POLICY,
             web: process.env.WEB,
             api: process.env.API,
+            coding: process.env.CODING,
             'testing-lab': process.env.TESTING_LAB,
             openapi: process.env.OPENAPI,
             migration: process.env.MIGRATION,
@@ -728,6 +788,9 @@ jobs:
           if (gates.api === 'skipped' && process.env.API_SELECTED !== 'false') {
             failed.push('api=skipped');
           }
+          if (gates.coding === 'skipped' && process.env.CODING_SELECTED !== 'false') {
+            failed.push('coding=skipped');
+          }
           if (gates['secret-scan'] !== 'success' && !failed.some(item => item.startsWith('secret-scan='))) {
             failed.push(`secret-scan=${gates['secret-scan']}`);
           }
@@ -753,6 +816,11 @@ jobs:
                 failed.push(`${name}=skipped`);
               }
             }
+          }
+          if (gates.coding === '') {
+            if (!failed.some(item => item.startsWith('coding='))) failed.push('coding=missing');
+          } else if (gates.coding === 'skipped' && process.env.CODING_SELECTED !== 'false') {
+            if (!failed.some(item => item.startsWith('coding='))) failed.push('coding=skipped');
           }
           if (failed.length) {
             console.error(`Required PR gates failed: ${failed.join(', ')}`);

@@ -56,7 +56,6 @@ import { existsSync, readFileSync, writeFileSync, createWriteStream, rmSync, app
 import { resolve } from "node:path";
 import { createClient, GeneratedApi } from "@game-guild/client";
 import { chromium } from "playwright";
-import { scoreValueFromPoints } from "../../../packages/features/grading/src/values.ts";
 import { resolveChromiumExecutablePath } from "./browser-executable.mjs";
 import {
   assertSharedAuthCookie,
@@ -84,6 +83,7 @@ if (CODE_GRADING_BROWSER_CHANNEL !== undefined && CODE_GRADING_BROWSER_CHANNEL !
 const PG_USER = "gameguild_e2e";
 const PG_PASSWORD = "gameguild_e2e_password";
 const PG_DB = "gameguild_e2e";
+const ACADEMIC_VALUE_SCALE = 100;
 const PG_IMAGE = process.env.GAMEGUILD_TEST_POSTGRES_17_IMAGE || "postgres:17-alpine";
 const PG_CONTAINER = `gg-e2e-pg-coding-${process.pid}-${Date.now()}`;
 
@@ -1540,7 +1540,7 @@ async function gradeCheck(fixture) {
   record("submission status Graded", sub?.status === "Graded", sub?.status ?? "no submission");
   // Keep the exact 100-point requirement. The API's ScoreValue wire contract
   // contains hundredths, so the required stored value is 10,000 units.
-  record("submission score == 100", sub?.score === scoreValueFromPoints(String(fixture.maxScore)),
+  record("submission score == 100", sub?.score === wholePointsToScoreUnits(fixture.maxScore),
     `scoreUnits=${sub?.score}; expectedPoints=${fixture.maxScore}`);
   record("submission feedback non-null", Boolean(sub?.feedback), `feedback=${sub?.feedback ? "present" : "null"}`);
 
@@ -1560,6 +1560,13 @@ async function gradeCheck(fixture) {
   const payloadNonEmpty = Boolean(rubricPayload) && rubricPayload !== "NULL" && rubricPayload !== "";
   record("DB RubricScoresPayload non-null", payloadNonEmpty, rubricPayload ?? dbError ?? "no row");
   return result;
+}
+
+function wholePointsToScoreUnits(points) {
+  if (!Number.isSafeInteger(points) || points < 0) {
+    throw new TypeError("The coding-cycle fixture score must be a non-negative integer point value.");
+  }
+  return points * ACADEMIC_VALUE_SCALE;
 }
 
 function queryPg(container, user, db, sql) {

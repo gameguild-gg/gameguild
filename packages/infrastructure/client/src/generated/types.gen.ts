@@ -20476,6 +20476,9 @@ Discriminator root: `Type == "coding-assignment"`, `Version == 1`. */
 export interface LearningCoursesCodingAssignmentContent {
   data: LearningCoursesWorkspaceData;
   environment: LearningCoursesCodingEnvironment;
+  /** Product experience rendered for this definition. This axis is
+independent from language, toolchain, test kind, and review policy. */
+  exerciseType?: string | null;
   grading: LearningCoursesGradingConfig;
   tests: LearningCoursesTestSuite;
   type?: string | null;
@@ -49045,6 +49048,7 @@ Discriminator root: `Type == "coding-assignment"`, `Version == 1`. */
 LearningCoursesCodingAssignmentContentSchema = z.object({
   data: z.lazy(() => LearningCoursesWorkspaceDataSchema),
   environment: z.lazy(() => LearningCoursesCodingEnvironmentSchema),
+  exerciseType: z.string().nullable().optional(),
   grading: z.lazy(() => LearningCoursesGradingConfigSchema),
   tests: z.lazy(() => LearningCoursesTestSuiteSchema),
   type: z.string().nullable().optional(),

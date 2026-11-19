@@ -1,5 +1,5 @@
 import type { AssessmentExecutionDeliveryV1, AssessmentItemManifestV1 } from '@game-guild/grading';
-import { projectCodingDefinitionForLearner } from '@game-guild/coding';
+import { projectCodingDefinitionForLearner, projectCodingDefinitionForLearnerV2 } from '@game-guild/coding';
 import { CODE_ASSESSMENT_TYPE_ADAPTER, type CodeItemProjectionV1, type CodeLearnerDeliveryItemV1 } from './contracts';
 
 export function createCodeItemManifest(items: readonly CodeItemProjectionV1[]): AssessmentItemManifestV1[] {
@@ -35,7 +35,9 @@ export function createCodeExecutionDelivery(
         adapterVersion: CODE_ASSESSMENT_TYPE_ADAPTER.version,
         learnerPayload: {
           itemId: item.itemId,
-          definition: projectCodingDefinitionForLearner(item.definition),
+          definition: item.definition.schemaVersion === 2
+            ? projectCodingDefinitionForLearnerV2(item.definition)
+            : projectCodingDefinitionForLearner(item.definition),
         },
       },
     },

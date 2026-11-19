@@ -40,6 +40,7 @@ export type {
   FileVisibility,
   FileEncoding,
   TestKind,
+  CodingExerciseType,
 } from './types';
 
 export {

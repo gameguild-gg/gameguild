@@ -12,8 +12,9 @@ import type { CodingAssignmentContent } from "@/lib/coding-assignment/types";
 const mocks = vi.hoisted(() => ({
   buildPlan: vi.fn(),
   createWorkspace: vi.fn(),
+  toDelivery: vi.fn(),
+  toFileRecord: vi.fn(),
   editor: vi.fn(() => null),
-  filesToPayload: vi.fn(),
   push: vi.fn(),
   seedFiles: vi.fn(),
   submit: vi.fn(),
@@ -25,24 +26,19 @@ const mocks = vi.hoisted(() => ({
 vi.mock("@/i18n/navigation", () => ({
   useRouter: () => ({ push: mocks.push }),
 }));
-vi.mock("@/lib/coding-assignment/code-payload", () => ({
-  filesToCodePayload: mocks.filesToPayload,
+vi.mock("@/lib/coding-assignment/coding-surface-bridge", () => ({
+  codingAssignmentToLearnerDelivery: mocks.toDelivery,
+  codingSubmissionToFileRecord: mocks.toFileRecord,
 }));
 vi.mock("@/lib/learning/grading-runtime-actions", () => ({
   startIndividualRuntimeSubmission: mocks.start,
   submitRuntimeSubmission: mocks.submit,
 }));
-vi.mock("@game-guild/emception-ui/assessment/editor", () => ({
-  CodingAssessmentEditor: mocks.editor,
-}));
-vi.mock("@game-guild/emception-ui/assessment/plan", () => ({
-  buildAssessmentExecutionPlan: mocks.buildPlan,
-}));
-vi.mock("@game-guild/emception-ui/assessment/presets", () => ({
-  createAssessmentWorkspaceConfig: mocks.createWorkspace,
-}));
-vi.mock("@game-guild/emception-ui/assessment/storage", () => ({
-  workspaceStorageKey: mocks.storageKey,
+vi.mock("@game-guild/coding-surface", () => ({
+  CodingSurface: mocks.editor,
+  buildCodingExecutionPlan: mocks.buildPlan,
+  createCodingWorkspaceConfig: mocks.createWorkspace,
+  codingWorkspaceStorageKey: mocks.storageKey,
 }));
 vi.mock("next/script", () => ({ default: () => null }));
 vi.mock("./resolve-seed", () => ({ publicSeedFiles: mocks.seedFiles }));
@@ -94,8 +90,11 @@ async function editorProps() {
   return mocks.editor.mock.calls.at(-1)![0] as Record<string, unknown>;
 }
 
-function readySession(props: Record<string, unknown>, delta: unknown = []) {
-  const session = { getSubmissionDelta: vi.fn().mockResolvedValue(delta) };
+function readySession(
+  props: Record<string, unknown>,
+  delta: unknown = { schemaVersion: 1, files: [] },
+) {
+  const session = { getSubmission: vi.fn().mockResolvedValue(delta) };
   act(() => {
     (props.onSessionReady as (value: typeof session) => void)(session);
   });
@@ -113,13 +112,18 @@ describe("CodingActivityClient", () => {
       id: `workspace-${language}`,
       files,
     }));
-    mocks.storageKey.mockImplementation(
-      (token, workspaceId) => `${token}:${workspaceId}`,
-    );
-    mocks.filesToPayload.mockImplementation((files) => JSON.stringify(Object.fromEntries(
-      files.map((file: { path: string; content: string }) => [file.path, { content: file.content, encoding: 'text' }]))));
+    mocks.storageKey.mockImplementation((scope) => JSON.stringify(scope));
+    mocks.toDelivery.mockImplementation((content) => ({
+      ...content,
+      schemaVersion: 2,
+      exerciseType: content.ExerciseType ?? "standard-io",
+      publicTests: content.Tests.Public,
+    }));
+    mocks.toFileRecord.mockImplementation((submission) => Object.fromEntries(
+      submission.files.map((file: { path: string; content: string }) => [file.path, { content: file.content, encoding: 'text' }])));
     mocks.start.mockResolvedValue({ success: true, data: {
       submissionId: 'official-submission-1',
+      definitionRevisionId: 'revision-1',
       execution: { delivery: { itemOrder: ['code'], items: { code: {
         adapterKey: 'code-assessment-type', adapterVersion: '1', learnerPayload: { definition: assignment() },
       } } } },
@@ -136,15 +140,13 @@ describe("CodingActivityClient", () => {
     expect(mocks.createWorkspace).toHaveBeenCalledWith("cpp", {
       "main.cpp": { encoding: "text", content: "// seed" },
     });
-    expect(mocks.storageKey).toHaveBeenCalledWith(
-      "assessment-1",
-      "workspace-cpp",
-    );
+    expect(mocks.storageKey).not.toHaveBeenCalled();
     expect(props).toMatchObject({
       mode: "learner",
       manifestUrl: "/emception/manifest.json",
       maxScore: 100,
       passingScore: 60,
+      enableWorkspace: false,
     });
     expect(screen.getByRole("button", { name: "Submit" })).toBeDisabled();
   });
@@ -152,14 +154,16 @@ describe("CodingActivityClient", () => {
   it("overlays prior submissions and namespaces local drafts by user", async () => {
     mocks.start.mockResolvedValue({ success: true, data: {
       submissionId: 'official-submission-1',
+      definitionRevisionId: 'revision-1',
       execution: { delivery: { itemOrder: ['code'], items: { code: {
-        adapterKey: 'code-assessment-type', adapterVersion: '1', learnerPayload: { definition: assignment('rust') },
+        adapterKey: 'code-assessment-type', adapterVersion: '1', learnerPayload: { definition: assignment('c') },
       } } } },
     } });
     renderActivity({
       userId: "user-1",
+      tenantId: "tenant-1",
       manifestUrl: "/manifest.json",
-      assignment: assignment("rust"),
+      assignment: assignment("c"),
       submissionFiles: [
         { path: "main.cpp", content: "// restored", encoding: "text" },
         { path: "notes.txt", content: "notes", encoding: "text" },
@@ -167,14 +171,18 @@ describe("CodingActivityClient", () => {
     });
 
     const props = await editorProps();
-    expect(mocks.createWorkspace).toHaveBeenCalledWith("rust", {
+    expect(mocks.createWorkspace).toHaveBeenCalledWith("c", {
       "main.cpp": { encoding: "text", content: "// restored" },
       "notes.txt": { encoding: "text", content: "notes" },
     });
-    expect(mocks.storageKey).toHaveBeenCalledWith(
-      "user-1:assessment-1",
-      "workspace-rust",
-    );
+    expect(mocks.storageKey).toHaveBeenCalledWith({
+      tenantId: "tenant-1",
+      assessmentRevisionId: "revision-1",
+      actorId: "user-1",
+      attemptId: "official-submission-1",
+      workspaceId: "workspace-c",
+    });
+    expect(props.enableWorkspace).toBe(true);
     expect(props.manifestUrl).toBe("/manifest.json");
   });
 
@@ -183,7 +191,7 @@ describe("CodingActivityClient", () => {
     const props = await editorProps();
     const report = { passed: 1, failed: 0, cases: [] };
     act(() => {
-      (props.onRunResult as (value: unknown) => void)({ report });
+      (props.onPreviewRun as (value: unknown) => void)({ report });
     });
 
     expect(screen.getByTestId("estimate-banner")).toBeInTheDocument();
@@ -202,10 +210,10 @@ describe("CodingActivityClient", () => {
     mocks.submit.mockReturnValue(pending.promise);
     renderActivity();
     const props = await editorProps();
-    const delta = [
-      { path: "main.cpp", content: "int main(){}", encoding: "text" },
-    ];
-    const session = readySession(props, delta);
+    const submission = { schemaVersion: 1, files: [
+      { fileId: "file-main", path: "main.cpp", content: "int main(){}", encoding: "text" },
+    ] };
+    const session = readySession(props, submission);
     const submitButton = screen.getByRole("button", { name: "Submit" });
     const form = submitButton.closest("form")!;
 
@@ -218,8 +226,8 @@ describe("CodingActivityClient", () => {
     expect(await screen.findByRole("status")).toHaveTextContent(
       "Submission received",
     );
-    expect(session.getSubmissionDelta).toHaveBeenCalledOnce();
-    expect(mocks.filesToPayload).toHaveBeenCalledWith(delta);
+    expect(session.getSubmission).toHaveBeenCalledOnce();
+    expect(mocks.toFileRecord).toHaveBeenCalledWith(submission);
     expect(mocks.submit).toHaveBeenCalledWith('official-submission-1', {
       schemaVersion: 1, contentType: 'coding-assignment', payloadSchema: 'code-files/v1',
       payload: { files: { 'main.cpp': { content: 'int main(){}', encoding: 'text' } } },
@@ -229,20 +237,21 @@ describe("CodingActivityClient", () => {
     );
   });
 
-  it("submits an empty delta when the session returns no value", async () => {
+  it("submits an empty canonical submission", async () => {
     mocks.submit.mockResolvedValue({
       success: false,
       error: "Submission rejected.",
     });
     renderActivity();
     const props = await editorProps();
-    readySession(props, null);
+    const submission = { schemaVersion: 1, files: [] };
+    readySession(props, submission);
 
     fireEvent.click(screen.getByRole("button", { name: "Submit" }));
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Submission rejected.",
     );
-    expect(mocks.filesToPayload).toHaveBeenCalledWith([]);
+    expect(mocks.toFileRecord).toHaveBeenCalledWith(submission);
     expect(mocks.push).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Submit" })).toBeEnabled();
   });

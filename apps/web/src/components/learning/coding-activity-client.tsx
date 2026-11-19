@@ -1,24 +1,27 @@
 "use client";
 
 import { useRouter } from "@/i18n/navigation";
-import { filesToCodePayload } from "@/lib/coding-assignment/code-payload";
+import {
+  codingAssignmentToLearnerDelivery,
+  codingSubmissionToFileRecord,
+} from "@/lib/coding-assignment/coding-surface-bridge";
 import type { CodingAssignmentContent } from "@/lib/coding-assignment/types";
 import type { LearnerMutationResult } from "@/lib/learner/activity-actions";
 import { startIndividualRuntimeSubmission, submitRuntimeSubmission } from "@/lib/learning/grading-runtime-actions";
 import { readCodeRuntimeDefinition } from "@/lib/coding-assignment/runtime";
 import type { AssessmentSubmissionRuntimeViewV1 } from "@game-guild/grading";
-import { buildAssessmentExecutionPlan } from "@game-guild/emception-ui/assessment/plan";
 import type {
-  AssessmentRunResult,
-  AssessmentSession,
-  CodingAssessmentEditorProps,
-} from "@game-guild/emception-ui/assessment/editor";
-import { EMCEPTION_MANIFEST_URL } from "@/lib/emception/manifest-url";
+  CodingLearnerSurfaceProps,
+  CodingPreviewResult,
+  CodingSurfaceSession,
+} from "@game-guild/coding-surface";
 import {
-  createAssessmentWorkspaceConfig,
-  type CodingLanguage,
-} from "@game-guild/emception-ui/assessment/presets";
-import { workspaceStorageKey } from "@game-guild/emception-ui/assessment/storage";
+  buildCodingExecutionPlan,
+  codingWorkspaceStorageKey,
+  createCodingWorkspaceConfig,
+  type CodingWorkspaceLanguage,
+} from "@game-guild/coding-surface";
+import { EMCEPTION_MANIFEST_URL } from "@/lib/emception/manifest-url";
 import { Button } from "@game-guild/ui/components/button";
 import { scoreUnitsToPoints } from "@/lib/learning/academic-values";
 import type { TestReport, WorkspaceConfig } from "emception";
@@ -36,15 +39,14 @@ import { PublicTestEstimateBanner } from "./public-test-estimate-banner";
 import { publicSeedFiles, type SeedFile } from "./resolve-seed";
 
 type CodingEditorLoader = () => Promise<
-  ComponentType<CodingAssessmentEditorProps>
+  ComponentType<CodingLearnerSurfaceProps>
 >;
 
 async function loadCodingEditor(): Promise<
-  ComponentType<CodingAssessmentEditorProps>
+  ComponentType<CodingLearnerSurfaceProps>
 > {
-  const { CodingAssessmentEditor } =
-    await import("@game-guild/emception-ui/assessment/editor");
-  return CodingAssessmentEditor;
+  const { CodingSurface } = await import("@game-guild/coding-surface");
+  return CodingSurface as ComponentType<CodingLearnerSurfaceProps>;
 }
 
 function IdeSkeleton() {
@@ -66,10 +68,11 @@ export interface CodingActivityClientProps {
   /** v1 CodingAssignmentContent (Public-only — server strips Private). */
   assignment: CodingAssignmentContent;
   manifestUrl?: string;
-  /** Namespaces the draft-storage token per user (page supplies; optional so
-   *  the page can wire it independently — a bare assessmentId keeps the
-   *  pre-namespacing keys, still reachable via the legacy fallback read). */
+  /** Actor scope for local drafts. Persistence stays disabled unless every
+   *  tenant, revision, actor, and attempt namespace component is available. */
   userId?: string;
+  /** Tenant scope used only to isolate local drafts. */
+  tenantId?: string;
   /** Prior submission files for overlay restore; null = no submission yet. */
   submissionFiles?: SeedFile[] | null;
   /** Alternate lazy loader used by embedded hosts and deterministic tests. */
@@ -87,10 +90,11 @@ function CodingActivitySession({
   assignment: initialAssignment,
   manifestUrl,
   userId,
+  tenantId,
   submissionFiles,
   loadEditor = loadCodingEditor,
 }: CodingActivityClientProps) {
-  const sessionRef = useRef<AssessmentSession | null>(null);
+  const sessionRef = useRef<CodingSurfaceSession | null>(null);
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [report, setReport] = useState<TestReport | null>(null);
@@ -102,7 +106,7 @@ function CodingActivitySession({
   const [startKey] = useState(() => crypto.randomUUID());
   const submitKey = useRef<string | null>(null);
   const [Editor, setEditor] =
-    useState<ComponentType<CodingAssessmentEditorProps> | null>(null);
+    useState<ComponentType<CodingLearnerSurfaceProps> | null>(null);
   const [editorLoadError, setEditorLoadError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -146,18 +150,22 @@ function CodingActivitySession({
     };
   }, [loadEditor]);
 
-  const receiveSession = useCallback((session: AssessmentSession) => {
+  const receiveSession = useCallback((session: CodingSurfaceSession) => {
     sessionRef.current = session;
     setSessionReady(true);
   }, []);
-  const receiveRunResult = useCallback((runResult: AssessmentRunResult) => {
+  const receiveRunResult = useCallback((runResult: CodingPreviewResult) => {
     setReport(runResult.report);
   }, []);
 
   const seedFiles = useMemo(() => publicSeedFiles(assignment), [assignment]);
+  const delivery = useMemo(
+    () => runtime ? codingAssignmentToLearnerDelivery(assignment) : null,
+    [assignment, runtime],
+  );
   const publicPlan = useMemo(
-    () => buildAssessmentExecutionPlan(assignment, "public").plan,
-    [assignment],
+    () => delivery ? buildCodingExecutionPlan(delivery, "public").plan : null,
+    [delivery],
   );
   const maxScore = assignment.Grading.MaxScore;
   // ponytail: PassingScore moved from GradingConfig to Program (T1/T3). Learner context
@@ -166,7 +174,7 @@ function CodingActivitySession({
   const passingScore = 60;
 
   const language =
-    (assignment.Environment.Language as CodingLanguage | undefined) ?? "cpp";
+    (assignment.Environment.Language as CodingWorkspaceLanguage | undefined) ?? "cpp";
   const restoredFiles = useMemo(() => {
     const response = runtime?.execution.submittedResponse;
     if (!response) return submissionFiles ?? [];
@@ -187,8 +195,18 @@ function CodingActivitySession({
     for (const file of restoredFiles) {
       files.set(file.path, { encoding: file.encoding, content: file.content });
     }
-    return createAssessmentWorkspaceConfig(language, Object.fromEntries(files));
+    return createCodingWorkspaceConfig(language, Object.fromEntries(files));
   }, [language, seedFiles, restoredFiles]);
+  const draftStorageKey = useMemo(() => {
+    if (!tenantId || !userId || !runtime) return undefined;
+    return codingWorkspaceStorageKey({
+      tenantId,
+      assessmentRevisionId: runtime.definitionRevisionId,
+      actorId: userId,
+      attemptId: runtime.submissionId,
+      workspaceId: workspaceConfig.id,
+    });
+  }, [runtime, tenantId, userId, workspaceConfig.id]);
 
   if (result?.success) {
     return (
@@ -210,15 +228,16 @@ function CodingActivitySession({
       // Submission serializes the current editor state without recompiling it.
       // Public tests have their own explicit action; repeating a full browser
       // toolchain run here can keep the form in "Submitting" for over a minute.
-      // The assessment session returns only editable public changes plus
+      // The surface session returns only editable public changes plus
       // permitted student-created text files.
-      const modified = (await sessionRef.current?.getSubmissionDelta()) ?? [];
+      const submission = await sessionRef.current?.getSubmission();
+      if (!submission) throw new Error("The coding workspace is not ready.");
       submitKey.current ??= crypto.randomUUID();
       const outcome = await submitRuntimeSubmission(runtime.submissionId, {
         schemaVersion: 1,
         contentType: "coding-assignment",
         payloadSchema: "code-files/v1",
-        payload: { files: JSON.parse(filesToCodePayload([...modified])) as Record<string, { content: string; encoding: 'text' }> },
+        payload: { files: codingSubmissionToFileRecord(submission) },
       }, submitKey.current);
       setResult(outcome.success ? { success: true } : { success: false, error: outcome.error });
       if (outcome.success) {
@@ -240,22 +259,25 @@ function CodingActivitySession({
   return (
     <>
       <Script src="/coi-serviceworker.js" strategy="afterInteractive" />
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form
+        onSubmit={(event) => {
+          void handleSubmit(event);
+        }}
+        className="space-y-4"
+      >
         <div className="h-[70vh] min-h-[500px]">
-          {Editor && runtime ? (
+          {Editor && runtime && delivery ? (
             <Editor
               mode="learner"
-              definition={assignment}
+              definition={delivery}
               workspaceConfig={workspaceConfig}
-              workspaceStorageKey={workspaceStorageKey(
-                userId ? `${userId}:${assessmentId}` : assessmentId,
-                workspaceConfig.id,
-              )}
+              workspaceStorageKey={draftStorageKey}
+              enableWorkspace={draftStorageKey != null}
               manifestUrl={manifestUrl ?? EMCEPTION_MANIFEST_URL}
               maxScore={maxScore}
               passingScore={passingScore}
               onSessionReady={receiveSession}
-              onRunResult={receiveRunResult}
+              onPreviewRun={receiveRunResult}
             />
           ) : runtimeError || editorLoadError ? (
             <p role="alert" className="text-sm text-destructive">
@@ -265,7 +287,7 @@ function CodingActivitySession({
             <IdeSkeleton />
           )}
         </div>
-        {report ? (
+        {report && publicPlan ? (
           <PublicTestEstimateBanner
             report={report}
             plan={publicPlan}

@@ -506,6 +506,27 @@ public class CodingAssignmentContentTests
         errors.Should().NotContain(e => e.ErrorCode == "invalid_language");
     }
 
+    [Theory]
+    [InlineData("function")]
+    [InlineData("standard-io")]
+    public void Validator_Accepts_ExplicitExerciseType(string exerciseType)
+    {
+        var errors = Validate(CreateMinimalValid() with { ExerciseType = exerciseType });
+
+        errors.Should().NotContain(e => e.ErrorCode == "invalid_exercise_type");
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("project")]
+    [InlineData("Standard-IO")]
+    public void Validator_Rejects_UnknownExerciseType(string exerciseType)
+    {
+        var errors = Validate(CreateMinimalValid() with { ExerciseType = exerciseType });
+
+        errors.Should().Contain(e => e.ErrorCode == "invalid_exercise_type");
+    }
+
     // ── total assignment size: sum of file Content lengths ≤ 10MB ─────────────────────────────────────
 
     [Fact]

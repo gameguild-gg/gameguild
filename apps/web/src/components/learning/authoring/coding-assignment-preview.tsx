@@ -1,13 +1,14 @@
 "use client";
 
 import type { CodingAssignmentContent } from "@/lib/coding-assignment/types";
-import type { CodingAssessmentEditorProps } from "@game-guild/emception-ui/assessment/editor";
+import type { CodingAuthorTestSurfaceProps } from "@game-guild/coding-surface";
 import {
-  createAssessmentWorkspaceConfig,
-  type CodingLanguage,
-} from "@game-guild/emception-ui/assessment/presets";
+  createCodingWorkspaceConfig,
+  type CodingWorkspaceLanguage,
+} from "@game-guild/coding-surface";
 import { useEffect, useMemo, useState, type ComponentType } from "react";
 import { EMCEPTION_MANIFEST_URL } from "@/lib/emception/manifest-url";
+import { codingAssignmentToAuthoringDefinition } from "@/lib/coding-assignment/coding-surface-bridge";
 
 interface CodingAssignmentPreviewProps {
   assignment: CodingAssignmentContent;
@@ -17,9 +18,13 @@ export function CodingAssignmentPreview({
   assignment,
 }: CodingAssignmentPreviewProps) {
   const [Editor, setEditor] =
-    useState<ComponentType<CodingAssessmentEditorProps> | null>(null);
+    useState<ComponentType<CodingAuthorTestSurfaceProps> | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const language = (assignment.Environment.Language || "cpp") as CodingLanguage;
+  const language = (assignment.Environment.Language || "cpp") as CodingWorkspaceLanguage;
+  const definition = useMemo(
+    () => codingAssignmentToAuthoringDefinition(assignment),
+    [assignment],
+  );
   const publicFiles = useMemo(
     () =>
       Object.fromEntries(
@@ -33,15 +38,15 @@ export function CodingAssignmentPreview({
     [assignment],
   );
   const workspaceConfig = useMemo(
-    () => createAssessmentWorkspaceConfig(language, publicFiles),
+    () => createCodingWorkspaceConfig(language, publicFiles),
     [language, publicFiles],
   );
 
   useEffect(() => {
     let active = true;
-    void import("@game-guild/emception-ui/assessment/editor")
-      .then(({ CodingAssessmentEditor }) => {
-        if (active) setEditor(() => CodingAssessmentEditor);
+    void import("@game-guild/coding-surface")
+      .then(({ CodingSurface }) => {
+        if (active) setEditor(() => CodingSurface as ComponentType<CodingAuthorTestSurfaceProps>);
       })
       .catch((error: unknown) => {
         if (active) {
@@ -76,9 +81,9 @@ export function CodingAssignmentPreview({
   return (
     <div className="h-[70vh] min-h-[500px] overflow-hidden rounded-md border">
       <Editor
-        mode="learner"
+        mode="author-test"
         manifestUrl={EMCEPTION_MANIFEST_URL}
-        definition={assignment}
+        definition={definition}
         workspaceConfig={workspaceConfig}
         enableWorkspace={false}
         maxScore={assignment.Grading.MaxScore}

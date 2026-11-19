@@ -11,7 +11,7 @@ describe('code grading adapter boundaries', () => {
     const source = readSources(join(packageRoot, 'src'), { excludeTesting: true });
     expect(source).not.toMatch(/@game-guild\/(?:coding|grading)\//);
     for (const forbidden of ['emception', '@gameguild/emception-ide', '@game-guild/emception-ui', '@game-guild/quiz', 'react', 'next']) {
-      expect(source, forbidden).not.toMatch(new RegExp(`from [\"']${escapeRegExp(forbidden)}`));
+      expect(source, forbidden).not.toMatch(new RegExp(`from ["']${escapeRegExp(forbidden)}`));
     }
   });
 

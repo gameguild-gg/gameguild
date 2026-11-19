@@ -1,6 +1,7 @@
 # Coding surface consumer map
 
-Status: preliminar; deve ser verificado e completado em `CODE-UI-01`.
+Status: consumidores de grading migrados e validados sobre o commit-base
+`41932100b2031c0ad78d7c02545a73addc6364b3`.
 
 Este mapa separa consumidores pertencentes ao fluxo de grading daqueles que
 devem continuar em `@game-guild/emception-ui`. Um path encontrado por busca nao
@@ -14,25 +15,23 @@ Status permitidos: `investigar`, `preservar`, `pronto para migrar`, `migrando`,
 
 | Fluxo | Path atual | Modo | Dependencia atual | Destino esperado | Estado | Regressao obrigatoria |
 | --- | --- | --- | --- | --- | --- | --- |
-| definicao de coding assessment | `apps/web/src/components/learning/console/courses/[course]/assessments/[assessmentId]/coding-definition/coding-definition-editor.tsx` | `author` | `@game-guild/emception-ui` e presets | `coding-surface` | investigar | roundtrip de draft e expectativas privadas |
-| preview de coding no authoring | `apps/web/src/components/learning/authoring/coding-assignment-preview.tsx` | `author-test` a confirmar | editor e presets de `emception-ui` | `coding-surface` | investigar | preview sem attempt, gradebook ou release |
-| atividade learner | `apps/web/src/components/learning/coding-activity-client.tsx` | `learner` | editor, plan, presets e storage de `emception-ui` | `coding-surface` | investigar | public data, submit oficial e refresh |
-| assessment grader de code | `apps/web/src/components/learning/assessment-grading/assessment-grader.tsx` | `grader` | editor e presets de `emception-ui` | `coding-surface` | investigar | snapshot, evidencias e review autorizada |
-| painel code do SpeedGrader | `apps/web/src/app/[locale]/(speedgrader)/speedgrader/assessments/[assessmentId]/code-grader-panel.tsx` | `grader` | reexporta o assessment grader | `coding-surface` por composicao migrada | investigar | code e itens nao-code permanecem funcionais |
+| definicao de coding assessment | `apps/web/src/components/learning/console/courses/[course]/assessments/[assessmentId]/coding-definition/coding-definition-editor.tsx` | `author` | `@game-guild/coding-surface` e bridge do host | `coding-surface` | validado | roundtrip de draft, tipo explicito e expectativas privadas |
+| preview de coding no authoring | `apps/web/src/components/learning/authoring/coding-assignment-preview.tsx` | `author-test` | `@game-guild/coding-surface` | `coding-surface` | validado | preview sem attempt, gradebook ou release |
+| atividade learner | `apps/web/src/components/learning/coding-activity-client.tsx` | `learner` | `@game-guild/coding-surface` e delivery redigida | `coding-surface` | validado | public data, storage namespaced, submit oficial e refresh |
+| assessment grader de code | `apps/web/src/components/learning/assessment-grading/assessment-grader.tsx` | `grader` | `@game-guild/coding-surface` e snapshot do host | `coding-surface` | validado | snapshot, evidencias e review autorizada |
+| painel code do SpeedGrader | `apps/web/src/app/[locale]/(speedgrader)/speedgrader/assessments/[assessmentId]/code-grader-panel.tsx` | `grader` | reusa o assessment grader migrado | `coding-surface` por composicao migrada | validado | code e itens nao-code permanecem funcionais |
 
-As linhas acima foram semeadas a partir dos imports conhecidos durante o
-planejamento. `CODE-UI-01` deve confirmar rotas chamadoras, props, callbacks,
-storage, testes e ownership antes de mudar o estado para `pronto para migrar`.
+Os sete arquivos de teste focados desses fluxos e da bridge somam 77 testes
+verdes. O browser cycle integral permanece no lane `coding`, porque ele exige o
+artifact Toolchain schema 2 exato.
 
 ## Consumidores preservados
 
-Nenhum consumidor especifico foi classificado ainda. `CODE-UI-01` deve listar
-todo import restante de `@game-guild/emception-ui`, indicar seu produto e
-registrar `preservar` quando nao pertencer ao fluxo de grading selecionado.
-
 | Fluxo | Path atual | Motivo para preservar | Teste de regressao | Estado |
 | --- | --- | --- | --- | --- |
-| a preencher | a preencher | a preencher | a preencher | investigar |
+| package preservado e seus testes | `packages/infrastructure/ui-emception/**` | produto Emception existente, fora do ownership de grading | `pnpm --filter @game-guild/emception-ui test` | preservar |
+| aliases e suporte do ciclo antigo | `apps/web/next.config.ts` e scripts `coding-cycle-*` | ainda protegem o package preservado e nao pertencem ao novo contrato | `pnpm --filter @game-guild/web test:browser:coding-cycle` | preservar |
+| restore de seed legado | `apps/web/src/components/learning/resolve-seed.ts` | helper do host ainda converte payloads existentes; nao pertence ao package novo | testes de coding activity | preservar |
 
 ## Configuracao compartilhada a preservar
 
@@ -46,13 +45,13 @@ registrar `preservar` quando nao pertencer ao fluxo de grading selecionado.
 
 Antes de marcar uma linha como `migrado`:
 
-- [ ] ownership de grading confirmado;
-- [ ] props e callbacks atuais registrados;
-- [ ] dados publicos e privados classificados;
-- [ ] source of truth e reidratacao identificadas;
-- [ ] destino usa apenas API publica de `coding-surface`;
-- [ ] host continua possuindo auth, tenant, fetch e mutations;
-- [ ] teste unitario ou de componente atualizado;
-- [ ] teste browser ou integracao identificado;
-- [ ] imports antigos removidos somente deste consumidor;
-- [ ] consumidores preservados e aliases nao foram afetados.
+- [x] ownership de grading confirmado;
+- [x] props e callbacks atuais registrados;
+- [x] dados publicos e privados classificados;
+- [x] source of truth e reidratacao identificadas;
+- [x] destino usa apenas API publica de `coding-surface`;
+- [x] host continua possuindo auth, tenant, fetch e mutations;
+- [x] teste unitario ou de componente atualizado;
+- [x] teste browser ou integracao identificado;
+- [x] imports antigos removidos somente deste consumidor;
+- [x] consumidores preservados e aliases nao foram afetados.

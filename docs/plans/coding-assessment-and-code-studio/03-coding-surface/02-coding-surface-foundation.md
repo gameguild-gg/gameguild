@@ -1,6 +1,6 @@
 # Parte 3.2. Fundacao do `coding-surface`
 
-Status: planejado.
+Status: concluido em 2026-11-18.
 
 ID preservado: `CODE-UI-02`.
 

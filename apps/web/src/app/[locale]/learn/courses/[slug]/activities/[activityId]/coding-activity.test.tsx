@@ -57,13 +57,17 @@ vi.mock('@/i18n/navigation', () => ({
   useRouter: () => ({ push: mocks.useRouterPush }),
   Link: ({ children, href }: { children: ReactNode; href: string }) => <a href={href}>{children}</a>,
 }));
-vi.mock('@game-guild/emception-ui/assessment/editor', () => ({ CodingAssessmentEditor: mocks.EditorRender }));
-vi.mock('@game-guild/emception-ui/assessment/plan', () => ({ buildAssessmentExecutionPlan: mocks.buildPlan }));
-vi.mock('@game-guild/emception-ui/assessment/presets', () => ({
-  createAssessmentWorkspaceConfig: mocks.createWorkspace,
-}));
-vi.mock('@game-guild/emception-ui/assessment/storage', () => ({
-  workspaceStorageKey: (token: string, workspaceId: string) => `gameguild.emception.workspace.${token}.${workspaceId}.v2`,
+vi.mock('@game-guild/coding-surface', () => ({
+  CodingSurface: mocks.EditorRender,
+  buildCodingExecutionPlan: mocks.buildPlan,
+  createCodingWorkspaceConfig: mocks.createWorkspace,
+  codingWorkspaceStorageKey: (scope: {
+    tenantId: string;
+    assessmentRevisionId: string;
+    actorId: string;
+    attemptId: string;
+    workspaceId: string;
+  }) => `gameguild.coding.workspace.${scope.tenantId}.${scope.assessmentRevisionId}.${scope.actorId}.${scope.attemptId}.${scope.workspaceId}.v1`,
 }));
 
 import LearnerActivityPage from './page';
@@ -89,6 +93,7 @@ function makeAssignment(overrides: Record<string, unknown> = {}) {
   return {
     Type: 'coding-assignment',
     Version: 1,
+    ExerciseType: 'standard-io',
     Environment: { Language: 'cpp', Tools: '', AllowStudentCreateFiles: true },
     Data: {
       Files: {
@@ -97,7 +102,12 @@ function makeAssignment(overrides: Record<string, unknown> = {}) {
         },
       },
     },
-    Tests: { Public: [], Private: [] },
+    Tests: {
+      Public: [
+        { kind: 'standard', Name: 'echo', Weight: 1, Stdin: '', Stdout: '' },
+      ],
+      Private: [],
+    },
     Grading: { MaxScore: 100, PassingScore: 60 },
     ...overrides,
   };
@@ -117,6 +127,7 @@ function makeReadyAccess() {
 function useOfficialDefinition(definition: ReturnType<typeof makeAssignment>) {
   mocks.startRuntimeSubmission.mockResolvedValue({ success: true, data: {
     submissionId: 'official-submission-1',
+    definitionRevisionId: 'revision-1',
     execution: { delivery: { itemOrder: ['code'], items: { code: {
       adapterKey: 'code-assessment-type', adapterVersion: '1', learnerPayload: { definition },
     } } } },
@@ -137,7 +148,15 @@ function pageParams(activityId = 'assessment-assessment-1', slug = 'test-course'
 function stubAssessmentEditor(delta: Array<{ path: string; content: string }> = []) {
   const session = {
     run: vi.fn(async () => undefined),
-    getSubmissionDelta: vi.fn(async () => delta),
+    getSubmission: vi.fn(async () => ({
+      schemaVersion: 1,
+      files: delta.map((file, index) => ({
+        fileId: `file-${index}`,
+        path: file.path,
+        encoding: 'text',
+        content: file.content,
+      })),
+    })),
   };
   mocks.EditorRender.mockImplementation((props: {
     onSessionReady?: (next: typeof session) => void;
@@ -157,7 +176,7 @@ describe('coding activity page', () => {
     vi.clearAllMocks();
     mocks.getCourseAccessData.mockResolvedValue(makeReadyAccess());
     mocks.getCourseLearnerContext.mockResolvedValue(makeContext(makeAssessment()));
-    mocks.auth.mockResolvedValue({ user: { id: 'user-1' } });
+    mocks.auth.mockResolvedValue({ user: { id: 'user-1' }, tenantId: 'tenant-1' });
     mocks.getToken.mockResolvedValue('token-1');
     mocks.getMySubmissions.mockResolvedValue({ ok: true, data: [] });
     mocks.getMyProjects.mockResolvedValue([]);
@@ -172,10 +191,10 @@ describe('coding activity page', () => {
       features: { canvas: false },
       files,
     }));
-    mocks.buildPlan.mockImplementation((assignment: { Tests: { Public?: Array<{ kind: string; Name?: string; Weight?: number }> } }) => ({
+    mocks.buildPlan.mockImplementation((delivery: { publicTests?: Array<{ kind: string; name?: string; weightUnits?: number }> }) => ({
       plan: {
-        cases: (assignment.Tests.Public ?? []).map((test) => ({
-          kind: test.kind === 'functional' ? 'doctest' : 'stdio', name: test.Name, weight: test.Weight,
+        cases: (delivery.publicTests ?? []).map((test) => ({
+          kind: test.kind === 'function' ? 'doctest' : 'stdio', name: test.name, weight: test.weightUnits,
         })),
       },
       overlay: [],
@@ -215,7 +234,7 @@ describe('coding activity page', () => {
     expect(mocks.startRuntimeSubmission).toHaveBeenCalledWith('assessment-1', 'enrollment-1', expect.any(String));
     const props = JSON.parse(editor.dataset.props ?? '{}');
     expect(props.mode).toBe('learner');
-    expect(props.workspaceStorageKey).toBe('gameguild.emception.workspace.user-1:assessment-1.cpp.v2');
+    expect(props.workspaceStorageKey).toBe('gameguild.coding.workspace.tenant-1.revision-1.user-1.official-submission-1.cpp.v1');
     expect(props.workspaceConfig.files).toEqual({ 'main.cpp': { encoding: 'text', content: '// starter' } });
     expect(props.assignmentToken).toBeUndefined();
     expect(props.testPlan).toBeUndefined();
@@ -234,7 +253,7 @@ describe('coding activity page', () => {
     fireEvent.click(screen.getByRole('button', { name: /^Submit$/ }));
     await waitFor(() => expect(mocks.submitRuntimeSubmission).toHaveBeenCalledTimes(1));
     expect(session.run).not.toHaveBeenCalled();
-    expect(session.getSubmissionDelta).toHaveBeenCalledTimes(1);
+    expect(session.getSubmission).toHaveBeenCalledTimes(1);
     expect(mocks.submitRuntimeSubmission).toHaveBeenCalledWith('official-submission-1', {
       schemaVersion: 1, contentType: 'coding-assignment', payloadSchema: 'code-files/v1',
       payload: { files: { 'main.cpp': { content: 'int main(){}', encoding: 'text' } } },
@@ -279,7 +298,7 @@ describe('coding activity page', () => {
 
     render(await LearnerActivityPage(pageParams()));
     await screen.findByTestId('mock-assessment-editor');
-    const onRunResult = mocks.EditorRender.mock.calls.at(-1)?.[0]?.onRunResult as (result: unknown) => void;
+    const onRunResult = mocks.EditorRender.mock.calls.at(-1)?.[0]?.onPreviewRun as (result: unknown) => void;
     await act(async () => {
       onRunResult({
         report: {

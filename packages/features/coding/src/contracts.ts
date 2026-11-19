@@ -1,5 +1,7 @@
 export const CODING_AUTHORING_SCHEMA_VERSION = 1 as const;
 export const CODING_DELIVERY_SCHEMA_VERSION = 1 as const;
+export const CODING_AUTHORING_SCHEMA_VERSION_V2 = 2 as const;
+export const CODING_DELIVERY_SCHEMA_VERSION_V2 = 2 as const;
 export const CODING_SUBMISSION_SCHEMA_VERSION = 1 as const;
 export const CODING_EXECUTION_REPORT_SCHEMA_VERSION = 1 as const;
 export const CODING_CONTENT_TYPE = 'coding-assignment' as const;
@@ -15,6 +17,7 @@ export const MAX_CODING_SUBMISSION_BYTES = 2_000_000;
 export type CodingFileEncodingV1 = 'text' | 'base64';
 export type CodingVisibilityV1 = 'public' | 'private';
 export type CodingScalarTypeV1 = 'string' | 'boolean' | 'integer' | 'float';
+export type CodingExerciseTypeV2 = 'function' | 'standard-io';
 
 export interface CodingToolchainIdentityV1 {
   key: string;
@@ -98,6 +101,15 @@ export interface CodingAuthoringDefinitionV1 {
   allowLearnerCreatedFiles: boolean;
 }
 
+/**
+ * Current authoring contract. V1 remains parseable for frozen adapter
+ * snapshots; V2 adds the product experience as an explicit independent axis.
+ */
+export interface CodingAuthoringDefinitionV2 extends Omit<CodingAuthoringDefinitionV1, 'schemaVersion'> {
+  schemaVersion: typeof CODING_AUTHORING_SCHEMA_VERSION_V2;
+  exerciseType: CodingExerciseTypeV2;
+}
+
 export interface CodingLearnerFileV1 {
   id: string;
   path: string;
@@ -118,6 +130,14 @@ export interface CodingLearnerDeliveryV1 {
   entryPoint: CodingEntryPointV1;
   allowLearnerCreatedFiles: boolean;
 }
+
+export interface CodingLearnerDeliveryV2 extends Omit<CodingLearnerDeliveryV1, 'schemaVersion'> {
+  schemaVersion: typeof CODING_DELIVERY_SCHEMA_VERSION_V2;
+  exerciseType: CodingExerciseTypeV2;
+}
+
+export type CodingAuthoringDefinition = CodingAuthoringDefinitionV1 | CodingAuthoringDefinitionV2;
+export type CodingLearnerDelivery = CodingLearnerDeliveryV1 | CodingLearnerDeliveryV2;
 
 export interface CodingSubmissionFileV1 {
   fileId: string;

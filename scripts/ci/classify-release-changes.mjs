@@ -9,6 +9,7 @@ const emptyClassification = Object.freeze({
   web: false,
   apiRuntimeChanged: false,
   webRuntimeChanged: false,
+  coding: false,
   testingLab: false,
   economyCritical: false,
   openApi: false,
@@ -25,6 +26,50 @@ const apiContractPathPattern =
   /(?:^|\/)(?:controllers?|endpoints?|contracts?|dtos?|requests?|responses?|openapi)(?:\/|$)|(?:^|\/)[^/]*(?:controller|endpoint|contracts?|dtos?|requests?|responses?)\.cs$/i;
 const testPathPattern =
   /(?:^|\/)(?:tests?|__tests__|e2e)(?:\/|$)|\.(?:test|spec)\.[cm]?[jt]sx?$/i;
+
+function isCodingAssessmentPath(filePath) {
+  if (
+    [
+      "packages/features/coding/",
+      "packages/features/coding-surface/",
+      "packages/features/grading-adapter-code/",
+      "apps/api/Source/Modules/GameGuild.Learning.Assessments.CodeAdapter/",
+      "apps/api/Source/Modules/GameGuild.Learning.Courses/Models/CodingAssignmentContent/",
+      "apps/api/tests/GameGuild.Learning.Assessments.CodeAdapter.UnitTests/",
+    ].some((prefix) => filePath.startsWith(prefix))
+  ) {
+    return true;
+  }
+
+  if (
+    filePath.startsWith("apps/api/tests/GameGuild.Learning.Courses.UnitTests/") &&
+    filePath.includes("CodingAssignmentContent")
+  ) {
+    return true;
+  }
+
+  if (filePath.startsWith("apps/web/scripts/coding-cycle-")) return true;
+  if (filePath.startsWith("apps/web/src/lib/coding-assignment/")) return true;
+  if (
+    filePath.startsWith("apps/web/src/app/") &&
+    filePath.includes("/learn/courses/") &&
+    filePath.includes("/activities/[activityId]/")
+  ) {
+    return true;
+  }
+
+  return (
+    filePath.startsWith("apps/web/src/") &&
+    [
+      "/coding-activity",
+      "/coding-assignment-preview",
+      "/coding-definition/",
+      "/assessment-grader",
+      "/code-grader-panel",
+      "/public-test-estimate-banner",
+    ].some((segment) => filePath.includes(segment))
+  );
+}
 
 function normalizePath(filePath) {
   return filePath.trim().replaceAll("\\", "/").replace(/^\.\//, "");
@@ -122,6 +167,17 @@ export function classifyReleaseChanges(filePaths) {
       ].includes(filePath)
     ) {
       classification.economyCritical = true;
+    }
+    if (
+      isCodingAssessmentPath(filePath) ||
+      [
+        ".github/workflows/pr-verify.yml",
+        "scripts/ci/classify-release-changes.mjs",
+        "scripts/ci/tests/classify-release-changes.test.mjs",
+        "scripts/ci/tests/pr-required-gate.test.mjs",
+      ].includes(filePath)
+    ) {
+      classification.coding = true;
     }
     if (!filePath || isDocumentationOrCi(filePath)) continue;
 

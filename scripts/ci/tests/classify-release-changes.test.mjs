@@ -12,6 +12,7 @@ const expectedEmptyClassification = {
   web: false,
   apiRuntimeChanged: false,
   webRuntimeChanged: false,
+  coding: false,
   testingLab: false,
   economyCritical: false,
   openApi: false,
@@ -28,7 +29,7 @@ test("documentation and CI changes do not deploy runtime services", () => {
       "scripts/ci/economy-artifacts.sh",
       "scripts/ci/economy-integration-shards.json",
     ]),
-    { ...expectedEmptyClassification, api: true, economyCritical: true },
+    { ...expectedEmptyClassification, api: true, coding: true, economyCritical: true },
   );
 });
 
@@ -237,5 +238,31 @@ test("test-only changes select verification without rebuilding a runtime image",
       ...expectedEmptyClassification,
       web: true,
     },
+  );
+});
+
+for (const filePath of [
+  "packages/features/coding/src/contracts.ts",
+  "packages/features/coding-surface/src/coding-surface.tsx",
+  "packages/features/grading-adapter-code/src/adapter.test.ts",
+  "apps/api/Source/Modules/GameGuild.Learning.Assessments.CodeAdapter/CodeGradingWorker.cs",
+  "apps/api/Source/Modules/GameGuild.Learning.Courses/Models/CodingAssignmentContent/CodingAssignmentContent.cs",
+  "apps/web/src/lib/coding-assignment/coding-surface-bridge.ts",
+  "apps/web/src/components/learning/coding-activity-client.tsx",
+  "apps/web/src/components/learning/assessment-grading/assessment-grader.tsx",
+  "apps/web/src/app/[locale]/(speedgrader)/speedgrader/assessments/[assessmentId]/code-grader-panel.tsx",
+  "apps/web/src/app/[locale]/learn/courses/[slug]/activities/[activityId]/page.tsx",
+]) {
+  test(`coding assessment path ${filePath} selects the coding gate`, () => {
+    assert.equal(classifyReleaseChanges([filePath]).coding, true);
+  });
+}
+
+test("the preserved Emception UI does not become a coding-consumer change", () => {
+  assert.equal(
+    classifyReleaseChanges([
+      "packages/infrastructure/ui-emception/src/components/CodingAssessmentEditor.tsx",
+    ]).coding,
+    false,
   );
 });

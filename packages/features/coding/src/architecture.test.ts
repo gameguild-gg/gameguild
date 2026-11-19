@@ -11,8 +11,8 @@ describe('coding package boundaries', () => {
     const packageJson = readFileSync(join(packageRoot, 'package.json'), 'utf8');
     const source = readSources(join(packageRoot, 'src'));
     for (const forbidden of ['@game-guild/grading', 'emception', '@gameguild/emception-ide', '@game-guild/emception-ui', 'react', 'next']) {
-      expect(packageJson, forbidden).not.toContain(`\"${forbidden}\"`);
-      expect(source, forbidden).not.toMatch(new RegExp(`from [\"']${escapeRegExp(forbidden)}`));
+      expect(packageJson, forbidden).not.toContain(`"${forbidden}"`);
+      expect(source, forbidden).not.toMatch(new RegExp(`from ["']${escapeRegExp(forbidden)}`));
     }
   });
 

@@ -54,7 +54,7 @@ for (const [version, identity] of [
 ]) {
   test('version ' + version + ' matches the server adapter source constants', async () => {
     const source = await readFile(
-      new URL('../../../apps/api/Source/Modules/GameGuild.Learning.Assessments/Grading/Code/CodeAssessmentTypeAdapter.cs', import.meta.url),
+      new URL('../../../apps/api/Source/Modules/GameGuild.Learning.Assessments.CodeAdapter/CodeAssessmentTypeAdapter.cs', import.meta.url),
       'utf8',
     );
     for (const value of Object.values(identity)) assert.ok(source.includes('"' + value + '"'));

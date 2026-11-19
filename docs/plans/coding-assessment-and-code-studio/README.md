@@ -156,7 +156,7 @@ AIReview.
 | --- | --- | --- | --- |
 | 1 | [`01`](./01-domain-contracts-and-typescript-adapter.md) | dominio coding e adapter TypeScript | contratos e testes de conformidade fechados |
 | 2 | [`02`](./02-backend-code-adapter-boundary.md) | modulo backend separado e core sem code | build, testes e arquitetura backend verdes |
-| 3 | [`03`](./03-coding-surface-and-web-integration.md) | coding-surface paralela e composicao web de grading, executada em quatro subplanos | quatro gates internos concluidos; autoria, learner e grader de grading usando a nova superficie; emception-ui preservado |
+| 3 | [`03`](./03-coding-surface-and-web-integration.md) | coding-surface paralela e composicao web de grading, executada em cinco subplanos | cinco gates internos concluidos; contrato canonico unico; autoria, learner e grader de grading usando a nova superficie; emception-ui preservado |
 | 4 | [`04`](./04-end-to-end-validation-and-cutover.md) | E2E, auditoria de capabilities e cutover | fluxo oficial e negativos de acesso aprovados |
 | 5 | [`05`](./05-emception-capability-and-language-review.md) | orquestracao da expansao aditiva de linguagens | baseline comum aprovada e decisao independente por linguagem |
 | 6 | [`06`](./06-code-studio-discovery-and-refoundation.md) | descoberta e eventual refundacao do Code Studio | decisao explicita de produto e arquitetura |

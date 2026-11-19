@@ -1,6 +1,6 @@
 # Parte 3.1. Caracterizacao e baseline de decisoes
 
-Status: planejado.
+Status: concluido em 2026-11-18.
 
 ID preservado: `CODE-UI-01`.
 

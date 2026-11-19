@@ -1,6 +1,6 @@
 # Parte 3.3. Perfis de exercicio e fronteiras por persona
 
-Status: planejado.
+Status: concluido em 2026-11-18.
 
 IDs preservados: `CODE-UI-03` e `CODE-UI-04`.
 

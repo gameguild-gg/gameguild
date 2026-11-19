@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ReviewCapabilityRegistry, parseScoreValue } from '@game-guild/grading';
+import { codingContractFixtureV2 } from '@game-guild/coding/testing';
 import { parseCodingExecutionReport, parseCodingSubmission } from '@game-guild/coding';
 import { codeAdapterFixtureV1 } from './testing';
 import { allocateCodeTestScores } from './allocation';
@@ -47,6 +48,19 @@ describe('code grading adapter', () => {
     expect(serialized).not.toContain('private-function');
     expect(serialized).not.toContain('private-case-1');
     expect(serialized).not.toContain('visibility');
+  });
+
+  it('preserves the explicit exercise type in a V2 learner delivery', () => {
+    const projected = codeAssessmentTypeAdapter.projectAuthoring({
+      ...codeAdapterFixtureV1.input,
+      definition: codingContractFixtureV2.authoring,
+    });
+    const delivery = codeAssessmentTypeAdapter.createDelivery('revision-2', 'b'.repeat(64), projected);
+
+    expect(delivery.items.code?.learnerPayload.definition).toMatchObject({
+      schemaVersion: 2,
+      exerciseType: 'standard-io',
+    });
   });
 
   it('decodes only learner-permitted source files and rejects forged scores', () => {

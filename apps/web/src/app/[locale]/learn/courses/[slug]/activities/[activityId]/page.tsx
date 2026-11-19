@@ -149,6 +149,7 @@ export default async function LearnerActivityPage({
   let quizSubmissionId: string | null = null;
   let submissionFiles: SubmissionFile[] | null = null;
   let userId: string | null = null;
+  let tenantId: string | null = null;
   let description = '';
   let dueAt: string | null | undefined;
   let points: number | undefined;
@@ -165,6 +166,7 @@ export default async function LearnerActivityPage({
     // user-scoped draft token, not just Project-type project listings.
     const session = await auth();
     userId = session?.user?.id ?? null;
+    tenantId = session?.tenantId ?? null;
     const projects = userId ? await getMyProjects(userId) : [];
     activity = { kind: 'assessment', assessment, submission, projects };
     description = assessment.description || '';
@@ -284,6 +286,7 @@ export default async function LearnerActivityPage({
           assessmentId: activity.assessment.id,
           assignment: codingAssignment,
           userId,
+          tenantId,
         }
       : null;
 
@@ -336,7 +339,7 @@ export default async function LearnerActivityPage({
             </CardTitle>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
-            This coding assignment hasn't been published by the instructor
+            This coding assignment hasn&apos;t been published by the instructor
             yet. The interactive code editor will appear here once the
             definition is saved — until then, you can still submit your
             response using the form below.
@@ -378,6 +381,7 @@ export default async function LearnerActivityPage({
             assignment={codingProps.assignment}
             manifestUrl={process.env.NEXT_PUBLIC_EMCEPTION_MANIFEST_URL}
             userId={codingProps.userId}
+            tenantId={codingProps.tenantId ?? undefined}
             submissionFiles={submissionFiles}
           />
         </div>

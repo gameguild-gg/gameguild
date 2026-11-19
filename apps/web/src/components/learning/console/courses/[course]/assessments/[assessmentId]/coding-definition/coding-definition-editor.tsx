@@ -11,12 +11,12 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2, Plus, Save } from "lucide-react";
-import { CodingAssessmentEditor } from "@game-guild/emception-ui";
 import {
-  ASSIGNMENT_SAMPLES,
-  createAssessmentWorkspaceConfig,
-  type CodingLanguage,
-} from "@game-guild/emception-ui/assessment/presets";
+  CodingSurface,
+  CODING_WORKSPACE_SAMPLES,
+  createCodingWorkspaceConfig,
+  type CodingWorkspaceLanguage,
+} from "@game-guild/coding-surface";
 import type { WorkspaceConfig } from "emception";
 import {
   Card,
@@ -32,21 +32,21 @@ import {
   type CodingEnvironment,
   type FileVisibility,
   type FunctionParameterType,
-  type StandardTest,
-  type FunctionalTestGroup,
   type Test,
+  type CodingExerciseType,
 } from "@/lib/coding-assignment/actions";
+import { codingAssignmentToDraftDefinition } from "@/lib/coding-assignment/coding-surface-bridge";
 import type { FileEncoding } from "@/lib/coding-assignment/types";
 import { StandardTestEditor } from "./standard-test-editor";
 import { FunctionalTestEditor } from "./functional-test-editor";
 import { useLearningBase } from "@/lib/learning/use-learning-base";
 import { EMCEPTION_MANIFEST_URL } from "@/lib/emception/manifest-url";
 
-// ponytail: direct import (matches code-grader-panel pattern). The IDE manages
-// its own worker boot client-side; Next's transpilePackages list already
-// includes @game-guild/emception-ui so this resolves at build time.
+// The grading-owned surface composes the public IDE client-side. Next
+// transpiles the workspace package, while this host retains persistence and
+// authoring policy.
 
-const LANGUAGE_OPTIONS: { value: CodingLanguage; label: string }[] = [
+const LANGUAGE_OPTIONS: { value: CodingWorkspaceLanguage; label: string }[] = [
   { value: "cpp", label: "C++ (clang + WASI)" },
   { value: "c", label: "C (clang + WASI)" },
   { value: "sdl-cpp", label: "C++ + SDL3 (emcc)" },
@@ -54,7 +54,7 @@ const LANGUAGE_OPTIONS: { value: CodingLanguage; label: string }[] = [
   { value: "allegro-cpp", label: "C++ + Allegro 5 (clang + wasm-ld)" },
 ];
 
-const DEFAULT_TOOLS: Record<CodingLanguage, string> = {
+const DEFAULT_TOOLS: Record<CodingWorkspaceLanguage, string> = {
   cpp: "clang",
   c: "clang",
   "sdl-cpp": "emcc",
@@ -162,8 +162,11 @@ export function CodingDefinitionEditor({
 
   // ── Editor state ──
   const initialLang =
-    (initialContent?.Environment.Language as CodingLanguage) ?? "cpp";
-  const [language, setLanguage] = useState<CodingLanguage>(initialLang);
+    (initialContent?.Environment.Language as CodingWorkspaceLanguage) ?? "cpp";
+  const [language, setLanguage] = useState<CodingWorkspaceLanguage>(initialLang);
+  const [exerciseType, setExerciseType] = useState<CodingExerciseType>(
+    initialContent?.ExerciseType ?? "standard-io",
+  );
   const [allowStudentCreateFiles, setAllowStudentCreateFiles] =
     useState<boolean>(
       initialContent?.Environment.AllowStudentCreateFiles ?? false,
@@ -184,11 +187,11 @@ export function CodingDefinitionEditor({
       ? [
           ...initialContent.Tests.Public.map((test) => ({
             test,
-            visibility: "Public" as FileVisibility,
+            visibility: "Public" as const,
           })),
           ...initialContent.Tests.Private.map((test) => ({
             test,
-            visibility: "Private" as FileVisibility,
+            visibility: "Private" as const,
           })),
         ]
       : [],
@@ -213,14 +216,14 @@ export function CodingDefinitionEditor({
 
   // ── WorkspaceConfig for the IDE — derive from language preset + files ──
   const workspaceConfig = useMemo(() => {
-    const sample = ASSIGNMENT_SAMPLES[language as CodingLanguage];
+    const sample = CODING_WORKSPACE_SAMPLES[language];
     if (!sample) return null;
     const files: WorkspaceConfig["files"] = {};
     for (const row of fileRows) {
       files[row.path] = { encoding: row.encoding, content: row.content };
     }
     // ponytail: if no files yet, fall back to the preset so the IDE has something to boot with.
-    return createAssessmentWorkspaceConfig(
+    return createCodingWorkspaceConfig(
       language,
       Object.keys(files).length > 0 ? files : sample.workspaceConfig.files,
     );
@@ -245,9 +248,9 @@ export function CodingDefinitionEditor({
   const isValid = validationErrors.length === 0;
 
   // ── Handlers ──
-  function handleLanguageChange(next: CodingLanguage) {
+  function handleLanguageChange(next: CodingWorkspaceLanguage) {
     setLanguage(next);
-    const sample = ASSIGNMENT_SAMPLES[next as CodingLanguage];
+    const sample = CODING_WORKSPACE_SAMPLES[next];
     if (!sample) return;
     const rows: AssignmentFileRow[] = Object.entries(
       sample.workspaceConfig.files,
@@ -255,7 +258,7 @@ export function CodingDefinitionEditor({
       path,
       content: bundle.content,
       encoding: bundle.encoding,
-      visibility: "Public" as FileVisibility,
+      visibility: "Public",
       modifiable: true,
     }));
     setFileRows(rows);
@@ -384,6 +387,7 @@ export function CodingDefinitionEditor({
       fileRows: liveFileRows,
       testRows,
       maxScore,
+      exerciseType,
     });
 
     // 10MB budget — matches the backend's files_too_large FluentValidation rule.
@@ -452,6 +456,7 @@ export function CodingDefinitionEditor({
     testRows,
     fileRows,
     language,
+    exerciseType,
     allowStudentCreateFiles,
     isValid,
     contentId,
@@ -484,7 +489,9 @@ export function CodingDefinitionEditor({
         {error && <p className="text-destructive text-sm">{error}</p>}
         <Badge variant="secondary">{language}</Badge>
         <Button
-          onClick={performSave}
+          onClick={() => {
+            void performSave();
+          }}
           disabled={!isValid || isPending}
           data-testid="save-button"
         >
@@ -524,16 +531,22 @@ export function CodingDefinitionEditor({
               }
             >
               {ideMounted ? (
-                <CodingAssessmentEditor
+                <CodingSurface
                   mode="author"
                   manifestUrl={EMCEPTION_MANIFEST_URL}
-                  definition={buildContent({
-                    language,
-                    allowStudentCreateFiles,
-                    fileRows,
-                    testRows,
-                    maxScore,
-                  })}
+                  definition={codingAssignmentToDraftDefinition(
+                    buildContent({
+                      language,
+                      allowStudentCreateFiles,
+                      fileRows,
+                      testRows,
+                      maxScore,
+                      exerciseType,
+                    }),
+                  )}
+                  onDefinitionChange={(definition) =>
+                    setExerciseType(definition.exerciseType)
+                  }
                   workspaceConfig={workspaceConfig}
                   maxScore={maxScore}
                   onReady={(controller) => {
@@ -551,7 +564,7 @@ export function CodingDefinitionEditor({
                               value={language}
                               onChange={(event) =>
                                 handleLanguageChange(
-                                  event.target.value as CodingLanguage,
+                                  event.target.value as CodingWorkspaceLanguage,
                                 )
                               }
                             >
@@ -667,7 +680,7 @@ export function CodingDefinitionEditor({
                                 <StandardTestEditor
                                   key={i}
                                   index={i}
-                                  test={row.test as StandardTest}
+                                  test={row.test}
                                   visibility={row.visibility}
                                   errors={validationErrors.filter((e) =>
                                     e.field.startsWith(`tests[${i}]`),
@@ -682,7 +695,7 @@ export function CodingDefinitionEditor({
                                 <FunctionalTestEditor
                                   key={i}
                                   index={i}
-                                  test={row.test as FunctionalTestGroup}
+                                  test={row.test}
                                   visibility={row.visibility}
                                   errors={validationErrors.filter((e) =>
                                     e.field.startsWith(`tests[${i}]`),
@@ -782,7 +795,7 @@ function validateAll(state: ValidationState): ValidationErr[] {
       });
     }
     if (t.kind === "standard") {
-      const std = t as StandardTest;
+      const std = t;
       if (!std.Stdout || std.Stdout.length === 0) {
         errors.push({
           field: `${path}.Stdout`,
@@ -791,7 +804,7 @@ function validateAll(state: ValidationState): ValidationErr[] {
         });
       }
     } else {
-      const fn = t as FunctionalTestGroup;
+      const fn = t;
       if (!FUNCTION_NAME_RE.test(fn.Function.FunctionName)) {
         errors.push({
           field: `${path}.Function.FunctionName`,
@@ -802,19 +815,21 @@ function validateAll(state: ValidationState): ValidationErr[] {
       }
       for (const p of fn.Function.Parameters) {
         // The select restricts to v1 4 types — this catches a hand-built payload.
-        if (!isV1ParamType(p.Type)) {
+        const parameterType: unknown = p.Type;
+        if (!isV1ParamType(parameterType)) {
           errors.push({
             field: `${path}.Function.Parameters`,
             code: "functional_param_type_not_supported_v1",
-            message: `Parameter type "${p.Type}" is not supported in v1.`,
+            message: `Parameter type "${String(parameterType)}" is not supported in v1.`,
           });
         }
       }
-      if (!isV1ParamType(fn.Function.ReturnType.Type)) {
+      const returnType: unknown = fn.Function.ReturnType.Type;
+      if (!isV1ParamType(returnType)) {
         errors.push({
           field: `${path}.Function.ReturnType`,
           code: "functional_param_type_not_supported_v1",
-          message: `Return type "${fn.Function.ReturnType.Type}" is not supported in v1.`,
+          message: `Return type "${String(returnType)}" is not supported in v1.`,
         });
       }
       if (fn.Cases.length === 0) {
@@ -830,14 +845,15 @@ function validateAll(state: ValidationState): ValidationErr[] {
   return errors;
 }
 
-function isV1ParamType(t: string): t is FunctionParameterType {
+function isV1ParamType(t: unknown): t is FunctionParameterType {
   return t === "string" || t === "boolean" || t === "integer" || t === "float";
 }
 
 // ── Payload assembly ──────────────────────────────────────────────────────
 
 interface BuildArgs {
-  language: CodingLanguage;
+  language: CodingWorkspaceLanguage;
+  exerciseType: CodingExerciseType;
   allowStudentCreateFiles: boolean;
   fileRows: AssignmentFileRow[];
   testRows: TestRow[];
@@ -879,6 +895,7 @@ function buildContent(args: BuildArgs): CodingAssignmentContent {
   return {
     Type: "coding-assignment",
     Version: 1,
+    ExerciseType: args.exerciseType,
     Environment: environment,
     Data: { Files: files },
     Tests: { Public: pub, Private: priv },

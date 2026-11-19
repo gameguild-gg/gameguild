@@ -1,6 +1,7 @@
 # Parte 3. Coding surface e integracao web
 
-Status: planejado; dividido em quatro subplanos sequenciais.
+Status: implementacao funcional concluida; consolidacao do contrato canonico
+pendente na parte 3.5 antes da validacao browser final no CI.
 
 ## Objetivo
 
@@ -45,12 +46,18 @@ e 04 antes do PR integrado.
 | 3.2 | [`Fundacao do coding-surface`](./03-coding-surface/02-coding-surface-foundation.md) | `CODE-UI-02` | package isolado, shell e API publica testados |
 | 3.3 | [`Perfis de exercicio e fronteiras por persona`](./03-coding-surface/03-exercise-profiles-and-persona-boundaries.md) | `CODE-UI-03`, `CODE-UI-04` | `function` e `standard-io` completos nos quatro modos |
 | 3.4 | [`Integracao web, estabilizacao e CI`](./03-coding-surface/04-web-integration-stabilization-and-ci.md) | `CODE-UI-05`, `CODE-UI-06`, `CODE-UI-07` | consumidores de grading migrados e regressao fechada |
+| 3.5 | [`Consolidacao do contrato canonico de coding`](./03-coding-surface/05-canonical-coding-contract-consolidation.md) | `CODE-CONTRACT-CANONICALIZATION` | um unico contrato, adapter e runtime de code, sem compatibilidade artificial |
 
 Um subplano so pode comecar depois que o gate anterior estiver marcado como
 concluido em
 [`IMPLEMENTATION-STATE.md`](./03-coding-surface/IMPLEMENTATION-STATE.md), com
 evidencias reproduziveis. Marcar uma tarefa em um texto sem executar seu gate
 nao autoriza o avanco.
+
+A parte 3.5 e uma excecao corretiva inserida durante a validacao da 3.4: a
+implementacao de `CODE-UI-05` e `CODE-UI-06` esta pronta, mas `CODE-UI-07`
+permanece aberto. A 3.5 deve ser concluida agora; depois o fluxo retorna ao
+browser E2E de `CODE-UI-07`. Ela nao autoriza iniciar a parte 4 antecipadamente.
 
 ## Protocolo de contexto persistente
 
@@ -178,8 +185,8 @@ pode ser usado por exercicios diferentes sem se tornar um workflow de grading.
 | `sql-query` | consulta sobre schema e dados controlados | result set, diagnostics e comparacao esperada |
 
 Somente `function` e `standard-io` pertencem ao corte inicial obrigatorio. Cada
-tipo adicional so se torna selecionavel quando possuir contrato canonico
-versionado, renderers dos quatro modos, evidencia executavel e testes E2E. Tipos
+tipo adicional so se torna selecionavel quando possuir contrato canonico,
+renderers dos quatro modos, evidencia executavel e testes E2E. Tipos
 futuros nao aparecem como opcoes desabilitadas e nao recuam para outro tipo.
 
 ### Modos
@@ -239,7 +246,7 @@ browser usa personas separadas quando cruza author, learner e grader.
 
 ## Criterios de conclusao
 
-- os quatro subplanos estao concluidos com evidencias no estado persistente;
+- os cinco subplanos estao concluidos com evidencias no estado persistente;
 - autoria, author test, learner e grader de code usam `coding-surface`;
 - `function` e `standard-io` oferecem experiencias proprias sobre o mesmo shell;
 - o catalogo aceita novos tipos sem acoplar linguagem, persona ou review;

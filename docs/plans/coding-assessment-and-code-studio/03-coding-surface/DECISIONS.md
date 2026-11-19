@@ -68,6 +68,96 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
 - Evidencia: protocolo de contexto persistente do indice.
 - Afeta: todos os subplanos.
 
+## `CS-ADR-005`. Contrato V2 aditivo para o tipo de exercicio
+
+- Data: 2026-11-18.
+- Status: substituida por `CS-ADR-008` antes de release.
+- Contexto: o contrato canonico V1 nao possui um discriminante de experiencia,
+  enquanto o payload de Learning possui apenas os testes e a toolchain. Inferir
+  a experiencia por linguagem ou por `tests[].kind` violaria a separacao dos
+  eixos definida em `CS-ADR-003`.
+- Decisao: preservar V1 e adicionar contratos authoring e delivery V2 com
+  `exerciseType: function | standard-io`. O payload de Learning persiste o
+  mesmo discriminante no JSON existente; snapshots sem o campo usam apenas um
+  fallback de compatibilidade explicito na bridge do host.
+- Alternativa rejeitada: alterar V1 ou inferir o tipo a cada renderizacao.
+- Consequencias: nao ha tabela ou migration; o host converte entre o wire DTO e
+  o contrato V2, e novos drafts sempre persistem o discriminante.
+- Evidencia: contratos V1 de `@game-guild/coding` e DTO
+  `CodingAssignmentContent` observados no commit-base.
+- Afeta: 3.3 e 3.4.
+
+## `CS-ADR-008`. Um unico contrato canonico para code antes do lancamento
+
+- Data: 2026-11-18.
+- Status: aceita.
+- Contexto: os contratos V1/V2 e adapters historicos foram criados durante o
+  mesmo programa de implementacao. Nao ha dados, revisoes ou submissions
+  publicados que exijam compatibilidade.
+- Decisao: consolidar o formato completo atual como o primeiro contrato
+  canonico de code. `exerciseType` e obrigatorio; tipos de propriedade de code
+  nao usam sufixos V1/V2; existe somente um adapter e uma toolchain corrente.
+  `schemaVersion: 1` e a identidade `adapterVersion: "1"` permanecem como
+  discriminantes estritos, sem parser ou registro alternativo.
+- Alternativa rejeitada: preservar caminhos criados apenas durante o
+  desenvolvimento sob a justificativa de compatibilidade futura.
+- Consequencias: fixtures locais podem ser descartadas, nao ha migration e
+  payloads incompletos falham fechado. Contratos V1 importados do grading
+  generico permanecem fora deste corte.
+- Evidencia: ausencia de release e inventario inicial da parte 3.5.
+- Afeta: partes 01, 02, 3.3, 3.4 e 3.5.
+
+## `CS-ADR-006`. Bridge de wire pertence ao host
+
+- Data: 2026-11-18.
+- Status: aceita.
+- Contexto: o DTO atual usa PascalCase e a estrutura historica de Learning,
+  enquanto `coding-surface` deve consumir contratos canonicos e nao conhecer
+  endpoints ou DTOs da aplicacao.
+- Decisao: manter a conversao wire-canonico em `apps/web`; a superficie recebe
+  somente contratos de `@game-guild/coding` e emite submissions canonicas.
+- Alternativa rejeitada: fazer `coding-surface` depender dos tipos ou actions de
+  `apps/web`.
+- Consequencias: auth, tenant, mutations, retry e navegacao permanecem no host.
+- Evidencia: consumidores mapeados em `CONSUMER-MAP.md`.
+- Afeta: 3.4.
+
+## `CS-ADR-007`. Browser cycle exige artifact exato e falha fechado
+
+- Data: 2026-11-18.
+- Status: aceita.
+- Contexto: o CDN versionado presente no workspace ainda usa manifest schema 1,
+  mas o coding cycle V3 exige schema 2, receipt, fingerprint e identidade
+  congelada correspondente ao commit testado.
+- Decisao: o lane `coding` adquire o artifact Toolchain exato pelo helper
+  oficial, valida sua identidade e somente depois monta o runtime e executa o
+  browser E2E. A verificacao local e do CI permanece fail-closed.
+- Alternativas rejeitadas: relaxar o verificador, aceitar o artifact legado ou
+  fabricar manualmente manifest e provenance.
+- Consequencias: os testes de package, componentes, API e runtime podem passar
+  localmente; a conclusao do gate browser depende da evidencia do lane com o
+  artifact correto.
+- Evidencia: `apps/web/scripts/coding-cycle-toolchain-support.mjs`,
+  `scripts/ci/acquire-emception-release.py` e lane `coding` em
+  `.github/workflows/pr-verify.yml`.
+- Afeta: 3.4.
+
+## `CS-ADR-008`. Correcao test-only do binding do adapter extraido
+
+- Data: 2026-11-18.
+- Status: aceita.
+- Contexto: a parte 2 moveu `CodeAssessmentTypeAdapter.cs` para o modulo
+  `GameGuild.Learning.Assessments.CodeAdapter`, mas o teste de binding do
+  Toolchain ainda lia o path removido dentro de Assessments.
+- Decisao: atualizar somente a referencia de arquivo em
+  `tools/emception/grading/toolchain-binding.test.mjs` para o path atual.
+- Alternativas rejeitadas: recriar um arquivo legado no path antigo ou remover
+  a verificacao de paridade.
+- Consequencias: nenhuma fonte, runtime, default ou UI do Emception muda; o
+  teste volta a verificar as mesmas constantes no owner atual do adapter.
+- Evidencia: build do runtime grading com 49 testes verdes e bundle Vite verde.
+- Afeta: 3.4.
+
 ## Modelo para novas decisoes
 
 ```text

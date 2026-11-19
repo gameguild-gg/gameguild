@@ -183,7 +183,7 @@ describe('last-submission restore (server page)', () => {
     mocks.getCourseLearnerContext.mockResolvedValue(
       makeContext(makeAssessment()),
     );
-    mocks.auth.mockResolvedValue({ user: { id: 'user-1' } });
+    mocks.auth.mockResolvedValue({ user: { id: 'user-1' }, tenantId: 'tenant-1' });
     mocks.getToken.mockResolvedValue('token-1');
     mocks.getMyProjects.mockResolvedValue([]);
     mocks.getCodingAssignmentPublic.mockResolvedValue(makeAssignment());
@@ -219,6 +219,7 @@ describe('last-submission restore (server page)', () => {
     expect(mocks.getMySubmissions).toHaveBeenCalledWith('enrollment-1');
     expect(mocks.auth).toHaveBeenCalledTimes(1);
     expect(props.userId).toBe('user-1');
+    expect(props.tenantId).toBe('tenant-1');
     expect(props.submissionFiles).toEqual([
       { path: 'main.py', content: 'v1', encoding: 'text', modifiable: true },
     ]);
@@ -301,7 +302,7 @@ describe('full-width coding experience (server page)', () => {
     mocks.getCourseLearnerContext.mockResolvedValue(
       makeContext(makeAssessment()),
     );
-    mocks.auth.mockResolvedValue({ user: { id: 'user-1' } });
+    mocks.auth.mockResolvedValue({ user: { id: 'user-1' }, tenantId: 'tenant-1' });
     mocks.getToken.mockResolvedValue('token-1');
     mocks.getMyProjects.mockResolvedValue([]);
     mocks.getCodingAssignmentPublic.mockResolvedValue(makeAssignment());

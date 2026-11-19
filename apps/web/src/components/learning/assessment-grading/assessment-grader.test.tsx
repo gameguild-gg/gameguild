@@ -3,26 +3,36 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { CodingAssignmentContent } from '@/lib/coding-assignment/client';
 
 const mocks = vi.hoisted(() => ({ editor: vi.fn(() => null), createWorkspace: vi.fn(), formatFeedback: vi.fn() }));
-vi.mock('@game-guild/emception-ui', () => ({
-  CodingAssessmentEditor: (props: Record<string, unknown>) => {
+vi.mock('@game-guild/coding-surface', () => ({
+  CodingSurface: (props: Record<string, unknown>) => {
     mocks.editor(props);
     return <div data-testid="assessment-editor" />;
   },
+  createCodingWorkspaceConfig: mocks.createWorkspace,
 }));
-vi.mock('@game-guild/emception-ui/assessment/presets', () => ({ createAssessmentWorkspaceConfig: mocks.createWorkspace }));
 vi.mock('@/lib/emception/scoring', () => ({ formatFeedback: mocks.formatFeedback }));
 
 import { AssessmentGrader, mergeWorkspaceWithSubmission } from './assessment-grader';
 
 function assignment(language: string | undefined = 'cpp') {
   return {
-    Environment: { Language: language },
+    Type: 'coding-assignment',
+    Version: 1,
+    ExerciseType: 'standard-io',
+    Environment: { Language: language, Tools: 'clang', AllowStudentCreateFiles: true },
     Data: {
       Files: {
-        'main.cpp': { Content: '// template', Encoding: 'text', Visibility: 'Public' },
-        'private.test.cpp': { Content: '// hidden tests', Encoding: 'text', Visibility: 'Private' },
+        'main.cpp': { Content: '// template', Encoding: 'text', Visibility: 'Public', Modifiable: true },
+        'private.test.cpp': { Content: '// hidden tests', Encoding: 'text', Visibility: 'Private', Modifiable: false },
       },
     },
+    Tests: {
+      Public: [
+        { kind: 'standard', Name: 'echo', Weight: 1, Stdin: '', Stdout: '' },
+      ],
+      Private: [],
+    },
+    Grading: { MaxScore: 100 },
   } as unknown as CodingAssignmentContent;
 }
 
@@ -67,12 +77,12 @@ describe('assessment grader workspace', () => {
     });
     expect(props).toMatchObject({
       mode: 'grader', manifestUrl: '/manifest.json', title: 'Grade submission',
-      workspaceStorageKey: undefined, enableWorkspace: false, maxScore: 100, passingScore: 0,
+      enableWorkspace: false, readOnly: true, maxScore: 100, passingScore: 0,
     });
 
     const report = { passed: 2, failed: 0 };
     act(() => {
-      (props.onRunResult as (value: unknown) => void)({ report, score: { score: 95 } });
+      (props.onPreviewRun as (value: unknown) => void)({ report, score: { score: 95 } });
     });
     expect(screen.getByTestId('computed-score')).toHaveTextContent('Computed score: 95 / 100');
     expect(mocks.formatFeedback).toHaveBeenCalledWith(report, 95);
@@ -99,9 +109,9 @@ describe('assessment grader workspace', () => {
       'notes.txt': { encoding: 'text', content: 'student notes' },
     });
     const props = mocks.editor.mock.calls.at(-1)![0] as Record<string, unknown>;
-    expect(props.workspaceStorageKey).toBe('emception:grader:submission-1');
+    expect(props.workspaceStorageKey).toBeUndefined();
     act(() => {
-      (props.onRunResult as (value: unknown) => void)({ report: { passed: 0, failed: 1 }, score: { score: 0 } });
+      (props.onPreviewRun as (value: unknown) => void)({ report: { passed: 0, failed: 1 }, score: { score: 0 } });
     });
     expect(screen.getByTestId('computed-score')).toHaveTextContent('Computed score: 0 / 50');
   });

@@ -1,6 +1,7 @@
 # Parte 3.4. Integracao web, estabilizacao e CI
 
-Status: planejado.
+Status: implementado; gate browser aguardando o lane `coding` adquirir e
+validar o artifact Toolchain schema 2 exato no CI.
 
 IDs preservados: `CODE-UI-05`, `CODE-UI-06` e `CODE-UI-07`.
 
@@ -128,12 +129,17 @@ learner e grader e validar ao menos:
 - registro de duplicacao cobre todas as copias conhecidas;
 - server components nao importam modulo browser-only;
 - `dev:fast` e build web resolvem os entrypoints sem alias privado novo;
+- o contrato OpenAPI e o cliente TypeScript gerado transportam o tipo do
+  exercicio sem edicao manual de artefato;
 - suites das duas superficies e browser E2E passam;
 - mudanca isolada de `coding-surface` dispara regressao de coding, mas nao
   release do Emception;
 - todo path novo ou migrado possui classificacao explicita no CI;
 - nenhuma tabela, migration, fonte ou default do Emception foi alterado;
-- `IMPLEMENTATION-STATE.md` marca os quatro subplanos concluidos e aponta a
+- a consolidacao corretiva da
+  [parte 3.5](./05-canonical-coding-contract-consolidation.md) esta concluida;
+- `IMPLEMENTATION-STATE.md` marca os cinco subplanos concluidos e aponta a
   [parte 4](../04-end-to-end-validation-and-cutover.md) como proxima fase.
 
-Este gate conclui a parte 3, mas nao substitui o cutover E2E da parte 4.
+Este gate conclui a parte 3 somente depois do retorno da parte 3.5, mas nao
+substitui o cutover E2E da parte 4.

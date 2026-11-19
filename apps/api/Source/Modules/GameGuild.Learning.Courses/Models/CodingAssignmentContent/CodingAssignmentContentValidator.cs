@@ -18,6 +18,11 @@ public sealed class CodingAssignmentContentValidator : AbstractValidator<CodingA
         "Public", "Private"
     };
 
+    private static readonly HashSet<string> s_validExerciseTypes = new(StringComparer.Ordinal)
+    {
+        "function", "standard-io"
+    };
+
     private static readonly HashSet<string> s_validParamTypes = new(StringComparer.Ordinal)
     {
         nameof(FunctionParameterType.String),
@@ -36,6 +41,11 @@ public sealed class CodingAssignmentContentValidator : AbstractValidator<CodingA
 
         RuleFor(x => x.Version)
             .Equal(1).WithErrorCode("invalid_version");
+
+        RuleFor(x => x.ExerciseType)
+            .Must(type => s_validExerciseTypes.Contains(type ?? string.Empty))
+            .WithMessage("ExerciseType must be one of: function, standard-io")
+            .WithErrorCode("invalid_exercise_type");
 
         RuleFor(x => x.Environment.Language)
             .Must(lang => s_validLanguages.Contains(lang ?? string.Empty))

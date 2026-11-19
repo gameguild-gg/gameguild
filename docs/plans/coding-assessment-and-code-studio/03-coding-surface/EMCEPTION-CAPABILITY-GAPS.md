@@ -1,6 +1,6 @@
 # Emception capability gaps for coding surface
 
-Status: nenhum gap confirmado.
+Status: baseline verificada; nenhum gap confirmado.
 
 Este arquivo registra somente necessidades que nao podem ser atendidas pelos
 entrypoints publicos do Emception instalado. Preferencia de API, conveniencia ou
@@ -17,7 +17,15 @@ Nenhuma capability ausente foi confirmada durante o planejamento. O subplano
 
 | ID | Capability necessaria | Caso de uso | Consumidor | Evidencia nos exports publicos | Fallback | Estado |
 | --- | --- | --- | --- | --- | --- | --- |
-| N/A | nenhuma confirmada | N/A | N/A | ainda nao caracterizado | N/A | aberto para verificacao |
+| N/A | nenhuma confirmada | editor, VFS, terminal e test runner | coding-surface | `@gameguild/emception-ide`, `emception` e `emception/testing` cobrem o corte | N/A | rejeitado |
+
+## Pre-condicao de artifact, nao capability gap
+
+O browser cycle local encontrou um manifest CDN schema 1, enquanto o contrato
+V3 exige o artifact schema 2 correspondente ao commit. Isso e uma pre-condicao
+de supply chain e provenance, nao uma API ausente no Emception. O lane `coding`
+adquire o artifact exato e valida sua identidade antes do E2E; a superficie nao
+usa import privado nem pede mudanca upstream para contornar essa condicao.
 
 Status permitidos: `investigando`, `confirmado`, `fallback aceito`,
 `proposta upstream`, `resolvido upstream`, `escopo reduzido` e `rejeitado`.

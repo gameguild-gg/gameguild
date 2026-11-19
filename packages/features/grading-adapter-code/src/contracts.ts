@@ -1,7 +1,7 @@
 import type {
-  CodingAuthoringDefinitionV1,
+  CodingAuthoringDefinition,
   CodingExecutionReportV1,
-  CodingLearnerDeliveryV1,
+  CodingLearnerDelivery,
   CodingSubmissionV1,
   CodingTestOutcomeStateV1,
   CodingToolchainIdentityV1,
@@ -30,7 +30,7 @@ export const CODE_SUPPORTED_REVIEW_METHODS = ['AutomatedReview', 'InstructorRevi
 export interface CodeGradingItemInputV1 {
   itemId: string;
   maxScore: ScoreValue;
-  definition: CodingAuthoringDefinitionV1;
+  definition: CodingAuthoringDefinition;
 }
 
 export interface CodeTestScoreAllocationV1 {
@@ -45,13 +45,13 @@ export interface CodeItemProjectionV1 extends AssessmentItemProjectionV1 {
     contentType: typeof CODE_CONTENT_TYPE;
     itemId: string;
   };
-  definition: CodingAuthoringDefinitionV1;
+  definition: CodingAuthoringDefinition;
   testScoreAllocation: CodeTestScoreAllocationV1[];
 }
 
 export interface CodeLearnerDeliveryItemV1 {
   itemId: string;
-  definition: CodingLearnerDeliveryV1;
+  definition: CodingLearnerDelivery;
 }
 
 export interface CodeSubmissionPayloadV1 {

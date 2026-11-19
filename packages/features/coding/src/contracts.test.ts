@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { codingContractFixtureV1 } from './testing';
-import { parseCodingAuthoringDefinition, parseCodingExecutionReport, parseCodingLearnerDelivery, parseCodingSubmission } from './schemas';
+import { codingContractFixtureV1, codingContractFixtureV2 } from './testing';
+import { parseCodingAuthoringDefinition, parseCodingAuthoringDefinitionV2, parseCodingExecutionReport, parseCodingLearnerDelivery, parseCodingLearnerDeliveryV2, parseCodingSubmission } from './schemas';
 import { normalizeCodingPath } from './paths';
-import { projectCodingDefinitionForLearner, validateCodingSubmissionAgainstDefinition } from './projection';
+import { projectCodingDefinitionForLearner, projectCodingDefinitionForLearnerV2, validateCodingSubmissionAgainstDefinition } from './projection';
 
 describe('coding contracts', () => {
   it('normalizes paths and preserves the canonical form on roundtrip', () => {
@@ -75,6 +75,16 @@ describe('coding contracts', () => {
     expect(serialized).not.toContain('private-case-1');
     expect(serialized).not.toContain('visibility');
     expect(parseCodingLearnerDelivery(learner)).toEqual(learner);
+  });
+
+  it('roundtrips the explicit V2 exercise type without inferring it from tests or toolchain', () => {
+    const parsed = parseCodingAuthoringDefinitionV2(codingContractFixtureV2.authoring);
+    const learner = projectCodingDefinitionForLearnerV2(parsed);
+
+    expect(parsed.exerciseType).toBe('standard-io');
+    expect(learner.exerciseType).toBe('standard-io');
+    expect(parseCodingLearnerDeliveryV2(JSON.parse(JSON.stringify(learner)))).toEqual(learner);
+    expect(() => parseCodingAuthoringDefinition({ ...parsed, schemaVersion: 1 })).toThrow(/Unrecognized key/);
   });
 
   it('accepts only mutable public files and explicitly allowed learner files', () => {
