@@ -15,16 +15,14 @@ export default async function Image({ params }: { params: Promise<{ program: str
   const { program: slug } = await params;
   const program = getPublicProgramPackage(slug);
   const title = program?.title ?? 'Program';
-  // Satori only resolves absolute http(s) image sources.
-  const rawImage = typeof program?.image === 'string' ? program.image.trim() : '';
-  const image = /^https?:\/\//i.test(rawImage) ? rawImage : null;
+  const image = program?.image ?? null;
 
   if (image) {
     return new ImageResponse(
       (
-        <picture style={{ width: '100%', height: '100%', display: 'flex', backgroundColor: '#070a12' }}>
+        <div style={{ width: '100%', height: '100%', display: 'flex', backgroundColor: '#070a12' }}>
           <img src={image} alt={title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-        </picture>
+        </div>
       ),
       { ...OG_IMAGE_SIZE },
     );

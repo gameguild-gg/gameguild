@@ -63,7 +63,9 @@ export function createWeb3CredentialsAuthorize(
     if (typeof deviceFingerprint === "string" && deviceFingerprint.length > 0) {
       body.deviceFingerprint = deviceFingerprint;
     }
-    if (credentials.rememberMe === true) {
+    // Remember-me defaults on (the forms ship defaultChecked): only an
+    // explicit opt-out suppresses the persistent refresh lifetime.
+    if (credentials.rememberMe !== false) {
       body.rememberMe = true;
     }
 
@@ -134,7 +136,7 @@ export function createWeb3CredentialsAuthorize(
 
     return {
       ...result,
-      rememberMe: credentials.rememberMe === true,
+      rememberMe: credentials.rememberMe !== false,
     };
   };
 }

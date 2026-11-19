@@ -27,6 +27,7 @@ interface ModuleEndpoint {
   }>;
   requestBodyType?: string;
   requestBodySchema?: string;
+  requestBodyRequired: boolean;
   responseType: string;
   responseSchema?: string;
   binaryMediaType?: string;
@@ -101,8 +102,10 @@ function extractModuleEndpoint(
   // Extract request body type
   let requestBodyType: string | undefined;
   let requestBodySchema: string | undefined;
+  let requestBodyRequired = false;
   if (operation.requestBody && !('$ref' in operation.requestBody)) {
     const body = operation.requestBody as OpenAPIV3.RequestBodyObject;
+    requestBodyRequired = body.required === true;
     const jsonContent = body.content['application/json'];
     if (jsonContent?.schema) {
       requestBodyType = typeMapper.map(jsonContent.schema as OpenAPIV3.SchemaObject);
@@ -150,6 +153,7 @@ function extractModuleEndpoint(
     parameters,
     requestBodyType,
     requestBodySchema,
+    requestBodyRequired,
     responseType,
     responseSchema,
     binaryMediaType,
@@ -246,7 +250,10 @@ function generateEndpointMethod(endpoint: ModuleEndpoint): string {
   if (hasBody && endpoint.requestBodySchema) {
     lines.push('');
     lines.push(`    // Validate request body`);
-    lines.push(`    const validatedBody = safeParse(Types.${endpoint.requestBodySchema}, body, 'request');`);
+    const validation = `safeParse(Types.${endpoint.requestBodySchema}, body, 'request')`;
+    lines.push(endpoint.requestBodyRequired
+      ? `    const validatedBody = ${validation};`
+      : `    const validatedBody = body === undefined ? undefined : ${validation};`);
   }
 
   lines.push('');
@@ -307,7 +314,11 @@ function buildMethodParams(endpoint: ModuleEndpoint): string {
 
   // Request body
   if (endpoint.requestBodyType) {
-    requiredParams.push(`body: ${qualifyType(endpoint.requestBodyType)}`);
+    if (endpoint.requestBodyRequired) {
+      requiredParams.push(`body: ${qualifyType(endpoint.requestBodyType)}`);
+    } else {
+      optionalParams.push(`body?: ${qualifyType(endpoint.requestBodyType)}`);
+    }
   }
 
   // Query parameters

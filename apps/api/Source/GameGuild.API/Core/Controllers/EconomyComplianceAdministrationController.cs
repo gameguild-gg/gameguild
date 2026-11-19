@@ -31,6 +31,10 @@ public sealed record DecideTrustSafetyAppealRequest(
     bool Overturn,
     string ReasonCode,
     string EvidenceHash);
+public sealed record SubmitTrustSafetyAppealRequest(
+    string SubjectHash,
+    string RestrictionReferenceHash,
+    string SubmissionEvidenceHash);
 
 [ApiVersion("1.0")]
 [Route("api/v{version:apiVersion}/admin/economy/compliance")]
@@ -175,6 +179,39 @@ public sealed class EconomyComplianceAdministrationController(
         if (!TryActor(out var tenantId, out _)) return Forbid();
         return Ok(await trustSafety.ReadAppealsAsync(tenantId, state, take, cancellationToken)
             .ConfigureAwait(false));
+    }
+
+    /// <summary>
+    ///     Submit a new Trust/Safety appeal (issue #1319 T1): the entry point that lets the
+    ///     appeals console actually create rows — assign/decide manage an appeal after it exists.
+    /// </summary>
+    [HttpPost("trust-safety/appeals")]
+    [ProducesResponseType(typeof(TrustSafetyAppeal), StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> SubmitTrustSafetyAppeal(
+        [FromBody] SubmitTrustSafetyAppealRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (!TryActor(out var tenantId, out var actorId)) return Forbid();
+        if (string.IsNullOrWhiteSpace(request.SubjectHash) ||
+            string.IsNullOrWhiteSpace(request.RestrictionReferenceHash) ||
+            string.IsNullOrWhiteSpace(request.SubmissionEvidenceHash))
+        {
+            return BadRequest("SubjectHash, RestrictionReferenceHash and SubmissionEvidenceHash are required.");
+        }
+
+        try
+        {
+            var appeal = await sender.Send(new SubmitTrustSafetyAppealEndpointCommand(
+                tenantId, actorId, request.SubjectHash, request.RestrictionReferenceHash,
+                request.SubmissionEvidenceHash, timeProvider.GetUtcNow()), cancellationToken).ConfigureAwait(false);
+            return CreatedAtAction(nameof(ListTrustSafetyAppeals), new { state = TrustSafetyAppealState.Submitted }, appeal);
+        }
+        catch (TrustSafetyConflictException exception)
+        {
+            return Conflict(exception.Message);
+        }
     }
 
     [HttpPost("trust-safety/appeals/{appealId:guid}/assignment")]

@@ -16,6 +16,22 @@ export class LearningExperienceRecommendationsModule {
   constructor(private readonly client: ApiClient) {}
 
   /**
+   * Record a click on a recommendation (issue #1184 G4: the click half of the
+   * viewed/clicked/converted recommendation funnel — mirrors the viewed endpoint).
+   */
+  async postRecommendationsClicked(id: string): Promise<Result<void, ApiError>> {
+    const url = `/v1/recommendations/${id}/clicked`;
+
+    const result = await this.client.request({
+      method: 'POST',
+      path: url,
+      requiresAuth: true,
+    });
+
+    return result as Result<void, ApiError>;
+  }
+
+  /**
    * Dismiss a recommendation
    */
   async postRecommendationsDismiss(id: string): Promise<Result<void, ApiError>> {

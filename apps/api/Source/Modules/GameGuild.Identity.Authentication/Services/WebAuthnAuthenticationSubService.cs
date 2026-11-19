@@ -124,18 +124,48 @@ public class WebAuthnAuthenticationSubService(
         }
     }
 
+    public Task<WebAuthnAuthenticationResult> CompleteAuthenticationAsync(string assertionResponse)
+        => CompleteAuthenticationAsync(assertionResponse, null, null, CancellationToken.None);
+
+    public Task<WebAuthnAuthenticationResult> CompleteAuthenticationAsync(string assertionResponse, CancellationToken cancellationToken)
+        => CompleteAuthenticationAsync(assertionResponse, null, null, cancellationToken);
+
+    public Task<WebAuthnAuthenticationResult> CompleteAuthenticationAsync(string assertionResponse, string? ipAddress)
+        => CompleteAuthenticationAsync(assertionResponse, ipAddress, null, CancellationToken.None);
+
+    public Task<WebAuthnAuthenticationResult> CompleteAuthenticationAsync(string assertionResponse, string? ipAddress, CancellationToken cancellationToken)
+        => CompleteAuthenticationAsync(assertionResponse, ipAddress, null, cancellationToken);
+
+    public Task<WebAuthnAuthenticationResult> CompleteAuthenticationAsync(string assertionResponse, string? ipAddress, string? userAgent)
+        => CompleteAuthenticationAsync(assertionResponse, ipAddress, userAgent, CancellationToken.None);
+
     public Task<WebAuthnAuthenticationResult> CompleteAuthenticationAsync(
         string assertionResponse,
-        string? ipAddress = null,
-        string? userAgent = null,
-        CancellationToken cancellationToken = default) =>
+        string? ipAddress,
+        string? userAgent,
+        CancellationToken cancellationToken) =>
         CompleteAuthenticationCoreAsync(assertionResponse, ipAddress, userAgent, cancellationToken, false);
+
+    public Task<WebAuthnAuthenticationResult> CompleteAuthenticationForStepUpAsync(string assertionResponse)
+        => CompleteAuthenticationForStepUpAsync(assertionResponse, null, null, CancellationToken.None);
+
+    public Task<WebAuthnAuthenticationResult> CompleteAuthenticationForStepUpAsync(string assertionResponse, CancellationToken cancellationToken)
+        => CompleteAuthenticationForStepUpAsync(assertionResponse, null, null, cancellationToken);
+
+    public Task<WebAuthnAuthenticationResult> CompleteAuthenticationForStepUpAsync(string assertionResponse, string? ipAddress)
+        => CompleteAuthenticationForStepUpAsync(assertionResponse, ipAddress, null, CancellationToken.None);
+
+    public Task<WebAuthnAuthenticationResult> CompleteAuthenticationForStepUpAsync(string assertionResponse, string? ipAddress, CancellationToken cancellationToken)
+        => CompleteAuthenticationForStepUpAsync(assertionResponse, ipAddress, null, cancellationToken);
+
+    public Task<WebAuthnAuthenticationResult> CompleteAuthenticationForStepUpAsync(string assertionResponse, string? ipAddress, string? userAgent)
+        => CompleteAuthenticationForStepUpAsync(assertionResponse, ipAddress, userAgent, CancellationToken.None);
 
     public Task<WebAuthnAuthenticationResult> CompleteAuthenticationForStepUpAsync(
         string assertionResponse,
-        string? ipAddress = null,
-        string? userAgent = null,
-        CancellationToken cancellationToken = default) =>
+        string? ipAddress,
+        string? userAgent,
+        CancellationToken cancellationToken) =>
         CompleteAuthenticationCoreAsync(assertionResponse, ipAddress, userAgent, cancellationToken, true);
 
     private async Task<WebAuthnAuthenticationResult> CompleteAuthenticationCoreAsync(

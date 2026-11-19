@@ -989,12 +989,12 @@ export class AuthModule {
    */
   async postAuthSamlSignInAuthorize(
     slug: string,
-    body: Types.IdentityAuthenticationSamlAuthorizeRequestDto,
+    body?: Types.IdentityAuthenticationSamlAuthorizeRequestDto,
   ): Promise<Result<Types.IdentityAuthenticationSamlSignInOutput, ApiError>> {
     const url = `/v1/auth/saml/${slug}:sign-in-authorize`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationSamlAuthorizeRequestDtoSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationSamlAuthorizeRequestDtoSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -1068,11 +1068,11 @@ export class AuthModule {
    *
    * Signs out the authenticated caller by revoking the current access token; with logoutEverywhere it also revokes every refresh token and terminates every session for the account (issue #1154).
    */
-  async postAuthSignOut(body: Types.IdentityAuthenticationSignOutInput): Promise<Result<Types.IdentityAuthenticationLogoutOutput, ApiError>> {
+  async postAuthSignOut(body?: Types.IdentityAuthenticationSignOutInput): Promise<Result<Types.IdentityAuthenticationLogoutOutput, ApiError>> {
     const url = '/v1/auth/sign-out';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationSignOutInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationSignOutInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

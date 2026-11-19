@@ -55,7 +55,7 @@ public sealed record StepUpReceiptResponse(string Receipt, DateTimeOffset Expire
 
 public sealed class StepUpChallenge
 {
-    public const int MaximumVerificationAttempts = 5;
+    public static int MaximumVerificationAttempts { get; } = 5;
 
     public int VerificationAttempts { get; set; }
 

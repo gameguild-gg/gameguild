@@ -111,7 +111,7 @@ public sealed class ServiceAccountCertificateBindingErrorsTests
         repository.Setup(repo => repo.GetByIdAsync(account.Id, It.IsAny<CancellationToken>())).ReturnsAsync(account);
         repository.Setup(repo => repo.UpdateAsync(account, It.IsAny<CancellationToken>())).ReturnsAsync(account);
         var service = new ServiceAccountService(repository.Object, Mock.Of<IRefreshTokenHasher>(), NullLogger<ServiceAccountService>.Instance);
-        return new Fixture(account, repository, new ServiceAccountOperationsController(service, new CommandHandlerSender(service, Mock.Of<IJwtTokenService>())));
+        return new Fixture(account, repository, new ServiceAccountOperationsController(service, new CommandHandlerSender(service, Mock.Of<IJwtTokenService>()), Mock.Of<IStepUpRequirementService>()));
     }
 
     private sealed record Fixture(ServiceAccount Account, Mock<IServiceAccountRepository> Repository, ServiceAccountOperationsController Controller);

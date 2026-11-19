@@ -8,10 +8,16 @@
     "generic": "Algo deu errado durante o login. Tente novamente.",
     "backToSignIn": "Voltar para o login"
   },
+  "feedTabs": {
+    "ariaLabel": "Feed social",
+    "recent": "Recentes",
+    "following": "Seguindo",
+    "community": "Comunidade",
+    "saved": "Salvos"
+  },
   "signIn": {
     "continueWithDiscord": "Continuar com o Discord",
-    "magicLink": "Entrar com link por e-mail",
-    "emailCode": "Entrar com um código por e-mail",
+    "passwordless": "Entrar sem senha",
     "continueWithWallet": "Continuar com",
     "walletConnecting": "Conectando…",
     "walletSigning": "Assinando…",
@@ -32,17 +38,10 @@
     },
     "mfa": {
       "title": "Autenticação de dois fatores",
-      "description": "Confirme seu acesso com um dos métodos de verificação disponíveis. Este desafio expira após cinco minutos.",
+      "description": "Confirme seu acesso com seu app autenticador. Este desafio expira após cinco minutos.",
       "methodLabel": "Método de verificação",
       "methodTotp": "App autenticador",
       "methodBackupCode": "Código de recuperação",
-      "methodSms": "Mensagem de texto",
-      "smsSend": "Enviar código por SMS",
-      "smsSending": "Enviando código...",
-      "smsResend": "Reenviar código",
-      "smsSent": "Enviamos um código para seu telefone verificado. Aguarde pelo menos um minuto antes de solicitar outro código.",
-      "smsFailed": "Não foi possível enviar o código. Aguarde um minuto e tente novamente ou reinicie o acesso se o desafio expirou.",
-      "noSupportedMethod": "Nenhum método de verificação compatível está disponível. Reinicie o acesso ou use a recuperação da conta.",
       "codeLabel": "Código de autenticação",
       "submit": "Verificar e entrar",
       "startAgain": "Começar o acesso novamente",
@@ -241,6 +240,14 @@
       "title": "Segurança e sessões",
       "description": "Revise todas as sessões ativas, nomeie os dispositivos que você reconhece e encerre qualquer atividade suspeita.",
       "actionFailed": "A solicitação falhou. Tente novamente.",
+      "loadError": {
+        "title": "Não foi possível carregar os dados de segurança",
+        "unauthorized": "Sua sessão expirou ao carregar esta página. Entre novamente e volte aqui para revisar suas sessões e a autenticação de dois fatores.",
+        "notFound": "O serviço de segurança não está aceitando esta conta no momento. Tente novamente em instantes; suas sessões e configurações de dois fatores não foram alteradas.",
+        "serverError": "O serviço de segurança não respondeu. Tente novamente em instantes; suas sessões e configurações de dois fatores não foram alteradas.",
+        "contractError": "O serviço de segurança retornou dados que este aplicativo não conseguiu entender. Tentar novamente pode ajudar quando o serviço estiver atualizado; suas configurações não foram alteradas.",
+        "retry": "Tentar novamente"
+      },
       "analysis": {
         "title": "Análise de segurança da sessão",
         "description": "{sessions, plural, =1 {1 sessão ativa} other {# sessões ativas}} em {devices, plural, =1 {1 dispositivo} other {# dispositivos}}.",
@@ -322,8 +329,6 @@
           "start": "Adicionar códigos por SMS",
           "unavailable": "A entrega de SMS não está configurada nesta plataforma.",
           "phoneLabel": "Número de telefone (formato internacional)",
-          "passwordLabel": "Senha da conta",
-          "passwordDescription": "Confirme a senha da sua conta antes de cadastrar um telefone.",
           "send": "Enviar código",
           "sent": "Código enviado para {phone}.",
           "codeLabel": "Código SMS",
@@ -403,7 +408,15 @@
         "dismiss": "Dispensar lembrete de dois fatores"
       },
       "errors": {
-        "saveFailed": "Não foi possível salvar suas preferências de segurança."
+        "saveFailed": "Não foi possível salvar suas preferências de segurança.",
+        "sessionExpired": "Sua sessão expirou. Entre novamente e tente de novo.",
+        "targetMissing": "Essa sessão ou dispositivo não existe mais. A lista será atualizada para o estado atual.",
+        "renameFailed": "Não foi possível renomear a sessão. Verifique o nome (1–64 caracteres) e tente novamente.",
+        "terminateFailed": "Não foi possível encerrar a sessão. Ela pode já estar fechada — atualize a página e confira a lista.",
+        "terminateOthersFailed": "Não foi possível encerrar as outras sessões. Tente novamente em instantes.",
+        "terminateAllFailed": "Não foi possível encerrar as sessões. Tente novamente em instantes.",
+        "trustFailed": "Não foi possível marcar este dispositivo como confiável. Tente novamente em instantes.",
+        "revokeFailed": "Não foi possível remover o dispositivo confiável. Ele pode já ter sido removido — atualize a página e confira a lista."
       }
     },
     "accessibility": {

@@ -15,6 +15,7 @@ const rootRequire = createRequire(join(root, 'package.json'));
 const scriptsRequire = createRequire(rootRequire.resolve('npm-run-all/package.json'));
 const shellQuote = scriptsRequire('shell-quote');
 const shadcnRequire = createRequire(realpathSync(join(root, 'packages/ui/node_modules/shadcn/package.json')));
+const mcpRequire = createRequire(shadcnRequire.resolve('@modelcontextprotocol/sdk/client/auth.js'));
 
 function packageVersion(entry, expectedName) {
   let directory = dirname(entry);
@@ -37,10 +38,7 @@ function packageVersion(entry, expectedName) {
 test('security overrides select the corrected packages used by Next, scripts and shadcn', () => {
   assert.equal(sharp.versions.sharp, '0.35.5');
   assert.equal(packageVersion(scriptsRequire.resolve('shell-quote'), 'shell-quote'), '1.11.0');
-  // shadcn moved from the legacy @modelcontextprotocol/sdk 1.32.x to the split
-  // @modelcontextprotocol/server 2.4.0 release (which the dependency-security
-  // suite separately pins for its fail-closed issuer validation).
-  assert.equal(packageVersion(shadcnRequire.resolve('@modelcontextprotocol/server'), '@modelcontextprotocol/server'), '2.4.0');
+  assert.equal(packageVersion(shadcnRequire.resolve('@modelcontextprotocol/sdk/client/auth.js'), '@modelcontextprotocol/sdk'), '1.32.1');
 });
 
 test('the updated native image dependency renders a benign SVG to PNG', async () => {
@@ -89,4 +87,34 @@ test('ordinary and valid pre-parsed templates retain rendering behavior', () => 
   const expected = 'one;&lt;two&gt;;';
   assert.equal(handlebars.compile(source)(context), expected);
   assert.equal(handlebars.compile(handlebars.parse(source))(context), expected);
+});
+
+test('the MCP transport resolves the patched Hono server and router releases', () => {
+  assert.equal(packageVersion(mcpRequire.resolve('@hono/node-server'), '@hono/node-server'), '2.1.6');
+  assert.equal(packageVersion(mcpRequire.resolve('hono'), 'hono'), '4.13.16');
+});
+
+test('Hono wildcard authorization covers an encoded line terminator before not-found handling', async () => {
+  // GHSA-h7mg-cq63-vhpq: the default router previously skipped this middleware.
+  const { Hono } = mcpRequire('hono');
+  const app = new Hono();
+  let guardCalls = 0;
+  let protectedHandlerReached = false;
+  app.use('/protected/*', (context) => {
+    guardCalls += 1;
+    return context.text('Denied', 403);
+  });
+  app.get('/protected/resource', (context) => {
+    protectedHandlerReached = true;
+    return context.text('Protected');
+  });
+  app.get('/public', (context) => context.text('Public'));
+  const denied = await app.request('http://localhost/protected/%0A');
+  assert.equal(denied.status, 403);
+  assert.equal(guardCalls, 1);
+  assert.equal(protectedHandlerReached, false);
+  const benign = await app.request('http://localhost/public');
+  assert.equal(benign.status, 200);
+  assert.equal(await benign.text(), 'Public');
+  assert.equal(guardCalls, 1);
 });

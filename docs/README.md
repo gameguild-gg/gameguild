@@ -49,6 +49,11 @@ This directory contains the cleaned and consolidated project documentation migra
 
 See `architecture/permissions-dac.md` for DAC details.
 
+## Design Proposals
+
+- `design/j1-email-verification.md` – Making the orphaned email-verification journey reachable and enforceable (#1298 J1)
+- `design/j3-checkout-monetization-ui.md` – Subscription storefront/checkout, buyer promo entry, billing workspace and dunning recovery (#1298 J3)
+
 ---
 
 If adding new docs, keep top-level heading unique and include a short purpose paragraph.

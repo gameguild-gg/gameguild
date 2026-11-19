@@ -19,15 +19,15 @@ Each quarter closes with a governors' meeting (Loomio + call):
 1. **Review**: performance vs. the quarter's plan, financials
 2. **Plan next quarter**: budget, roadmap — approved by vote; this becomes the *planned spend baseline*
 3. **Distribution vote**: how much of the quarter's distributable profit goes to revenue shareholders (waterfall in 07 applies: opex → founder loans → distributions)
-4. **Compensation votes**: contractors/employees paid per contract; any governor who worked without a contract gets a **voted performance-based payment** — limited mechanism, discretionary, not a salary entitlement
+4. **Compensation review**: contracted pay confirmed per contract; contracts for new/changed work approved by vote
 5. Outcomes recorded in `appendix-decisions-log.md`
 
 ## Voting model
 
 - **Equity-weighted votes** (40/30/30).
-- **No two can outvote the one (structural protection)**: a coalition of the two 30% holders (60% combined) can never pass anything against the 40% holder's opposition, and vice versa — because passing thresholds are set **above 60%** (qualified majority ≥66⅔%). This is the deliberate design: no simple-majority (51%) voting anywhere that money or structural change is at stake, since 30+30=60 would let a duo override the third.
-- Deadlock is the *intended* outcome when agreement fails — it forces negotiation, not domination.
-- **Deadlock breaker (agreed)**: on **product decisions only**, Tolsta holds the tie-breaking vote. Treasury/structural items have no tie-breaker — they escalate per the deadlock clause.
+- **No simple majority anywhere money or structure is at stake.** All passing thresholds are qualified majorities set above 60%, because 30+30=60 must never override the 40% holder, and 40 alone must never force anything.
+- Deadlock is the *intended* outcome when agreement fails on structural items — it forces negotiation, not domination.
+- **Deadlock breaker**: on **product decisions only**, Tolsta holds the tie-breaking vote. Treasury and structural items have no tie-breaker — they follow the deadlock clause below.
 - Proposal threshold: any governor may submit; formal votes require all three to cast.
 - Quorum: 100% of governors for treasury decisions.
 
@@ -36,29 +36,39 @@ Each quarter closes with a governors' meeting (Loomio + call):
 | Class | Examples | Threshold |
 |---|---|---|
 | Routine ops | spend within the approved quarterly plan | CEO (Tolsta) discretion |
-| Product | roadmap changes, feature bets | qualified majority **≥66⅔%** (any 2 governors = 60% < 66⅔% → fails; effectively requires consensus or Tolsta's tie-break) |
-| Unplanned treasury spend | **anything not in the approved quarterly plan** | qualified majority **≥70%** (no two governors alone can pass; even 40+30 = 70% exactly meets it only if the threshold is "≥", otherwise must include all three — see note) |
+| Product | roadmap changes, feature bets | qualified majority **≥66⅔%** (any 2 governors = 60% < 66⅔% → fails without consensus or Tolsta's tie-break) |
+| Unplanned treasury spend | **anything not in the approved quarterly plan** | **dual condition: ≥2/3 (66⅔%) of voting weight AND a majority of governors (≥2 of 3) voting in favor** — see note |
 | Structural | cap table changes, dissolution, governor exit terms | **unanimous (100%)** |
 | Quarterly cycle votes | distribution %, plan approval, compensation | qualified majority **≥66⅔%** |
 
-**Threshold note**: at exactly 40/30/30, "≥70%" is met only by 40+30 = 70% *or* by all three. If the intent is that treasury spend must include ALL governors, set the threshold to **">70%"** or **"all three governors"** explicitly. Recommendation: state it as **unanimous for unplanned treasury spend** — same practical effect at 3 governors, unambiguous at any future cap-table shape. (Open decision — confirm.)
+**Threshold note (unplanned treasury, agreed 2026-11-12)**: "2/3 + majority of governors." At exactly 40/30/30 this means 40+30 = 70% ≥ 66⅔% with 2 governors in favor → **passes over the third's objection**. That is the agreed rule: treasury spend can move with a strong coalition (Tolsta+1) but never with 60% (the two 30s alone, weight-failed) and never with one governor alone. The dual condition stays correct as the cap table changes: a future 51% holder alone still fails the governor-majority condition; three small holders totaling 66% pass only if ≥2 of them… i.e., the formula, not today's arithmetic, is the law. Counsel to draft precisely.
 
-The quarterly plan is therefore the master control: planned spend flows freely; anything unplanned needs a qualified majority above any two-holder coalition.
+The quarterly plan is therefore the master control: planned spend flows freely; anything unplanned needs the dual-condition qualified majority.
 
 ## Coalition table (why these numbers)
 
-| Coalition | Combined weight | Passes product (≥66⅔%)? | Passes treasury (≥70%)? | Passes structural (100%)? |
-|---|---|---|---|---|
-| Tolsta + Matheus | 70% | ✅ | ✅ (exactly, if "≥") | ❌ |
-| Tolsta + Joel | 70% | ✅ | ✅ (exactly, if "≥") | ❌ |
-| Matheus + Joel | 60% | ❌ | ❌ | ❌ |
-| All three | 100% | ✅ | ✅ | ✅ |
+| Coalition | Weight | Governors | Product (≥66⅔%)? | Treasury (⅔ + gov majority)? | Structural (100%)? |
+|---|---|---|---|---|---|
+| Tolsta + Matheus | 70% | 2 | ✅ | ✅ (70% ≥ ⅔ and 2 ≥ 2) | ❌ |
+| Tolsta + Joel | 70% | 2 | ✅ | ✅ | ❌ |
+| Matheus + Joel | 60% | 2 | ❌ | ❌ (weight fails) | ❌ |
+| Any single governor | ≤40% | 1 | ❌ | ❌ | ❌ |
+| All three | 100% | 3 | ✅ | ✅ | ✅ |
 
-The two 30% governors together (60%) can never outvote Tolsta (40% blocks everything at ≥66⅔%). Conversely Tolsta alone (40%) can never force anything — every threshold requires at least one other governor.
+The two 30% governors together (60%) can never pass anything. Tolsta alone can never pass anything. Only Tolsta + at least one other can move treasury — and structural change requires everyone.
 
-## Compensation model (agreed)- Ownership and work are **fully separated**. Governors do not earn by owning; workers are paid for working.
-- Anyone (governor or not) doing meaningful work for the company does so **under a contract** with agreed pay.
-- A governor who worked without a contract: at cycle end, performance is measured and compensation is **voted** by governors. Limited mechanism — discretionary bonus, not an entitlement, and it should stay rare (the contract route is the norm).
+## Deadlock clause (agreed)
+
+For treasury/structural items where the dual condition or unanimity fails:
+
+1. **Cooling period**: 30 days from the failed vote; the item may not be re-proposed.
+2. **Mediation**: mandatory mediation session (all governors + a neutral mediator).
+3. **Shotgun buy-sell**: if mediation fails within 30 more days, any governor may trigger — offering to buy the others' shares at a stated per-share price; each recipient either sells at that price or buys the offeror's shares at the same price. Counsel to draft terms (valuation mechanics, funding period, tag of both share classes).
+
+## Compensation model (agreed)
+
+- Ownership and work are **fully separated**. Governors do not earn by owning; workers are paid for working.
+- **All work for the company is done under contract** with agreed pay — governor or not. There is no voted-payment mechanism for uncontracted work: if work is worth paying, it is worth a contract first.
 
 ## Voting tool: Loomio
 

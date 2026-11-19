@@ -210,4 +210,58 @@ describe('SessionsManager', () => {
     await user.click(screen.getByRole('button', { name: 'settings.security.trustedDevices.revoke' }));
     await waitFor(() => expect(mocks.revokeTrustedDevice).toHaveBeenCalledWith(TRUSTED_DEVICE_ID));
   });
+
+  it('toasts the session-specific failure message when termination fails generically (issue #1298 J4)', async () => {
+    const user = userEvent.setup();
+    mocks.terminateSession.mockResolvedValue({ success: false, status: 'error' });
+    render(<SessionsManager data={makeData()} locale="en-US" />);
+
+    await user.click(screen.getByRole('button', { name: 'settings.security.sessions.terminateAria' }));
+
+    await waitFor(() => expect(mocks.toastError).toHaveBeenCalledWith('settings.security.errors.terminateFailed'));
+    expect(mocks.toastError).not.toHaveBeenCalledWith('settings.security.actionFailed');
+  });
+
+  it('toasts the expired-session guidance and skips the generic message on 401 (issue #1298 J4)', async () => {
+    const user = userEvent.setup();
+    mocks.trustCurrentDevice.mockResolvedValue({ success: false, status: 'unauthorized' });
+    render(<SessionsManager data={makeData()} locale="en-US" />);
+
+    const trust = screen.getByRole('button', { name: 'settings.security.trustedDevices.trustCurrentButton' });
+    await waitFor(() => expect(trust).toBeEnabled());
+    await user.click(trust);
+
+    await waitFor(() => expect(mocks.toastError).toHaveBeenCalledWith('settings.security.errors.sessionExpired'));
+    expect(mocks.toastError).not.toHaveBeenCalledWith('settings.security.errors.trustFailed');
+    expect(mocks.toastError).not.toHaveBeenCalledWith('settings.security.actionFailed');
+  });
+
+  it('toasts the already-gone guidance and refreshes the stale list on 404 (issue #1298 J4)', async () => {
+    const user = userEvent.setup();
+    mocks.revokeTrustedDevice.mockResolvedValue({ success: false, status: 'notFound' });
+    render(<SessionsManager data={makeData()} locale="en-US" />);
+
+    const revoke = screen.getByRole('button', { name: 'settings.security.trustedDevices.revoke' });
+    await waitFor(() => expect(revoke).toBeEnabled());
+    await user.click(revoke);
+
+    await waitFor(() => expect(mocks.toastError).toHaveBeenCalledWith('settings.security.errors.targetMissing'));
+    // The stale row must not linger: the failed 404 action resyncs the server-rendered list.
+    await waitFor(() => expect(mocks.refresh).toHaveBeenCalled());
+  });
+
+  it('toasts the rename-specific failure message when renaming fails (issue #1298 J4)', async () => {
+    const user = userEvent.setup();
+    mocks.renameSession.mockResolvedValue({ success: false, status: 'error' });
+    render(<SessionsManager data={makeData()} locale="en-US" />);
+
+    await user.click(screen.getAllByRole('button', { name: 'settings.security.rename.aria' })[0]);
+    const input = screen.getByTestId(`rename-input-${CURRENT_SESSION_ID}`);
+    await user.clear(input);
+    await user.type(input, 'Main desktop');
+    await user.click(screen.getByTestId(`rename-save-${CURRENT_SESSION_ID}`));
+
+    await waitFor(() => expect(mocks.toastError).toHaveBeenCalledWith('settings.security.errors.renameFailed'));
+    expect(mocks.toastError).not.toHaveBeenCalledWith('settings.security.actionFailed');
+  });
 });

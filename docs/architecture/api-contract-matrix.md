@@ -11,33 +11,48 @@ corrections are not a newly certified surface audit. F3 records the subsequent
 Next registration/token-revocation, extended-auth and web password-action migrations, and F4 records the password/MFA credential-provider
 migration; the other provider transports remain.
 
+**F3 inventory re-run (issue #1298 J5, 2026-11-18, develop `a0fc54fc012`):** the
+raw-fetch sweep was repeated against current develop because the historical F3
+inventory predated several merged action libraries (mentorship, content-creators,
+blogs, launch-pad and others). The re-run found **66 API-directed hand-rolled
+`fetch` call sites across 42 files** in `apps/web/src` — versus the 7 web-side
+transports the historical F3 list recorded — and every resolved target URL exists
+in the regenerated client (F3-class shadows, not CLIENT-CALL-NO-ENDPOINT). The
+full file-by-file inventory and the mentorship/content-creators follow-up note
+live in the F3 section below. No `axios` import exists anywhere in `apps/web/src`.
+The deterministically recountable surface numbers were refreshed (2,181 endpoints,
+228 module classes, 2,038 TS/TSX files); the generated-method/dead-endpoint split
+remains the 2026-11-02 snapshot — a full module-call recount was not re-certified
+in this pass.
+
 Sources of truth:
 
 - **Client surface**: `packages/infrastructure/client/src/generated/endpoints.gen.ts`
-  (2,115 endpoint definitions; 224 module classes in `generated/modules/`), generated
-  from the API OpenAPI document — `.metadata.json` records
-  `apiVersion 4.4.0`, hash `a60945fa…25d158`, generated `2026-11-01T22:48:05Z`
-  (commit `d3e340865`).
+  (2,115 endpoint definitions at the 2026-11-02 audit; **2,181** at the 2026-11-18
+  re-run; 224 module classes in `generated/modules/`, **228** at the re-run),
+  generated from the API OpenAPI document — `.metadata.json` records
+  `apiVersion 4.4.0`, hash `a60945fa…25d158` at the audit, hash
+  `5bd30902…247d6e3` generated `2026-11-15T13:07:57Z` at the re-run.
 - **Server surface**: controller route attributes across `apps/api/Source`
   (267 files, 2,283 route/action pairs incl. dual-route actions).
-- **Usage**: full scan of `apps/web/src` (1,992 TS/TSX files) for generated-module
-  method calls, plus hand-rolled `fetch` transports in `apps/web/src` and the client
-  package's own runtime (`packages/infrastructure/client/src/runtime`,
-  `…/integrations/next`).
+- **Usage**: full scan of `apps/web/src` (1,992 TS/TSX files at the audit; 2,038
+  at the 2026-11-18 re-run) for generated-module method calls, plus hand-rolled
+  `fetch` transports in `apps/web/src` and the client package's own runtime
+  (`packages/infrastructure/client/src/runtime`, `…/integrations/next`).
 
 ## Headline numbers
 
 | Metric | Count |
 | --- | --- |
-| Generated client endpoints | 2,115 |
+| Generated client endpoints | 2,115 (audit) → **2,181** (2026-11-18 re-run) |
 | Controller route/actions parsed | 2,283 |
-| Client endpoints matched to a controller route | 2,100 + 12 version-parameterized + 3 parser artifacts = **2,115 (100%)** |
-| Called from apps/web via generated methods | 421 (19.9%) |
-| Called only via hand-rolled `fetch` (raw transport) | 17 |
+| Client endpoints matched to a controller route | 2,100 + 12 version-parameterized + 3 parser artifacts = **2,115 (100%)** (audit snapshot) |
+| Called from apps/web via generated methods | 421 (19.9%) — 2026-11-02 snapshot, not re-certified by the J5 re-run |
+| Called only via hand-rolled `fetch` (raw transport) | 17 endpoints (audit); the 2026-11-18 re-run inventoried **66 raw-fetch call sites across 42 files** (see F3) |
 | Referenced only by tests | 8 |
-| **Never called by any transport (ENDPOINT-NO-CALLER candidates)** | **1,669** |
+| **Never called by any transport (ENDPOINT-NO-CALLER candidates)** | **1,669** (audit snapshot) |
 | Controller endpoints with no client method (live HTTP, absent from contract) | 171 (102 hidden by design — 95 `IgnoreApi` + 7 Orders safety-allowlist, 56 unversioned, 13 see F6) |
-| Raw-fetch URLs with no API route (CLIENT-CALL-NO-ENDPOINT) | 2 (F1, F2) — both fixed by the #1217 PR |
+| Raw-fetch URLs with no API route (CLIENT-CALL-NO-ENDPOINT) | 2 (F1, F2) — both fixed by the #1217 PR; the 2026-11-18 re-run found none new |
 
 ### Finding classes
 
@@ -155,8 +170,8 @@ exercised, but not through its generated method (finding F3).
 
 | Method | Path | operationId | Called from |
 | --- | --- | --- | --- |
-| GET | `/v1/auth/guest-session` | `getAuthGuestSession` | — |
-| POST | `/v1/auth/guest-session` | `postAuthGuestSession` | — |
+| GET | `/v1/auth/guest-session` | `getAuthGuestSession` | — (raw transport: `app/api/auth/guest-session/route.ts`, F3 re-run) |
+| POST | `/v1/auth/guest-session` | `postAuthGuestSession` | — (raw transport: `app/api/auth/guest-session/route.ts`, F3 re-run) |
 
 ### Multi-factor (`auth-multi-factor.gen.ts`) — 21 endpoints, 10 called
 
@@ -531,6 +546,82 @@ the original audit, not the current source):
   `apps/web/src/lib/workspace-actions.ts:506` (`/v1/assets`);
   `apps/web/src/app/api/assets/[assetId]/route.ts:45`, `apps/web/src/app/api/courses/content-reports/route.ts:105`;
   `apps/web/src/app/api/audit/permission-patterns/route.ts:28` (`/v1/audit-queries/:execute`).
+
+#### F3 re-run inventory (issue #1298 J5, 2026-11-18, develop `a0fc54fc012`)
+
+Full sweep of non-test `fetch(` occurrences in `apps/web/src`, classified:
+browser→own-Next-route calls (`fetch('/api/...')` against the web origin) are the
+web app's own BFF surface, not API transports; third-party fetches (Cloudflare
+Turnstile verify, GitHub repo API, Pyodide/WASM CDNs, telemetry) are likewise
+out of matrix scope. What remains is **66 API-directed call sites across 42
+files**. Every resolved target below exists in the regenerated client — these
+are F3-class shadows (typed method available but bypassed), not
+CLIENT-CALL-NO-ENDPOINT. Helper-based files centralize one `fetch` behind a
+private `requestJson`/`adminFetch`/`launchPadApiRequest`-style wrapper; the
+endpoint count column counts the wrapper's call sites.
+
+| File (apps/web/src) | Sites | Endpoint family | Generated module (shadowed) | In historical F3 list? |
+| --- | --- | --- | --- | --- |
+| `lib/mentorship/actions.ts` | 1 helper, **13 call sites** | `/v1/mentorship/*` (mentors, profile, availability, sessions, cancel/complete) | `social-mentorship.gen.ts` | **no — the J5 headline gap** |
+| `lib/content-creators/actions.ts` | 1 | `POST /v1/content/course-proposals` | `content-course-proposals.gen.ts` | **no — the J5 headline gap** |
+| `lib/proposals/actions.ts` | 3 | `/v1/content/course-proposals`, `/v1/content/course-proposals/by-slug/{slug}`, `POST /v1/marketing/leads` | `content-course-proposals.gen.ts`, `content-marketing-leads.gen.ts` | no |
+| `lib/contact/actions.ts` | 1 | `POST /v1/marketing/leads` | `content-marketing-leads.gen.ts` | no |
+| `lib/blogs/actions.ts` | 6 | `/api/social/blog/posts*`, `/api/social/comments/*`, `/api/social/reactions`, `/api/social/profiles/*` | `social-blog-*.gen.ts` | no |
+| `lib/blogs/admin.ts` | 1 helper, 7 call sites | `/api/social/blog/admin/*` | `social-blog-admin.gen.ts` | no |
+| `lib/blogs/legacy-redirect.ts` | 1 | `GET /api/social/blog/public/resolve-legacy/{slug}` | `social-blog-public.gen.ts` | no |
+| `components/blogs/blog-view-beacon.tsx` | 1 | `POST /api/social/blog/public/posts/{id}/views` (browser→API direct) | `social-blog-public.gen.ts` | no |
+| `app/api/blogs/authoring/[postId]/ai/[...aiPath]/route.ts` | 1 | `/api/social/blog/posts/{id}/ai/*` | `social-blog-ai.gen.ts` | no |
+| `app/api/blogs/authoring/[postId]/runs/[runId]/stream/route.ts` | 1 | `.../ai/runs/{runId}/stream` (SSE) | `social-blog-ai.gen.ts` | no |
+| `lib/learning/authoring.ts` | 1 helper | `/v1/courses/{id}/content/{cid}/authoring*` | `learning-courses-program-content-authoring.gen.ts` | no |
+| `app/api/learning/authoring/[courseId]/[contentId]/runs/[runId]/stream/route.ts` | 1 | `/v1/courses/{id}/content/{cid}/authoring/ai/runs/{runId}/stream` (SSE) | same | no |
+| `lib/launch-pad/actions.ts` | 1 helper, 16 call sites | `/v1/launch-pad*`, `/v1/launch-pad/events/*` | `launch-pad.gen.ts`, `launch-pad-events.gen.ts` | no |
+| `lib/launch-pad/queries.ts` | 1 helper, 6 call sites | `/v1/launch-pad/events/*` (public/management/me) | `launch-pad-events.gen.ts` | no |
+| `lib/api/testing-lab.ts` | 1 | `GET /v1/testing/locations` | `testing-lab` surface | no |
+| `app/api/testing-lab/applications/draft/route.ts` | 1 helper, 3 paths | `/v1/testing/events/*` (drafts, draft, `:submit`) | `testing-lab` surface | no |
+| `app/api/audit/replay/route.ts` | 1 | `GET /v1/admin/audit-logs/replay/snapshots` | admin audit surface | no |
+| `app/api/courses/certificates/route.ts` | 2 | `/api/certificates/*` (templates, my, verify, issue) + `GET /v1/courses/{id}/me/progress` | `certificates`/`courses` surfaces | no |
+| `app/api/courses/content-reports/route.ts` | 3 | `/v1/assets/{id}:report`, `/v1/admin/assets/*` | assets + admin assets | yes (1 of 3) |
+| `app/api/assets/route.ts` | 2 | `GET/POST /v1/assets` | `assets.gen.ts` | partially (`workspace-actions` twin was listed) |
+| `app/api/assets/[assetId]/route.ts` | 3 | `GET/PUT/DELETE /v1/assets/{id}` | `assets.gen.ts` | yes |
+| `app/api/assets/[assetId]/content/route.ts` | 1 | `GET /api/assets/{id}/content` | `assets-cdn.gen.ts` | no |
+| `lib/workspace-actions.ts` | 1 | `GET /v1/assets` | `assets.gen.ts` | yes |
+| `lib/learner/activity-actions.ts` | 1 | `GET /v1/assets` | `assets.gen.ts` | no |
+| `app/api/social/media/route.ts` | 1 | `/v1/assets/social-media` | assets surface | no |
+| `app/api/auth/guest-session/route.ts` | 2 | `GET/POST /v1/auth/guest-session` | `auth-guest.gen.ts` | no |
+| `app/api/auth/session-state/route.ts` | 1 | `GET /v1/auth/session-state` | `auth.gen.ts` | yes |
+| `app/api/auth/web3/challenge/route.ts` | 1 | `POST /v1/auth/web3/challenge` | `auth.gen.ts` | F4-adjacent |
+| `lib/auth/email-code-request.ts`, `magic-link-request.ts` | 2 | `/v1/auth/email-code:request`, `/v1/auth/magic-link:request` | `auth.gen.ts` | yes |
+| `lib/auth/email-code-credentials.ts`, `magic-link-credentials.ts`, `web3-credentials.ts` | 3 | email-code/magic-link consume + `web3:verify` | `auth.gen.ts` | F4 (named there) |
+| `app/api/audit/permission-patterns/route.ts` + `console/compliance/permission-patterns/page.tsx` | 4 | `POST /v1/audit-queries/:execute`, `GET /api/audit/security-events/alerts` | audit-queries + security-events surfaces | yes (route only; the page duplicate was unlisted) |
+| `app/api/billing/pricing-insights/route.ts` + `console/economy/pricing-insights/page.tsx` | 4 | `/api/v1/billing/pricing-discounts-ledger*` | `commerce-billing-pricing-discounts-ledger.gen.ts` | no |
+| `app/api/billing/revenue-currencies/route.ts` + `console/economy/revenue-currencies/page.tsx` | 7 | `/api/v1/billing/revenue/auditing/*` | `commerce-payments-billing-revenue-auditing.gen.ts` | no |
+| `app/api/currencies/route.ts` | 2 | `/api/v1/currencies*` | `commerce-payments-currencies.gen.ts` | no |
+| `app/api/currency/convert/route.ts` | 1 | `/api/v1/currency/convert` | `commerce-payments-currency.gen.ts` | no |
+| `app/[locale]/(public)/unsubscribe/page.tsx` | 1 | `GET /api/v1/notifications/unsubscribe` | notifications surface | no |
+
+Notes from the reconciliation:
+
+- The `api/v1/...`-prefixed families above are **not** F2-class wrong prefixes:
+  their controllers (`CurrenciesController`, `CurrencyConversionController`,
+  `PricingDecisionLedgerController`, `RevenueAuditingController`,
+  `NotificationUnsubscribeController`) use `api/v{version:apiVersion}` route
+  templates, so `/api/v1/...` is the served path, and the generated client
+  carries 503 such endpoints. Same for the `/api/social/*` (115 endpoints) and
+  `/api/certificates/*` families.
+- Both SSE stream proxies (`.../ai/runs/{runId}/stream`) shadow generated
+  endpoints; a generated-client migration would still need a streaming-capable
+  call path, so they may stay proxy-shaped by design.
+- `apps/web/src` uses no axios anywhere; the raw transport is uniformly
+  `fetch`.
+
+**Follow-up (not done in #1298 J4/J5, by scope decision):** converting the
+mentorship (13 call sites) and content-creators (1) raw fetches to
+`GeneratedApi.SocialMentorshipModule` / `GeneratedApi.ContentCourseProposalsModule`
+follows the established #1282 migration pattern (generated module call + surfaced
+failure states + tests), but each conversion is a behavior-affecting change to a
+live surface with its own view models and error-copy contract — it belongs in its
+own change, not in this documentation re-run. The rows above are the tracking
+inventory for that work.
 
 ### F4 — password/MFA sign-in migrated; other provider transports remain
 

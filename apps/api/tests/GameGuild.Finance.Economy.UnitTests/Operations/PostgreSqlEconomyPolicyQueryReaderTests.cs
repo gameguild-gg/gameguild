@@ -28,10 +28,11 @@ public sealed class PostgreSqlEconomyPolicyQueryReaderTests
             tenant,
             Policy(TenantId, 3, Now.AddMinutes(-1)),
             Policy(Guid.NewGuid(), 4, Now));
-        context.Set<EconomyCapabilityPolicyApprovalRow>().Add(new EconomyCapabilityPolicyApprovalRow
+        context.Set<EconomyApprovalRow>().Add(new EconomyApprovalRow
         {
             Id = Guid.NewGuid(),
-            PolicyId = tenant.Id,
+            ApprovalKind = EconomyApprovalKind.CapabilityPolicy,
+            SubjectId = tenant.Id,
             ActorId = tenant.ApprovedBy!.Value,
             ReauthenticationHash = "approval-evidence",
             ApprovedAt = tenant.ApprovedAt!.Value

@@ -5,7 +5,9 @@ import {
   hasReviewMethod,
   isPrimaryReviewMethodAvailable,
   readReviewWorkflow,
+  resolveAIReviewConfiguration,
   REVIEW_METHOD_FLAGS,
+  type AIReviewProviderCapability,
 } from "./assessment-grading-methods";
 
 describe("assessment grading method helpers", () => {
@@ -36,11 +38,39 @@ describe("assessment grading method helpers", () => {
     expect(buildReviewWorkflow("InstructorReview", true)).toBe(8);
   });
 
-  it("keeps implemented human reviews available and AI review unavailable without a provider", () => {
+  it("keeps implemented reviews available and gates AI review on sanitized capabilities", () => {
     expect(isPrimaryReviewMethodAvailable("AutomatedReview")).toBe(true);
     expect(isPrimaryReviewMethodAvailable("InstructorReview")).toBe(true);
     expect(isPrimaryReviewMethodAvailable("SelfReview")).toBe(true);
     expect(isPrimaryReviewMethodAvailable("PeerReview")).toBe(true);
     expect(isPrimaryReviewMethodAvailable("AIReview")).toBe(false);
+
+    const unavailable: AIReviewProviderCapability[] = [{
+      providerKey: "gameguild-ai",
+      policyVersions: ["v1"],
+      contexts: ["author-test", "official-submission"],
+      available: false,
+      code: "credential-missing",
+      message: "The configured provider has no server credential.",
+    }];
+    expect(isPrimaryReviewMethodAvailable("AIReview", unavailable)).toBe(false);
+
+    const available = [{ ...unavailable[0], available: true }];
+    expect(isPrimaryReviewMethodAvailable("AIReview", available)).toBe(true);
+    expect(resolveAIReviewConfiguration(available)).toEqual({
+      providerKey: "gameguild-ai",
+      policyVersion: "v1",
+    });
+  });
+
+  it("requires AI review support in author test and official submission", () => {
+    expect(resolveAIReviewConfiguration([{
+      providerKey: "author-test-only",
+      policyVersions: ["v1"],
+      contexts: ["author-test"],
+      available: true,
+      code: null,
+      message: null,
+    }])).toBeNull();
   });
 });

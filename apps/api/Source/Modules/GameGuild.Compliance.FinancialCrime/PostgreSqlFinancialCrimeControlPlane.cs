@@ -61,6 +61,7 @@ public interface IFinancialCrimeControlPlane
     ValueTask<IReadOnlyList<FinancialCrimeScreening>> ReadDueRescreeningsAsync(DateTimeOffset now, int limit, CancellationToken cancellationToken);
     ValueTask<IReadOnlyList<FinancialCrimeCase>> ReadCasesAsync(Guid tenantId, FinancialCrimeCaseState? state, int limit, CancellationToken cancellationToken);
     ValueTask<FinancialCrimeCaseDetails> ReadCaseDetailsAsync(Guid tenantId, Guid caseId, CancellationToken cancellationToken);
+    ValueTask<FinancialCrimeCaseDecision?> ReadLatestApprovedDecisionAsync(Guid tenantId, string subjectHash, DateTimeOffset now, CancellationToken cancellationToken);
 }
 
 public sealed class PostgreSqlFinancialCrimeControlPlane : IFinancialCrimeControlPlane
@@ -393,6 +394,35 @@ public sealed class PostgreSqlFinancialCrimeControlPlane : IFinancialCrimeContro
             Array.AsReadOnly(events),
             Array.AsReadOnly(decisionRows.Select(Map).ToArray()),
             Array.AsReadOnly(references));
+    }
+
+    /// <summary>
+    /// Reads the newest Approved case decision for a subject that is still inside its
+    /// consumption window and has not been consumed yet (issue #1291 decision consumption):
+    /// the money path consumes exactly this decision when a value-moving operation succeeds,
+    /// producing the durable link between the operation fingerprint and the AML decision that
+    /// authorized it.
+    /// </summary>
+    public async ValueTask<FinancialCrimeCaseDecision?> ReadLatestApprovedDecisionAsync(
+        Guid tenantId,
+        string subjectHash,
+        DateTimeOffset now,
+        CancellationToken cancellationToken)
+    {
+        if (tenantId == Guid.Empty)
+        {
+            throw new ArgumentException("Tenant is required.", nameof(tenantId));
+        }
+
+        ArgumentException.ThrowIfNullOrWhiteSpace(subjectHash);
+        var row = await _db.Set<FinancialCrimeDecisionRow>().AsNoTracking()
+            .Where(row => row.TenantId == tenantId && row.SubjectHash == subjectHash &&
+                          row.Outcome == FinancialCrimeOutcome.Approved &&
+                          row.IssuedAt <= now && row.ExpiresAt > now &&
+                          !_db.Set<FinancialCrimeDecisionConsumptionRow>().Any(consumed => consumed.DecisionId == row.Id))
+            .OrderByDescending(row => row.IssuedAt).ThenByDescending(row => row.Version)
+            .FirstOrDefaultAsync(cancellationToken).ConfigureAwait(false);
+        return row is null ? null : Map(row);
     }
 
     private async ValueTask<FinancialCrimeCaseRow> OpenCaseAndHoldAsync(

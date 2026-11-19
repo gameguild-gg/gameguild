@@ -44,10 +44,20 @@ describe("social navigation", () => {
     );
   });
 
-  it("gives For You, Following, Community, and Saved distinct locale-aware destinations", () => {
-    render(<SocialFeedTabs active="community" />);
+  it("gives Recent, Following, Community, and Saved distinct locale-aware destinations", () => {
+    // #1381: the default tab is honestly "Recent" (timestamp-ordered feed —
+    // no interest ranking) and tab labels arrive localized from SocialFeed.
+    render(
+      <SocialFeedTabs
+        active="community"
+        labels={{
+          ariaLabel: "Social feed",
+          tab: { foryou: "Recent", following: "Following", community: "Community", saved: "Saved" },
+        }}
+      />,
+    );
     const destinations = [
-      ["For you", "/feed"],
+      ["Recent", "/feed"],
       ["Following", "/feed?tab=following"],
       ["Community", "/feed?tab=community"],
       ["Saved", "/feed?tab=saved"],

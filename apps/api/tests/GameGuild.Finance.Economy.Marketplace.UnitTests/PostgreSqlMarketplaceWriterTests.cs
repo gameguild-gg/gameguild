@@ -123,8 +123,9 @@ public sealed class PostgreSqlMarketplaceWriterTests
             SELECT "EntitlementStatus" FROM public.economy_marketplace_settlements WHERE "Id" = '{ids.Settlement}';
             """)).Should().Be(3);
         (await ScalarAsync<long>(connection, $"""
-            SELECT count(*) FROM public.economy_marketplace_outbox
-            WHERE "SettlementId" = '{ids.Settlement}'
+            SELECT count(*) FROM public.economy_outbox
+            WHERE "OutboxKind" = 2
+              AND "SettlementId" = '{ids.Settlement}'
               AND "MessageType" = 'marketplace.entitlement.revoke.v1';
             """)).Should().Be(1);
         (await ScalarAsync<long>(connection, $"""

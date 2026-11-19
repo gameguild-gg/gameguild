@@ -80,10 +80,28 @@ public sealed class BackupCodeMfaService(
     /// <summary>
     ///     Verifies a backup code and invalidates it (single-use).
     /// </summary>
-    public Task<bool> VerifyBackupCodeAsync(Guid userId, string backupCode, string? deviceId = null, CancellationToken cancellationToken = default)
+    public Task<bool> VerifyBackupCodeAsync(Guid userId, string backupCode)
+        => VerifyBackupCodeAsync(userId, backupCode, null, CancellationToken.None);
+
+    public Task<bool> VerifyBackupCodeAsync(Guid userId, string backupCode, string? deviceId)
+        => VerifyBackupCodeAsync(userId, backupCode, deviceId, CancellationToken.None);
+
+    public Task<bool> VerifyBackupCodeAsync(Guid userId, string backupCode, CancellationToken cancellationToken)
+        => VerifyBackupCodeAsync(userId, backupCode, null, cancellationToken);
+
+    public Task<bool> VerifyBackupCodeAsync(Guid userId, string backupCode, string? deviceId, CancellationToken cancellationToken)
         => VerifyBackupCodeCoreAsync(userId, backupCode, deviceId, false, cancellationToken);
 
-    public Task<bool> VerifyBackupCodeForStepUpAsync(Guid userId, string backupCode, string? deviceId = null, CancellationToken cancellationToken = default)
+    public Task<bool> VerifyBackupCodeForStepUpAsync(Guid userId, string backupCode)
+        => VerifyBackupCodeForStepUpAsync(userId, backupCode, null, CancellationToken.None);
+
+    public Task<bool> VerifyBackupCodeForStepUpAsync(Guid userId, string backupCode, string? deviceId)
+        => VerifyBackupCodeForStepUpAsync(userId, backupCode, deviceId, CancellationToken.None);
+
+    public Task<bool> VerifyBackupCodeForStepUpAsync(Guid userId, string backupCode, CancellationToken cancellationToken)
+        => VerifyBackupCodeForStepUpAsync(userId, backupCode, null, cancellationToken);
+
+    public Task<bool> VerifyBackupCodeForStepUpAsync(Guid userId, string backupCode, string? deviceId, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         return VerifyBackupCodeCoreAsync(userId, backupCode, deviceId, true, cancellationToken);

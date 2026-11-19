@@ -1,4 +1,5 @@
 using GameGuild.Finance.Economy.Contracts;
+using GameGuild.Finance.Economy.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Finance.Economy.Payouts;
@@ -173,7 +174,7 @@ public sealed class PostgreSqlPayoutOperationStore : IPayoutOperationStore
         ArgumentException.ThrowIfNullOrWhiteSpace(eventId);
         ArgumentException.ThrowIfNullOrWhiteSpace(eventHash);
 
-        var row = _db.Set<PayoutProviderEventRow>()
+        var row = _db.Set<EconomyProviderEventRow>()
             .FromSqlInterpolated($"""
                 SELECT * FROM economy_private.read_payout_provider_event_v1({eventId.Trim()})
                 """)
@@ -194,8 +195,8 @@ public sealed class PostgreSqlPayoutOperationStore : IPayoutOperationStore
         return new PayoutProviderEventRecord(
             row.EventId,
             row.EventHash,
-            row.OperationId,
-            row.ResultingState,
+            row.OperationId!.Value,
+            (PayoutOperationState)row.ResultingState!.Value,
             row.RecordedAt);
     }
 

@@ -66,6 +66,15 @@ public sealed class TenantMembershipRolePermissionProvider(ITenantMemberReposito
             permissions.Add(QueryPermission.Keys.List);
             permissions.Add(QueryPermission.Keys.Search);
             permissions.Add(QueryPermission.Keys.Query);
+
+            // Achievements admin tier (issue #1319 G2): the achievements:create/update/delete/award
+            // keys were never seeded, so the achievements admin surface 403'd for everyone. Tenant
+            // administrators receive the full management tier; the keys are also delegable
+            // individually through the permission-grant surface.
+            permissions.Add(global::GameGuild.Gamification.Achievements.AchievementsPermission.Keys.Create);
+            permissions.Add(global::GameGuild.Gamification.Achievements.AchievementsPermission.Keys.Update);
+            permissions.Add(global::GameGuild.Gamification.Achievements.AchievementsPermission.Keys.Delete);
+            permissions.Add(global::GameGuild.Gamification.Achievements.AchievementsPermission.Keys.Award);
         }
 
         return permissions.ToArray();

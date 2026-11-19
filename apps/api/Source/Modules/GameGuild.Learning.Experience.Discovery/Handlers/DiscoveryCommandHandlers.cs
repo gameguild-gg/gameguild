@@ -7,7 +7,7 @@ namespace GameGuild.Learning.Experience.Discovery;
 /// <summary>
 /// Command handlers for Discovery module
 /// </summary>
-public sealed class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<DiscoveryCommandHandlers> logger)
+public sealed class DiscoveryCommandHandlers(IApplicationDbContext context, ILogger<DiscoveryCommandHandlers> logger, IPublisher? publisher = null)
     : ICommandHandler<CreateFeaturedContentCommand, FeaturedContent>,
       ICommandHandler<UpdateFeaturedContentCommand, FeaturedContent?>,
       ICommandHandler<DeleteFeaturedContentCommand, bool>,
@@ -271,7 +271,25 @@ public sealed class DiscoveryCommandHandlers(IApplicationDbContext context, ILog
         searchHistory.RecordClick(request.ClickedCourseId, position: 0);
         await context.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
 
+        // Issue #1184 G4: SearchResultClickedEvent was declared but never raised; the explicit
+        // search-click recording endpoint is its producing site (this handler already persists
+        // the click on the search-history row — event consumers must not duplicate that write).
+        // Separate method (GGARCH003).
+        await PublishSearchClickAsync(searchHistory, request.ClickedCourseId, cancellationToken).ConfigureAwait(false);
+
         return true;
+    }
+
+    private async Task PublishSearchClickAsync(SearchHistory searchHistory, Guid clickedCourseId, CancellationToken cancellationToken)
+    {
+        if (publisher is null)
+        {
+            return;
+        }
+
+        await publisher.Publish(
+            new SearchResultClickedEvent(searchHistory.UserId, searchHistory.Query, clickedCourseId, 0, searchHistory.TenantId),
+            cancellationToken).ConfigureAwait(false);
     }
 
     // ===== HELPER METHODS =====

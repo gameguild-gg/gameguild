@@ -34,11 +34,11 @@ Example: $100 course sale → creator receives $90–95, GameGuild receives $5�
 
 | Outflow | Rail | Governance |
 |---|---|---|
-| Infra costs | fiat/card | ops budget, below vote threshold |
-| Team compensation | fiat (BR/US payroll) + crypto bounties | below threshold |
-| Investor distributions | stablecoin | per annual mandate |
-| Founder distributions | stablecoin | per annual mandate |
-| Treasury reserve | stablecoin + blue-chip crypto | allocation set by vote |
+| Infra costs | fiat/card | within approved quarterly plan — CEO discretion |
+| Team/contractor compensation | fiat (BR/US) + crypto | contracts approved at quarterly meeting |
+| Founder loans (principal) | stablecoin/fiat | repaid before distributions (07) |
+| Governor/investor distributions | stablecoin | voted each quarter (07) |
+| Treasury reserve | stablecoin + blue-chip crypto | allocation voted quarterly |
 
 ## Canonical flow
 
@@ -56,8 +56,9 @@ Treasury (Safe multisig)
 
 ## Money-flow rules
 
-1. **Anything not in the approved quarterly plan requires a qualified-majority vote** (≥70% — no two governors alone can pass; see coalition table in 05). Planned spend flows freely under CEO discretion.
-2. Every distribution pool movement is on-chain (auditable by all holders).
+1. **Anything not in the approved quarterly plan requires the dual-condition qualified majority** (≥⅔ of voting weight AND a majority of governors — see 05). Planned spend flows freely under CEO discretion.
+2. Every distribution pool movement is recorded in the decisions log (canonical record) and executed from the treasury wallet — auditable by all shareholders.
 3. Fiat/crypto conversion policy: defined per entity for tax reasons (see 03-legal-structure).
 4. **Runway floor: 6 months** — distribution votes may not drain below it.
 5. HardCoin float: reserved 1:1 as unearned-revenue liability; never spent as if it were income.
+6. **Emergency freeze**: any 2-of-3 governors may freeze non-routine treasury actions pending a formal vote (freezing ≠ passing — deliberately easier than spending).

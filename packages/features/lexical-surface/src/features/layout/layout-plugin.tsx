@@ -26,9 +26,7 @@ import {
   KEY_ARROW_LEFT_COMMAND,
   KEY_ARROW_RIGHT_COMMAND,
   KEY_ARROW_UP_COMMAND,
-  type ElementNode,
   type LexicalCommand,
-  type LexicalNode,
   type NodeKey,
 } from "lexical";
 import {

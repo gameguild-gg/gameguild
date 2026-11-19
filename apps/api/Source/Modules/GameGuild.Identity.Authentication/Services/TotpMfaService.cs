@@ -36,13 +36,10 @@ public sealed class TotpMfaService(
             : await _enrollmentGuard.ExecuteEnrollmentOperationAsync(userId, operation, cancellationToken).ConfigureAwait(false);
     }
 
-    public Task<(string QrCodeUri, string SecretKey, DateTimeOffset ExpiresAt)> SetupTotpAsync(Guid userId, string userEmail)
-        => SetupTotpAsync(userId, userEmail, default);
-
     /// <summary>
     ///     Sets up TOTP-based MFA for a user. Returns QR code URI, secret key, and setup expiry.
     /// </summary>
-    public Task<(string QrCodeUri, string SecretKey, DateTimeOffset ExpiresAt)> SetupTotpAsync(Guid userId, string userEmail, CancellationToken cancellationToken)
+    public Task<(string QrCodeUri, string SecretKey, DateTimeOffset ExpiresAt)> SetupTotpAsync(Guid userId, string userEmail, CancellationToken cancellationToken = default)
     {
         if (!_mfaOptions.Enabled)
         {
@@ -106,10 +103,29 @@ public sealed class TotpMfaService(
     ///     Verifies TOTP code and enables MFA if first-time setup.
     /// </summary>
     public Task<bool> VerifyTotpAsync(Guid userId, string totpCode, string? deviceId = null, CancellationToken cancellationToken = default)
+        => GuardedAsync(userId, () => VerifyTotpCoreAsync(userId, totpCode, deviceId, false, cancellationToken), cancellationToken);
+
+    public Task<bool> VerifyTotpForStepUpAsync(Guid userId, string totpCode)
+        => VerifyTotpForStepUpAsync(userId, totpCode, null, CancellationToken.None);
+
+    public Task<bool> VerifyTotpForStepUpAsync(Guid userId, string totpCode, string? deviceId)
+        => VerifyTotpForStepUpAsync(userId, totpCode, deviceId, CancellationToken.None);
+
+    public Task<bool> VerifyTotpForStepUpAsync(Guid userId, string totpCode, CancellationToken cancellationToken)
+        => VerifyTotpForStepUpAsync(userId, totpCode, null, cancellationToken);
+
+    public Task<bool> VerifyTotpForStepUpAsync(Guid userId, string totpCode, string? deviceId, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return VerifyTotpCoreAsync(userId, totpCode, deviceId, true, cancellationToken);
+    }
+
+    private async Task<bool> VerifyTotpCoreAsync(Guid userId, string totpCode, string? deviceId,
+        bool strictStepUp, CancellationToken cancellationToken)
     {
         if (!_mfaOptions.Enabled)
         {
-            return Task.FromResult(false);
+            return false;
         }
 
         logger.LogInformation("Verifying TOTP code for user: {UserId}", userId);
@@ -117,19 +133,6 @@ public sealed class TotpMfaService(
         // The verify path both reads and (on first success) flips the enrollment flags on
         // the same row setup writes — it is a settings-path enrollment mutation and runs
         // under the same per-subject claim (issue #1117).
-        return GuardedAsync(userId, () => VerifyTotpCoreAsync(userId, totpCode, deviceId, false, cancellationToken), cancellationToken);
-    }
-
-    public Task<bool> VerifyTotpForStepUpAsync(Guid userId, string totpCode, string? deviceId = null, CancellationToken cancellationToken = default)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        if (!_mfaOptions.Enabled) { return Task.FromResult(false); }
-        return GuardedAsync(userId, () => VerifyTotpCoreAsync(userId, totpCode, deviceId, true, cancellationToken), cancellationToken);
-    }
-
-    private async Task<bool> VerifyTotpCoreAsync(Guid userId, string totpCode, string? deviceId,
-        bool strictStepUp, CancellationToken cancellationToken)
-    {
         try
         {
             // Get MFA configuration

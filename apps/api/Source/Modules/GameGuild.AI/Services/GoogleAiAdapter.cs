@@ -6,16 +6,23 @@ using System.Text.Json.Serialization;
 
 namespace GameGuild.AI;
 
-internal sealed class GoogleAiAdapter(IHttpClientFactory httpClientFactory, ILogger<GoogleAiAdapter> logger) : IAiProviderAdapter
+internal sealed class GoogleAiAdapter(IHttpClientFactory httpClientFactory, ILogger<GoogleAiAdapter> logger) : IAiAdapter
 {
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web)
     {
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
-    public AiProvider Provider => AiProvider.Google;
+    public string Key => AiAdapterKeys.Google;
 
-    public async Task<Result<AiProviderExecutionResult>> CompleteStreamingAsync(
+    public AiAdapterDescriptor Descriptor { get; } = new(
+        AiAdapterKeys.Google,
+        RequiresExplicitBaseUrl: false,
+        AiCredentialPolicy.Required,
+        "https://generativelanguage.googleapis.com",
+        SupportsStreaming: true);
+
+    public async Task<Result<AiAdapterExecutionResult>> CompleteStreamingAsync(
         AiResolvedRequest request,
         Func<string, CancellationToken, ValueTask> onDelta,
         CancellationToken cancellationToken = default)
@@ -40,7 +47,7 @@ internal sealed class GoogleAiAdapter(IHttpClientFactory httpClientFactory, ILog
                 }
             };
 
-            var endpoint = $"{request.BaseUrl.TrimEnd('/')}/v1beta/models/{Uri.EscapeDataString(request.Model)}:streamGenerateContent?alt=sse&key={Uri.EscapeDataString(request.ApiKey)}";
+            var endpoint = $"{request.BaseUrl.TrimEnd('/')}/v1beta/models/{Uri.EscapeDataString(request.Model)}:streamGenerateContent?alt=sse&key={Uri.EscapeDataString(request.ApiKey!)}";
             using var httpRequest = new HttpRequestMessage(HttpMethod.Post, endpoint)
             {
                 Content = new StringContent(JsonSerializer.Serialize(payload, SerializerOptions), Encoding.UTF8, "application/json")
@@ -51,8 +58,7 @@ internal sealed class GoogleAiAdapter(IHttpClientFactory httpClientFactory, ILog
             using var response = await client.SendAsync(httpRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
             {
-                var errorBody = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
-                return Result.Failure<AiProviderExecutionResult>(AiProviderErrorMapper.Map("Google", response.StatusCode, errorBody));
+                return Result.Failure<AiAdapterExecutionResult>(AiAdapterErrorMapper.Map("Google", response.StatusCode));
             }
 
             await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
@@ -111,23 +117,23 @@ internal sealed class GoogleAiAdapter(IHttpClientFactory httpClientFactory, ILog
 
             if (text.Length == 0)
             {
-                return Result.Failure<AiProviderExecutionResult>(Error.Failure("AI.GoogleEmptyResponse", "Google returned an empty response."));
+                return Result.Failure<AiAdapterExecutionResult>(Error.Failure("AI.GoogleEmptyResponse", "Google returned an empty response."));
             }
 
-            return Result.Success(new AiProviderExecutionResult(request.Model, text.ToString(), finishReason, inputTokens, outputTokens, totalTokens));
+            return Result.Success(new AiAdapterExecutionResult(request.Model, text.ToString(), finishReason, inputTokens, outputTokens, totalTokens));
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            return Result.Failure<AiProviderExecutionResult>(Error.Failure("AI.GoogleTimeout", "Google did not respond in time."));
+            return Result.Failure<AiAdapterExecutionResult>(Error.Failure("AI.GoogleTimeout", "Google did not respond in time."));
         }
         catch (Exception exception)
         {
             logger.LogError(exception, "Google AI streaming request failed for tenant {TenantId}", request.TenantId);
-            return Result.Failure<AiProviderExecutionResult>(Error.Failure("AI.GoogleRequestFailed", "Failed to execute the Google AI streaming request."));
+            return Result.Failure<AiAdapterExecutionResult>(Error.Failure("AI.GoogleRequestFailed", "Failed to execute the Google AI streaming request."));
         }
     }
 
-    public async Task<Result<AiProviderExecutionResult>> CompleteAsync(AiResolvedRequest request, CancellationToken cancellationToken = default)
+    public async Task<Result<AiAdapterExecutionResult>> CompleteAsync(AiResolvedRequest request, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -157,7 +163,7 @@ internal sealed class GoogleAiAdapter(IHttpClientFactory httpClientFactory, ILog
                 }
             };
 
-            var endpoint = $"{request.BaseUrl.TrimEnd('/')}/v1beta/models/{Uri.EscapeDataString(request.Model)}:generateContent?key={Uri.EscapeDataString(request.ApiKey)}";
+            var endpoint = $"{request.BaseUrl.TrimEnd('/')}/v1beta/models/{Uri.EscapeDataString(request.Model)}:generateContent?key={Uri.EscapeDataString(request.ApiKey!)}";
 
             using var httpRequest = new HttpRequestMessage(HttpMethod.Post, endpoint)
             {
@@ -170,7 +176,7 @@ internal sealed class GoogleAiAdapter(IHttpClientFactory httpClientFactory, ILog
 
             if (!response.IsSuccessStatusCode)
             {
-                return Result.Failure<AiProviderExecutionResult>(AiProviderErrorMapper.Map("Google", response.StatusCode, responseBody));
+                return Result.Failure<AiAdapterExecutionResult>(AiAdapterErrorMapper.Map("Google", response.StatusCode));
             }
 
             using var document = JsonDocument.Parse(responseBody);
@@ -179,7 +185,7 @@ internal sealed class GoogleAiAdapter(IHttpClientFactory httpClientFactory, ILog
                 || candidatesElement.ValueKind != JsonValueKind.Array
                 || candidatesElement.GetArrayLength() == 0)
             {
-                return Result.Failure<AiProviderExecutionResult>(Error.Failure("AI.GoogleEmptyResponse", "Google returned no candidates."));
+                return Result.Failure<AiAdapterExecutionResult>(Error.Failure("AI.GoogleEmptyResponse", "Google returned no candidates."));
             }
 
             var candidate = candidatesElement[0];
@@ -190,12 +196,12 @@ internal sealed class GoogleAiAdapter(IHttpClientFactory httpClientFactory, ILog
 
             if (string.IsNullOrWhiteSpace(text))
             {
-                return Result.Failure<AiProviderExecutionResult>(Error.Failure("AI.GoogleEmptyResponse", "Google returned an empty response."));
+                return Result.Failure<AiAdapterExecutionResult>(Error.Failure("AI.GoogleEmptyResponse", "Google returned an empty response."));
             }
 
             var usage = root.TryGetProperty("usageMetadata", out var usageElement) ? usageElement : default;
 
-            return Result.Success(new AiProviderExecutionResult(
+            return Result.Success(new AiAdapterExecutionResult(
                 request.Model,
                 text,
                 candidate.TryGetProperty("finishReason", out var finishReasonElement) ? finishReasonElement.GetString() : null,
@@ -205,12 +211,12 @@ internal sealed class GoogleAiAdapter(IHttpClientFactory httpClientFactory, ILog
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            return Result.Failure<AiProviderExecutionResult>(Error.Failure("AI.GoogleTimeout", "Google did not respond in time."));
+            return Result.Failure<AiAdapterExecutionResult>(Error.Failure("AI.GoogleTimeout", "Google did not respond in time."));
         }
         catch (Exception exception)
         {
             logger.LogError(exception, "Google AI request failed for tenant {TenantId}", request.TenantId);
-            return Result.Failure<AiProviderExecutionResult>(Error.Failure("AI.GoogleRequestFailed", "Failed to execute the Google AI request."));
+            return Result.Failure<AiAdapterExecutionResult>(Error.Failure("AI.GoogleRequestFailed", "Failed to execute the Google AI request."));
         }
     }
 }

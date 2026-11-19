@@ -41,7 +41,7 @@ export class RequestDeduplicator {
   /**
    * Deduplicate a request by caching in-flight promises
    */
-  async deduplicate<T>(method: string, url: string, body: unknown, executor: () => Promise<Result<T, ApiError>>): Promise<Result<T, ApiError>> {
+  async deduplicate<T>(method: string, url: string, body: unknown | undefined, executor: () => Promise<Result<T, ApiError>>): Promise<Result<T, ApiError>> {
     const key = this.keyGenerator(method, url, body);
 
     // Check if request is already in-flight
@@ -51,10 +51,13 @@ export class RequestDeduplicator {
     }
 
     // Execute request and cache promise
-    const promise = executor().finally(() => {
+    const promise = executor();
+    this.pendingRequests.set(key, promise);
+
+    // Clean up after completion
+    promise.finally(() => {
       this.pendingRequests.delete(key);
     });
-    this.pendingRequests.set(key, promise);
 
     return promise;
   }

@@ -266,11 +266,12 @@ public sealed class PostgreSqlEconomyOperationsReader : IEconomyOperationsReader
             .Take(limit)
             .ToArrayAsync(cancellationToken);
         var killSwitchIds = killSwitchRows.Select(row => row.Id).ToArray();
-        var approvals = await _db.Set<EconomyKillSwitchReleaseApprovalRow>().AsNoTracking()
-            .Where(row => killSwitchIds.Contains(row.KillSwitchId))
+        var approvals = await _db.Set<EconomyApprovalRow>().AsNoTracking()
+            .Where(row => row.ApprovalKind == EconomyApprovalKind.KillSwitchRelease &&
+                          row.SubjectId != null && killSwitchIds.Contains(row.SubjectId.Value))
             .OrderBy(row => row.ApprovedAt)
             .ToArrayAsync(cancellationToken);
-        var approvalLookup = approvals.GroupBy(row => row.KillSwitchId)
+        var approvalLookup = approvals.GroupBy(row => row.SubjectId!.Value)
             .ToDictionary(group => group.Key, group => (IReadOnlyList<Guid>)Array.AsReadOnly(
                 group.Select(row => row.ActorId).ToArray()));
 

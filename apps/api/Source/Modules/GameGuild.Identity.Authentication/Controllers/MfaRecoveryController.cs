@@ -8,8 +8,8 @@ namespace GameGuild.Identity.Authentication;
 
 /// <summary>
 ///     Lost-MFA-device recovery: request (email) → continue (request token, after the
-///     cooling-off window) → confirm (confirmation token). These stages use anonymous,
-///     single-use, expiring, hash-matched tokens; cancellation requires the authenticated owner.
+///     cooling-off window) → confirm (confirmation token). Token-based recovery actions are anonymous; owner cancellation requires authentication;
+///     authorization rests on single-use, expiring, hash-matched tokens.
 /// </summary>
 [ApiController]
 [ApiVersion("1.0")]

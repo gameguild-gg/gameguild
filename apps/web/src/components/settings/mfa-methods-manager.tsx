@@ -74,6 +74,7 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
   };
 
   async function handleStartTotp() {
+    setSmsPassword('');
     setBusy(true);
     try {
       const result = await startTotpEnrollmentAction();
@@ -109,6 +110,9 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
   }
 
   async function handleStartSms() {
+    if (smsPassword.length === 0) {
+      return;
+    }
     setBusy(true);
     try {
       const result = await startSmsEnrollmentAction(phone, smsPassword);
@@ -232,7 +236,7 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
               </Button>
             )}
             {!sms?.isEnabled && sms?.isAvailable && methodState.kind !== 'sms-active' && (
-              <Button variant="outline" onClick={() => setMethodState({ kind: 'sms-active', maskedPhone: '' })} disabled={busy} data-testid="mfa-sms-start">
+              <Button variant="outline" onClick={() => { setSmsPassword(''); setMethodState({ kind: 'sms-active', maskedPhone: '' }); }} disabled={busy} data-testid="mfa-sms-start">
                 {t('sms.start')}
               </Button>
             )}
@@ -287,20 +291,18 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="mfa-sms-password">{t('sms.passwordLabel')}</Label>
+                <Label htmlFor="mfa-sms-password">{t('disable.passwordLabel')}</Label>
                 <Input
                   id="mfa-sms-password"
+                  data-testid="mfa-sms-password"
                   type="password"
-                  autoComplete="current-password"
                   value={smsPassword}
                   onChange={(event) => setSmsPassword(event.target.value)}
-                  disabled={busy}
-                  aria-describedby="mfa-sms-password-description"
+                  autoComplete="current-password"
                 />
-                <p id="mfa-sms-password-description" className="text-muted-foreground text-sm">{t('sms.passwordDescription')}</p>
               </div>
               <div className="flex gap-2">
-                <Button onClick={() => void handleStartSms()} disabled={busy || phone.trim().length < 9 || !smsPassword}>
+                <Button onClick={() => void handleStartSms()} disabled={busy || phone.trim().length < 9 || smsPassword.length === 0}>
                   {t('sms.send')}
                 </Button>
                 <Button variant="ghost" onClick={() => { setSmsPassword(''); setMethodState({ kind: 'idle' }); }} disabled={busy}>

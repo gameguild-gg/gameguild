@@ -1,4 +1,4 @@
-# Wiring-gap guard baseline (G1-G6) — KNOWN gaps, ratcheted.
+# Wiring-gap guard baseline (G1-G9) — KNOWN gaps, ratcheted.
 #
 # Format:   <guard>|<item>   # <issue reference + one-line justification>
 #
@@ -18,67 +18,29 @@
 #   G6 no-op stub middleware                (inspiring bug: #1180; note the ABAC
 #     header-stub copies DO forward to next(), so they are out of G6's crude
 #     scope and tracked solely by #1180)
-
+#
 # ── G1: commands whose handler is never registered in host DI ─────────────────
 # (empty — the #1158 Achievements module gap was fixed and its entries removed)
+#
+# (2026-11-11, #1184 pass) The remaining G2/G4/G5 gaps were fixed and removed:
+#   G2: FinancialLedgerEntry (Commerce.Payments) and UserKycVerification
+#       (Compliance.KYC) materialized into the compiled model (migration
+#       MaterializeFinancialLedgerAndKycVerifications).
+#   G4: all 28 dead domain events wired to their natural producing sites (or, for
+#       TenantSubscriptionPlanChangedEvent, removed as dead machinery with no
+#       runtime producer).
+#   G5: all 21 unbound options anchored to their SectionName binding sites
+#       (builders/Configure<T>); the dead duplicate HealthCheckOptions was removed.
+# The G1-G6 sections below are now empty.
 
 # ── G2: entity configurations without tables ──────────────────────────────────
-# Dead configurations discovered by the guard itself (same shape as the fixed #1158):
-G2|GameGuild.Commerce.Payments|FinancialLedgerEntryConfiguration|FinancialLedgerEntry # issue #1184: Commerce.Payments financial-ledger configuration never materializes (dead configuration).
-G2|GameGuild.Compliance.KYC|UserKycVerificationConfiguration|UserKycVerification # issue #1184: Compliance.KYC verification configuration never materializes (dead configuration).
+# (empty — see the #1184 pass note above)
 
-# ── G4: dead domain events — declared, never constructed anywhere (#1184) ─────
-G4|GameGuild.Commerce.Subscriptions.PlanCreatedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Commerce.Subscriptions.SubscriptionCreatedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Commerce.Subscriptions.SubscriptionDowngradedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Commerce.Subscriptions.SubscriptionUpgradedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Commerce.Subscriptions.SubscriptionUsageLimitExceededEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Commerce.Subscriptions.SubscriptionUsageWarningEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Features.FeatureFlagToggledEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Features.UsageLimitExceededEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Identity.Tenants.TenantCreatedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Identity.Tenants.TenantDeletedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Identity.Tenants.TenantSubscriptionPlanChangedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Learning.ContentCompletedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Learning.ContentStartedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Learning.CourseCompletedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Learning.CourseDroppedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Learning.CourseEnrolledEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Learning.CourseRatedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Learning.CourseViewedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Learning.CourseWishlistedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Learning.LearningPathCompletedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Learning.LearningPathEnrolledEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Learning.LearningProgressUpdatedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Learning.RecommendationClickedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Learning.RecommendationConvertedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Learning.RecommendationViewedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Learning.SearchPerformedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Learning.SearchResultClickedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
-G4|GameGuild.Learning.UserSkillUpdatedEvent # issue #1184: dead domain event — no producing call site anywhere in product sources.
+# ── G4: dead domain events — declared, never constructed anywhere ─────────────
+# (empty — see the #1184 pass note above)
 
-# ── G5: options classes with a SectionName that nothing binds (#1184) ─────────
-G5|GameGuild.Assets.Deduplication.DeduplicationOptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
-G5|GameGuild.Assets.Transformation.TransformationOptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
-G5|GameGuild.Configuration.ConfigurationFromAPI.InfrastructureLayer.InfrastructureLayerOptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
-G5|GameGuild.Configuration.PresentationLayer.ApiExplorer.ApiExplorerOptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
-G5|GameGuild.Configuration.PresentationLayer.ApiVersioning.ApiVersioningOptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
-G5|GameGuild.Configuration.PresentationLayer.Authorization.OwnerOverrideOptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
-G5|GameGuild.Configuration.PresentationLayer.Controllers.ControllersOptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
-G5|GameGuild.Configuration.PresentationLayer.Endpoints.EndpointsOptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
-G5|GameGuild.Configuration.PresentationLayer.FeatureFlags.FeatureFlagsOptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
-G5|GameGuild.Configuration.PresentationLayer.GraphQL.GraphQLOptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
-G5|GameGuild.Configuration.PresentationLayer.GraphQL.GraphQLSchemaAuthorizationOptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
-G5|GameGuild.Configuration.PresentationLayer.HealthChecks.HealthCheckOptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
-G5|GameGuild.Configuration.PresentationLayer.HttpLogging.HttpLoggingOptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
-G5|GameGuild.Configuration.PresentationLayer.Localization.LocalizationOptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
-G5|GameGuild.Configuration.PresentationLayer.ModelValidation.ModelValidationOptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
-G5|GameGuild.Configuration.PresentationLayer.OpenAPI.OpenApiOptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
-G5|GameGuild.Configuration.PresentationLayer.RequestContext.RequestContextOptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
-G5|GameGuild.Configuration.PresentationLayer.ResponseCaching.ResponseCachingOptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
-G5|GameGuild.Configuration.PresentationLayer.ResponseCompression.ResponseCompressionOptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
-G5|GameGuild.Configuration.PresentationLayer.SignalR.SignalROptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
-G5|GameGuild.Features.FeatureFlagOptions # issue #1184: SectionName declared but no DI binding, appsettings section or env binding exists.
+# ── G5: options classes with a SectionName that nothing binds ─────────────────
+# (empty — see the #1184 pass note above)
 
 # == Round-2 additions (2026-11-04): guards G7/G8 and route-smoke E9 ===============
 # G7 request-handler resolution | G8 planned-422 surface leaks | E9 route smoke

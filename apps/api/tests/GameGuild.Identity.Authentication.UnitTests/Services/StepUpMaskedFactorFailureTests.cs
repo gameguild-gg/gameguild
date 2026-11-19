@@ -23,7 +23,7 @@ public sealed class StepUpMaskedFactorFailureTests
         var error = await Record.ExceptionAsync(async () => outcome = await new StepUpCommandHandler(service).Handle(
             new VerifyStepUpChallengeCommand(challenge.ChallengeId,
                 new StepUpVerification(MfaMethod.BackupCode, state.Code)), CancellationToken.None));
-        // The actual backup-code verifier already executed its repository update;
+        // The real backup-code verifier has already updated its repository.
         // its audit exception was converted into a plain false by the legacy facade.
         Assert.Single(state.Writes);
         Assert.NotEqual(state.OriginalCodes, state.Writes.Single());

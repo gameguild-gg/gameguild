@@ -10,29 +10,28 @@ const bracesAdvisory = {
   id: 'GHSA-vfj7-8cjw-p6xm',
   url: 'https://github.com/advisories/GHSA-vfj7-8cjw-p6xm',
   cve: 'CVE-2026-93687',
-  patchedVersions: ['3.0.3'],
+  patchedVersion: '3.0.3',
 };
 const sprintfAdvisory = {
   moduleName: 'sprintf-js',
   id: 'GHSA-hp3w-g68c-fv3c',
   url: 'https://github.com/advisories/GHSA-hp3w-g68c-fv3c',
   cve: 'CVE-2026-97058',
-  patchedVersions: ['1.1.3'],
+  patchedVersion: '1.1.3',
 };
 const deepmergeAdvisory = {
   moduleName: 'deepmerge',
   id: 'GHSA-gcqx-w48m-w2h4',
   url: 'https://github.com/advisories/GHSA-gcqx-w48m-w2h4',
   cve: 'CVE-2026-93753',
-  patchedVersions: ['4.3.1'],
+  patchedVersion: '4.3.1',
 };
 const picomatchAdvisory = {
   moduleName: 'picomatch',
   id: 'GHSA-fc5q-39xc-vjpf',
   url: 'https://github.com/advisories/GHSA-fc5q-39xc-vjpf',
   cve: 'CVE-2026-112366',
-  // 4.0.7 is locally patched; 2.3.2 is only reached through @dbml/cli, a
-  // devDependency CLI that never evaluates repository glob patterns.
+  // Both installed majors carry the vulnerable parser; each is locally patched.
   patchedVersions: ['4.0.7', '2.3.2'],
 };
 
@@ -64,8 +63,10 @@ const matchesAdvisoryIdentity = (advisory, expected) =>
 
 const hasSingleExpectedCve = (advisory, expected) => Array.isArray(advisory.cves) && advisory.cves.length === 1 && advisory.cves[0] === expected.cve;
 
-const hasOnlyPatchedFindings = (advisory, expected) =>
-  Array.isArray(advisory.findings) && advisory.findings.length > 0 && advisory.findings.every((finding) => expected.patchedVersions.includes(finding.version));
+const hasOnlyPatchedFindings = (advisory, expected) => {
+  const expectedVersions = expected.patchedVersions ?? [expected.patchedVersion];
+  return Array.isArray(advisory.findings) && advisory.findings.length > 0 && advisory.findings.every((finding) => expectedVersions.includes(finding.version));
+};
 
 const matchesPatchedAdvisory = (advisory, expected) =>
   matchesAdvisoryIdentity(advisory, expected) && hasSingleExpectedCve(advisory, expected) && hasOnlyPatchedFindings(advisory, expected);

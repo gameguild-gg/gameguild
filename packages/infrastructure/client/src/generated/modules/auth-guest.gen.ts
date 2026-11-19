@@ -47,12 +47,12 @@ export class AuthGuestModule {
    * Issues a short-lived guest session (guest audience bearer token, no refresh credential) holding only the enumerated public guest permissions. Rate limited per client address and audited through the security-event pipeline.
    */
   async postAuthGuestSession(
-    body: Types.IdentityAuthenticationGuestSessionIssueInput,
+    body?: Types.IdentityAuthenticationGuestSessionIssueInput,
   ): Promise<Result<Types.IdentityAuthenticationGuestSessionOutput, ApiError>> {
     const url = '/v1/auth/guest-session';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationGuestSessionIssueInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationGuestSessionIssueInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

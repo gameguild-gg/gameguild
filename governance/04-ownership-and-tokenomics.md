@@ -15,12 +15,12 @@ The cap table (Delaware stock ledger — can be a signed spreadsheet) records ea
 |---|---|---|
 | Governors (initial three) | ✅ | ✅ |
 | Advisor / future governor (vote-only) | ❌ | ✅ |
-| Investor (money-first, capped voting) | ✅ | limited |
+| Investor | ✅ | voting per deal — no standing cap; reviewed case-by-case per round |
 
 Splitting into two classes buys:
 
-- **Independent transfer** — revenue shares are freely sellable by their holder (including initial governors, at their discretion); governance transfers are restricted (see Transfer rules)
-- **Clean investor terms** — investors buy revenue shares with explicitly capped governance
+- **Separate transfer rules per class** — both carry ROFR; economic and voting interests can still change hands independently of each other
+- **Clean investor terms** — investors buy revenue shares; governance included (or not) per deal
 - **Separation of work from ownership** — governors who work for the company do so under contract, paid as contractors; ownership and compensation never mix (see Compensation model, 05)
 - **Simpler cap table reasoning** — payouts computed off one class, votes off the other
 
@@ -42,9 +42,11 @@ Initial governors hold both classes at 40/30/30. Vesting applies to both classes
 
 **Exit for cause** (misconduct / not working): same as voluntary (unvested reclaimed) **plus harsher treatment** — exact clause (e.g., vested shares buyable at fair value, forfeiture of unpaid cycle compensation) to be defined with counsel.
 
-**Transfers**:
-- Revenue shares: freely transferable by the holder (may sell or not, at will)
-- Governance shares: **ROFR** — existing governance shareholders may buy at the same terms before any outsider; no governance transfer to outsiders without that right clearing
+**Transfers (both classes)**:
+
+1. **Only vested shares are transferable.** Unvested shares (either class) cannot be sold or transferred — they stay with the holder until vested or reclaimed.
+2. **ROFR on both classes**: existing shareholders of that class may buy at the same terms before any outsider. No transfer to outsiders without the right clearing.
+3. Rationale: prevents outsiders quietly acquiring a quarterly payout stream (revenue class) or voting power (governance class) — while vested holders can still exit.
 
 ## Allocation & reserves (proposed — awaiting sign-off)
 

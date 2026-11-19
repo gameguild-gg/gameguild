@@ -71,7 +71,7 @@ public sealed class EconomyPayoutPostgreSqlMigrationTests
         var directEventUpdate = await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsRoleAsync(
             connection,
             "gameguild_economy_writer",
-            "UPDATE public.economy_payout_provider_events SET \"EventHash\" = 'rewritten';"));
+            "UPDATE public.economy_provider_events SET \"EventHash\" = 'rewritten';"));
         directEventUpdate.SqlState.Should().Be(PostgresErrorCodes.InsufficientPrivilege);
     }
 

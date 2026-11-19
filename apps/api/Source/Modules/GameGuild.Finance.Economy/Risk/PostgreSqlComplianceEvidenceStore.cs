@@ -2,7 +2,6 @@ using System.Data;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
-using System.Text.Json;
 using GameGuild.Finance.Economy.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -190,10 +189,11 @@ public sealed class PostgreSqlComplianceEvidenceStore : IComplianceEvidenceStore
         return await PostgreSqlTransactionExecutor.ExecuteAsync(
             _db, IsolationLevel.Serializable, async _ =>
         {
-        var existingInbox = await _db.Set<EconomyComplianceInboxRow>()
+        var existingInbox = await _db.Set<EconomyInboxRow>()
             .AsNoTracking()
             .SingleOrDefaultAsync(
-                row => row.Provider == envelope.Provider &&
+                row => row.InboxKind == EconomyInboxKind.Compliance &&
+                       row.Provider == envelope.Provider &&
                        row.Environment == envelope.Environment &&
                        row.ProviderEventId == envelope.ProviderEventId,
                 cancellationToken);
@@ -202,24 +202,25 @@ public sealed class PostgreSqlComplianceEvidenceStore : IComplianceEvidenceStore
             if (!string.Equals(existingInbox.PayloadHash, envelope.PayloadHash, StringComparison.Ordinal))
                 {
                     throw new ComplianceEvidenceConflictException(
-                    "The provider event was replayed with a different payload hash.");
+                        "The provider event was replayed with a different payload hash.");
                 }
 
-                var existingEvidence = await _db.Set<EconomyComplianceEvidenceRow>()
-                .AsNoTracking()
-                .SingleOrDefaultAsync(
-                    row => row.Provider == envelope.Provider &&
-                           row.Environment == envelope.Environment &&
-                           row.ProviderEventId == envelope.ProviderEventId,
-                    cancellationToken);
+            var existingEvidence = await _db.Set<EconomyComplianceEvidenceRow>()
+            .AsNoTracking()
+            .SingleOrDefaultAsync(
+                row => row.Provider == envelope.Provider &&
+                       row.Environment == envelope.Environment &&
+                       row.ProviderEventId == envelope.ProviderEventId,
+                cancellationToken);
             var duplicate = new ComplianceEvidenceIngestionResult(
                 ComplianceEvidenceIngestionStatus.Duplicate,
                 existingEvidence?.Id);
             return duplicate;
         }
-        var inbox = new EconomyComplianceInboxRow
+        var inbox = new EconomyInboxRow
         {
             Id = Guid.NewGuid(),
+            InboxKind = EconomyInboxKind.Compliance,
             Provider = envelope.Provider,
             Environment = envelope.Environment,
             ProviderEventId = envelope.ProviderEventId,
@@ -227,7 +228,7 @@ public sealed class PostgreSqlComplianceEvidenceStore : IComplianceEvidenceStore
             RawObjectReference = envelope.RawObjectReference,
             ReceivedAt = envelope.ReceivedAt
         };
-        _db.Set<EconomyComplianceInboxRow>().Add(inbox);
+        _db.Set<EconomyInboxRow>().Add(inbox);
 
         if (!envelope.SignatureVerified || envelope.ExpiresAt <= envelope.IssuedAt)
         {
@@ -275,26 +276,10 @@ public sealed class PostgreSqlComplianceEvidenceStore : IComplianceEvidenceStore
             ExpiresAt = envelope.ExpiresAt,
             ReceivedAt = envelope.ReceivedAt
         });
-        var outboxPayload = JsonSerializer.Serialize(new
-        {
-            EvidenceId = evidenceId,
-            envelope.TenantId,
-            envelope.SubjectHash,
-            envelope.EvidenceKind,
-            envelope.Version,
-            Result = envelope.Result.ToString(),
-            envelope.EvidenceHash
-        });
-        _db.Set<EconomyComplianceOutboxRow>().Add(new EconomyComplianceOutboxRow
-        {
-            Id = Guid.NewGuid(),
-            EvidenceId = evidenceId,
-            Type = "economy.compliance-evidence.published.v1",
-            Payload = outboxPayload,
-            PayloadHash = Convert.ToHexString(
-                SHA256.HashData(Encoding.UTF8.GetBytes(outboxPayload))).ToLowerInvariant(),
-            OccurredAt = envelope.ReceivedAt
-        });
+        // #1092 Tier 1.1: the compliance outbox write side was retired with the
+        // unified economy_outbox merge — the former economy_compliance_outbox
+        // spool never had a reader (evidence is consumed from the evidence
+        // tables directly via IComplianceEvidenceReader).
         inbox.ProcessedAt = envelope.ReceivedAt;
         await _db.SaveChangesAsync(cancellationToken);
         return new ComplianceEvidenceIngestionResult(ComplianceEvidenceIngestionStatus.Published, evidenceId);

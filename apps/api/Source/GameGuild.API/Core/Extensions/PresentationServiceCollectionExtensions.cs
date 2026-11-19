@@ -30,7 +30,7 @@ public static class PresentationServiceCollectionExtensions
 
         options ??= OptionBuilderUtilities.CreateAndBind(
             configuration,
-            "Controllers",
+            ControllersOptions.SectionName,
             ControllersOptions.CreateDefault);
         options.Validate();
 
@@ -161,7 +161,7 @@ public static class PresentationServiceCollectionExtensions
     {
         options ??= OptionBuilderUtilities.CreateAndBind(
             configuration,
-            "Endpoints",
+            EndpointsOptions.SectionName,
             EndpointsOptions.CreateDefault);
         options.Validate();
 

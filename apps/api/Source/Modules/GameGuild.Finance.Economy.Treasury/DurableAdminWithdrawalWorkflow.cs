@@ -317,15 +317,16 @@ public sealed class PostgreSqlDurableAdminWithdrawalWorkflow(
                     run.IdempotencyKey.Value + ":dispatch",
                     request.OccurredAt);
                 var payload = JsonSerializer.Serialize(command);
-                await dispatchOutbox.AddAsync(new AdminWithdrawalDispatchOutboxRow
+                await dispatchOutbox.AddAsync(new EconomyOutboxRow
                 {
                     Id = DeterministicGuid(run.Id, "dispatch-outbox"),
+                    OutboxKind = EconomyOutboxKind.AdminWithdrawalDispatch,
                     RunId = run.Id,
                     TenantId = run.TenantId,
                     IdempotencyKey = command.IdempotencyKey,
                     Payload = payload,
                     PayloadHash = Hash(payload),
-                    CreatedAt = request.OccurredAt,
+                    OccurredAt = request.OccurredAt,
                     AvailableAt = request.OccurredAt
                 }, operationToken).ConfigureAwait(false);
                 audit.Append(

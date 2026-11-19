@@ -199,7 +199,7 @@ public sealed class MfaSmsSignInPostgreSqlTests(ApiPostgreSqlFixture fixture)
         Assert.True(configuration.LockedOutUntil > DateTime.UtcNow);
         Assert.Equal(3, await database.Set<MfaAttempt>().CountAsync(row => row.UserId == subject.UserId && !row.IsSuccessful && row.Method == MfaMethod.Sms));
         using var freshPassword = await client.PostAsJsonAsync("/v1/auth/sign-in", new { subject.Email, subject.Password, subject.TenantId });
-        // The existing LocalSignIn mapper returns the service's denial DTO as HTTP200;
+        // Local sign-in reports the service denial in its HTTP 200 response.
         // enforce the actual security boundary instead of inferring an authentication success.
         Assert.Equal(HttpStatusCode.OK, freshPassword.StatusCode);
         using var freshPasswordBody = JsonDocument.Parse(await freshPassword.Content.ReadAsStringAsync());

@@ -2573,9 +2573,23 @@ Those original criteria remain open until their separate evidence is accepted.
 
 `Jwt:RefreshTokenSlidingExpiration` defaults to `true`, retaining renewal on each
 successful refresh. With `false`, rotation preserves the predecessor's deadline
-or a shorter configured TTL. Both modes retain `SessionOptions.AbsoluteTimeoutMinutes`
+or a shorter configured TTL — except inside the final-week renewal window
+(`RefreshTokenLifetimeResolver.RenewalWindowDays`, 7 days): a refresh occurring
+with seven days or less remaining mints the full configured lifetime even when
+sliding expiration is disabled, so an actively used session is not cut down to
+the predecessor's remaining deadline in its last week. Both modes retain
+`SessionOptions.AbsoluteTimeoutMinutes`
 measured from the original session creation; rotation cannot reset that boundary.
 The existing idle timeout and active-session checks remain mandatory.
+
+Remember-me defaults ON across every issuing path (local, polymorphic, OAuth,
+OIDC/SAML, Web3, and the host sign-in endpoint): a null `RememberMe` flag is
+treated as persistent, and only an explicit `false` selects the standard
+lifetime. Sign-up issues a persistent session because the register request does
+not carry the flag. The standard refresh lifetime default is 30 days
+(`RefreshTokenLifetimeResolver.StandardDefaultDays`), matching the persistent
+default; typed `JwtOptions` and the raw-config fallbacks retain their configured
+values where present.
 
 Session binding and rotation cap the stored refresh credential at the actual
 persisted session deadline. Credential sign-in, sign-up, OAuth/Discord and Web3
@@ -3342,3 +3356,70 @@ The GameGuild Authorization Architecture provides a **comprehensive, enterprise-
 │                    Authorization Decision                    │
 │                    ✅ Allow  or  ❌ Deny                     │
 └─────────────────────────────────────────────────────────────┘
+
+### API-key creation requires operation-bound verification (#1191)
+
+API-key creation requires an authenticated human actor with a tenant and session.
+The command validates the creation fields before consuming a receipt. A valid
+request without a receipt returns HTTP 403 with a persisted challenge and the
+supported enrolled factors. The operation is `create-api-key`, the target is
+`current-user`, and the payload is the lowercase SHA-256 digest of the UTF-8 JSON
+object with `Name`, `Scopes`, `ExpiresAt` and `IpWhitelist`, in that order, using
+System.Text.Json's default serialization. The receipt itself is excluded.
+
+Clients verify an enrolled factor and retry the identical creation fields with
+`stepUpReceipt`. The handler snapshots the scopes before awaiting verification,
+uses the authenticated actor and tenant for ownership, and consumes the receipt
+inside the same command transaction as key persistence. Expired, mismatched or
+reused receipts cannot issue a key. Receipt-store and persistence failures
+propagate to the transaction owner; they cannot become a successful key response.
+
+The creation body is required, and successful creation returns HTTP 201. OpenAPI
+preserves MVC body-binding and model-validation requirements so generated clients
+retain mandatory mutation payloads. Explicitly optional bodies, including the
+service-secret challenge request below, remain optional.
+Service-account secret rotation uses a dedicated guarded command handler. It
+requires a human administrator, an authenticated tenant/session, and ownership of
+the account's tenant; only SystemAdmin may explicitly target another tenant or a
+global account. The receipt binds `rotate-service-account-secret` to
+`service-account/{accountId:D}` and the lowercase SHA-256 digest of the UTF-8
+`accountId:D` string. A request without a receipt returns its structured demand
+only after the account and caller pass these checks. Receipt consumption and
+secret persistence share the command transaction. Storage failures propagate to
+the transaction owner; they are not translated into an account-not-found result.
+
+
+### Platform step-up-required response and enrolled-factor discovery
+
+The metadata-only platform trigger returns HTTP 423 with a matching ProblemDetails
+status. It does not persist a challenge or issue a receipt. Clients create a
+challenge explicitly using the operation, target and payload binding, verify an
+enrolled factor, and retry the sensitive action with the resulting one-use receipt.
+Operation-bound credential-creation demands continue to use their distinct HTTP 403
+flow and persisted challenge.
+
+Advertised methods follow the strict step-up verifier: TOTP and remaining backup
+codes require enabled, complete MFA enrollment; WebAuthn requires an active
+credential. SMS and email proofs cannot be advertised for this verifier. This
+does not change the legacy MFA configuration/status API. A discovery failure
+still returns the required 423 demand with no advertised methods and never grants
+the action. Independent full-host Swagger captures belong to their own HTTP
+tests; one response must not be copied into another surface's evidence file.
+
+
+### SMS enrollment and first-factor continuation boundaries
+
+Starting SMS enrollment requires the current authenticated owner's password to
+be re-verified before sending an enrollment code or changing pending delivery.
+The settings form forwards that password only for the enrollment request and
+clears its separate password state after submission or cancellation.
+
+The anonymous SMS challenge endpoint accepts an opaque MFA continuation from
+successful first-factor verification, never a caller-selected account identifier.
+The dedicated command handler delegates to the existing sign-in MFA service,
+which validates the active continuation, current account and policy, enrolled
+SMS method and lockout budget under the subject lock before delivery. The old
+unbound handler is removed from the command mapping. Passwords and continuation
+bearers are audit-sensitive and are not included in command or SMS transport
+string rendering. Raw phone numbers are also omitted from those representations.
+The complete native SMS regression suites remain part of the existing gate.

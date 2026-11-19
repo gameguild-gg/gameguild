@@ -147,6 +147,15 @@ public static class InfrastructureLayerExtensions
             logger.LogInformation("MemoryCaching registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
         }
 
+        // 02a. Idempotency (issue #1248 N2): mutating requests carrying an Idempotency-Key
+        // replay the cached response instead of reprocessing. The store rides the
+        // IDistributedCache provider installed above (Redis when enabled, distributed-memory
+        // otherwise) so replays are honored across instances. The middleware itself is added
+        // to the pipeline in ConfigurePipeline (after authorization).
+        stepStopwatch.Restart();
+        services.AddIdempotency();
+        logger.LogInformation("Idempotency registered in {ElapsedMs}ms", stepStopwatch.ElapsedMilliseconds);
+
         // 03. HTTP Client (required for OAuth and external API calls)
         stepStopwatch.Restart();
         services.AddHttpClient();
@@ -234,6 +243,14 @@ public static class InfrastructureLayerExtensions
         // 10a. Resources Module (quota, usage tracking, SLA services)
         stepStopwatch.Restart();
         services.AddResourcesInfrastructure(configuration);
+        // Observability pipeline behavior (issue #1248 N1): request-level logging, slow-request
+        // warnings and exception reporting for every CQRS request. Registered FIRST in this
+        // block so it wraps the validation/quota/operation behaviors below (it still runs after
+        // AuthorizationBehavior, which is registered by the Authorization module earlier).
+        // Options bind from Cqrs:Observability (WarningThresholdMs).
+        services.Configure<GameGuild.CQRS.ObservabilityOptions>(
+            configuration.GetSection("Cqrs:Observability"));
+        services.AddTransient(typeof(GameGuild.CQRS.IPipelineBehavior<,>), typeof(GameGuild.CQRS.ObservabilityBehavior<,>));
         // FluentValidation pipeline behavior (issue #394): registered BEFORE the quota and
         // operation/audit behaviors so invalid commands short-circuit with
         // RequestValidationException without consuming resource quotas and without opening a

@@ -9,7 +9,7 @@ namespace GameGuild.Finance.Economy.Treasury;
 
 public interface IAdminWithdrawalDispatchOutboxWriter
 {
-    Task AddAsync(AdminWithdrawalDispatchOutboxRow row, CancellationToken cancellationToken = default);
+    Task AddAsync(EconomyOutboxRow row, CancellationToken cancellationToken = default);
 }
 
 public sealed class PostgreSqlAdminWithdrawalDispatchOutboxWriter :
@@ -25,10 +25,16 @@ public sealed class PostgreSqlAdminWithdrawalDispatchOutboxWriter :
     }
 
     public async Task AddAsync(
-        AdminWithdrawalDispatchOutboxRow row,
+        EconomyOutboxRow row,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(row);
+        if (row.OutboxKind != EconomyOutboxKind.AdminWithdrawalDispatch)
+        {
+            throw new ArgumentException(
+                "The Treasury dispatch outbox only accepts AdminWithdrawalDispatch rows.", nameof(row));
+        }
+
         _db.Add(row);
         await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
     }
@@ -107,7 +113,8 @@ public sealed class PostgreSqlAdminWithdrawalDispatchOutboxProcessor :
             var command = JsonSerializer.Deserialize<AdminWithdrawalDispatchCommand>(lease.Payload, JsonOptions)
                 ?? throw new AdminWithdrawalEvidenceException(
                     "The durable Treasury dispatch payload is invalid.");
-            if (command.TenantId == Guid.Empty || lease.TenantId != command.TenantId || lease.RunId != command.RunId)
+            if (command.TenantId == Guid.Empty || lease.TenantId != command.TenantId ||
+                lease.RunId != command.RunId)
             {
                 throw new AdminWithdrawalEvidenceException(
                 "The durable Treasury dispatch payload is not bound to its tenant outbox row.");
@@ -125,7 +132,7 @@ public sealed class PostgreSqlAdminWithdrawalDispatchOutboxProcessor :
             return await PostgreSqlTransactionExecutor.ExecuteAsync(
                 _db, IsolationLevel.ReadCommitted, async _ =>
             {
-            var currentOutbox = await _db.Set<AdminWithdrawalDispatchOutboxRow>()
+            var currentOutbox = await _db.Set<EconomyOutboxRow>()
                 .SingleAsync(row => row.Id == lease.Id, cancellationToken);
             if (currentOutbox.CompletedAt.HasValue)
                 {
@@ -170,7 +177,7 @@ public sealed class PostgreSqlAdminWithdrawalDispatchOutboxProcessor :
             currentOutbox.CompletedAt = receipt.ObservedAt;
             currentOutbox.LeaseOwner = null;
             currentOutbox.LeaseExpiresAt = null;
-            currentOutbox.LastErrorCode = null;
+            currentOutbox.LastError = null;
             await _db.SaveChangesAsync(cancellationToken);
             return new AdminWithdrawalDispatchOutboxResult(
                 command.TenantId, command.RunId, receipt.Outcome, true, currentOutbox.AttemptCount);
@@ -183,7 +190,7 @@ public sealed class PostgreSqlAdminWithdrawalDispatchOutboxProcessor :
         }
     }
 
-    private async ValueTask<AdminWithdrawalDispatchOutboxRow?> ClaimAsync(
+    private async ValueTask<EconomyOutboxRow?> ClaimAsync(
         string workerId,
         DateTimeOffset now,
         CancellationToken cancellationToken)
@@ -191,12 +198,12 @@ public sealed class PostgreSqlAdminWithdrawalDispatchOutboxProcessor :
         return await PostgreSqlTransactionExecutor.ExecuteAsync(
             _db, IsolationLevel.ReadCommitted, async _ =>
         {
-        var row = await _db.Set<AdminWithdrawalDispatchOutboxRow>()
+        var row = await _db.Set<EconomyOutboxRow>()
             .FromSqlInterpolated($"""
-                SELECT * FROM public.economy_admin_withdrawal_dispatch_outbox
-                WHERE "CompletedAt" IS NULL AND "AvailableAt" <= {now}
+                SELECT * FROM public.economy_outbox
+                WHERE "OutboxKind" = 4 AND "CompletedAt" IS NULL AND "AvailableAt" <= {now}
                   AND ("LeaseExpiresAt" IS NULL OR "LeaseExpiresAt" <= {now})
-                ORDER BY "CreatedAt", "Id"
+                ORDER BY "OccurredAt", "Id"
                 FOR UPDATE SKIP LOCKED
                 LIMIT 1
                 """)
@@ -219,12 +226,12 @@ public sealed class PostgreSqlAdminWithdrawalDispatchOutboxProcessor :
         string workerId,
         DateTimeOffset now,
         CancellationToken cancellationToken) => new(_db.Database.ExecuteSqlInterpolatedAsync($"""
-            UPDATE public.economy_admin_withdrawal_dispatch_outbox
+            UPDATE public.economy_outbox
             SET "LeaseOwner" = NULL,
                 "LeaseExpiresAt" = NULL,
                 "AvailableAt" = {now.AddMinutes(1)},
-                "LastErrorCode" = {"provider-error"}
-            WHERE "Id" = {id} AND "CompletedAt" IS NULL AND "LeaseOwner" = {workerId}
+                "LastError" = {"provider-error"}
+            WHERE "OutboxKind" = 4 AND "Id" = {id} AND "CompletedAt" IS NULL AND "LeaseOwner" = {workerId}
             """, cancellationToken));
 
     private static void ValidateBinding(

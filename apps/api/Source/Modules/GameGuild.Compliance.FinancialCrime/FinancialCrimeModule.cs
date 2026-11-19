@@ -10,16 +10,38 @@ public sealed class FinancialCrimeModule : ModuleBase
     public override string Name => "Compliance.FinancialCrime";
     public override bool EnabledByDefault => true;
     public override IServiceCollection ConfigureServices(IServiceCollection services, IConfiguration configuration)
-        => services.AddFinancialCrimeComposition();
+        => services.AddFinancialCrimeComposition(configuration);
 }
 
 public static class FinancialCrimeCompositionExtensions
 {
-    public static IServiceCollection AddFinancialCrimeComposition(this IServiceCollection services)
+    public static IServiceCollection AddFinancialCrimeComposition(
+        this IServiceCollection services,
+        IConfiguration? configuration = null)
     {
         services.TryAddSingleton<IComplianceEvidenceReader, UnavailableComplianceEvidenceReader>();
         services.TryAddScoped<IFinancialCrimeRiskInputSource, PostgreSqlFinancialCrimeRiskInputSource>();
         services.TryAddScoped<IFinancialCrimeControlPlane, PostgreSqlFinancialCrimeControlPlane>();
+        // Issue #1291 option C — the module's own ingestion outbox and its workers: the
+        // economy hook (and the KYC enrichment hook in the host) enqueue signals here, and the
+        // scoped workers turn them into screenings, transaction signals, rescreenings and
+        // decision consumption asynchronously, off the money path. The interval-driven hosted
+        // wrappers live in the API host next to the other compliance workers.
+        services.TryAddScoped<IFinancialCrimeSignalQueue, PostgreSqlFinancialCrimeSignalQueue>();
+        services.TryAddScoped<IFinancialCrimeSignalOutboxStore, PostgreSqlFinancialCrimeSignalQueue>();
+        services.TryAddScoped<IFinancialCrimeSignalIngestionWorker, FinancialCrimeSignalIngestionWorker>();
+        services.TryAddScoped<IFinancialCrimeRescreeningWorker, FinancialCrimeRescreeningWorker>();
+        services.TryAddSingleton(TimeProvider.System);
+        if (configuration is not null)
+        {
+            services.AddOptions<FinancialCrimeEconomyHookOptions>()
+                .Bind(configuration.GetSection(FinancialCrimeEconomyHookOptions.SectionName));
+            services.AddOptions<FinancialCrimeIngestionWorkerOptions>()
+                .Bind(configuration.GetSection(FinancialCrimeIngestionWorkerOptions.SectionName));
+            services.AddOptions<FinancialCrimeRescreeningWorkerOptions>()
+                .Bind(configuration.GetSection(FinancialCrimeRescreeningWorkerOptions.SectionName));
+        }
+
         return services;
     }
 }

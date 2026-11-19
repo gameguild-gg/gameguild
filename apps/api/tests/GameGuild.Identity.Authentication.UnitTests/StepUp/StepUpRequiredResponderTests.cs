@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.Configuration.ApplicationLayer;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Xunit;
@@ -12,21 +13,25 @@ namespace GameGuild.Identity.Authentication.UnitTests.StepUp;
 /// </summary>
 public sealed class StepUpRequiredResponderTests
 {
-    private readonly Mock<IMfaService> _mfa = new();
+    private readonly Mock<IUserMfaConfigurationRepository> _configurations = new();
+    private readonly Mock<IWebAuthnCredentialRepository> _credentials = new();
 
     private StepUpRequiredResponder CreateSut() =>
-        new(_mfa.Object, NullLogger<StepUpRequiredResponder>.Instance);
+        new(_configurations.Object, _credentials.Object, new MfaOptions { Enabled = true },
+            NullLogger<StepUpRequiredResponder>.Instance);
 
-    private static MfaConfigurationResponse Configuration(params string[] methods) => new()
+    private static UserMfaConfiguration Configuration(params string[] methods) => new()
     {
         IsEnabled = methods.Length > 0,
-        EnabledMethods = methods
+        IsSetupComplete = methods.Length > 0,
+        TotpSecretKey = methods.Contains("Totp") ? "synthetic-enrollment" : null,
+        BackupCodes = methods.Contains("BackupCode") ? "set-v1$1$synthetic-remaining-hash" : string.Empty
     };
 
     [Fact]
     public async Task BuildAsync_CarriesTheOperationBindingAndChallengeWindow()
     {
-        _mfa.Setup(s => s.GetMfaConfigurationAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+        _configurations.Setup(s => s.GetByUserIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Configuration("Totp", "BackupCode"));
 
         var response = await CreateSut().BuildAsync(
@@ -44,8 +49,10 @@ public sealed class StepUpRequiredResponderTests
     [Fact]
     public async Task BuildAsync_FromTheException_UsesTheExceptionBinding()
     {
-        _mfa.Setup(s => s.GetMfaConfigurationAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+        _configurations.Setup(s => s.GetByUserIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Configuration("WebAuthn"));
+        _credentials.Setup(s => s.HasActiveCredentialsAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
 
         var requirement = new StepUpRequiredException(
             "Step-up receipt is invalid, expired, mismatched, or already consumed.",
@@ -62,7 +69,7 @@ public sealed class StepUpRequiredResponderTests
     [Fact]
     public async Task BuildAsync_WithoutEnrolledFactors_ReturnsAnEmptyMethodList()
     {
-        _mfa.Setup(s => s.GetMfaConfigurationAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+        _configurations.Setup(s => s.GetByUserIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Configuration());
 
         var response = await CreateSut().BuildAsync(
@@ -74,7 +81,7 @@ public sealed class StepUpRequiredResponderTests
     [Fact]
     public async Task BuildAsync_MfaConfigurationFailure_DoesNotFailTheTrigger()
     {
-        _mfa.Setup(s => s.GetMfaConfigurationAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+        _configurations.Setup(s => s.GetByUserIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("database unavailable"));
 
         var response = await CreateSut().BuildAsync(

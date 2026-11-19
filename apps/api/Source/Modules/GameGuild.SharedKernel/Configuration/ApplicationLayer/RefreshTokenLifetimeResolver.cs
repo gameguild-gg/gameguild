@@ -12,11 +12,22 @@ namespace GameGuild.Configuration.ApplicationLayer;
 /// </summary>
 public static class RefreshTokenLifetimeResolver
 {
-    /// <summary>Default standard refresh lifetime in days when nothing is configured.</summary>
-    public const int StandardDefaultDays = 7;
+    /// <summary>
+    ///     Default standard refresh lifetime in days when nothing is configured. Matches the
+    ///     persistent default so the out-of-the-box experience is a uniform 30-day session.
+    /// </summary>
+    public const int StandardDefaultDays = 30;
 
     /// <summary>Default persistent ("remember me") refresh lifetime in days when nothing is configured.</summary>
     public const int PersistentDefaultDays = 30;
+
+    /// <summary>
+    ///     Renewal window (in days) before expiration within which rotation mints the full
+    ///     configured lifetime even when sliding expiration is disabled: a client actively
+    ///     refreshing in the token's final week is clearly still using the session, so the
+    ///     replacement must not die with the predecessor's deadline.
+    /// </summary>
+    public const int RenewalWindowDays = 7;
 
     /// <summary>
     ///     Resolves the refresh-token lifetime in days for a sign-in request.
@@ -68,6 +79,17 @@ public static class RefreshTokenLifetimeResolver
 
         return originatingLifetime >= TimeSpan.FromDays(persistentDays) ? persistentDays : standardDays;
     }
+
+    /// <summary>
+    ///     Determines whether a stored refresh token is inside the final-week renewal window:
+    ///     rotation in this window mints the full configured lifetime even when sliding
+    ///     expiration is disabled, so an actively used session is not cut down to the
+    ///     predecessor's remaining deadline in its final week.
+    /// </summary>
+    /// <param name="expiresAt">UTC expiration time of the stored refresh token.</param>
+    /// <param name="now">Current UTC time.</param>
+    public static bool IsWithinRenewalWindow(DateTime expiresAt, DateTime now)
+        => expiresAt - now <= TimeSpan.FromDays(RenewalWindowDays);
 
     /// <summary>
     ///     Recovers the lifetime a session was issued with so rotation can classify the
