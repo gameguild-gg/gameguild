@@ -47,14 +47,14 @@ describe('backup-code password re-verification transport', () => {
   });
 });
 
-describe('loadMfaData (issue #864 contract-drift defense)', () => {
+describe('loadMfaData (issue #1298 J4: failures surface, never silently blank)', () => {
   beforeEach(() => {
     mocks.getAuthMfa.mockReset();
     mocks.getAuthMfaMethods.mockReset();
     mocks.getAuthMfaBackupCodes.mockReset();
   });
 
-  it('returns data when all calls succeed', async () => {
+  it('returns data and loadStatus ok when all calls succeed', async () => {
     mocks.getAuthMfa.mockResolvedValue({ ok: true, data: CONFIGURATION });
     mocks.getAuthMfaMethods.mockResolvedValue({ ok: true, data: METHODS });
     mocks.getAuthMfaBackupCodes.mockResolvedValue({ ok: true, data: BACKUP_CODES });
@@ -63,10 +63,11 @@ describe('loadMfaData (issue #864 contract-drift defense)', () => {
       configuration: CONFIGURATION,
       methods: METHODS,
       backupCodes: BACKUP_CODES,
+      loadStatus: 'ok',
     });
   });
 
-  it('degrades to null when safeParse throws on contract mismatch instead of crashing the RSC render', async () => {
+  it('reports contract drift instead of rendering empty MFA panels when safeParse throws', async () => {
     const contractDrift = new Error('[GET /v1/auth/mfa] Response validation failed');
     mocks.getAuthMfa.mockRejectedValue(contractDrift);
     mocks.getAuthMfaMethods.mockRejectedValue(contractDrift);
@@ -76,10 +77,11 @@ describe('loadMfaData (issue #864 contract-drift defense)', () => {
       configuration: null,
       methods: null,
       backupCodes: null,
+      loadStatus: 'contractError',
     });
   });
 
-  it('degrades individual failures to null while keeping successful sections', async () => {
+  it('keeps successful sections and reports the most actionable aggregate status', async () => {
     mocks.getAuthMfa.mockRejectedValue(new Error('drift'));
     mocks.getAuthMfaMethods.mockResolvedValue({ ok: false, error: { status: 500 } });
     mocks.getAuthMfaBackupCodes.mockResolvedValue({ ok: true, data: BACKUP_CODES });
@@ -88,10 +90,11 @@ describe('loadMfaData (issue #864 contract-drift defense)', () => {
       configuration: null,
       methods: null,
       backupCodes: BACKUP_CODES,
+      loadStatus: 'serverError',
     });
   });
 
-  it('degrades non-ok results to null', async () => {
+  it('classifies non-ok results by their HTTP status', async () => {
     mocks.getAuthMfa.mockResolvedValue({ ok: false, error: { status: 401 } });
     mocks.getAuthMfaMethods.mockResolvedValue({ ok: false, error: { status: 500 } });
     mocks.getAuthMfaBackupCodes.mockResolvedValue({ ok: false, error: { status: 404 } });
@@ -100,6 +103,7 @@ describe('loadMfaData (issue #864 contract-drift defense)', () => {
       configuration: null,
       methods: null,
       backupCodes: null,
+      loadStatus: 'unauthorized',
     });
   });
 });
