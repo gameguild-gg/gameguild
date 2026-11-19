@@ -69,13 +69,25 @@ public sealed class CreateApiKeyHandler : ICommandHandler<CreateApiKeyCommand, R
     private readonly IStepUpReceiptService _stepUpReceipts;
     private readonly IHttpContextAccessor? _httpContextAccessor;
 
+    public CreateApiKeyHandler(IApiKeyRepository apiKeyRepository, IActorContextAccessor actorContext, IStepUpReceiptService stepUpReceipts, ILogger<CreateApiKeyHandler> logger) : this(apiKeyRepository, actorContext, stepUpReceipts, logger, null, null)
+    {
+    }
+
+    public CreateApiKeyHandler(IApiKeyRepository apiKeyRepository, IActorContextAccessor actorContext, IStepUpReceiptService stepUpReceipts, ILogger<CreateApiKeyHandler> logger, IApiKeyAuditEventSink? apiKeyAuditSink) : this(apiKeyRepository, actorContext, stepUpReceipts, logger, apiKeyAuditSink, null)
+    {
+    }
+
+    public CreateApiKeyHandler(IApiKeyRepository apiKeyRepository, IActorContextAccessor actorContext, IStepUpReceiptService stepUpReceipts, ILogger<CreateApiKeyHandler> logger, IHttpContextAccessor? httpContextAccessor = null) : this(apiKeyRepository, actorContext, stepUpReceipts, logger, null, httpContextAccessor)
+    {
+    }
+
     public CreateApiKeyHandler(
         IApiKeyRepository apiKeyRepository,
         IActorContextAccessor actorContext,
         IStepUpReceiptService stepUpReceipts,
         ILogger<CreateApiKeyHandler> logger,
-        IApiKeyAuditEventSink? apiKeyAuditSink = null,
-        IHttpContextAccessor? httpContextAccessor = null)
+        IApiKeyAuditEventSink? apiKeyAuditSink,
+        IHttpContextAccessor? httpContextAccessor)
     {
         _apiKeyRepository = apiKeyRepository;
         _actorContext = actorContext;
@@ -584,4 +596,25 @@ internal static class ApiKeyLifecycleAudit
                 auditEvent.ActionType, auditEvent.ApiKeyId);
         }
     }
+}
+
+/// <summary>
+/// Fails-closed receipt consumer for the legacy constructor overloads that predate
+/// step-up enforcement: any presented receipt is invalid instead of throwing NRE.
+/// </summary>
+file sealed class LegacyStepUpReceipts : IStepUpReceiptService
+{
+    public static readonly LegacyStepUpReceipts Instance = new();
+
+    public Task<StepUpChallengeResponse> CreateChallengeAsync(StepUpOperationBinding binding, CancellationToken cancellationToken = default) =>
+        throw new StepUpContextUnavailableException("Legacy test constructor cannot create step-up challenges.");
+
+    public Task<WebAuthnAuthenticationOptionsResult> BeginWebAuthnAsync(Guid challengeId, CancellationToken cancellationToken = default) =>
+        throw new StepUpContextUnavailableException("Legacy test constructor cannot begin WebAuthn.");
+
+    public Task<StepUpReceiptResponse> VerifyAsync(Guid challengeId, StepUpVerification verification, CancellationToken cancellationToken = default) =>
+        throw new StepUpContextUnavailableException("Legacy test constructor cannot verify step-up challenges.");
+
+    public Task ConsumeAsync(StepUpOperationBinding binding, string receipt, CancellationToken cancellationToken = default) =>
+        throw new StepUpReceiptInvalidException("Legacy test constructor cannot consume step-up receipts.");
 }

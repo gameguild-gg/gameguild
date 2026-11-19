@@ -62,11 +62,8 @@ public sealed class RefreshTokenExpirationPostgreSqlHttpTests(ApiPostgreSqlFixtu
         var tenantId = Guid.NewGuid();
         // Rotation renews the credential's originating lifetime (remember-me semantics), so the
         // sliding case that asserts a renewed full 7-day window must seed a credential that
-        // already carries that window. Non-sliding cases seed a credential 15 minutes from
-        // expiry — inside the deliberate final-week renewal grace (#1348: a client actively
-        // refreshing that close to expiration keeps the session, so the replacement gets the
-        // full configured lifetime instead of dying with the predecessor). Both modes
-        // therefore assert the same renewed window for these fixtures.
+        // already carries that window; non-sliding cases keep the short-lived credential the
+        // rotation must not extend.
         var seededCreatedAt = sliding ? now : now.AddHours(-23);
         var originalExpiry = sliding ? now.AddDays(7) : now.AddMinutes(15);
         var sessionId = Guid.NewGuid();
@@ -105,11 +102,23 @@ public sealed class RefreshTokenExpirationPostgreSqlHttpTests(ApiPostgreSqlFixtu
         Assert.InRange(Math.Abs((reported - token.ExpiresAt).TotalMilliseconds), 0, 0.001);
         Assert.Equal(reported, payload.RootElement.GetProperty("expiresAt").GetDateTime());
         Assert.True(token.ExpiresAt <= now.AddHours(-23).AddMinutes(absoluteMinutes));
-        if (absoluteMinutes == 1440)
+        if (!sliding)
         {
-            // The 24-hour session absolute timeout caps the renewal at one hour out,
-            // sliding or not — the final-week grace grants lifetime, never past the
-            // session's absolute deadline.
+            // The seeded 15-minute credential sits inside the 7-day final-week renewal
+            // window, so non-sliding rotation mints the full configured lifetime
+            // rather than preserving the predecessor's deadline; the session's
+            // absolute timeout caps the reported expiry when it is shorter.
+            if (absoluteMinutes < 7 * 24 * 60)
+            {
+                Assert.InRange(token.ExpiresAt, session.CreatedAt.AddMinutes(absoluteMinutes).AddMilliseconds(-0.001), session.CreatedAt.AddMinutes(absoluteMinutes).AddMilliseconds(0.001));
+            }
+            else
+            {
+                Assert.InRange(token.ExpiresAt, before.AddDays(7).AddMilliseconds(-0.001), after.AddDays(7));
+            }
+        }
+        else if (absoluteMinutes == 1440)
+        {
             Assert.Equal(now.AddHours(1), token.ExpiresAt);
         }
         else
