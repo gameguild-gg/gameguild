@@ -2,11 +2,29 @@
 
 Status: planned. Gate: `CODE-UX-05`. Depends on `CODE-UX-04`.
 
+## Invariants and boundaries
+
+Apply [GOVERNANCE.md](./GOVERNANCE.md). Surface owns solving/inspection views
+and local diagnostics; host/grading own submission, authorization and release.
+Consume frozen/redacted data and existing recovery contracts. Reviewer views
+cannot restore mutable learner drafts or imply release through local execution.
+
 ## Outcome
 
 Deliver a problem-solving experience, not a read-only teacher editor or a full
 generic IDE. The instructor's learner preview and the actual learner must share
 presentation logic while retaining different authorized effects and scratch state.
+
+## Atomic sequence and terminal gates
+
+Each row completes Specification -> Contract/schema -> Test -> Minimal
+implementation -> Quality gate; see [QUALITY-GATES.md](./QUALITY-GATES.md).
+
+| Slice | Specification | Contract / schema | Test oracle | Minimal implementation | Quality gate |
+| --- | --- | --- | --- | --- | --- |
+| UX05-A | solve both families using samples/custom input and diagnose errors | shared learner/preview props, immutable samples, scratch and authorized result states | expected/actual display, no-oracle output, stale/cancel/error states; scratch never changes teacher/academic data | focused problem/editor/cases/results views with usable narrow navigation | contract compilation + G-SURFACE/G-WEB + G-RUNTIME for CS-REF-03/04/14 |
+| UX05-B | recover edits and submit the exact visible snapshot once | scoped recovery and official-submit intent/ack/retry contract | refresh/actor switch, duplicate click, retry, later edits and no silent reset | host recovery/submission integration and distinct submitted state | G-SURFACE/G-WEB + G-RUNTIME for CS-REF-07/15; affected API cases |
+| UX05-C | inspect frozen attempts and show only authorized released feedback | reviewer read-only props and host pending/withheld/released read models | later teacher edits cannot change reviewed work; unreleased data withheld; feedback survives runtime failure | reviewer and learner feedback composition with adaptive regions | G-WEB + G-RUNTIME for CS-REF-16 + applicable quiz-grading protocol; persona walkthroughs |
 
 ## Work
 

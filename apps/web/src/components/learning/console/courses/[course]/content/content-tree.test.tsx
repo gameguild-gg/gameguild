@@ -179,7 +179,9 @@ describe("ContentTree course management", () => {
     expect(
       screen.getByRole("option", { name: "Discussion" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("option", { name: "Code" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Coding exercise" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("option", { name: "Reflection" }),
     ).toBeInTheDocument();
@@ -444,6 +446,38 @@ describe("ContentTree course management", () => {
     });
   }, 15_000);
 
+  it("creates a coding exercise with the canonical Code content type", async () => {
+    const user = userEvent.setup();
+    renderContentTree({ allItems: [moduleItem, lessonItem] });
+
+    await user.click(screen.getByRole("button", { name: /add lesson/i }));
+    const dialog = screen.getByRole("dialog", { name: /add lesson/i });
+    await user.click(within(dialog).getByLabelText(/type/i));
+    await user.click(
+      await screen.findByRole("option", { name: "Coding exercise" }),
+    );
+
+    expect(
+      within(dialog).queryByLabelText(/lesson format/i),
+    ).not.toBeInTheDocument();
+
+    await user.type(within(dialog).getByLabelText(/title/i), "Array sum");
+    await user.click(
+      within(dialog).getByRole("button", { name: /^add lesson$/i }),
+    );
+
+    await waitFor(() => {
+      expect(addContent).toHaveBeenCalledWith({
+        courseId: "course-1",
+        parentId: "module-1",
+        title: "Array sum",
+        type: "Code",
+        slug: "array-sum",
+        sortOrder: 1,
+      });
+    });
+  }, 15_000);
+
   it("duplicates lesson items from the content tree", async () => {
     const user = userEvent.setup();
     renderContentTree({ allItems: [moduleItem, lessonItem, secondLessonItem] });
@@ -649,7 +683,7 @@ describe("ContentTree course management", () => {
 
     expect(screen.getByText("1 sub-items")).toBeInTheDocument();
     expect(screen.getByText("Starter exercise")).toBeInTheDocument();
-    expect(screen.getByText("Code")).toBeInTheDocument();
+    expect(screen.getByText("Coding exercise")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /add submodule/i }));
     let dialog = screen.getByRole("dialog", { name: /add submodule/i });

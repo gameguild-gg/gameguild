@@ -26,6 +26,28 @@ verdes. O browser cycle integral permanece no lane `coding`: sua fixture deve
 emitir `ExerciseType` canonico e sua execucao exige o artifact Toolchain schema
 2 exato.
 
+## Refoundation inventory - 2026-11-19
+
+Baseline: `723eeeb84589cfb23b0def630ee46ead02890acc`. The validation states
+above are historical implementation evidence, not acceptance of the new UX.
+None of these consumers was cut over to the refounded product in `CODE-UX-01`.
+
+| Consumer / shared boundary | Observed current behavior | Refoundation disposition |
+| --- | --- | --- |
+| `lesson-authoring-workspace.tsx` | already offers a wide Code container; owns title, outer draft and publication | preserve host ownership and available space; supply the new authoring draft ports |
+| `coding-definition-editor.tsx` | valid-only direct upsert, 30-second autosave; language/files/tests inserted into workbench extension slots | replace owned composition with the five teacher tasks; converge on existing Learning draft/concurrency services |
+| `standard-test-editor.tsx`, `functional-test-editor.tsx`, visibility controls | concrete validation/field behavior in the host | retain useful rules; move family-specific authoring to the package without retaining console forms |
+| `coding-assignment-preview.tsx` | `author-test` receives a full definition | distinguish private validation from genuinely redacted learner preview |
+| `coding-activity-client.tsx` | obtains frozen runtime delivery; maintains host submission keys and local namespace | keep official commands and contextual identity; replace solving composition and freeze retry payload |
+| `assessment-grader.tsx` and SpeedGrader | server snapshot/submitted files and authorized review commands | retain frozen-source ownership; integrate read-only review presentation |
+| `coding-surface-bridge.ts` | converts PascalCase content and rejects a missing explicit type | evolve with owned contracts; incomplete draft is a separate model |
+| `coding-cycle-browser-e2e.mjs` | historical mixed stdio/function diagnostic cycle | fixture now imported from `coding-cycle-fixture.mjs` with explicit `ExerciseType`; real execution remains artifact-blocked |
+
+Detailed reuse/replace/remove reasons and the ownership trace are in
+[`PRODUCT-MODEL.md`](./06-refoundation/PRODUCT-MODEL.md) and `CS-ADR-014`.
+There was no database scan or bulk rewrite of saved content. Perform the
+authorized persisted-use inventory before any breaking contract interpretation.
+
 ## Consumidores preservados
 
 | Fluxo | Path atual | Motivo para preservar | Teste de regressao | Estado |

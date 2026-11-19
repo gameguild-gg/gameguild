@@ -54,12 +54,14 @@ test("malformed manifest fails before any academic data is created", async () =>
     await assert.rejects(verifyCodingCycleToolchain(filename), SyntaxError);
   });
 });
-test("the actual runner verifies synced artifacts before starting PostgreSQL", async () => {
+test("the actual runner verifies synced artifacts before building runtime or starting PostgreSQL", async () => {
   const source = await readFile(new URL("./coding-cycle-browser-e2e.mjs", import.meta.url), "utf8");
   const boot = source.slice(source.indexOf("async function bootStack()"));
   const verify = boot.indexOf("await verifyCodingCycleToolchain(");
   const postgres = boot.indexOf("// --- disposable postgres ---");
+  const runtimeBuild = boot.indexOf('const gradingBuild = spawnSync(');
   assert.ok(verify > boot.indexOf('log("syncing canonical emception Toolchain release")'));
+  assert.ok(runtimeBuild > verify);
   assert.ok(verify < postgres);
 });
 

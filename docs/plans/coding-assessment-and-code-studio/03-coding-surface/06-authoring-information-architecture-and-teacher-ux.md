@@ -1,6 +1,9 @@
 # Part 3.6. Coding surface refoundation
 
-Status: planned; implementation and product acceptance are not complete.
+Status: in progress; `CODE-UX-01` is partial. Model/prototype and fixture repair
+are recorded; critical UX review requires the additional 3.6.1a iteration.
+Exact artifact and compound-value disposition also remain pending.
+Production refoundation and product acceptance are not complete.
 
 Updated: 2026-11-19.
 
@@ -9,7 +12,24 @@ Gate IDs: `CODE-UX-01` through `CODE-UX-06`.
 This file retains its existing path for incoming references. It replaces the
 earlier teacher-inspector plan, not the separate roadmap part 06 about Code
 Studio. The six previously planned gates are redefined below; none had been
-completed. Historical test results do not certify this new scope.
+completed when this plan was rewritten. Historical test results do not certify
+this new scope. Current evidence is in
+[`PRODUCT-MODEL.md`](./06-refoundation/PRODUCT-MODEL.md) and the shared state.
+
+## Governing invariants and execution protocol
+
+The mandatory [Meta-Harness governance](./06-refoundation/GOVERNANCE.md)
+applies to this coordinator and every subplan, including the current prototype
+remediation. It defines directory ownership, the one-way import graph, negative
+constraints, structural Stop & Ask, Builder/Auditor separation and the single
+state/ADR handoff. Root/app `AGENTS.md` and existing Emception/grading/data
+boundaries remain authoritative.
+
+Every atomic slice follows Specification -> Contract/schema -> Test -> Minimal
+implementation -> Quality gate. Contract validation precedes behavioral code.
+Use [terminal gate commands](./06-refoundation/QUALITY-GATES.md); missing tests,
+required skips and nonzero exits cannot close a gate. Terminal success, real
+runtime evidence and explicit human acceptance remain separate requirements.
 
 ## Product mandate
 
@@ -139,15 +159,19 @@ or launches a second runtime for each tab.
 | Order | Subplan | Gate | Required result |
 | --- | --- | --- | --- |
 | 3.6.1 | [Product model and evidence baseline](./06-refoundation/01-product-model-and-evidence-baseline.md) | `CODE-UX-01` | accepted workflows, ownership, capability matrix and executable test preconditions |
+| 3.6.1a | [Prototype workflows and critical review](./06-refoundation/01a-prototype-workflows-and-critical-review.md) | required design checkpoint inside `CODE-UX-01` | typed, stateful teacher/learner journeys; six review findings resolved; human design review |
 | 3.6.2 | [Domain, drafts and data boundaries](./06-refoundation/02-domain-drafts-and-data-boundaries.md) | `CODE-UX-02` | coherent contracts, recoverable drafts, revisions and private/public projections |
 | 3.6.3 | [Workbench, runtime and capabilities](./06-refoundation/03-workbench-runtime-and-capabilities.md) | `CODE-UX-03` | tested execution foundation, graphics/terminal integration and resource lifecycle |
 | 3.6.4 | [Instructor authoring and validation](./06-refoundation/04-instructor-authoring-and-validation.md) | `CODE-UX-04` | teacher can create, validate, save and reopen both exercise families |
 | 3.6.5 | [Learner and review experiences](./06-refoundation/05-learner-and-review-experiences.md) | `CODE-UX-05` | solve, experiment, recover, submit and inspect the correct snapshot |
 | 3.6.6 | [Web integration and acceptance](./06-refoundation/06-web-integration-and-acceptance.md) | `CODE-UX-06` | integrated representative journeys, human acceptance and explicit handoff |
 
-Each gate requires its predecessor. Small feasibility probes and test
-infrastructure preparation belong in 3.6.1; do not implement all later phases
-under the label of discovery. Each subplan can be paused at a recorded checkpoint.
+Each production gate requires its predecessor. The 3.6.1a iteration belongs
+inside the active first gate and can run while artifact acquisition or the
+compound-value decision is pending; it cannot waive either obligation.
+Small feasibility probes and test infrastructure preparation belong in 3.6.1;
+do not implement later production phases under the label of discovery. Each
+subplan's atomic sequence uses the mandatory cycle and named command gates.
 
 ## Remove the validation dependency cycle
 
@@ -168,9 +192,10 @@ parts 01-04 remains unchanged.
 
 ## Context and evidence protocol
 
-Read this index, the active subplan, the competitive baseline, the acceptance
-matrix and the existing part 3 state/decision/consumer/gap/duplication files
-before implementation. Do not create competing state trackers.
+Use tiered context from the governance: current ledger/invariants/active slice
+first, then only its contracts, acceptance rows, ADRs and consumers. Expand to
+upstream/history on demonstrated need. Do not reload every plan in every turn
+or create competing state trackers.
 
 - Record product and contract decisions in [DECISIONS.md](./DECISIONS.md)
   before coding.
@@ -185,6 +210,9 @@ before implementation. Do not create competing state trackers.
   is a plan, not a generated claim that a capability passed.
 - Record before/after screenshots and inspect them; sanitize traces and use
   synthetic data. Never commit real reference answers, private cases or secrets.
+- Complete the Builder pass, then audit against the negative constraints and
+  execute the slice's terminal gate. Update the compact current checkpoint;
+  preserve historical evidence while removing obsolete next-action instructions.
 
 The tracker is shared with the rest of part 3 so another executor can resume
 without this chat. Subplans in `06-refoundation/` reference these same files,
@@ -198,6 +226,13 @@ A decision-gated capability needs implemented evidence or explicit owner/product
 acceptance of a tracked limitation; an agent cannot downgrade it to optional
 merely to finish. Do not claim broad competitor parity for a deliberately
 restricted exercise set.
+
+The initial layout specimen is not an accepted implementation blueprint.
+The critical review found missing typed authoring, diagnosis, faithful preview,
+host-constrained layout, capability compatibility and recovery states. Close
+[3.6.1a](./06-refoundation/01a-prototype-workflows-and-critical-review.md)
+before treating its design as approved. A working compiler is not needed to
+resolve those design questions; simulated behavior still cannot prove runtime.
 
 Excluded: new languages, a new general IDE, Code Studio/Lexical, a replacement
 grading engine, plagiarism/proctoring, AI assistants, multiplayer, private tests

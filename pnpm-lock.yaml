@@ -946,6 +946,9 @@ importers:
       '@game-guild/grading-adapter-code':
         specifier: workspace:^
         version: link:../grading-adapter-code
+      '@gameguild/emception-browser':
+        specifier: workspace:*
+        version: link:../../../tools/emception/packages/browser
       '@gameguild/emception-ide':
         specifier: workspace:*
         version: link:../../../tools/emception/packages/ide

@@ -222,6 +222,15 @@ Qualquer convergencia depende da revisao com o responsavel pelo Emception.
 Nenhuma entrada acima exige sincronizacao automatica com a origem. O package
 preservado manteve diff vazio e sua suite permaneceu verde.
 
+## Refoundation discovery - 2026-11-19
+
+`CODE-UX-01` added an independent layout specimen and moved our existing
+browser-cycle fixture into a directly testable helper. Neither copies Emception
+source, changes its package or creates a shared runtime abstraction. No new
+upstream code duplication was introduced in this gate. Current consumer
+dispositions are recorded in part 3's `CONSUMER-MAP.md`; production replacements
+remain pending. Historical duplication entries above are retained.
+
 ## Template para novas entradas
 
 Cada copia implementada deve adicionar uma linha com:

@@ -1112,6 +1112,11 @@ describe("LessonAuthoringWorkspace", () => {
       "true",
     );
     expect(
+      screen
+        .getByTestId("coding-definition-editor")
+        .closest('[data-authoring-editor-layout="wide"]'),
+    ).toHaveClass("w-full", "max-w-none");
+    expect(
       screen.getByText("Coding assignment", { exact: true }),
     ).toBeInTheDocument();
     expect(
@@ -1181,6 +1186,11 @@ describe("LessonAuthoringWorkspace", () => {
     );
 
     expect(screen.getByTestId("coding-definition-editor")).toBeInTheDocument();
+    expect(
+      screen
+        .getByTestId("coding-definition-editor")
+        .closest('[data-authoring-editor-layout="wide"]'),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("textbox", { name: "Lesson body" }),
     ).not.toBeInTheDocument();

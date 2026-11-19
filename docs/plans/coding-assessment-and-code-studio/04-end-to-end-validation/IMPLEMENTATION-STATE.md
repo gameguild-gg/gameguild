@@ -22,7 +22,8 @@ atualiza-la antes de iniciar implementacao.
 
 | Etapa | Estado | Evidencia ou bloqueio |
 | --- | --- | --- |
-| `CODE-UX-01` a `CODE-UX-06` | nao iniciado | refundacao de produto, dados, runtime, autoria, learner/reviewer e integracao; matriz `CS-REF-*` ainda sem evidencia de execucao |
+| `CODE-UX-01` | partial / open | shared part 3 state records model/fixture evidence; 3.6.1a design remediation, human acceptance, exact artifact and compound-value scope remain pending |
+| `CODE-UX-02` a `CODE-UX-06` | nao iniciado | depende do gate anterior; layout-only evidence does not certify runtime or product acceptance |
 | `CODE-E2E-00` | bloqueado | depende de `CODE-UX-06`; revalida preparacao da 3.6.1 e fecha lane exata |
 | `CODE-UI-07` | pendente | exige artifact Emception schema 2 e browser E2E oficial |
 | `CODE-E2E-01` | nao iniciado | depende de `CODE-E2E-00` |
@@ -35,8 +36,9 @@ atualiza-la antes de iniciar implementacao.
 
 ## Achados de entrada
 
-1. `apps/web/scripts/coding-cycle-browser-e2e.mjs` possui
-   `buildCodingContent()` sem o `ExerciseType` requerido pelo contrato atual.
+1. Historical finding resolved in `CODE-UX-01`: the browser cycle now imports
+   `buildCodingContent()` with explicit `ExerciseType` from its testable fixture
+   module. The canonical bridge regression passed; real runtime remains blocked.
 2. A parte 3 possui seis subplanos; o sexto e um coordenador de seis etapas de
    refundacao, com requisitos de autoria, aluno e runtime baseados no benchmark.
 3. O cutover dos consumidores de grading ja ocorreu na parte 3; a parte 4 deve
@@ -45,14 +47,21 @@ atualiza-la antes de iniciar implementacao.
 5. A identidade canonica deste corte e `code-assessment-type@1`,
    `code-wasm-review@1` e payload `code-files`.
 6. O artifact local schema 1 nao substitui o artifact oficial schema 2.
-7. Fixture e artifact foram antecipados para 3.6.1 no plano, nao corrigidos ou
-   adquiridos durante esta reescrita documental. Nenhum teste novo foi executado.
+7. Current 3.6.1 evidence: fixture repaired, 5 bridge tests and 26 lightweight
+   preflight tests passed; prototype has 69 layout checks. The actual schema-1
+   manifest fails preflight and the exact-source GitHub query found no artifact.
+   Runtime/user-flow acceptance has not been executed. Canonical status remains
+   in the shared [part 3 state](../03-coding-surface/IMPLEMENTATION-STATE.md).
 8. A matriz `CS-REF-*` deve ser mapeada ao catalogo da parte 4, sem duplicar a
    fonte de status ou considerar o planejamento como aceite do produto.
 
 ## Proxima acao exata
 
-Iniciar pela preparacao e modelo de `CODE-UX-01` e concluir as seis etapas do
+Complete the required [3.6.1a prototype iteration](../03-coding-surface/06-refoundation/01a-prototype-workflows-and-critical-review.md)
+under its Meta-Harness protocol. It can proceed independently of artifact
+acquisition; canonical progress remains in the shared part 3 ledger.
+Close the independent artifact/scope prerequisites of `CODE-UX-01`, then the
+remaining stages of
 [`3.6`](../03-coding-surface/06-authoring-information-architecture-and-teacher-ux.md).
 Depois, atualizar esta baseline e executar
 [`00-entry-baseline-and-part-3-closure.md`](./00-entry-baseline-and-part-3-closure.md).

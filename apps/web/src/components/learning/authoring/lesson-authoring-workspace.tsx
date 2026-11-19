@@ -957,7 +957,10 @@ export function LessonAuthoringWorkspace({
 
   const editorPanel = (
     <section className="h-full min-w-0 overflow-auto bg-background px-5 py-6 xl:px-8">
-      <div className="mx-auto w-full max-w-4xl">
+      <div
+        className={isCode ? "w-full max-w-none" : "mx-auto w-full max-w-4xl"}
+        data-authoring-editor-layout={isCode ? "wide" : "standard"}
+      >
         <Textarea
           aria-label="Lesson title"
           value={payload.title}

@@ -36,6 +36,26 @@ tracking reference. The implementing agent cannot unilaterally defer it.
 | `CS-REF-21` | Canonical fixture and exact artifact preflight are ready before real runtime checks; wrong identity fails closed | `CODE-UX-01` | harness/preflight tests + artifact provenance | Required |
 | `CS-REF-22` | Owned contract changes agree across UI, API, snapshots and adapters; any actual storage change includes its migration and upgrade coverage | `CODE-UX-02` | parity/integration/architecture + migration tests if applicable | Required |
 
+## Prototype review mapping
+
+The [Meta-Harness](./GOVERNANCE.md) governs all evidence. The current
+[01a iteration](./01a-prototype-workflows-and-critical-review.md) resolves
+design findings before production implementation. Its UXP IDs are atomic
+design slices, not new canonical capability IDs or replacement CS-REF statuses.
+
+| Review finding | Prototype slices | Production acceptance retained |
+| --- | --- | --- |
+| UX-F01: generic/incomplete family authoring | UXP-01/02 | CS-REF-01/02/06/08 |
+| UX-F02: missing learner diagnosis cycle | UXP-04 | CS-REF-03/04/13/14/15/16 |
+| UX-F03: incomplete validation and unfaithful preview | UXP-03 | CS-REF-05/09/19 |
+| UX-F04: host-constrained space and navigation | UXP-05 | CS-REF-10/11/17 |
+| UX-F05: incompatible environment choices | UXP-02/05 | CS-REF-08/10/11/18 |
+| UX-F06: absent incomplete/error/recovery states | UXP-01/05 | CS-REF-07/08/12/15/16 |
+
+UXP-06 audits all six findings and the complete human journeys. Automated
+prototype results establish only the simulated interaction contract. Required
+runtime/API/production browser layers above remain pending until executed.
+
 ## Representative fixtures
 
 Use simple, synthetic exercises whose expected behavior is easy to inspect:

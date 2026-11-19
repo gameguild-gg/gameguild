@@ -1,7 +1,8 @@
 # Parte 3. Coding surface e integracao web
 
 Status: implementacao funcional e consolidacao canonica concluidas localmente;
-refundacao de produto 3.6 planejada, com seis etapas proprias antes da parte 4.
+refundacao de produto 3.6 iniciada (`CODE-UX-01` parcial), com seis etapas
+proprias antes da parte 4. O estado corrente esta no handoff da parte 3.
 
 ## Objetivo
 
@@ -57,8 +58,9 @@ nao autoriza o avanco.
 
 A parte 3.5 foi uma excecao corretiva inserida durante a validacao da 3.4. Sua
 implementacao e regressao local estao concluidas; `CODE-UI-07` permanece aberto
-ate o runner emitir `ExerciseType` canonico e o lane `coding` executar o browser
-E2E com o artifact schema 2 exato.
+ate o lane `coding` executar o browser E2E com o artifact schema 2 exato.
+The runner fixture now emits canonical `ExerciseType` and its focused test
+passes; this does not close the real-browser gate.
 
 A parte 3.6 refunda a experiencia com base em tarefas de instrutor e aluno e
 referencias documentadas da concorrencia. A UI, os slots e os contratos nossos
@@ -70,6 +72,15 @@ de `CODE-UI-07`, conforme `CS-ADR-013`. Isso nao marca esse gate como concluido
 nem dispensa sua evidencia. Dentro da 3.6, cada `CODE-UX-*` depende do anterior;
 a excecao nao permite pular contratos, runtime real ou aceite humano.
 
+All of 3.6 now follows the mandatory
+[Meta-Harness governance](./03-coding-surface/06-refoundation/GOVERNANCE.md)
+and [terminal quality gates](./03-coding-surface/06-refoundation/QUALITY-GATES.md).
+The critical prototype review requires
+[3.6.1a](./03-coding-surface/06-refoundation/01a-prototype-workflows-and-critical-review.md)
+inside `CODE-UX-01`. This design-only iteration can proceed while artifact or
+compound-value decisions are pending; it neither approves the existing
+specimen nor waives those independent obligations.
+
 `CODE-UX-01` prepara a fixture canonica, artifact exato e preflight antes dos
 testes reais da refundacao. Isso remove a dependencia circular com
 [`4.0`](./04-end-to-end-validation/00-entry-baseline-and-part-3-closure.md), que
@@ -80,8 +91,10 @@ depois revalida a branch e fecha a evidencia oficial restante de `CODE-UI-07`.
 
 A implementacao nao pode depender da memoria da conversa ou de uma unica IA.
 Qualquer IA ou pessoa que execute um subplano deve persistir as decisoes e o
-checkpoint nos arquivos abaixo, em vez de apenas relata-los na conversa. Antes
-de iniciar qualquer subplano, o executor deve ler:
+checkpoint nos arquivos abaixo, em vez de apenas relata-los na conversa.
+For part 3.6, apply tiered context: current state, invariants and active atomic
+row first; then only relevant sections of the sources below. Do not reload the
+entire historical record in every turn. These are the authoritative sources:
 
 1. este indice e o subplano ativo;
 2. [`IMPLEMENTATION-STATE.md`](./03-coding-surface/IMPLEMENTATION-STATE.md);

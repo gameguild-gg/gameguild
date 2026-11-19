@@ -265,6 +265,136 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
 - Evidencia: sequencia 3.6.1 -> 3.6.6 -> 4.0.
 - Afeta: 3.4, 3.6 e 4.0.
 
+## `CS-ADR-014`. One revision-bound problem and one authoring draft
+
+- Date: 2026-11-19.
+- Status: accepted as the implementation model; contract/persistence work is
+  still pending `CODE-UX-02`.
+- Evidence: `ProgramContent.JsonBody` already stores the coding definition;
+  `ProgramContentAuthoringService` already owns JSON draft storage, expected
+  revision/ETag and publication. The separate coding upsert currently writes
+  `ProgramContent.JsonBody` directly. The current UI skips autosave while
+  invalid, and a code edit is not itself a complete authoring draft.
+- Decision: reuse Learning's shared draft and publication boundary. Add
+  missing problem/reference concepts to the owned coding JSON contract and
+  snapshot, with TS/backend/projection parity. Do not create a second mutable
+  problem editor in lesson metadata or a second coding-draft table.
+  The refounded host must converge its authoring entry points on that draft;
+  the legacy direct upsert is not a parallel writer for the new editor.
+- Draft: use a distinct incomplete discriminated authoring state, with stable
+  file/case IDs. Server Saved means an acknowledged expected-revision write.
+  Optional local recovery is explicitly local, scoped to actor/tenant/content/
+  base revision and reconciled before restoring. The shared server draft is
+  not per-author private storage. Teacher-only references use authorized
+  authoring data; never silently put them in learner recovery or VFS.
+- Data: preserve existing definitions and immutable submissions. Actual
+  published data has not been counted in this session; inventory through
+  authorized reads before changing its interpretation. No schema/migration
+  change is authorized by this observation alone; existing JSON storage is
+  the first implementation path.
+
+| Field | Current authoritative location | Target owner / persistence | Revision and projection rule |
+| --- | --- | --- | --- |
+| Lesson title, slug, catalog description | Learning authoring payload / `ProgramContent` | host remains the single editable owner | capture any title needed for immutable assessment presentation; navigation metadata is not the problem answer context |
+| Problem statement | absent as an explicit coding field; `JsonBody` is already occupied by coding | coding problem data within the existing authoring JSON; render with existing content primitives | freeze with the coding revision; learner/reviewer use that frozen problem, not mutable lesson chrome |
+| Examples and constraints | absent as structured coding data | same problem object, never separate UI-only fields | learner-visible and snapshot-bound; example/reference are distinct concepts |
+| Family and function signature | `ExerciseType`; signatures currently repeated in functional groups | coding draft/definition; one coherent function signature | normalize/reconcile cases explicitly; no inference from test kinds or preset |
+| Language, toolchain, execution requirements | `Environment`, canonical toolchain and limits | coding execution contract + host binding to the exact runtime | freeze reproducibility requirements; resolve only supported combinations |
+| Starter and support files | `Data.Files`, visibility/modifiable flags | coding definition, stable identities and protected-file rules | only public authorized files reach learner delivery/VFS |
+| Reference/wrong solutions | no dedicated concept; private files currently mean compilation inputs | protected authoring validation data separate from starter/support files | a validation solution replaces the intended candidate files in an isolated validation operation; never compiles accidentally alongside starter or reaches learner data |
+| Tests, visibility and expected values | `Tests.Public`/`Private`, canonical test contracts | coding owns technical cases; grading owns academic value semantics | freeze IDs/expected data; private cases excluded by server projection, not hidden controls |
+| Runtime capability availability | partly preset features / profile flags | public API identity + environment + requirements + authorized mode resolver | derived availability; persist requirements, not a mutable assertion of support |
+| Panel sizes, selected task/file and output tab | component state | surface local view preferences | no effect on snapshots, permissions or scoring |
+| Incomplete teacher draft | React fields; valid-only direct upsert | existing Learning JSON draft + expected revision | recover through the host; cannot pretend to be a validated definition |
+| Learner edits and scratch cases | namespace helper and browser storage | host-scoped local recovery; server submission stays authoritative | tenant/actor/revision/attempt isolation; restore mutable allowed text files only |
+| Validation result | in-memory run result | local diagnostic evidence bound to candidate and runtime identity | invalidate after material edits; no academic status or fake persisted success |
+| Published assessment revision | grading immutable manifest/snapshot | existing grading/domain publication flow | include the exact coding/problem candidate; subsequent edits cannot rewrite it |
+| Official submission/review/release | grading runtime API and frozen response | grading and authorized host commands | immutable submission capture, retry key, released-result policy; no surface-owned score or release |
+
+- Rejected: using a canonical definition type for invalid form state; storing
+  statement only in a React prop; reusing private starter files as a reference
+  solution; an autosave label that claims server persistence after a local edit.
+- Implementation trace and layouts:
+  [`PRODUCT-MODEL.md`](./06-refoundation/PRODUCT-MODEL.md).
+- Affects: `CS-REF-06` through `09`, `15`, `16`, `19`, `22`; `CODE-UX-02` onward.
+
+## `CS-ADR-015`. Compound values require an explicit upstream disposition
+
+- Date: 2026-11-19.
+- Status: proposal; no scope reduction has been approved.
+- Evidence: the installed public `emception/testing` entry point successfully
+  generates an integer function harness and rejects Array parameters, returns
+  and nested array values. The source and official Courses validator retain a
+  scalar-only contract. Generic custom test callbacks are not a typed compound
+  function transport provided by the runtime.
+- Proposal: continue the initial function/I/O experience with the four
+  currently supported scalar kinds, record `EMC-GAP-001` with the Emception
+  owner, and add arrays/matrices only through a coherent public harness and
+  official executor contract. Product acceptance of that temporary limit is
+  pending; otherwise the function scope remains blocked on upstream work.
+- No workaround: no private imports, upstream patch, parallel compiler/harness
+  or unexplained conversion of arrays to strings.
+- Affects: `CS-REF-18`, `CODE-UX-01` and subsequent supported-family options.
+
+## `CS-ADR-016`. Verified artifacts and measured budgets are distinct from layout
+
+- Date: 2026-11-19.
+- Status: accepted technical execution rule; artifact availability is blocked.
+- Decision: keep `verifyCodingCycleToolchain()` and the exact-source producer/
+  acquisition mechanism intact. A schema-1 local manifest or successful
+  prototype is not official execution evidence. Preserve the existing release
+  directory; do not overwrite it or manufacture a schema-2 manifest.
+- Evidence: the actual local manifest fails preflight. GitHub's read-only
+  exact-name query for HEAD `723eeeb84589cfb23b0def630ee46ead02890acc`,
+  tree `c1236b3e35c0da3eed4e79135eb6b7090b91863f`, returned zero artifacts.
+  No artifact was downloaded. Fixture contract tests and all 26 lightweight
+  preflight tests pass independently of that missing runtime evidence.
+- Resource rule: one browser worker, one execution, sequential builds and at
+  least two logical CPUs left free. Use the measured host entry criteria and
+  startup/output/cleanup thresholds in `PRODUCT-MODEL.md`. Never start the
+  historical 12 GiB coding-cycle build on the currently pressured host merely
+  to discover the same missing artifact later in boot.
+- Affects: `CS-REF-10` through `12`, `21`, all real-runtime gates and part 4.
+
+## `CS-ADR-017`. Meta-Harness governs all refoundation slices
+
+- Date: 2026-11-19.
+- Status: accepted by explicit product instruction.
+- Decision: every atomic slice follows Specification -> Contract/schema ->
+  Test -> Minimal implementation -> Quality gate. Adopt the invariant/import
+  graph, negative constraints, tiered context, structural Stop & Ask and
+  Builder/Auditor passes in
+  [`GOVERNANCE.md`](./06-refoundation/GOVERNANCE.md).
+- Terminal: use [`QUALITY-GATES.md`](./06-refoundation/QUALITY-GATES.md), with
+  strict checks, actual selected cases and exit 0. Missing tests, required skips
+  and relaxed assertions cannot pass. Runtime and human acceptance are separate.
+- Memory: keep `IMPLEMENTATION-STATE.md` as the single required state ledger;
+  retain numbered ADRs here. Update compact active instructions after each
+  approved slice, without deleting historical evidence or unresolved failures.
+- Consequence: plans 3.6.1 through 3.6.6 use explicit atomic sequences. New test
+  infrastructure remains a planned deliverable until implemented and executed.
+- Affects: all `CODE-UX-*` gates and UXP prototype slices; no production change.
+
+## `CS-ADR-018`. Resolve prototype workflow gaps before design approval
+
+- Date: 2026-11-19.
+- Status: remediation plan accepted; design and implementation still pending.
+- Evidence: critical review identified UX-F01..06. The prototype's preview
+  ignores edited problem/starter; typed authoring and failure/validation/
+  recovery states are missing; realistic host constraints require another
+  layout iteration. Historical navigation/overflow checks remain limited.
+- Decision: perform
+  [`3.6.1a`](./06-refoundation/01a-prototype-workflows-and-critical-review.md)
+  inside the current CODE-UX-01 gate, with typed synthetic states, independent
+  behavioral oracles, adversarial audit and human design review. Complete
+  teacher and learner journeys before approving the implementation blueprint.
+- Boundary: no real runtime/API/database or official grading in this prototype.
+  Simulated controls are allowed for design inspection and labeled as such.
+  Product contract implementation remains in CODE-UX-02 onward.
+- Dependency: this iteration can proceed while artifacts/scope are pending;
+  it cannot waive CS-REF-18/21 or imply approval of CS-ADR-015's scalar limit.
+- Affects: UX-F01..06, existing CS-REF acceptance mappings and current handoff.
+
 ## Modelo para novas decisoes
 
 ```text

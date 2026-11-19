@@ -4,6 +4,14 @@ Research date: 2026-11-19. Evidence: public first-party documentation, including
 documented examples. No authenticated instructor usability benchmark was run.
 Recheck sources when execution starts if their behavior affects a decision.
 
+Execution recheck on 2026-11-19 reopened the LeetCode, HackerRank, CodeGrade
+and both Codio primary pages below. Their Run/Submit separation, distinct
+question/language/case authoring, reference/preview and task layout guidance
+remain the basis for the
+[local model and prototype](./PRODUCT-MODEL.md). No authenticated competitor
+account was tested. The CodinGame PDF remains the prior research reference;
+its graphical example is not evidence of our runtime integration.
+
 ## Observations and local decisions
 
 | Reference | Documented behavior | Decision for our product | Acceptance cases |
@@ -53,6 +61,21 @@ Canvas integration uses existing graphics APIs, but a visualization does not
 establish correctness. No custom game referee, algorithm animation engine or
 pixel-based assessment is promised here. Academic assessment decisions remain
 in grading even where a competitor puts them in its exercise editor.
+
+## Critical review follow-through
+
+The initial layout specimen adopted task tabs and separate Run/Submit controls,
+but did not yet demonstrate the defining workflows behind those references.
+The 2026-11-19 review requires [01a](./01a-prototype-workflows-and-critical-review.md):
+typed signature/cases, actionable diagnostics, reference preparation/results,
+faithful preview, host-constrained layouts and recovery states. Its UXP slices
+map to existing CS-REF IDs; visual resemblance or 69 layout assertions do not
+establish competitor-level usability.
+
+Retain the adopted ownership boundaries. A competitor placing academic
+configuration inside its question editor does not move policy into our surface.
+Bulk import, new languages, AI generation and complete feature parity are not
+implicit requirements of this review.
 
 ## Traceability rule
 

@@ -2,12 +2,31 @@
 
 Status: planned. Gate: `CODE-UX-02`. Depends on `CODE-UX-01`.
 
+## Invariants and boundaries
+
+Apply [GOVERNANCE.md](./GOVERNANCE.md) before specification. Allowed scope is
+coding/domain contracts, adapters, affected Learning write/read paths and their
+tests. The host owns persistence; grading owns academic state. Preserve
+private projections, immutable history and the one-way graph. Schema/upstream
+changes require their recorded decisions, not a UI convenience.
+
 ## Outcome
 
 Make the accepted exercise model persist, reopen and freeze correctly. Do not
 preserve a deficient contract solely to avoid changing our adapter or API.
 Conversely, do not invent a new contract for a concern already owned correctly
 by Learning or grading. Apply the ownership decisions from 3.6.1.
+
+## Atomic sequence and terminal gates
+
+Each row completes Specification -> Contract/schema -> Test -> Minimal
+implementation -> Quality gate; see [QUALITY-GATES.md](./QUALITY-GATES.md).
+
+| Slice | Specification | Contract / schema | Test oracle | Minimal implementation | Quality gate |
+| --- | --- | --- | --- | --- | --- |
+| UX02-A | trace accepted problem/family/case fields and inventory existing data | incomplete draft vs publishable definition; typed signature/cases, stable IDs and wire parity | blank/invalid/empty-output fixtures, TS/backend acceptance parity, lossless cancelled transformation | owned parsers/mappings and pure transformations | G-CONTRACT + affected G-API contract tests; contract stage passes before host behavior |
+| UX02-B | define save/reopen/conflict and protected-data guarantees | host persistence ports, expected revision, recovery scope and reference separation | incomplete save/reopen, failure/conflict, cross-actor recovery denial and protected-file negatives | existing Learning draft integration and authorized projections | G-CONTRACT + G-WEB + G-API, including actual persistence tests |
+| UX02-C | bind published problem and submitted files to their revision | immutable snapshot/projection and generated wire contract | later edits cannot rewrite an old attempt; private canaries absent; upgrade tests if storage changes | adapter/domain integration and generated client through official tooling | complete applicable G-CONTRACT/G-WEB/G-API + Auditor data/import review |
 
 ## Work
 

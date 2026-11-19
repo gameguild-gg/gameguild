@@ -1,6 +1,22 @@
 # 3.6.1. Product model and evidence baseline
 
-Status: planned. Gate: `CODE-UX-01`.
+Status: partial execution; prototype quality remediation, exact artifact and
+compound-value product disposition pending. Gate: `CODE-UX-01`.
+Updated: 2026-11-19.
+
+Execution evidence: [`PRODUCT-MODEL.md`](./PRODUCT-MODEL.md), the
+[layout specimen](./layout-prototype.html), and the shared
+[implementation state](../IMPLEMENTATION-STATE.md). Ownership is recorded in
+`CS-ADR-014`; scope/provenance decisions in `015` and `016`. No downstream
+gate has passed.
+
+## Invariants and boundaries
+
+Apply [GOVERNANCE.md](./GOVERNANCE.md), including topology/import direction,
+negative constraints and the mandatory contract-first cycle. This phase owns
+design evidence, public feasibility probes and harness preparation. It does
+not authorize production refoundation, platform edits or upstream changes.
+The shared ledger is the single `state.md` role; use the referenced ADRs.
 
 Read the [refoundation index](../06-authoring-information-architecture-and-teacher-ux.md),
 [competitive baseline](./COMPETITIVE-BASELINE.md),
@@ -11,6 +27,21 @@ Read the [refoundation index](../06-authoring-information-architecture-and-teach
 Define the experience and contract ownership before deciding what current code
 to keep. Produce a concrete, reviewable model for both instructor and learner,
 plus the infrastructure needed to validate it without depending on part 4.0.
+
+## Atomic sequence and terminal gates
+
+Each row completes Specification -> Contract/schema -> Test -> Minimal
+implementation -> Quality gate. Commands are in
+[QUALITY-GATES.md](./QUALITY-GATES.md).
+
+| Slice | Specification | Contract / schema | Test oracle | Minimal implementation | Quality gate |
+| --- | --- | --- | --- | --- | --- |
+| UX01-A | inventory ownership, capabilities and actual data boundaries | field map, public API signatures and feasibility fixture expectations | supported/rejected function values and canonical wire requirements | bounded public probes, fixture repair and evidence/ADRs | G-DOC + relevant G-CONTRACT/G-WEB + preflight unit command; actual runtime check reported separately |
+| UX01-B | resolve the six critical design findings | presentation states/events and complete teacher/learner task contract | UXP-01..06 oracles in 01a | isolated typed prototype iteration | complete 01a: G-PROT-flow + inspected/human design evidence |
+| UX01-C | establish runtime test prerequisites and product scope | exact artifact binding, resource budget and explicit compound-value disposition | wrong identity fails; verified release passes; required decision is recorded | supported artifact acquisition/preflight, no manifest fabrication | G-PREFLIGHT + G-DOC; all CODE-UX-01 obligations and decisions recorded |
+
+UX01-B can proceed while UX01-C is externally blocked. Its passing terminal
+checks do not approve array scope, runtime support or the overall gate.
 
 ## Work
 
@@ -24,6 +55,8 @@ plus the infrastructure needed to validate it without depending on part 4.0.
    Validate. Prototype the learner problem/editor/results composition too.
    Inspect wide, constrained-by-sidebar and mobile containers. Do not approve a
    fixed inspector width or the current component tree as the product model.
+   Complete [3.6.1a](./01a-prototype-workflows-and-critical-review.md): the
+   first specimen did not demonstrate complete workflows or faithful preview.
 4. Classify existing components as reuse, replace or remove after cutover, with
    reasons. Preserve existing correctness/privacy tests; replace assertions
    that encode a rejected layout. Do not rename the same IDE wrapper and call
@@ -74,6 +107,9 @@ do not seek approval for every local component extraction.
 
 - Instructor and learner task models and annotated layout proposals are
   recorded and reviewed; no data owner or publication boundary is implicit.
+- UX-F01..06 are resolved through the typed prototype and critical walkthrough,
+  with terminal and human outcomes recorded separately. Previous overflow/tab
+  checks are historical layout evidence, not this acceptance.
 - Accepted/rejected competitor patterns map to `CS-REF-*` cases.
 - Reuse/removal map is grounded in actual consumers, not assumptions about
   legacy code. Emception preservation boundaries are unchanged.

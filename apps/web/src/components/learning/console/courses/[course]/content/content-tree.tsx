@@ -108,7 +108,7 @@ const typeConfig: Record<
   Assignment: { icon: FileText, label: "Assignment" },
   Questionnaire: { icon: HelpCircle, label: "Quiz" },
   Discussion: { icon: MessageSquare, label: "Discussion" },
-  Code: { icon: Code2, label: "Code" },
+  Code: { icon: Code2, label: "Coding exercise" },
   Reflection: { icon: BookOpen, label: "Reflection" },
   Survey: { icon: HelpCircle, label: "Survey" },
   Project: { icon: Flag, label: "Project" },
@@ -130,7 +130,7 @@ const lessonTypes: Array<{
   { value: "Questionnaire", label: "Quiz" },
   { value: "Project", label: "Project" },
   { value: "Discussion", label: "Discussion" },
-  { value: "Code", label: "Code" },
+  { value: "Code", label: "Coding exercise" },
   { value: "Reflection", label: "Reflection" },
   { value: "Survey", label: "Survey" },
 ];

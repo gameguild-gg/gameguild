@@ -2,11 +2,29 @@
 
 Status: planned. Gate: `CODE-UX-06`. Depends on `CODE-UX-05`.
 
+## Invariants and boundaries
+
+Apply [GOVERNANCE.md](./GOVERNANCE.md). Only named owned consumers migrate.
+Keep upstream/UI, platform purity, official grading and published history
+intact. Integration consumes validated contracts; it cannot weaken them to
+make a route, build or acceptance report pass.
+
 ## Outcome
 
 Accept the refounded surface in actual Learning journeys, with measured UX,
 security and resource behavior. Do not substitute package snapshots for product
 acceptance or claim that the broader part 4 validation program is complete.
+
+## Atomic sequence and terminal gates
+
+Each row completes Specification -> Contract/schema -> Test -> Minimal
+implementation -> Quality gate; see [QUALITY-GATES.md](./QUALITY-GATES.md).
+
+| Slice | Specification | Contract / schema | Test oracle | Minimal implementation | Quality gate |
+| --- | --- | --- | --- | --- | --- |
+| UX06-A | enumerate navigation/authoring/preview/learner/reviewer consumers | route composition ports, SSR/browser and payload boundaries | reach each through normal navigation; permissions/private projections and generated types agree | migrate named consumers and remove superseded owned wiring | contract compilation + G-CONTRACT/G-SURFACE/G-WEB and affected G-API |
+| UX06-B | execute accepted teacher/learner tasks under real host/runtime constraints | frozen CS-REF oracles, layout/focus/resource observations and persona fixtures | complete required matrix; real canvas/input; no leaks, lost edits or misreported results | root-cause fixes within existing contracts; restart contract cycle if a contract must change | G-RUNTIME + G-REGRESSION + inspected stress captures + explicit human acceptance |
+| UX06-C | hand off a reviewable, reproducible implementation to part 4 | evidence manifest, resolved/deferred decision ownership and next-action contract | no required skip or unreviewed capability promotion; all references/statuses agree | reconcile docs/consumers and bounded final builds | G-FINAL + G-DOC; Auditor checks negative constraints and independent human status |
 
 ## Work
 

@@ -1,6 +1,7 @@
 import { CODE_CONTENT_TYPE } from '@game-guild/grading-adapter-code';
-import { Ide, type IdeController, type IdeExtension } from '@gameguild/emception-ide';
+import type { IdeController } from '@gameguild/emception-ide';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { CodingWorkbench } from './coding-workbench';
 import { getCodingSurfaceProfile, listCodingSurfaceProfiles } from './profile-registry';
 import { createCodingSurfaceSession } from './session';
 import { CodingTestResultsPanel } from './test-results-panel';
@@ -90,23 +91,8 @@ function ReadyCodingSurface(props: CodingSurfaceProps) {
       ? 'Run full tests'
       : 'Preview tests';
 
-  const extensions = useMemo<readonly IdeExtension[]>(() => [{
-    id: 'gameguild-coding-surface',
-    toolbarEnd: () => (
-      <button type="button" onClick={() => void run()} disabled={!session || running}>
-        {running ? 'Running...' : runLabel}
-      </button>
-    ),
-    bottomPanel: () => (
-      <div aria-label="Coding preview results" style={{ padding: 8 }}>
-        {runError ? <p role="alert">{runError}</p> : null}
-        {result ? <CodingTestResultsPanel result={result} maxScore={props.maxScore ?? 100} /> : <p>No preview run yet.</p>}
-      </div>
-    ),
-  }, ...(props.extensions ?? [])], [props.extensions, props.maxScore, props.mode, result, run, runError, running, session]);
-
   return (
-    <section data-coding-content-type={CODE_CONTENT_TYPE} data-coding-mode={props.mode} data-exercise-type={profile.type} style={{ display: 'grid', gridTemplateRows: 'auto auto minmax(420px, 1fr)', minHeight: 500, height: '100%' }}>
+    <section data-coding-content-type={CODE_CONTENT_TYPE} data-coding-mode={props.mode} data-exercise-type={profile.type} style={{ display: 'grid', gridTemplateRows: 'auto minmax(420px, 1fr)', minHeight: 500, height: '100%', overflow: 'hidden' }}>
       <header style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 12, borderBottom: '1px solid rgb(63 63 70)', padding: '10px 12px' }}>
         <div style={{ minWidth: 0, flex: 1 }}>
           <strong>{props.title ?? profile.label}</strong>
@@ -134,21 +120,29 @@ function ReadyCodingSurface(props: CodingSurfaceProps) {
         ) : null}
         {props.header}
       </header>
-      <CodingProfileContext profile={profile} props={props} />
-      <div style={{ minHeight: 0 }}>
-        <Ide
-          title={props.title ?? profile.label}
-          manifestUrl={props.manifestUrl}
-          workspaceConfig={workspaceConfig}
-          workspaceStorageKey={props.workspaceStorageKey}
-          enableWorkspace={props.enableWorkspace ?? true}
-          allowFileCreation={props.mode !== 'learner' || props.definition.allowLearnerCreatedFiles}
-          enableTerminal={profile.capabilities.terminal}
-          readOnly={props.readOnly}
-          onReady={receiveController}
-          extensions={extensions}
-        />
-      </div>
+      <CodingWorkbench
+        definition={props.definition}
+        manifestUrl={props.manifestUrl}
+        workspaceConfig={workspaceConfig}
+        workspaceStorageKey={props.workspaceStorageKey}
+        enableWorkspace={props.enableWorkspace ?? true}
+        allowFileCreation={props.mode !== 'learner' || props.definition.allowLearnerCreatedFiles}
+        readOnly={props.readOnly ?? false}
+        onReady={receiveController}
+        extensions={props.extensions ?? []}
+        details={<CodingProfileContext profile={profile} props={props} />}
+        controls={(
+          <button type="button" onClick={() => void run()} disabled={!session || running}>
+            {running ? 'Running...' : runLabel}
+          </button>
+        )}
+        result={(
+          <div aria-label="Coding preview results">
+            {runError ? <p role="alert">{runError}</p> : null}
+            {result ? <CodingTestResultsPanel result={result} maxScore={props.maxScore ?? 100} /> : <p>No preview run yet.</p>}
+          </div>
+        )}
+      />
     </section>
   );
 }

@@ -5,6 +5,7 @@ import {
   codingAssignmentToLearnerDelivery,
 } from './coding-surface-bridge';
 import type { CodingAssignmentContent } from './types';
+import { buildCodingContent } from '../../../scripts/coding-cycle-fixture.mjs';
 
 function fixture(exerciseType: CodingAssignmentContent['ExerciseType'] = 'standard-io'): CodingAssignmentContent {
   return {
@@ -25,6 +26,21 @@ function fixture(exerciseType: CodingAssignmentContent['ExerciseType'] = 'standa
 }
 
 describe('coding surface wire bridge', () => {
+  it('CS-REF-21: the actual browser-cycle fixture satisfies the canonical contract', () => {
+    const content = buildCodingContent(100);
+    const definition = codingAssignmentToAuthoringDefinition(content);
+    expect(definition.exerciseType).toBe('function');
+    expect(definition.entryPoint.symbol).toBe('add');
+    expect(definition.tests).toHaveLength(3);
+    const delivery = codingAssignmentToLearnerDelivery(content);
+    expect(delivery.publicTests).toHaveLength(2);
+    expect(JSON.stringify(delivery)).not.toContain('secret-exit');
+    expect(() => codingAssignmentToAuthoringDefinition({
+      ...content,
+      ExerciseType: undefined,
+    } as unknown as CodingAssignmentContent)).toThrow('exercise type is required');
+  });
+
   it('preserves the explicit exercise type independently from test kind', () => {
     expect(codingAssignmentToAuthoringDefinition(fixture('function')).exerciseType).toBe('function');
     expect(codingAssignmentToAuthoringDefinition(fixture('standard-io')).exerciseType).toBe('standard-io');

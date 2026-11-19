@@ -48,6 +48,7 @@ import { startCodingCycleWeb } from "./coding-cycle-web-runtime.mjs";
 import { randomUUID } from "node:crypto";
 import { createMfaSignInContinuation, E2E_ADMIN_TOTP_SECRET } from "./sign-in-mfa-support.mjs";
 import { verifyCodingCycleToolchain } from "./coding-cycle-toolchain-support.mjs";
+import { buildCodingContent } from "./coding-cycle-fixture.mjs";
 import { assertRenderedEditorSource } from "./coding-cycle-editor-support.mjs";
 import { evaluateGradingTransport } from "./coding-cycle-grading-transport.mjs";
 import { observeGradingAcknowledgement } from "./coding-cycle-grading-observer.mjs";
@@ -285,12 +286,6 @@ function readTail(file, lines) {
 }
 
 async function bootStack() {
-  // Build the runtime used by official Code submissions. The existing release
-  // gate stages verified compiler artifacts before this isolated browser cycle.
-  const gradingBuild = spawnSync(process.execPath, ["grading/build.mjs"], {
-    cwd: resolve(REPO_ROOT, "tools/emception"), stdio: "inherit",
-  });
-  if (gradingBuild.status !== 0) throw new Error("Trusted Code runtime build failed.");
   await mkdir(ARTIFACTS, { recursive: true });
   await mkdir(EVIDENCE, { recursive: true });
   await mkdir(RUNTIME, { recursive: true });
@@ -311,6 +306,13 @@ async function bootStack() {
 
   await verifyCodingCycleToolchain(resolve(WEB_DIR, "public/emception/manifest.json"));
   log("verified deployment artifacts against the frozen Code toolchain");
+
+  // Reject unusable compiler artifacts before building the grading runtime or
+  // creating the isolated application stack.
+  const gradingBuild = spawnSync(process.execPath, ["grading/build.mjs"], {
+    cwd: resolve(REPO_ROOT, "tools/emception"), stdio: "inherit",
+  });
+  if (gradingBuild.status !== 0) throw new Error("Trusted Code runtime build failed.");
 
   // --- disposable postgres ---
   log(`starting disposable postgres on ${PG_PORT} (${PG_IMAGE})`);
@@ -506,93 +508,6 @@ async function rawRequest(client, path, init = {}) {
 // ---------------------------------------------------------------------------
 // Phase 1 — seed
 // ---------------------------------------------------------------------------
-
-/**
- * The v1 coding-assignment content payload (PascalCase + lowercase `kind`).
- * main.cpp starter FAILS every test; the student edits `add` to return a+b.
- *
- *   Public[0] stdio 'prints-sum'   : stdout '5\\n' (starter prints '0\\n' → fail)
- *   Public[1] functional 'add-fn'  : CHECK(add(2,3)==5) (starter 0 → fail)
- *   Private[0] stdio 'secret-exit' : stdout '5\\n' + exit 5 (starter 0/exit 0 → fail)
- *
- * No stdin on any stdio case → works without SharedArrayBuffer (SpeedGrader
- * route is not cross-origin-isolated; stdin degrades to EOF there).
- */
-function buildCodingContent(maxScore) {
-  return {
-    Type: "coding-assignment",
-    Version: 1,
-    Environment: {
-      Language: "cpp",
-      Tools: "clang",
-      LibBundle: null,
-      AllowStudentCreateFiles: false,
-    },
-    Data: {
-      Files: {
-        "/user/main.cpp": {
-          Content:
-            "extern \"C\" int printf(const char*, ...);\n" +
-            "extern \"C\" int add(int a, int b) {\n" +
-            "    return 0; // TODO: replace with your implementation\n" +
-            "}\n" +
-            "\n" +
-            "int main() {\n" +
-            "    printf(\"%d\\n\", add(2, 3));\n" +
-            "    return add(2, 3);\n" +
-            "}\n",
-          Encoding: "text",
-          Visibility: "Public",
-          Modifiable: true,
-        },
-      },
-    },
-    Tests: {
-      Public: [
-        {
-          kind: "standard",
-          Name: "prints-sum",
-          Stdin: "",
-          Stdout: "5\n",
-          Weight: 1,
-        },
-        {
-          kind: "functional",
-          Name: "add-fn",
-          Function: {
-            FunctionName: "add",
-            Parameters: [
-              { Type: "integer", Name: "a" },
-              { Type: "integer", Name: "b" },
-            ],
-            ReturnType: { Type: "integer" },
-          },
-          Cases: [
-            {
-              Inputs: [
-                { Type: "integer", Content: 2 },
-                { Type: "integer", Content: 3 },
-              ],
-              Expected: { Type: "integer", Content: 5 },
-            },
-          ],
-          Weight: 1,
-        },
-      ],
-      Private: [
-        {
-          kind: "standard",
-          Name: "secret-exit",
-          Stdin: "",
-          Stdout: "5\n",
-          ExitCode: 5,
-          Weight: 1,
-        },
-      ],
-    },
-    Grading: { MaxScore: maxScore },
-  };
-}
 
 /** The corrected program the student types into Monaco. */
 const STUDENT_FIX_SOURCE =

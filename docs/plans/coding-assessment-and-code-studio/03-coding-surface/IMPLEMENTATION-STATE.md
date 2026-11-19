@@ -2,10 +2,13 @@
 
 Ultima atualizacao: 2026-11-19.
 
-Status geral: implementacao funcional e consolidacao canonica 3.5 concluidas
-localmente; refundacao 3.6 planejada em seis etapas, ainda nao implementada.
-Fixture canonica/artifact/preflight precedem os testes reais da refundacao;
-o gate browser oficial permanece separado.
+Current status: functional baseline and canonical consolidation 3.5 completed
+locally. Refoundation 3.6 has started: `CODE-UX-01` is partial, with a concrete
+product model/layout prototype and repaired browser fixture. Critical review
+found six design gaps; the required 3.6.1a remediation is planned, not implemented.
+Exact artifact availability and compound-value product disposition also remain
+open. Design remediation can proceed independently of those prerequisites.
+The production UI has not been cut over to the refounded model.
 
 Este e o handoff mutavel da parte 3. Atualize-o com fatos observados. Nao marque
 um gate como concluido sem registrar a evidencia executada.
@@ -17,10 +20,13 @@ um gate como concluido sem registrar a evidencia executada.
 - Baseline reavaliada em `43144e23ec`: branch alinhada com
   `origin/feature/coding-grading`, 188 commits atras e 7 a frente de
   `origin/develop` antes da atualizacao documental da parte 4.
-- HEAD observado na reescrita da 3.6: `2e35c3fc49`.
-- Worktree observado: alteracoes previas de web, surface, lockfile e documentos
-  preservadas; este trabalho reescreve somente planos. As contagens de relacao
-  com develop acima sao historicas, nao foram atualizadas por fetch.
+- HEAD at refoundation entry: `723eeeb84589cfb23b0def630ee46ead02890acc`.
+- Root tree: `c1236b3e35c0da3eed4e79135eb6b7090b91863f`.
+- Entry worktree preserved: Learning workspace and content-tree source/tests,
+  coding-surface source/tests/package, untracked `coding-workbench.tsx`, and
+  `pnpm-lock.yaml`. No pre-existing changes were reverted. No merge/commit,
+  fetch or database reset was performed. Historical develop counts above
+  are not current remote-state evidence.
 - Ultimo merge relevante: nenhum merge em andamento.
 - Observacao: a criacao destes planos nao caracteriza a implementacao.
 
@@ -33,21 +39,42 @@ um gate como concluido sem registrar a evidencia executada.
 | Parte 3.1 | concluida | buscas de consumidores, contratos e exports publicos registradas em 2026-11-18 |
 | Parte 3.2 | concluida | package isolado, 14 testes e typecheck verdes |
 | Parte 3.3 | concluida | dois perfis, quatro modos, privacy e contrato canonico cobertos |
-| Parte 3.4 | em validacao final | consumidores e CI migrados; runner deve emitir `ExerciseType` canonico e browser E2E depende do artifact schema 2 exato |
+| Parte 3.4 | em validacao final | consumidores e CI migrados; runner fixture now emits canonical `ExerciseType`; real browser E2E remains exact-artifact blocked |
 | Parte 3.5 | concluida localmente | `CANON-01` a `CANON-06` concluidos; validacao local verde, com fixture do runner e browser CI ainda pendentes no fechamento de `CANON-07` |
-| Parte 3.6 | planejada | refundacao baseada em tarefas/concorrencia; seis subplanos e matriz `CS-REF-*`; nenhum novo gate de produto foi executado |
+| Parte 3.6 | in progress | `CODE-UX-01` model/prototype/fixture work recorded; no new product gate has passed |
 
 ## Etapa ativa
 
-- Subplano: 3.6.1, modelo de produto e baseline de evidencia.
-- Gate atual: `CODE-UX-01`, modelo, capabilities e preparacao do harness.
-- Estado: planejado; `CS-ADR-012` substitui a proposta de inspector fixo de
-  `CS-ADR-011`. `CS-ADR-013` remove a dependencia circular com 4.0.
+- Subplan: 3.6.1, with required [3.6.1a design remediation](./06-refoundation/01a-prototype-workflows-and-critical-review.md).
+- Current gate: `CODE-UX-01`; next implementation slice is `UXP-01`.
+- State: partial. Product model, ownership, runtime matrix, resource budget and
+  fixture repair are recorded in `CS-ADR-014` through `016` and
+  [`PRODUCT-MODEL.md`](./06-refoundation/PRODUCT-MODEL.md).
+  Governance/remediation are recorded in `CS-ADR-017` and `018`.
+  Design is not approved; exact-source artifact is unavailable;
+  `CS-REF-18` disposition is pending.
 - Responsavel: Codex.
+
+### Current compact checkpoint
+
+- Active stage: documentation audit passed; UXP-01..06 implementation not started.
+- Allowed task delta: refoundation plans, shared state/ADRs and parent links.
+  Existing application changes are preserved, not part of this documentation task.
+- Contract: [governance](./06-refoundation/GOVERNANCE.md), atomic UXP rows and
+  [terminal gates](./06-refoundation/QUALITY-GATES.md). This file fulfills the
+  `state.md` role; do not create a second mutable tracker.
+- Acceptance IDs: UX-F01..06 map to UXP-01..06 and existing CS-REF rows.
+- Terminal evidence: G-DOC passed; 46 Markdown documents, 165 local links,
+  24 atomic rows and command targets checked. Prototype contract and behavior
+  tests are planned, with no red/green evidence yet.
+- Runtime: blocked by artifact provenance; no new runtime check this turn.
+- Human: design acceptance pending; earlier agent inspection is not approval.
+- Next exact action: UXP-01 specification and typed presentation contracts,
+  followed by failing tests before behavioral implementation.
 
 | Gate da refundacao | Estado | Evidencia necessaria |
 | --- | --- | --- |
-| `CODE-UX-01` | planejado | modelo, ownership, layouts, matriz de capabilities e fixture/artifact/preflight |
+| `CODE-UX-01` | partial / open | model, ownership, public probes and fixture tests recorded; 3.6.1a design remediation/approval, artifact/preflight success and compound scope pending |
 | `CODE-UX-02` | nao iniciado | contratos, recuperacao de drafts, revisoes e projecoes autorizadas |
 | `CODE-UX-03` | nao iniciado | runtime real, canvas/terminal, cancelamento e recursos |
 | `CODE-UX-04` | nao iniciado | autoria completa dos dois tipos e validacao pelo professor |
@@ -88,37 +115,48 @@ um gate como concluido sem registrar a evidencia executada.
 
 ## Decisoes abertas
 
-A direcao da refundacao foi aceita em `CS-ADR-012`, mas a 3.6.1 ainda precisa
-registrar decisoes concretas de ownership de enunciado/exemplos/referencia,
-recuperacao de drafts incompletos, combinacoes runtime/familia/executor,
-orcamento de recursos e destino de arrays/matrizes (`CS-REF-18`).
+`CS-ADR-017` adopts the Meta-Harness protocol for all of 3.6; `CS-ADR-018`
+records the additional design iteration. The user authorized this planning,
+not acceptance of the existing specimen or a scalar-only product scope.
 
-O harness funcional atual possui testes que rejeitam Array. A leitura foi
-registrada em `EMC-GAP-001`; nao prova ausencia de todos os caminhos publicos e
-nao autoriza mudar Emception. Limitacao de escopo exige disposicao explicita.
+`CS-ADR-014` records the actual field ownership/persistence trace and the
+single Learning draft/publication model. `PRODUCT-MODEL.md` contains the
+teacher/learner journeys, component dispositions, runtime matrix and budgets.
+Implementation of these domain choices belongs to `CODE-UX-02`; no database
+schema or platform module was changed.
+
+`EMC-GAP-001` is now confirmed through actual installed public API calls:
+scalar harness generation succeeds; Array inputs, returns and nested values
+are rejected. The official validator is also scalar-only. `CS-ADR-015`
+proposes an explicit initial scalar scope with an upstream follow-up; a
+product question has been issued, but no answer/acceptance is recorded yet.
+Do not silently convert the limitation into an approved scope reduction.
 
 ## Bloqueios
 
-O helper `buildCodingContent()` de
-`apps/web/scripts/coding-cycle-browser-e2e.mjs` ainda omite o
-`ExerciseType` obrigatorio. O write path atual valida esse campo, portanto a
-fixture deve ser atualizada para os tipos canonicos `function` e `standard-io`.
-Nao se deve restaurar ausencia de tipo, alias ou fallback para compatibilidade.
-
-Essa preparacao pertence agora a `CODE-UX-01`, antes da validacao real da
-refundacao. 4.0 revalida o resultado; nao e mais necessario esperar 4.0 para
-preparar a fixture ou obter o artifact exato.
+Resolved fixture defect: the actual cycle imports `buildCodingContent()` from
+`apps/web/scripts/coding-cycle-fixture.mjs`, which emits `ExerciseType:
+"function"`. Its focused canonical bridge test passes, including rejection
+of a missing type and private-test redaction. Historical mixed execution
+coverage is retained; this does not claim the new family-specific browser
+journeys are implemented.
 
 A entrada da parte 4 continua bloqueada por `CODE-UX-01` a `CODE-UX-06`.
 O browser E2E deve provar o modelo refundado, e nao congelar como aceita a
 composicao antiga. Preflight verde nao substitui aceite de produto ou CI.
 
-O CDN local contem o manifest operacional `version: 1`. O browser E2E oficial
-exige o artifact de grading `schemaVersion: 2` com identidade congelada
-correspondente ao commit e falha
-fechado antes de iniciar API ou banco. Isso nao e gap de capability nem motivo
-para relaxar a verificacao: o lane `coding` agora adquire e valida o artifact
-exato antes do ciclo browser.
+Both local manifests remain `version: 1`, and the release has no provenance
+record. The real preflight rejects that artifact. A read-only GitHub query
+for artifact `emception-web-723eeeb84589cfb23b0def630ee46ead02890acc-c1236b3e35c0da3eed4e79135eb6b7090b91863f`
+returned zero results. No exact artifact can currently be acquired.
+This infrastructure blocker is independent from the successful 26 preflight
+unit tests. Preserve compiler identity/provenance checks and the existing
+release directory. See `CS-ADR-016` and `PRODUCT-MODEL.md` for the next action.
+
+Resource entry: 31,806 MiB RAM, 6,486 MiB available, 9,391 MiB swap used,
+12 logical CPUs. No full stack/build was started. The historical cycle
+requests a 12 GiB build heap; it is not suitable for an unmeasured local run
+on that baseline. The recorded budget requires adequate memory first.
 
 A suite `GameGuild.Identity.Authentication.UnitTests` possui uma falha externa
 reproduzida tambem de forma isolada em
@@ -129,9 +167,8 @@ modulo sem ampliar o escopo da parte 3.
 
 ## Evidencias de validacao da etapa ativa
 
-Validacoes locais executadas sobre a implementacao. O browser E2E integral
-permanece reservado ao CI enquanto a fixture nao estiver canonica e o artifact
-exato nao estiver no workspace.
+Historical implementation checks are retained below. Current `CODE-UX-01`
+evidence is listed separately; it does not certify runtime or product gates.
 
 | Data | Comando ou inspecao | Resultado | Escopo |
 | --- | --- | --- | --- |
@@ -170,10 +207,64 @@ exato nao estiver no workspace.
 | 2026-11-19 | inspecao humana da autoria no Learning em viewport desktop | workbench amplo confirmado, mas configuracao, output e formularios de testes ainda misturados; parte 3.6 requerida | baseline `CODE-UX-01` |
 | 2026-11-19 | revisao documental com Node em modo somente leitura e `git diff --check -- docs/plans/coding-assessment-and-code-studio` | 42 documentos e 109 links locais sem destino ausente; seis subplanos, 22 IDs de aceite e dependencias consistentes; sem erros de whitespace | planejamento 3.6, nao execucao dos gates |
 
+The earlier planning rewrite did not run application builds. Its note follows:
+
 A reescrita documental nao executou builds, testes de aplicacao ou novos
 benchmarks de runtime. O comando `node` nao estava no PATH desta sessao; a
 checagem usou o executavel instalado em `.nvm/versions/node/v24.16.0/bin/node`,
 sem iniciar servicos nem alterar os arquivos de aplicacao ja presentes no worktree.
+
+### `CODE-UX-01` execution evidence - 2026-11-19
+
+| Check | Observed result | Limit |
+| --- | --- | --- |
+| installed public `emception/testing` calls | integer harness generated; arrays/matrices/aggregate returns rejected | feasibility only, no compiler boot |
+| package manifests and installed public exports | core/browser/IDE 4.5.2, headless workspace/testing/canvas exports present | a public export does not establish a working family/environment combination |
+| real cycle fixture through `coding-surface-bridge.test.ts` | 5 tests passed, including `CS-REF-21` canonical fixture/redaction/missing-type regression | no API/database writes |
+| toolchain/editor/web-runtime preflight suites | 26 tests passed, sequentially | subprocess tests use dummy Node executables, not a Next build |
+| preflight ordering regression after edit | affected 14-test toolchain suite passed again; invalid artifacts are rejected before grading-runtime build | no full runtime build |
+| actual release manifest preflight | rejected: verified artifact matching frozen identity required | gate remains blocked |
+| exact-name GitHub Actions artifact query | `total_count: 0` | read-only; no producer launched, no files downloaded |
+| prototype Playwright inspection | 69 checks; six captures, three viewports; keyboard/task navigation and no horizontal overflow | layout only, no Emception or academic behavior |
+| prototype browser resource observation | 2.27 seconds; maximum sampled known Chromium RSS 376 MiB; browser closed | not a WASM memory/startup benchmark |
+| focused lint, syntax and document checks | fixture/bridge ESLint passed; script syntax passed; 122 local links across 43 docs resolve; diff whitespace clean | no application build |
+
+The commands and capture paths are recorded in `PRODUCT-MODEL.md`. Node
+24.16.0 was used explicitly because the tool shell lacks Node on PATH.
+Sandbox restrictions required rerunning subprocess/Chromium checks outside
+the sandbox; those bounded checks passed. No runtime was left running.
+
+Current work files: `coding-cycle-fixture.mjs`, its importing cycle,
+`coding-surface-bridge.test.ts`, the layout HTML specimen, `PRODUCT-MODEL.md`
+and shared plan/state/decision/consumer/gap/duplication records. The original
+application/source/lockfile changes are preserved and are not this execution's
+production implementation. No backend, generated client, migration or Emception
+source file was edited.
+
+### Critical review and planning follow-up - 2026-11-19
+
+The actual specimen was inspected in Chromium, alongside the first-party
+references recorded in `COMPETITIVE-BASELINE.md`. UX-F01..06 identify missing
+typed authoring, learner diagnosis, faithful reference/preview workflows,
+host-constrained layouts, capability compatibility and draft recovery.
+In the simulated 1280x720 host, the central region was 704 px wide and expected
+output began at y=796; the 390x844 learner specimen placed result tabs at
+y=1096. Changing the problem/starter to a maximum function did not change its
+preview. These are prototype findings, not measurements of live Learning.
+Review captures: `/tmp/coding-surface-review-20261119/` (ephemeral local evidence).
+
+The follow-up changes documentation only: 01a, governance, terminal gates,
+atomic rows in all six subplans, acceptance mapping and shared handoff.
+No prototype, application, dependency, runtime, migration or platform code was
+changed during this planning task. Prior application diffs remain untouched.
+Passing layout checks have not been promoted to UX or runtime acceptance.
+
+| Planning check | Result | Scope / limitation |
+| --- | --- | --- |
+| Node 24.16.0 read-only inline audit using installed remark parser/GFM | exit 0; 46 documents, 165 local links, 7 atomic subplans/24 rows; six findings mapped and all 22 CS-REF IDs preserved | local targets and required table structure, not runtime or UX acceptance |
+| Node 24.16.0 read-only gate-target/manifest audit | exit 0; 14 existing command paths and six package manifests checked | planned prototype files are explicitly future deliverables, not executed tests |
+| `git diff --check -- docs/plans/coding-assessment-and-code-studio` | exit 0 | documentation whitespace |
+| Auditor self-review against Meta-Harness and entry scope | no new boundary violation identified; tiered context and next action reconciled; upstream/dev scripts have no diff | same-agent review, not independent human design acceptance |
 
 ## Arquivos alterados pela implementacao
 
@@ -192,11 +283,29 @@ sem iniciar servicos nem alterar os arquivos de aplicacao ja presentes no worktr
 
 ## Proxima acao exata
 
-Executar
-[`3.6.1`](./06-refoundation/01-product-model-and-evidence-baseline.md): ler o
-benchmark e matriz de aceite, estabelecer o modelo de professor/aluno e
-ownership, comprovar capabilities e preparar fixture/artifact/preflight.
-Registrar decisoes antes de implementar contratos em `CODE-UX-02`.
+Continue [`3.6.1`](./06-refoundation/01-product-model-and-evidence-baseline.md):
+
+1. Start `UXP-01` in [3.6.1a](./06-refoundation/01a-prototype-workflows-and-critical-review.md):
+   read the active contracts/invariants, record allowed files, specify the
+   prototype states and validate their types before implementing interactions.
+   Then write independent failing oracles and implement only that slice.
+   Continue UXP-02..06 sequentially, including explicit human design review.
+   Artifact availability does not block these design-only steps.
+2. Separately record the product response to the scalar/compound-value question
+   in `CS-ADR-015` and `EMC-GAP-001`; no answer is currently recorded. Obtain
+   a verified producer result for the exact source identity to test.
+   `.github/workflows/emception.yml` supports `workflow_dispatch` with
+   `publish_packages: false`; running it is separate from publishing packages.
+   After committed source/producer identity is agreed, use the existing
+   acquisition mechanism in a suitable checkout without overwriting this
+   unowned legacy release. Run the real frozen-toolchain preflight.
+3. Recheck memory against the recorded budget before any full stack run.
+   Preserve the existing developer environment; do not reset data or stop
+   unrelated processes to make room.
+4. Only after design approval, product disposition and runtime prerequisites
+   close `CODE-UX-01`, enter `CODE-UX-02` using `CS-ADR-014`. Inventory actual
+   persisted published exercises before a breaking interpretation. Apply the
+   mandatory atomic cycle and terminal gate to each subsequent slice.
 
 Nao iniciar o programa abrangente `CODE-E2E-00` antes de `CODE-UX-06` nem
 declarar qualidade de concorrencia apenas com a reescrita dos documentos.

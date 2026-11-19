@@ -2,11 +2,29 @@
 
 Status: planned. Gate: `CODE-UX-04`. Depends on `CODE-UX-03`.
 
+## Invariants and boundaries
+
+Apply [GOVERNANCE.md](./GOVERNANCE.md). Implement the accepted 01a interactions
+inside owned surface/host boundaries using 3.6.2 contracts. Forms start no
+compiler; reference data stays protected; academic settings stay with grading.
+Do not copy prototype state into a competing persistence/schema layer.
+
 ## Outcome
 
 An instructor creates and verifies a complete coding exercise without needing
 JSON, hidden IDE controls or knowledge of the current component implementation.
 The starting point is the teaching task, not a preloaded graphics demo.
+
+## Atomic sequence and terminal gates
+
+Each row completes Specification -> Contract/schema -> Test -> Minimal
+implementation -> Quality gate; see [QUALITY-GATES.md](./QUALITY-GATES.md).
+
+| Slice | Specification | Contract / schema | Test oracle | Minimal implementation | Quality gate |
+| --- | --- | --- | --- | --- | --- |
+| UX04-A | blank-to-complete authoring for both families with compatible defaults | task props/events, signature-derived fields and case operations over accepted draft | typed edits/duplicates/deletes, field errors, no lost navigation state and no runtime boot | Problem/Environment/Starter/Tests task views and compact case editor | contract compilation + G-SURFACE + affected G-WEB; inspect adopted UXP-02 behavior |
+| UX04-B | prepare and validate correct/wrong solutions; faithful learner preview | candidate-bound validation and redacted preview ports with isolated scratch | reference passes, wrong solution fails, edits stale results; non-default preview reflects draft without private canary | validation preparation/results and shared solving preview | G-SURFACE + G-WEB + G-RUNTIME for CS-REF-05/19 |
+| UX04-C | save/reopen, change impact, conflict recovery and constrained layouts | existing persistence/status ports and lossless transformation intents | save failure is not Saved; cancel preserves input; keyboard/focus and task controls survive panel changes | real persistence/recovery integration and adaptive authoring composition | G-SURFACE + G-WEB + focused G-RUNTIME for CS-REF-01/02/08; instructor walkthrough |
 
 ## Work
 

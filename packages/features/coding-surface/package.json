@@ -16,6 +16,7 @@
   "dependencies": {
     "@game-guild/coding": "workspace:^",
     "@game-guild/grading-adapter-code": "workspace:^",
+    "@gameguild/emception-browser": "workspace:*",
     "@gameguild/emception-ide": "workspace:*",
     "emception": "workspace:*"
   },

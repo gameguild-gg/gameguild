@@ -2,12 +2,30 @@
 
 Status: planned. Gate: `CODE-UX-03`. Depends on `CODE-UX-02`.
 
+## Invariants and boundaries
+
+Apply [GOVERNANCE.md](./GOVERNANCE.md). Allowed changes are the owned surface,
+its public-runtime integration, tests and necessary host composition. Emception
+source/UI remain preserved; only declared editor/terminal libraries and public
+runtime APIs are available. No local diagnostic becomes an official grade.
+
 ## Outcome
 
 Provide a shared execution foundation for purpose-built authoring, solving and
 inspection views. Reuse the installed editor/terminal libraries and public
 Emception APIs. Do not embed the monolithic IDE, rebuild its docking system or
 preserve our existing controller-shaped API when a smaller public port is clearer.
+
+## Atomic sequence and terminal gates
+
+Each row completes Specification -> Contract/schema -> Test -> Minimal
+implementation -> Quality gate; see [QUALITY-GATES.md](./QUALITY-GATES.md).
+
+| Slice | Specification | Contract / schema | Test oracle | Minimal implementation | Quality gate |
+| --- | --- | --- | --- | --- | --- |
+| UX03-A | specify supported operations by family/environment/mode | capability resolver inputs and discriminated available/unavailable states | unsupported combinations unavailable; no workers on form navigation; no official commands on local run | lazy runtime port and basic workbench regions | contract compilation, G-SURFACE + G-PREFLIGHT |
+| UX03-B | distinguish batch I/O, interactive terminal, graphics and diagnostic outcomes | channel/run/result contracts with candidate identity and authorized comparisons | real stdin delivery, visible graphics/input/resize, expected/actual diff and separate compiler/timeout failures | public APIs connected to declared terminal/editor/canvas controls | G-SURFACE + focused G-RUNTIME for CS-REF-10/11/13; mocks insufficient |
+| UX03-C | define stop, context switch and bounded resource ownership | cancellation/disposal/stale-callback lifecycle and measurable budgets | one active run; old callbacks cannot overwrite; five-cycle cleanup/memory observations | lifecycle cleanup and stale-result presentation | G-SURFACE + G-RUNTIME for CS-REF-12 + G-REGRESSION; Auditor inspects measurements |
 
 ## Work
 
