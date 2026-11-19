@@ -581,6 +581,18 @@ public sealed class EconomyPersistenceModelTests
             return new DateTimeOffset(2026, 7, 30, 12, 0, 0, TimeSpan.Zero);
         }
 
+        if (valueType == typeof(DateOnly))
+        {
+            // The unified policy spine carries the ad-network domain's
+            // DateOnly columns (e.g. ReportsCurrentThrough) as nullable.
+            return new DateOnly(2026, 7, 30);
+        }
+
+        if (valueType == typeof(DateTime))
+        {
+            return new DateTime(2026, 7, 30, 12, 0, 0, DateTimeKind.Utc);
+        }
+
         if (valueType == typeof(bool))
         {
             return true;
