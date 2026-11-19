@@ -156,6 +156,115 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
 - Evidencia: build do runtime grading com 49 testes verdes e bundle Vite verde.
 - Afeta: 3.4.
 
+## `CS-ADR-010`. Workbench proprio sobre o runtime headless
+
+- Data: 2026-11-19.
+- Status: aceita.
+- Contexto: a primeira implementacao de `coding-surface` renderizava o
+  componente monolitico `Ide` de `@gameguild/emception-ide`. Embora o package
+  e os contratos fossem novos, Explorer, docking, canvas, terminal e hierarquia
+  visual continuavam sendo a IDE generica. Isso contradizia o modelo de
+  superficie orientada ao tipo de exercicio e a experiencia observada no
+  Learning permanecia praticamente igual ao `Coding assignment` anterior.
+- Decisao: `coding-surface` possui o workbench visual. Ele usa o entrypoint
+  publico headless `createEmception()` para runtime, VFS e test runner, e usa
+  Monaco para editar os arquivos autorizados. O package nao renderiza `Ide`,
+  nao importa internals e nao modifica Emception ou `emception-ui`.
+- Alternativas rejeitadas: renomear apenas a opcao no Learning; aplicar CSS
+  sobre a IDE completa; ou alterar/decompor o package mantido pelo time do
+  Emception.
+- Consequencias vigentes: tabs, contexto, console e resultados pertencem ao
+  novo package. A composicao headless permanece; controllers e intents nossos
+  podem evoluir na refundacao. A restricao original de canvas/terminal a um
+  perfil futuro foi substituida por `CS-ADR-012`: sao capabilities ortogonais,
+  sujeitas a prova da combinacao e nao a criacao artificial de outro tipo.
+- Evidencia: `packages/features/coding-surface/src/coding-workbench.tsx` e teste
+  que prova a ausencia do componente monolitico.
+- Afeta: 3.2, 3.3, 3.4 e validacao 4.0.
+
+## `CS-ADR-011`. Autoria e execucao usam superficies distintas
+
+- Data: 2026-11-19.
+- Status: substituida por `CS-ADR-012`; mantida como historico do plano inicial.
+- Contexto: a primeira autoria de coding reutilizou a superficie de execucao e
+  injetou formularios de linguagem, arquivos e testes nos slots do workbench.
+  Isso misturou configuracao do exercicio, codigo, terminal e edicao de testes
+  numa coluna longa, mesmo quando o Learning oferecia largura suficiente. O
+  seletor de tipo tambem nao selecionava um editor de configuracao proprio,
+  como ocorre no registry de tipos do Quiz.
+- Decisao: criar `CodingAuthoringSurface` como shell exclusivo do professor e
+  manter `CodingSurface` orientada a execucao. A autoria tera workbench amplo e
+  inspector lateral com Setup, Tests e Files. Um registry tipado selecionara o
+  editor, validacao, defaults e capabilities de cada `exerciseType`. O estado
+  de formulario sera um draft discriminado que pode estar incompleto; o
+  contrato canonico `CodingAuthoringDefinition` so sera produzido depois da
+  validacao. Formularios de autoria nao serao injetados em slots genericos do
+  console ou do explorer.
+- Alternativas rejeitadas: apenas ampliar o container atual; manter todos os
+  formularios abaixo do terminal; ou adicionar condicionais de tipo no host sem
+  um boundary de perfil.
+- Consequencias: `standard-io` expoe somente testes stdio e `function` somente
+  casos funcionais; troca de tipo trata dados incompativeis explicitamente. A
+  composicao responsiva usa a largura real do container. O runtime headless e
+  os exports publicos do Emception continuam preservados e nenhuma mudanca em
+  `@game-guild/emception-ui` e necessaria.
+- Evidencia: inspecao humana da autoria no Learning e plano
+  `06-authoring-information-architecture-and-teacher-ux.md`.
+- Afeta: 3.2, 3.3, 3.4, 3.6 e entrada da parte 4.
+
+## `CS-ADR-012`. Refundacao orientada ao produto, nao ao wrapper atual
+
+- Data: 2026-11-19.
+- Status: aceita.
+- Contexto: a revisao do fluxo e das referencias oficiais de LeetCode,
+  HackerRank, Codio, CodeGrade e CodinGame mostrou que mover formularios para
+  uma lateral nao resolve autoria, resolucao, recuperacao e validacao da
+  atividade. O usuario autorizou reescrever o plano para refundar a superficie,
+  sem preservar por preciosismo a implementacao inicial.
+- Decisao: executar a 3.6 em seis etapas de produto, dados, runtime, autoria,
+  learner/reviewer e integracao. Autoria e resolucao possuem composicoes
+  proprias sobre uma fundacao compartilhada; paineis sao adaptados a tarefa,
+  sem largura lateral obrigatoria. Componentes, slots e contratos nossos
+  podem ser substituidos quando o modelo exigir, com consumidores e dados
+  inventariados. Nao criar compatibilidade V2 especulativa.
+- Decisao de modelo: familia, preparacao pedagogica, linguagem/ambiente,
+  capabilities, apresentacao e politica academica sao eixos separados.
+  Canvas e terminal podem atender familias existentes quando a combinacao
+  estiver comprovada; nao sao reservados a um futuro tipo visual. Debugging
+  normalmente e variante de starter code. Function e standard I/O sao o corte
+  inicial; arrays/matrizes exigem decisao de viabilidade e escopo explicita.
+- Fronteiras preservadas: grading possui score/review/release; apps/web e o
+  dominio possuem persistencia/autorizacao. Emception e emception-ui nao sao
+  editados. Mudanca necessaria de banco segue `SCHEMA-GATE` e migration real;
+  nenhum dado existente e descartado apenas por ser de desenvolvimento.
+- Alternativas rejeitadas: manter a arvore atual a qualquer custo; colocar toda
+  a autoria num inspector estreito; tratar canvas como tipo; adicionar campos
+  somente na UI sem persistencia; ou expandir para todas as features dos concorrentes.
+- Consequencias: qualidade e medida pelos casos `CS-REF-*`, incluindo jornadas
+  humanas e recursos. A matriz e requisito planejado, nao evidencia de sucesso.
+  Limitacoes nao podem ser descartadas pelo executor para declarar conclusao.
+- Evidencia: indice 3.6, `06-refoundation/COMPETITIVE-BASELINE.md` e
+  `06-refoundation/ACCEPTANCE-MATRIX.md`.
+- Afeta: 3.2 a 3.6, entrada da parte 4 e criterios de aceite do roadmap.
+- Substitui: `CS-ADR-011` e a restricao de capabilities futuras de `CS-ADR-010`.
+
+## `CS-ADR-013`. Preparacao do harness precede validacao da refundacao
+
+- Data: 2026-11-19.
+- Status: aceita.
+- Contexto: 3.6 exigia runtime/browser reais, mas a fixture canonica e a
+  aquisicao do artifact estavam somente em 4.0, bloqueado pela propria 3.6.
+- Decisao: `CODE-UX-01` prepara fixture, artifact exato e preflight com os
+  mecanismos existentes. Os testes reais dos subplanos usam essa preparacao;
+  4.0 revalida na branch reconciliada e fecha a evidencia oficial de `CODE-UI-07`.
+- Alternativas rejeitadas: esperar 4.0 para testar 3.6; substituir execucao real
+  por mocks; relaxar provenance; ou declarar aceite E2E so com preflight verde.
+- Consequencias: gates de produto e gate CI conservam evidencias distintas;
+  indisponibilidade do artifact bloqueia o runtime afetado sem autorizar
+  manifest fabricado ou alteracao no Emception.
+- Evidencia: sequencia 3.6.1 -> 3.6.6 -> 4.0.
+- Afeta: 3.4, 3.6 e 4.0.
+
 ## Modelo para novas decisoes
 
 ```text

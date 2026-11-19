@@ -1,7 +1,7 @@
 # Coding assessment, grading adapter e refundacao do Code Studio
 
-Status: em implementacao; partes 1 e 2 concluidas, parte 3 implementada
-localmente e parte 4 bloqueada em seu gate de entrada.
+Status: em implementacao; partes 1 e 2 concluidas, parte 3 em refundacao do
+coding-surface e parte 4 bloqueada ate o gate 3.6.
 
 Data: 2026-11-06.
 
@@ -59,6 +59,10 @@ de assessment e sem obrigar o Lexical a conhecer regras academicas.
   com o responsavel pelo Emception.
 - O Code Studio antigo e evidencia historica, nao especificacao. Collections,
   assets, runners, layouts, JSON e UX antigos nao sao requisitos implicitos.
+- A implementacao inicial de coding-surface tambem nao e uma especificacao a
+  preservar. A parte 3.6 pode substituir componentes e evoluir contratos nossos
+  para atender autoria e resolucao de qualidade, sem remodelar grading ou
+  Emception. Evidencia de seguranca e dados reais permanecem protegidos.
 - Um Code Studio novo, caso seja aprovado, sera um plugin do Lexical para
   experimentar codigo. Ele nao sera um assessment e nao usara
   `grading-adapter-code`.
@@ -157,7 +161,7 @@ AIReview.
 | --- | --- | --- | --- |
 | 1 | [`01`](./01-domain-contracts-and-typescript-adapter.md) | dominio coding e adapter TypeScript | contratos e testes de conformidade fechados |
 | 2 | [`02`](./02-backend-code-adapter-boundary.md) | modulo backend separado e core sem code | build, testes e arquitetura backend verdes |
-| 3 | [`03`](./03-coding-surface-and-web-integration.md) | coding-surface paralela e composicao web de grading, executada em cinco subplanos | cinco gates internos concluidos; contrato canonico unico; autoria, learner e grader de grading usando a nova superficie; emception-ui preservado |
+| 3 | [`03`](./03-coding-surface-and-web-integration.md) | coding-surface paralela e composicao web; seis subplanos, com seis etapas adicionais dentro da refundacao 3.6 | contrato coerente; autoria e resolucao completas no corte aceito; runtime comprovado; aceite humano; emception-ui preservado |
 | 4 | [`04`](./04-end-to-end-validation-and-cutover.md) | E2E, auditoria de capabilities e aceite do cutover ja realizado | `CODE-UI-07`, fluxo oficial e negativos de acesso aprovados |
 | 5 | [`05`](./05-emception-capability-and-language-review.md) | orquestracao da expansao aditiva de linguagens | baseline comum aprovada e decisao independente por linguagem |
 | 6 | [`06`](./06-code-studio-discovery-and-refoundation.md) | descoberta e eventual refundacao do Code Studio | decisao explicita de produto e arquitetura |
@@ -168,13 +172,18 @@ ja suportadas. Elas nao autorizam por si mesmas mudancas no Emception.
 
 A parte 3 possui sequencia interna obrigatoria: caracterizacao e decisoes,
 fundacao do package, perfis e personas, integracao web com CI e consolidacao do
-contrato canonico. O estado, as decisoes, o mapa de consumidores e os gaps de
-capability ficam em
+contrato canonico, seguidos pela refundacao de produto, autoria e resolucao.
+A refundacao tem indice na
+[`parte 3.6`](./03-coding-surface/06-authoring-information-architecture-and-teacher-ux.md)
+e etapas em [`06-refoundation/`](./03-coding-surface/06-refoundation/).
+O estado, as decisoes, o mapa de consumidores e os gaps de capability ficam em
 [`03-coding-surface/`](./03-coding-surface/). Esses arquivos devem ser
 atualizados em cada checkpoint para que a execucao nao dependa da memoria de
-uma conversa ou de uma IA. O subplano `4.0` existe somente para fechar a fixture
-canonica e a evidencia CI restante de `CODE-UI-07`; as demais etapas da parte 4
-continuam bloqueadas ate esse gate.
+uma conversa ou de uma IA. `CODE-UX-01` antecipa a fixture canonica, o artifact
+exato e o preflight exigidos pela validacao da refundacao. O subplano `4.0`
+inicia depois de `CODE-UX-06`, revalida essa preparacao na branch reconciliada e
+fecha a evidencia CI restante de `CODE-UI-07`. As demais etapas da parte 4
+continuam bloqueadas ate esses gates; nao ha dependencia circular de harness.
 
 A parte 4 tambem possui sequencia interna obrigatoria. Catalogo, lifecycle,
 contratos/API, browser, laboratorio web e aceite ficam em

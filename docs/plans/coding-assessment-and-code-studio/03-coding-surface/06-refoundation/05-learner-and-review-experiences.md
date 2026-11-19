@@ -1,0 +1,69 @@
+# 3.6.5. Learner and review experiences
+
+Status: planned. Gate: `CODE-UX-05`. Depends on `CODE-UX-04`.
+
+## Outcome
+
+Deliver a problem-solving experience, not a read-only teacher editor or a full
+generic IDE. The instructor's learner preview and the actual learner must share
+presentation logic while retaining different authorized effects and scratch state.
+
+## Work
+
+1. Compose the problem, examples and constraints alongside a focused editor.
+   Use adjustable regions and tabs for files, cases, results and available
+   outputs. Preserve task context when changing tabs; avoid forcing simultaneous
+   statement, file tree, canvas, terminal and results into narrow columns.
+2. For functions, expose the signature/starter and typed sample cases without
+   requiring transport boilerplate. For I/O, make batch input and expected
+   output explicit. Render only environment actions proven by 3.6.3.
+3. Add private-to-the-learner scratch cases. These are experimentation data, not
+   official teacher cases or new attempts. Without a permitted expected value,
+   show observed output rather than a correctness verdict. Never evaluate
+   scratch inputs by sending a hidden reference solution to the browser.
+4. Keep Run program, Run tests and Submit separate and clearly scoped. Display
+   diagnostics and authorized case differences; distinguish pending, running,
+   cancelled, error, pass and fail. Show when results describe an older file
+   state. No local result changes the official grading workflow.
+5. Integrate draft recovery keyed by tenant, learner, exercise revision and
+   attempt. Explain available recovery through status, not misleading server
+   Saved labels. Reset requires confirmation; server conflict/revision change
+   cannot silently overwrite work. Cancel outstanding runs before context changes.
+6. Make the submit boundary deterministic: capture the current editable file
+   state once, route through the official host command and preserve idempotent
+   retry behavior. Prevent double submission and accidental edits during capture.
+   Store/display the acknowledgement and distinguish submitted code from later
+   local changes. Do not run a second local grading pass merely to submit.
+7. Integrate pending review, withheld result and released feedback through
+   existing grading read models. Refresh/new session uses server truth. Already
+   released feedback remains readable even if a compiler artifact cannot load.
+8. Build reviewer inspection around the frozen revision, submitted files and
+   authorized evidence. Do not load mutable learner drafts as the submission.
+   Review commands remain host/grading actions, and local inspection runs do
+   not regrade implicitly. Keep the existing reviewer permission checks.
+9. Ensure narrow layouts, keyboard navigation and focus restoration work in
+   solving and inspection, not only in teacher authoring. A visible graphics
+   panel must not make the problem or execution errors inaccessible.
+
+## Evidence and gate
+
+- `CS-REF-03`, `04`, `14`, `15` and `16` pass using independent instructor,
+  learner and reviewer sessions. Do not substitute SystemAdmin for a learner.
+- Both families cover an incorrect attempt, correction, local tests, official
+  submission and refresh. User-editable code agrees with the captured payload.
+- Scratch activity and author-test produce no official submission/review effects.
+- Cross-actor/revision recovery, protected files and private-case redaction
+  remain covered by negative tests from `CODE-UX-02`.
+- Official pending/released states come from the API. Duplicate-click and
+  retry cases do not create duplicate academic work.
+- Review inspects the original revision after a teacher changes the current
+  exercise. A failed execution is never converted into a zero-grade fallback.
+- Runtime unmount/disposal and layout behavior remain verified when switching
+  real learner activities, not only in an isolated component fixture.
+
+Use focused Vitest/component checks first, then one-worker real-browser flows.
+Follow the quiz-grading agent protocol for shared review/release/result paths;
+do not alter authentication/MFA or unrelated suites to facilitate a coding test.
+
+Update consumers, decisions and actual evidence in the part 3 trackers. Next:
+[3.6.6](./06-web-integration-and-acceptance.md).

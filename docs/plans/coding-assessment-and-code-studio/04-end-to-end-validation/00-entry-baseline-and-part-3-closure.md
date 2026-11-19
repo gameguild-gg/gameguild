@@ -1,15 +1,24 @@
 # 4.0. Entrada, baseline e fechamento da parte 3
 
-Status: planejado.
+Status: bloqueado ate a conclusao de `CODE-UX-06` na parte 3.6.
 
 IDs: `CODE-E2E-00`, `CODE-UI-07`.
 
 ## Objetivo
 
-Estabelecer uma baseline atual da `develop`, corrigir o harness anterior para o
-contrato canonico e obter a evidencia exata que ainda falta para concluir a
-parte 3. Este subplano e pre-condicao dos demais; ele nao cria o novo programa
-de validacao.
+Estabelecer uma baseline atual da `develop`, revalidar o harness preparado na
+3.6.1 para o contrato entregue e obter a evidencia exata que ainda falta para
+concluir a parte 3. Este subplano e pre-condicao dos demais; ele nao cria o novo
+programa de validacao.
+
+Pre-requisito adicional: concluir
+[`3.6`](../03-coding-surface/06-authoring-information-architecture-and-teacher-ux.md)
+com autoria, resolucao e recursos de execucao aceitos. Nao congelar o E2E sobre
+a composicao antiga que injeta formularios no output do workbench.
+
+A correcao inicial da fixture, aquisicao do artifact exato e preflight foram
+antecipados para `CODE-UX-01`, pois a propria refundacao precisa deles. Aqui
+esses pre-requisitos sao revalidados, nao desbloqueados pela primeira vez.
 
 ## Implementacao
 
@@ -17,15 +26,17 @@ de validacao.
    toolchains em `IMPLEMENTATION-STATE.md`.
 2. Reconciliar a branch com a `develop` mais recente e caracterizar mudancas em
    auth, coding, Emception, CI e no ciclo browser antes de editar o harness.
-3. Atualizar `buildCodingContent()` em
+3. Revalidar `buildCodingContent()` em
    `apps/web/scripts/coding-cycle-browser-e2e.mjs` para emitir o
-   `ExerciseType` canonico exigido pelo contrato atual.
+   `ExerciseType` e os demais campos exigidos pelo contrato entregue; corrigir
+   somente divergencias novas, sem reabrir compatibilidade especulativa.
 4. Cobrir explicitamente `function` e `standard-io`; nao usar ausencia do campo,
    alias ou fallback para preservar payload antigo.
 5. Executar os testes unitarios do observer, transport e runtime web.
 6. Executar o preflight do ciclo de coding.
-7. Adquirir o artifact Emception schema 2 pela lane oficial e executar o browser
-   E2E pelo `PR Verify` via `workflow_dispatch` ou draft PR.
+7. Verificar o artifact Emception schema 2 exato adquirido pelos mecanismos
+   oficiais; readquirir se a identidade mudou e executar o browser E2E pelo
+   `PR Verify` via `workflow_dispatch` ou draft PR.
 8. Registrar a evidencia no estado da parte 3 e marcar `CODE-UI-07` concluido
    somente depois da lane verde.
 
@@ -53,4 +64,3 @@ de validacao.
 - criar lifecycle de cenarios;
 - mudar auth ou MFA para facilitar o teste;
 - adicionar linguagem, schema, migration ou nova versao de adapter.
-

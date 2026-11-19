@@ -1,6 +1,6 @@
 # Registro de duplicacoes entre coding-surface e Emception UI
 
-Status: partes 1 a 3 implementadas; documento vivo.
+Status: baseline funcional das partes 1 a 3; refundacao 3.6 planejada; documento vivo.
 
 Data: 2026-11-06.
 
@@ -32,6 +32,11 @@ produto atual. A composicao exibida hoje como `Coding assignment` em Learning e
 um consumidor que sera substituido nos fluxos selecionados. Seu layout de IDE
 generica, sua hierarquia visual e seu workflow nao sao baseline da nova
 `coding-surface`.
+
+Essa regra tambem se aplica a primeira implementacao do proprio coding-surface.
+O registro de uma copia nao obriga preservar seu target, API ou layout. A 3.6
+pode substitui-los; registrar a divergencia/remocao com evidencia depois da
+migracao dos consumidores, sem alterar a origem Emception preservada.
 
 ## Regra de preservacao
 
@@ -117,7 +122,7 @@ target pelo path real, registrar o commit exato de origem e descrever o delta.
 | `DUP-PL-005` | `diverged` | `ui-emception/src/assessment/presets.ts` | `packages/features/coding-surface/src/workspace.ts` | workspace config por linguagem | usa somente `PRESETS` publico e limita o catalogo ao corte aprovado |
 | `DUP-PL-006` | `diverged` | `ui-emception/src/assessment/samples.ts` | `packages/features/coding-surface/src/workspace.ts` e testes locais | conceito de sample por linguagem | nenhum sample foi copiado; o destino projeta somente `PRESETS` do entrypoint publico |
 | `DUP-PL-007` | `diverged` | `ui-emception/src/assessment/workspace-storage.ts` | `packages/features/coding-surface/src/storage.ts` | chave de workspace | exige tenant, revisao, actor e attempt; nao armazena estado academico |
-| `DUP-PL-008` | `diverged` | `ui-emception/src/components/CodingAssessmentEditor.tsx` | `packages/features/coding-surface/src/coding-surface.tsx` | composicao publica de `Ide`, read-only e run controls | shell novo, quatro modos e registro de perfis; layout antigo nao foi copiado |
+| `DUP-PL-008` | `diverged` | `ui-emception/src/components/CodingAssessmentEditor.tsx` | `packages/features/coding-surface/src/coding-surface.tsx` e `coding-workbench.tsx` | controller, read-only, workspace sync e run controls | workbench proprio sobre `createEmception()` headless; o componente monolitico `Ide` e seu layout nao sao renderizados |
 | `DUP-PL-009` | `diverged` | `ui-emception/src/components/TestResultsPanel.tsx` | `packages/features/coding-surface/src/test-results-panel.tsx` | estado resumido do preview | resultado explicitamente local; review/release permanecem no host |
 | `DUP-PL-010` | `diverged` | `ui-emception/src/styles/theme.css` e `css.d.ts` | estilos locais em `coding-surface.tsx` e `test-results-panel.tsx` | nenhuma folha de estilo copiada | composicao minima e propria; o tema preservado nao virou dependencia nem baseline visual |
 | `DUP-PL-011` | `diverged` | `ui-emception/src/index.ts` e `assessment/editor.ts` | `packages/features/coding-surface/src/index.ts` | organizacao da API publica | API tipada por modo e sem aliases legados |
@@ -210,7 +215,7 @@ Qualquer convergencia depende da revisao com o responsavel pelo Emception.
 | `DUP-NEW-004` | `ui-emception/src/assessment/session.ts` | `coding-surface/src/session.ts` | executar preview e extrair submission canonica | API minima, learner redigido e score somente local | `coding-surface` | coding/grading |
 | `DUP-NEW-005` | presets e samples publicos do Emception | `coding-surface/src/workspace.ts` | compor workspace sem importar `emception-ui` | usa `PRESETS` publico; samples antigos nao foram copiados | `coding-surface` | coding/grading |
 | `DUP-NEW-006` | `ui-emception/src/assessment/workspace-storage.ts` | `coding-surface/src/storage.ts` | isolar drafts locais | namespace exige tenant, revisao, actor e attempt | `coding-surface` e web | coding/grading |
-| `DUP-NEW-007` | mecanica publica de `CodingAssessmentEditor.tsx` | `coding-surface/src/coding-surface.tsx` | compor `Ide` para quatro personas | shell e perfis proprios; layout/workflow antigo nao copiado | `coding-surface` e web | coding/grading |
+| `DUP-NEW-007` | controller e sincronizacao publica de `CodingAssessmentEditor.tsx`; API `createEmception()` | `coding-surface/src/coding-surface.tsx` e `coding-workbench.tsx` | prover runtime, VFS e editor aos quatro modos sem herdar a IDE generica | workbench proprio com contexto, tabs, Monaco, console e resultados; nenhum `Ide`, docking ou canvas implicito | `coding-surface` e web | coding/grading |
 | `DUP-NEW-008` | conceito de `TestResultsPanel.tsx` | `coding-surface/src/test-results-panel.tsx` | exibir evidencia de preview | distingue preview local de grade oficial | `coding-surface` | coding/grading |
 | `DUP-NEW-009` | testes e mocks do package preservado | testes de `coding-surface` | proteger boundary, privacy, modos e storage | mocks apenas do entrypoint publico; suites independentes | `coding-surface`; `emception-ui` | coding/grading |
 

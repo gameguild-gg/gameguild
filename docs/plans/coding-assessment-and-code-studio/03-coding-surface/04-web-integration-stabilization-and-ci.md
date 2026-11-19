@@ -138,8 +138,17 @@ learner e grader e validar ao menos:
 - nenhuma tabela, migration, fonte ou default do Emception foi alterado;
 - a consolidacao corretiva da
   [parte 3.5](./05-canonical-coding-contract-consolidation.md) esta concluida;
-- `IMPLEMENTATION-STATE.md` marca os cinco subplanos concluidos e aponta a
-  [parte 4](../04-end-to-end-validation-and-cutover.md) como proxima fase.
+- a consolidacao 3.5 permanece como evidencia tecnica, mas a refundacao da
+  [parte 3.6](./06-authoring-information-architecture-and-teacher-ux.md) passa
+  antes da [parte 4](../04-end-to-end-validation-and-cutover.md);
+- `IMPLEMENTATION-STATE.md` registra os seis subplanos e aponta `CODE-UX-01`
+  como proximo gate enquanto o modelo de produto da refundacao estiver pendente.
 
-Este gate conclui a parte 3 somente depois do retorno da parte 3.5, mas nao
-substitui o cutover E2E da parte 4.
+Este gate preserva o fechamento tecnico da integracao web depois do retorno da
+parte 3.5, mas nao substitui o aceite de produto 3.6 nem o cutover E2E da parte
+4.
+
+A 3.6 pode substituir componentes, slots e contratos nossos que nao atendem ao
+modelo aprovado. A preparacao de fixture/artifact e preflight ocorre em
+`CODE-UX-01`; a evidencia browser oficial continua identificada separadamente
+por `CODE-UI-07`.

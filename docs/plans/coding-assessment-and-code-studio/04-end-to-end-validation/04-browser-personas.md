@@ -9,6 +9,10 @@ ID: `CODE-E2E-04`.
 Provar a jornada real em browser, com sessoes independentes, para os dois tipos
 de exercicio e para os estados retido e liberado do resultado.
 
+Partir da superficie aceita na 3.6 e mapear os requisitos `CS-REF-*` aos casos
+do catalogo. Reaproveitar fluxos representativos existentes e ampliar negativos
+e combinacoes; nao restaurar a UI anterior para preservar seletores antigos.
+
 ## Jornadas obrigatorias
 
 Para `function` e `standard-io`:
@@ -46,4 +50,3 @@ sem grant nao obtêm acesso apenas porque conhecem a URL.
 - refresh e nova sessao observam o mesmo resultado liberado;
 - falha de worker aparece como falha tecnica;
 - ambos os exercise types passam sem fallback entre perfis.
-

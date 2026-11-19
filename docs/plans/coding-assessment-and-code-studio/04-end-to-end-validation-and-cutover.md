@@ -1,6 +1,7 @@
 # Parte 4. Validacao end-to-end e aceite do coding grading
 
-Status: bloqueado na entrada `CODE-E2E-00`.
+Status: bloqueado pela refundacao `CODE-UX-01` a `CODE-UX-06`; depois,
+retorna para a entrada `CODE-E2E-00`.
 
 ## Objetivo
 
@@ -22,17 +23,21 @@ O resultado deve dizer, com evidencia reproduzivel:
 
 - partes [`01`](./01-domain-contracts-and-typescript-adapter.md) e
   [`02`](./02-backend-code-adapter-boundary.md) concluidas;
-- os cinco subplanos da
-  [`parte 03`](./03-coding-surface-and-web-integration.md) estao implementados
-  localmente;
+- a fundacao funcional e a consolidacao canonica da
+  [`parte 03`](./03-coding-surface-and-web-integration.md) possuem evidencias
+  locais; isso nao significa que a refundacao 3.6 esteja implementada;
+- a parte 3.6 refunda autoria, resolucao e execucao em seis etapas e precisa de
+  aceite antes do programa abrangente desta parte;
 - `CODE-UI-07` ainda depende do lane `coding` com o artifact Emception schema
   2 exato;
-- o runner de regressao atual ainda precisa emitir `ExerciseType` no payload
-  criado por `buildCodingContent()`;
+- a preparacao de fixture canonica, artifact exato e preflight ocorre em
+  `CODE-UX-01`, antes dos testes reais da refundacao;
 - a branch deve ser reconciliada com a `develop` antes da evidencia final.
 
-Esses pontos pertencem ao subplano `CODE-E2E-00`. Nenhum outro subplano desta
-parte pode ser declarado concluido enquanto essa entrada estiver aberta.
+O subplano `CODE-E2E-00` revalida essa preparacao apos reconciliar a branch e
+fecha a evidencia CI restante. Ele nao bloqueia a aquisicao de artifact ou a
+correcao de fixture necessarias a 3.6. Nenhum outro subplano desta parte pode
+ser declarado concluido enquanto essa entrada estiver aberta.
 
 ## Identidades canonicas congeladas
 
@@ -100,6 +105,12 @@ O catalogo executavel possui IDs estaveis. Reports gerados sao candidatos e nao
 alteram o status canonico sem revisao humana. Tokens, cookies, private tests,
 answer keys e secrets nao entram em artifacts.
 
+Mapear os requisitos `CS-REF-*` da
+[matriz da refundacao](./03-coding-surface/06-refoundation/ACCEPTANCE-MATRIX.md)
+aos casos deste catalogo. Reaproveitar evidencias quando o commit e o escopo
+permitirem; nao criar uma segunda fonte de status nem considerar aceito um
+requisito apenas por existir no plano.
+
 ## Matriz minima
 
 Cada fluxo aplicavel deve possuir casos para `function` e `standard-io`. Um
@@ -124,7 +135,7 @@ linguagem da parte 5 nao bloqueiam este gate.
 
 | Ordem | Subplano | IDs | Resultado exigido |
 | --- | --- | --- | --- |
-| 4.0 | [`Entrada, baseline e fechamento da parte 3`](./04-end-to-end-validation/00-entry-baseline-and-part-3-closure.md) | `CODE-E2E-00`, `CODE-UI-07` | branch reconciliada, fixture canonica e lane exato verdes |
+| 4.0 | [`Entrada, baseline e fechamento da parte 3`](./04-end-to-end-validation/00-entry-baseline-and-part-3-closure.md) | `CODE-E2E-00`, `CODE-UI-07` | branch reconciliada, preparacao da 3.6 revalidada e lane exato verde |
 | 4.1 | [`Catalogo de capabilities e oracles`](./04-end-to-end-validation/01-capability-catalog-and-oracles.md) | `CODE-E2E-01` | casos estaveis, ownership e oracles autorizados |
 | 4.2 | [`Lifecycle de cenarios`](./04-end-to-end-validation/02-scenario-lifecycle.md) | `CODE-E2E-02` | personas, checkpoints e cleanup idempotentes |
 | 4.3 | [`Contratos, API e seguranca`](./04-end-to-end-validation/03-contract-api-and-security.md) | `CODE-E2E-03` | pipeline servidor e negativos comprovados |

@@ -2,6 +2,10 @@
 
 Status: concluido em 2026-11-18.
 
+Nota de evolucao: este documento registra a fundacao funcional. A refundacao
+3.6 substitui escolhas de composicao/estado que nao atendem ao modelo de
+produto; as evidencias antigas nao certificam sua UX ou suas capabilities.
+
 IDs preservados: `CODE-UI-03` e `CODE-UI-04`.
 
 ## Objetivo
@@ -66,11 +70,12 @@ Pre-requisito: gate da
 
 ### Tipos futuros
 
-- caracterizar `project`, `debugging`, `visual` e `sql-query` somente contra
-  contratos e capabilities existentes;
+- caracterizar `project` e `sql-query` contra contratos e capabilities
+  existentes; debugging normalmente e variante pedagogica e canvas e recurso
+  de saida, conforme `CS-ADR-012`;
 - nao implementar nem exibir um tipo incompleto;
-- compor preview web ou canvas apenas quando perfil e API publica declararem a
-  capability;
+- compor preview web ou canvas quando a combinacao de requisitos do exercicio,
+  configuracao e API publica for comprovada, sem exigir um tipo visual novo;
 - registrar necessidade real de novo contrato ou capability antes de expandir
   o escopo.
 

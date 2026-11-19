@@ -254,5 +254,11 @@ aliases pertencentes a code nao sao permitidos.
 - browser cycle passa com o artifact exato;
 - `@game-guild/emception-ui` e fontes do Emception permanecem sem diff;
 - nenhuma tabela ou migration foi criada ou alterada;
-- `IMPLEMENTATION-STATE.md` registra a evidencia e aponta a parte 4 como
-  proxima acao.
+- `IMPLEMENTATION-STATE.md` registra a evidencia e aponta a refundacao
+  [3.6](./06-authoring-information-architecture-and-teacher-ux.md) como proxima
+  acao antes da parte 4.
+
+Esta consolidacao nao congela o modelo de produto contra evolucoes necessarias
+na 3.6. Contratos nossos podem evoluir com paridade, revisoes e dados existentes
+protegidos; nao se reintroduzem formatos paralelos ou aliases especulativos.
+As evidencias acima sao historicas e nao certificam automaticamente o novo modelo.

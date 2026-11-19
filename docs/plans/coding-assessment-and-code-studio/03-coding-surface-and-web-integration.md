@@ -1,7 +1,7 @@
 # Parte 3. Coding surface e integracao web
 
 Status: implementacao funcional e consolidacao canonica concluidas localmente;
-fixture canonica do runner e validacao browser final pendentes.
+refundacao de produto 3.6 planejada, com seis etapas proprias antes da parte 4.
 
 ## Objetivo
 
@@ -47,9 +47,10 @@ e 04 antes do PR integrado.
 | 3.3 | [`Perfis de exercicio e fronteiras por persona`](./03-coding-surface/03-exercise-profiles-and-persona-boundaries.md) | `CODE-UI-03`, `CODE-UI-04` | `function` e `standard-io` completos nos quatro modos |
 | 3.4 | [`Integracao web, estabilizacao e CI`](./03-coding-surface/04-web-integration-stabilization-and-ci.md) | `CODE-UI-05`, `CODE-UI-06`, `CODE-UI-07` | consumidores de grading migrados e regressao fechada |
 | 3.5 | [`Consolidacao do contrato canonico de coding`](./03-coding-surface/05-canonical-coding-contract-consolidation.md) | `CODE-CONTRACT-CANONICALIZATION` | um unico contrato, adapter e runtime de code, sem compatibilidade artificial |
+| 3.6 | [`Refundacao do coding-surface`](./03-coding-surface/06-authoring-information-architecture-and-teacher-ux.md) | `CODE-UX-01` a `CODE-UX-06` | modelo de produto, contratos/drafts, runtime, autoria, resolucao e aceite; seis subplanos internos |
 
-Um subplano so pode comecar depois que o gate anterior estiver marcado como
-concluido em
+Salvo as excecoes corretivas documentadas abaixo, um subplano so pode comecar
+depois que o gate anterior estiver marcado como concluido em
 [`IMPLEMENTATION-STATE.md`](./03-coding-surface/IMPLEMENTATION-STATE.md), com
 evidencias reproduziveis. Marcar uma tarefa em um texto sem executar seu gate
 nao autoriza o avanco.
@@ -57,10 +58,23 @@ nao autoriza o avanco.
 A parte 3.5 foi uma excecao corretiva inserida durante a validacao da 3.4. Sua
 implementacao e regressao local estao concluidas; `CODE-UI-07` permanece aberto
 ate o runner emitir `ExerciseType` canonico e o lane `coding` executar o browser
-E2E com o artifact schema 2 exato. Somente o subplano de entrada
-[`4.0`](./04-end-to-end-validation/00-entry-baseline-and-part-3-closure.md) pode
-avancar para fechar essas pendencias; `CODE-E2E-01` e etapas posteriores
-continuam bloqueados.
+E2E com o artifact schema 2 exato.
+
+A parte 3.6 refunda a experiencia com base em tarefas de instrutor e aluno e
+referencias documentadas da concorrencia. A UI, os slots e os contratos nossos
+podem mudar quando impedem esse modelo; o objetivo nao e preservar o wrapper
+atual nem encaixar todos os formularios em um inspector fixo.
+
+Assim como a 3.5, a 3.6 e uma excecao corretiva autorizada antes do fechamento
+de `CODE-UI-07`, conforme `CS-ADR-013`. Isso nao marca esse gate como concluido
+nem dispensa sua evidencia. Dentro da 3.6, cada `CODE-UX-*` depende do anterior;
+a excecao nao permite pular contratos, runtime real ou aceite humano.
+
+`CODE-UX-01` prepara a fixture canonica, artifact exato e preflight antes dos
+testes reais da refundacao. Isso remove a dependencia circular com
+[`4.0`](./04-end-to-end-validation/00-entry-baseline-and-part-3-closure.md), que
+depois revalida a branch e fecha a evidencia oficial restante de `CODE-UI-07`.
+`CODE-E2E-00` e o programa abrangente da parte 4 continuam depois de `CODE-UX-06`.
 
 ## Protocolo de contexto persistente
 
@@ -120,7 +134,10 @@ privacidade, compatibilidade, sequencia ou escopo de outro subplano.
 - a nota oficial e produzida somente pelo pipeline servidor de grading;
 - politica de review pertence a `@game-guild/grading` e nao ao catalogo da UI;
 - nenhum import por `src/**` ou alias privado do Emception e permitido;
-- nenhuma tabela, migration ou fonte do Emception e alterada nesta parte.
+- fontes do Emception e modulos de plataforma nao sao remodelados nesta parte;
+- contratos e persistencia de dominio nossos podem evoluir na 3.6 quando o
+  modelo exigir; mudanca fisica de banco exige `SCHEMA-GATE`, migration real e
+  preservacao do historico, nunca uma alteracao especulativa.
 
 Os entrypoints publicos inicialmente permitidos sao `emception`,
 `@gameguild/emception-browser` e `@gameguild/emception-ide`. Outro package
@@ -152,13 +169,16 @@ flowchart LR
 - editar, mover, renomear, consolidar, depreciar ou remover
   `@game-guild/emception-ui`;
 - remover seus aliases, testes ou consumidores fora do grading selecionado;
-- criar outro editor, terminal, filesystem, canvas, toolchain ou runner;
+- criar outra implementacao de editor, terminal, filesystem, runtime grafico,
+  toolchain ou runner; compor as bibliotecas e APIs existentes em paineis nossos
+  e parte explicita da 3.6;
 - adicionar linguagens;
 - expor tipos futuros ou incompletos como opcoes desabilitadas;
 - definir ou duplicar politicas de review;
 - definir a UX futura do Code Studio ou preservar collections/assets antigos;
 - colocar fetch, cookies, tenant ou router dentro do package;
-- alterar tabelas ou migrations.
+- alterar tabelas sem necessidade demonstrada e `SCHEMA-GATE`, ou remover
+  migrations historicas.
 
 ## Modelo da superficie
 
@@ -183,9 +203,13 @@ pode ser usado por exercicios diferentes sem se tornar um workflow de grading.
 | `function` | funcao com assinatura e casos de teste, no modelo LeetCode | casos publicos, resultado por caso e diagnostics |
 | `standard-io` | programa que recebe entrada e produz saida | stdin, stdout, stderr, exit code e testes |
 | `project` | workspace com multiplos arquivos e suite de testes | terminal, diagnostics e arvore de resultados |
-| `debugging` | codigo inicial com falha que deve ser corrigido | falha inicial, execucoes e testes de regressao |
-| `visual` | programa com saida web, DOM ou canvas | preview isolado, console e validacoes disponiveis |
 | `sql-query` | consulta sobre schema e dados controlados | result set, diagnostics e comparacao esperada |
+
+`debugging`, completar codigo e refatorar sao normalmente variantes pedagogicas
+dos tipos acima. Canvas e um recurso de saida, nao um tipo automatico. Um
+projeto interativo pode exigir um perfil proprio por seu contrato de interacao,
+nao apenas por mostrar graficos. A matriz de capabilities da 3.6 verifica cada
+combinacao de familia, ambiente, runtime e executor oficial antes de oferta-la.
 
 Somente `function` e `standard-io` pertencem ao corte inicial obrigatorio. Cada
 tipo adicional so se torna selecionavel quando possuir contrato canonico,
@@ -249,9 +273,13 @@ browser usa personas separadas quando cruza author, learner e grader.
 
 ## Criterios de conclusao
 
-- os cinco subplanos estao concluidos com evidencias no estado persistente;
+- os seis subplanos estao concluidos com evidencias no estado persistente;
 - autoria, author test, learner e grader de code usam `coding-surface`;
 - `function` e `standard-io` oferecem experiencias proprias sobre o mesmo shell;
+- autoria e resolucao usam superficies orientadas a tarefa, configuracao por
+  tipo e paineis adaptaveis, sem formularios injetados no output;
+- os seis gates internos da 3.6 possuem evidencia da matriz `CS-REF-*`, incluindo
+  recuperacao de drafts, privacidade, recursos de execucao e aceite humano;
 - o catalogo aceita novos tipos sem acoplar linguagem, persona ou review;
 - nenhuma informacao privada aparece no contexto learner;
 - Emception e consumido somente por APIs publicas;
@@ -261,4 +289,5 @@ browser usa personas separadas quando cruza author, learner e grader.
 - duplicacoes, divergencias, gaps e decisoes estao registrados;
 - CI valida a nova superficie como consumidor sem redefinir release do
   Emception;
-- nenhuma tabela, migration ou fonte do Emception foi alterada.
+- fontes do Emception permanecem preservadas; qualquer mudanca necessaria de
+  persistencia nossa passou por `SCHEMA-GATE`, migration e validacao de upgrade.

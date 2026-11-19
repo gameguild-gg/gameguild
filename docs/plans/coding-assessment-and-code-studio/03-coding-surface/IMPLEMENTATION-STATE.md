@@ -3,7 +3,9 @@
 Ultima atualizacao: 2026-11-19.
 
 Status geral: implementacao funcional e consolidacao canonica 3.5 concluidas
-localmente; fixture canonica do runner e gate browser final ainda pendentes.
+localmente; refundacao 3.6 planejada em seis etapas, ainda nao implementada.
+Fixture canonica/artifact/preflight precedem os testes reais da refundacao;
+o gate browser oficial permanece separado.
 
 Este e o handoff mutavel da parte 3. Atualize-o com fatos observados. Nao marque
 um gate como concluido sem registrar a evidencia executada.
@@ -15,8 +17,10 @@ um gate como concluido sem registrar a evidencia executada.
 - Baseline reavaliada em `43144e23ec`: branch alinhada com
   `origin/feature/coding-grading`, 188 commits atras e 7 a frente de
   `origin/develop` antes da atualizacao documental da parte 4.
-- Worktree atual: consolidacao 3.5 implementada e validada localmente sobre a
-  implementacao funcional da parte 3; documentos da parte 4 em atualizacao.
+- HEAD observado na reescrita da 3.6: `2e35c3fc49`.
+- Worktree observado: alteracoes previas de web, surface, lockfile e documentos
+  preservadas; este trabalho reescreve somente planos. As contagens de relacao
+  com develop acima sao historicas, nao foram atualizadas por fetch.
 - Ultimo merge relevante: nenhum merge em andamento.
 - Observacao: a criacao destes planos nao caracteriza a implementacao.
 
@@ -31,24 +35,36 @@ um gate como concluido sem registrar a evidencia executada.
 | Parte 3.3 | concluida | dois perfis, quatro modos, privacy e contrato canonico cobertos |
 | Parte 3.4 | em validacao final | consumidores e CI migrados; runner deve emitir `ExerciseType` canonico e browser E2E depende do artifact schema 2 exato |
 | Parte 3.5 | concluida localmente | `CANON-01` a `CANON-06` concluidos; validacao local verde, com fixture do runner e browser CI ainda pendentes no fechamento de `CANON-07` |
+| Parte 3.6 | planejada | refundacao baseada em tarefas/concorrencia; seis subplanos e matriz `CS-REF-*`; nenhum novo gate de produto foi executado |
 
 ## Etapa ativa
 
-- Subplano: 4.0, fechamento da parte 3 apos a consolidacao 3.5.
-- Gate atual: `CODE-UI-07`, fixture canonica e browser coding cycle no lane com
-  artifact exato.
-- Estado: implementacao do produto concluida localmente; harness e evidencia
-  externa pendentes.
+- Subplano: 3.6.1, modelo de produto e baseline de evidencia.
+- Gate atual: `CODE-UX-01`, modelo, capabilities e preparacao do harness.
+- Estado: planejado; `CS-ADR-012` substitui a proposta de inspector fixo de
+  `CS-ADR-011`. `CS-ADR-013` remove a dependencia circular com 4.0.
 - Responsavel: Codex.
+
+| Gate da refundacao | Estado | Evidencia necessaria |
+| --- | --- | --- |
+| `CODE-UX-01` | planejado | modelo, ownership, layouts, matriz de capabilities e fixture/artifact/preflight |
+| `CODE-UX-02` | nao iniciado | contratos, recuperacao de drafts, revisoes e projecoes autorizadas |
+| `CODE-UX-03` | nao iniciado | runtime real, canvas/terminal, cancelamento e recursos |
+| `CODE-UX-04` | nao iniciado | autoria completa dos dois tipos e validacao pelo professor |
+| `CODE-UX-05` | nao iniciado | resolucao, envio, recuperacao e revisao por persona |
+| `CODE-UX-06` | nao iniciado | integracao, matriz de aceite e revisao humana |
 
 ## Fatos confirmados
 
 - `@game-guild/emception-ui` deve permanecer preservado.
 - `coding-surface` sera um consumidor paralelo dos exports publicos do
   Emception.
+- a primeira composicao visual com o componente monolitico `Ide` foi corrigida:
+  o package agora possui o workbench e consome `createEmception()` headless;
 - somente fluxos de grading explicitamente selecionados podem migrar.
 - `function` e `standard-io` formam o corte inicial de tipos.
-- nenhuma mudanca de tabela ou migration esta prevista na parte 3.
+- nenhuma mudanca de tabela foi decidida para a 3.6; necessidade demonstrada
+  exige `SCHEMA-GATE`, migration e validacao, sem apagar historico.
 - `CodingAssignmentContent.ExerciseType` permanece no JSON ja persistido; nao
   cria coluna, tabela ou migration.
 - o diff atual de `@game-guild/emception-ui` e `tools/emception` permanece vazio;
@@ -60,12 +76,26 @@ um gate como concluido sem registrar a evidencia executada.
   corrente falha fechado;
 - nomes `V1` importados de `@game-guild/grading` pertencem ao protocolo
   generico e permanecem fora da consolidacao de code.
+- a superficie de autoria precisa ser distinta da superficie de execucao;
+- configuracao passa a views por tarefa, com largura integral ou composicao
+  lateral quando util; output e console nao recebem formularios;
+- o contrato canonico completo nao deve ser usado como estado intermediario de
+  formulario; recuperacao de draft e validacao para publicacao sao operacoes
+  distintas no modelo alvo;
+- canvas e terminal sao capabilities e nao exigem automaticamente outro tipo;
+- contratos e componentes nossos podem evoluir para o modelo aceito, em vez de
+  preservar a estrutura inicial apenas porque ja foi implementada.
 
 ## Decisoes abertas
 
-Nenhuma decisao aberta. A proposta de formatos paralelos foi substituida pela
-consolidacao canonica registrada em `DECISIONS.md`; bridge do host, artifact
-verificado e ajuste test-only permanecem validos.
+A direcao da refundacao foi aceita em `CS-ADR-012`, mas a 3.6.1 ainda precisa
+registrar decisoes concretas de ownership de enunciado/exemplos/referencia,
+recuperacao de drafts incompletos, combinacoes runtime/familia/executor,
+orcamento de recursos e destino de arrays/matrizes (`CS-REF-18`).
+
+O harness funcional atual possui testes que rejeitam Array. A leitura foi
+registrada em `EMC-GAP-001`; nao prova ausencia de todos os caminhos publicos e
+nao autoriza mudar Emception. Limitacao de escopo exige disposicao explicita.
 
 ## Bloqueios
 
@@ -74,6 +104,14 @@ O helper `buildCodingContent()` de
 `ExerciseType` obrigatorio. O write path atual valida esse campo, portanto a
 fixture deve ser atualizada para os tipos canonicos `function` e `standard-io`.
 Nao se deve restaurar ausencia de tipo, alias ou fallback para compatibilidade.
+
+Essa preparacao pertence agora a `CODE-UX-01`, antes da validacao real da
+refundacao. 4.0 revalida o resultado; nao e mais necessario esperar 4.0 para
+preparar a fixture ou obter o artifact exato.
+
+A entrada da parte 4 continua bloqueada por `CODE-UX-01` a `CODE-UX-06`.
+O browser E2E deve provar o modelo refundado, e nao congelar como aceita a
+composicao antiga. Preflight verde nao substitui aceite de produto ou CI.
 
 O CDN local contem o manifest operacional `version: 1`. O browser E2E oficial
 exige o artifact de grading `schemaVersion: 2` com identidade congelada
@@ -128,12 +166,22 @@ exato nao estiver no workspace.
 | 2026-11-19 | `GameGuild.API.UnitTests` integral | 1882 testes verdes | 3.5 |
 | 2026-11-19 | `GameGuild.Identity.Authorization.UnitTests` integral | 2815 testes verdes | 3.5 |
 | 2026-11-19 | `GameGuild.Identity.Authentication.UnitTests` integral e caso isolado | 4572/4573 verdes; falha externa de throttle de email reproduzida isoladamente, sem diff no modulo | 3.5 |
+| 2026-11-19 | `@game-guild/coding-surface typecheck` e `test` apos substituir o `Ide` monolitico | typecheck verde; 2 arquivos e 14 testes verdes | correcao visual 3.2/3.3 |
+| 2026-11-19 | inspecao humana da autoria no Learning em viewport desktop | workbench amplo confirmado, mas configuracao, output e formularios de testes ainda misturados; parte 3.6 requerida | baseline `CODE-UX-01` |
+| 2026-11-19 | revisao documental com Node em modo somente leitura e `git diff --check -- docs/plans/coding-assessment-and-code-studio` | 42 documentos e 109 links locais sem destino ausente; seis subplanos, 22 IDs de aceite e dependencias consistentes; sem erros de whitespace | planejamento 3.6, nao execucao dos gates |
+
+A reescrita documental nao executou builds, testes de aplicacao ou novos
+benchmarks de runtime. O comando `node` nao estava no PATH desta sessao; a
+checagem usou o executavel instalado em `.nvm/versions/node/v24.16.0/bin/node`,
+sem iniciar servicos nem alterar os arquivos de aplicacao ja presentes no worktree.
 
 ## Arquivos alterados pela implementacao
 
 - contrato canonico unico de coding, sem aliases de compatibilidade;
 - identidade unica e concordante do adapter backend e TypeScript;
 - novo `packages/features/coding-surface`;
+- workbench visual proprio em `coding-workbench.tsx`, com runtime headless e
+  sem renderizar a IDE generica;
 - campo JSON `ExerciseType` e validacao no modelo de Learning Courses;
 - contrato OpenAPI e cliente TypeScript gerado para `ExerciseType`;
 - bridge e cinco consumidores de grading em `apps/web`;
@@ -144,12 +192,14 @@ exato nao estiver no workspace.
 
 ## Proxima acao exata
 
-Reconciliar a branch com `develop` e executar o subplano
-[`4.0`](../04-end-to-end-validation/00-entry-baseline-and-part-3-closure.md):
-corrigir a fixture para `ExerciseType`, deixar o lane `coding` adquirir o
-artifact schema 2 exato e executar o browser E2E oficial. Com a evidencia verde,
-registrar o resultado e concluir `CODE-UI-07`. Nao iniciar `CODE-E2E-01` antes
-disso nem substituir o artifact por um manifest local fabricado.
+Executar
+[`3.6.1`](./06-refoundation/01-product-model-and-evidence-baseline.md): ler o
+benchmark e matriz de aceite, estabelecer o modelo de professor/aluno e
+ownership, comprovar capabilities e preparar fixture/artifact/preflight.
+Registrar decisoes antes de implementar contratos em `CODE-UX-02`.
+
+Nao iniciar o programa abrangente `CODE-E2E-00` antes de `CODE-UX-06` nem
+declarar qualidade de concorrencia apenas com a reescrita dos documentos.
 
 ## Checklist de checkpoint
 

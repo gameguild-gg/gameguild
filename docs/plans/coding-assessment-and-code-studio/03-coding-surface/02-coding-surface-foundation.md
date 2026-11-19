@@ -85,7 +85,8 @@ contrato.
 - migrar consumidor de `apps/web`;
 - editar ou remover aliases de `@game-guild/emception-ui`;
 - recriar IDE, VFS, terminal, canvas, toolchain ou runner;
-- implementar `project`, `debugging`, `visual` ou `sql-query`;
+- implementar familias futuras como `project` ou `sql-query`; a taxonomia e a
+  composicao de recursos sao reavaliadas na refundacao 3.6;
 - decidir politica de review;
 - alterar tabelas, migrations ou Emception.
 

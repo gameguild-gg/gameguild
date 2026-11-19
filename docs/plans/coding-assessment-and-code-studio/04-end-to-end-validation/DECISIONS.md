@@ -55,6 +55,17 @@ decisao separada.
 O PR final continua sendo a integracao conjunta das partes 01 a 04 depois de
 todos os gates.
 
+### `D-04-10`. Preparacao de fixture/artifact ocorre antes da refundacao
+
+`CODE-UX-01` prepara fixture canonica, artifact exato e preflight para permitir
+os testes reais da 3.6. A parte 4.0 revalida esses pre-requisitos na branch
+reconciliada e fecha `CODE-UI-07` com evidencia oficial, sem depender de uma
+primeira preparacao que antes criava ciclo entre 3.6 e 4.0.
+
+Os casos `CS-REF-*` da refundacao sao requisitos a mapear ao catalogo desta
+parte, nao uma segunda fonte de status executavel. Evidencia antiga so e
+reaproveitada quando o commit e o escopo ainda correspondem ao produto atual.
+
 ## Como atualizar
 
 Registrar aqui somente decisoes que alterem fronteiras, oracles, privacidade,
