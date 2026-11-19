@@ -26,6 +26,9 @@ public interface IMfaService
     /// <summary>Verifies an SMS proof bound to the server-resolved first-factor continuation.</summary>
     Task<MfaVerificationResult> VerifySmsSignInCodeAsync(Guid userId, Guid signInChallengeId, string code, CancellationToken cancellationToken);
 
+    /// <summary>Verifies an email proof for the server-resolved first-factor continuation (lockout-tracked).</summary>
+    Task<MfaVerificationResult> VerifyEmailSignInCodeAsync(Guid userId, string code, CancellationToken cancellationToken = default);
+
     /// <summary>
     ///     Disables MFA after re-verifying the account password (issue #244). The confirmation
     ///     parameter is the account password, not an MFA code.

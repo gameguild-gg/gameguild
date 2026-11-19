@@ -294,6 +294,55 @@ public sealed class SignInMfaServiceTests
     }
 
     [Fact]
+    public async Task EnrolledEmailSubjectCompletesThroughTheEmailVerifyLaneUnderTheSubjectLock()
+    {
+        // GAP-1 (design J2): an Email-only subject must be able to complete sign-in. The email
+        // branch mirrors SMS — enrolled check, subject-lock serialization, dedicated verify lane.
+        var fixture = new FlowFixture { EnrolledMethods = [MfaMethod.Email] };
+        var result = await fixture.CompleteAsync(method: MfaMethod.Email);
+        Assert.Same(fixture.Issued, result);
+        Assert.Equal(
+        [
+            "find", "subject", "policy", "lock", "find", "subject", "policy", "verify-email",
+            "subject", "policy", "consume", "issue", "audit:Authentication.MfaSignInVerified"
+        ], fixture.Trace);
+        Assert.Equal(MfaMethod.Email, fixture.ConsumedMethod);
+        Assert.Equal(new SignInMfaChallengeBinding(fixture.User.Id, fixture.TenantId, fixture.User.TokenVersion,
+            fixture.Decision.PolicyFingerprint, SignInMfaPurpose.VerifyFactor), fixture.ConsumedBinding);
+        var audit = Assert.Single(fixture.Audits);
+        Assert.True(audit.Success);
+        Assert.Equal("Email", audit.Method);
+    }
+
+    [Fact]
+    public async Task EmailCompletionIsDeniedWhenEmailIsNotAmongTheEnrolledMethods()
+    {
+        // The account stays enrolled (a Totp factor keeps the challenge alive) but Email is not
+        // enrolled: completion must deny before any verification call.
+        var fixture = new FlowFixture { EnrolledMethods = [MfaMethod.Totp] };
+        var result = await fixture.CompleteAsync(method: MfaMethod.Email);
+        AssertDenied(result);
+        Assert.Equal(new[] { "find", "subject", "policy" }, fixture.Trace);
+        Assert.Null(fixture.ConsumedBinding);
+        fixture.Mfa.VerifyNoOtherCalls();
+        fixture.Issuer.VerifyNoOtherCalls();
+        Assert.Empty(fixture.Audits);
+    }
+
+    [Fact]
+    public async Task WrongEmailProofKeepsFailureAccountingOnlyAfterAuditSucceeds()
+    {
+        var fixture = new FlowFixture { EnrolledMethods = [MfaMethod.Email], VerificationSuccess = false };
+        var result = await fixture.CompleteAsync(method: MfaMethod.Email);
+        Assert.False(result.Success);
+        Assert.False(CommandOutcome.ShouldRollback(result));
+        Assert.Null(fixture.ConsumedBinding);
+        Assert.Equal("Authentication.MfaSignInDenied", Assert.Single(fixture.Audits).ActionType);
+        Assert.Equal("Email", Assert.Single(fixture.Audits).Method);
+        fixture.Issuer.VerifyNoOtherCalls();
+    }
+
+    [Fact]
     public async Task SuccessfulCompletionCancelsTheUsersLiveRecoveryRequest()
     {
         var fixture = new FlowFixture();
@@ -613,6 +662,7 @@ public sealed class SignInMfaServiceTests
         public List<AuthenticationAuditEvent> Audits { get; } = [];
         public SignInResponse Issued { get; }
         public bool Enrolled { get; set; } = true;
+        public IReadOnlyList<MfaMethod>? EnrolledMethods { get; set; }
         public bool MissingSubject { get; set; }
         public DateTime? Lockout { get; set; }
         public bool VerificationSuccess { get; init; } = true;
@@ -638,7 +688,7 @@ public sealed class SignInMfaServiceTests
             Subjects.Setup(port => port.ReadCurrentAsync(VerifiedSubjectId, It.IsAny<CancellationToken>())).ReturnsAsync(() =>
             {
                 Trace.Add("subject");
-                return MissingSubject ? null : new SignInMfaSubjectState(User, Enrolled, Lockout);
+                return MissingSubject ? null : new SignInMfaSubjectState(User, Enrolled, Lockout, EnrolledMethods);
             });
             Policy.Setup(port => port.EvaluateAsync(VerifiedSubjectId, TenantId, It.IsAny<CancellationToken>())).ReturnsAsync(() =>
             {
@@ -670,6 +720,12 @@ public sealed class SignInMfaServiceTests
             Mfa.Setup(port => port.VerifyMfaAsync(VerifiedSubjectId, It.IsAny<string>(), It.IsAny<MfaMethod>(), It.IsAny<CancellationToken>())).ReturnsAsync(() =>
             {
                 Trace.Add("verify");
+                AfterVerification?.Invoke();
+                return new MfaVerificationResult { IsSuccess = VerificationSuccess, RequiresAdditionalVerification = AdditionalProof };
+            });
+            Mfa.Setup(port => port.VerifyEmailSignInCodeAsync(VerifiedSubjectId, It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(() =>
+            {
+                Trace.Add("verify-email");
                 AfterVerification?.Invoke();
                 return new MfaVerificationResult { IsSuccess = VerificationSuccess, RequiresAdditionalVerification = AdditionalProof };
             });

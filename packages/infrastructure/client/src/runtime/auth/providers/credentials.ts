@@ -178,6 +178,10 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
             mfaToken: typeof data.mfaToken === 'string' ? data.mfaToken : undefined,
             availableMethods: Array.isArray(data.availableMethods) ? data.availableMethods.filter((m): m is string => typeof m === 'string') : undefined,
             mfaEnrollment: parseMfaEnrollmentOffer(data.mfaEnrollment),
+            // Post-password-proof identifiers (design J2 GAP-2): the pending response carries
+            // them so consumers can drive method-specific challenges (e.g. email:challenge).
+            userId: typeof data.userId === 'string' ? data.userId : undefined,
+            email: typeof data.email === 'string' ? data.email : undefined,
           });
         }
 

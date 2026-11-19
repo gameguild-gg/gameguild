@@ -135,7 +135,7 @@ public sealed class SignInMfaService(
     {
         cancellationToken.ThrowIfCancellationRequested();
         ArgumentNullException.ThrowIfNull(deviceInfo);
-        if (method is not (MfaMethod.Totp or MfaMethod.BackupCode or MfaMethod.Sms) || string.IsNullOrWhiteSpace(code) || code.Length > 64 ||
+        if (method is not (MfaMethod.Totp or MfaMethod.BackupCode or MfaMethod.Sms or MfaMethod.Email) || string.IsNullOrWhiteSpace(code) || code.Length > 64 ||
             !SignInMfaChallengeToken.TryHash(bearer, out var hash)) { return Denied(); }
         var challenge = await challenges.FindActiveAsync(hash, _time.GetUtcNow(), cancellationToken).ConfigureAwait(false);
         if (challenge is null) { return Denied(); }
@@ -153,19 +153,22 @@ public sealed class SignInMfaService(
         var current = await ReadBoundSubjectAsync(challenge, cancellationToken, enrolled: !completingEnrollment).ConfigureAwait(false);
         if (current is null || IsLocked(current)) { return Denied(); }
 
-        if (method == MfaMethod.Sms)
+        if (method is MfaMethod.Sms or MfaMethod.Email)
         {
-            if (current.EnrolledMethods?.Contains(MfaMethod.Sms) != true) { return Denied(); }
-            // Serialize the per-account attempt update with SMS completion and settings enrollment.
+            if (current.EnrolledMethods?.Contains(method) != true) { return Denied(); }
+            // Serialize the per-account attempt update with SMS/email completion and settings enrollment.
             await enrollment.AcquireSubjectLockAsync(challenge.SubjectId, cancellationToken).ConfigureAwait(false);
             challenge = await challenges.FindActiveAsync(hash, _time.GetUtcNow(), cancellationToken).ConfigureAwait(false);
             if (challenge is null || challenge.Purpose != SignInMfaPurpose.VerifyFactor) { return Denied(); }
             current = await ReadBoundSubjectAsync(challenge, cancellationToken).ConfigureAwait(false);
-            if (current is null || IsLocked(current) || current.EnrolledMethods?.Contains(MfaMethod.Sms) != true) { return Denied(); }
+            if (current is null || IsLocked(current) || current.EnrolledMethods?.Contains(method) != true) { return Denied(); }
         }
-        var verification = method == MfaMethod.Sms
-            ? await mfa.VerifySmsSignInCodeAsync(challenge.SubjectId, challenge.Id, code, cancellationToken).ConfigureAwait(false)
-            : await mfa.VerifyMfaAsync(challenge.SubjectId, code, method, cancellationToken).ConfigureAwait(false);
+        var verification = method switch
+        {
+            MfaMethod.Sms => await mfa.VerifySmsSignInCodeAsync(challenge.SubjectId, challenge.Id, code, cancellationToken).ConfigureAwait(false),
+            MfaMethod.Email => await mfa.VerifyEmailSignInCodeAsync(challenge.SubjectId, code, cancellationToken).ConfigureAwait(false),
+            _ => await mfa.VerifyMfaAsync(challenge.SubjectId, code, method, cancellationToken).ConfigureAwait(false)
+        };
         cancellationToken.ThrowIfCancellationRequested();
         if (!verification.IsSuccess)
         {

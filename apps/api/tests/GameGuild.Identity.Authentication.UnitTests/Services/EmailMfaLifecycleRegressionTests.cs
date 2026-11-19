@@ -35,7 +35,8 @@ public sealed class EmailMfaLifecycleRegressionTests : IDisposable
     public void Dispose() => cache.Dispose();
 
     private EmailMfaService CreateService() =>
-        new(NullLogger<EmailMfaService>.Instance, cache, configurations.Object, users.Object, publisher.Object);
+        new(NullLogger<EmailMfaService>.Instance, cache, configurations.Object, users.Object, publisher.Object,
+            Mock.Of<IMfaAttemptTrackingService>());
 
     private UserMfaConfiguration Configure(bool enabled, string? address = "member@example.com") =>
         configuration = new UserMfaConfiguration { UserId = userId, IsEnabled = enabled, EmailMfaAddress = address };

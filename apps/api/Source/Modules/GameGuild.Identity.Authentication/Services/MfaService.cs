@@ -53,6 +53,26 @@ public sealed class MfaService(
     }
 
     /// <inheritdoc />
+    public async Task<MfaVerificationResult> VerifyEmailSignInCodeAsync(Guid userId, string code, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var valid = emailMfaService is not null &&
+            await emailMfaService.VerifySignInCodeAsync(userId, code, cancellationToken).ConfigureAwait(false);
+        MfaEnrollmentMetrics.RecordVerification(MfaMethod.Email, valid);
+        if (valid)
+        {
+            await AuthenticationEventDispatch.PublishAsync(eventPublisher,
+                new MfaVerificationSucceededEvent(userId, MfaMethod.Email.ToString(), SystemClock.UtcNow), logger, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            await AuthenticationEventDispatch.PublishAsync(eventPublisher,
+                new MfaVerificationFailedEvent(userId, MfaMethod.Email.ToString(), "Invalid MFA proof", SystemClock.UtcNow), logger, cancellationToken).ConfigureAwait(false);
+        }
+        return new MfaVerificationResult { Success = valid, Message = valid ? "MFA verification successful" : "Invalid MFA code" };
+    }
+
+    /// <inheritdoc />
     public Task<MfaConfigurationResponse> GetMfaConfigurationAsync(Guid userId, CancellationToken cancellationToken = default) =>
         attemptTrackingService.GetMfaConfigurationAsync(userId, cancellationToken);
 
