@@ -1,7 +1,7 @@
 # Parte 3. Coding surface e integracao web
 
 Status: implementacao funcional e consolidacao canonica concluidas localmente;
-validacao browser final pendente no lane `coding` do CI.
+fixture canonica do runner e validacao browser final pendentes.
 
 ## Objetivo
 
@@ -56,8 +56,11 @@ nao autoriza o avanco.
 
 A parte 3.5 foi uma excecao corretiva inserida durante a validacao da 3.4. Sua
 implementacao e regressao local estao concluidas; `CODE-UI-07` permanece aberto
-somente ate o lane `coding` executar o browser E2E com o artifact schema 2
-exato. Isso nao autoriza iniciar a parte 4 antecipadamente.
+ate o runner emitir `ExerciseType` canonico e o lane `coding` executar o browser
+E2E com o artifact schema 2 exato. Somente o subplano de entrada
+[`4.0`](./04-end-to-end-validation/00-entry-baseline-and-part-3-closure.md) pode
+avancar para fechar essas pendencias; `CODE-E2E-01` e etapas posteriores
+continuam bloqueados.
 
 ## Protocolo de contexto persistente
 

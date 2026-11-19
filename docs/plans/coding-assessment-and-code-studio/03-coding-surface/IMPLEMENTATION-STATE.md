@@ -3,7 +3,7 @@
 Ultima atualizacao: 2026-11-19.
 
 Status geral: implementacao funcional e consolidacao canonica 3.5 concluidas
-localmente; gate browser final pendente no lane `coding` do CI.
+localmente; fixture canonica do runner e gate browser final ainda pendentes.
 
 Este e o handoff mutavel da parte 3. Atualize-o com fatos observados. Nao marque
 um gate como concluido sem registrar a evidencia executada.
@@ -12,9 +12,11 @@ um gate como concluido sem registrar a evidencia executada.
 
 - Branch: `feature/coding-grading`.
 - Commit-base da consolidacao: `810c2a0764`.
-- Worktree preexistente: limpo; branch dois commits a frente de origin.
+- Baseline reavaliada em `43144e23ec`: branch alinhada com
+  `origin/feature/coding-grading`, 188 commits atras e 7 a frente de
+  `origin/develop` antes da atualizacao documental da parte 4.
 - Worktree atual: consolidacao 3.5 implementada e validada localmente sobre a
-  implementacao funcional da parte 3.
+  implementacao funcional da parte 3; documentos da parte 4 em atualizacao.
 - Ultimo merge relevante: nenhum merge em andamento.
 - Observacao: a criacao destes planos nao caracteriza a implementacao.
 
@@ -27,14 +29,16 @@ um gate como concluido sem registrar a evidencia executada.
 | Parte 3.1 | concluida | buscas de consumidores, contratos e exports publicos registradas em 2026-11-18 |
 | Parte 3.2 | concluida | package isolado, 14 testes e typecheck verdes |
 | Parte 3.3 | concluida | dois perfis, quatro modos, privacy e contrato canonico cobertos |
-| Parte 3.4 | em validacao final | consumidores e CI migrados; browser E2E depende do artifact schema 2 exato |
-| Parte 3.5 | concluida localmente | `CANON-01` a `CANON-06` concluidos; regressao local de `CANON-07` verde, aguardando somente browser CI |
+| Parte 3.4 | em validacao final | consumidores e CI migrados; runner deve emitir `ExerciseType` canonico e browser E2E depende do artifact schema 2 exato |
+| Parte 3.5 | concluida localmente | `CANON-01` a `CANON-06` concluidos; validacao local verde, com fixture do runner e browser CI ainda pendentes no fechamento de `CANON-07` |
 
 ## Etapa ativa
 
-- Subplano: 3.4, validacao browser final apos a consolidacao 3.5.
-- Gate atual: `CODE-UI-07`, browser coding cycle no lane com artifact exato.
-- Estado: implementacao local concluida; evidencia externa pendente.
+- Subplano: 4.0, fechamento da parte 3 apos a consolidacao 3.5.
+- Gate atual: `CODE-UI-07`, fixture canonica e browser coding cycle no lane com
+  artifact exato.
+- Estado: implementacao do produto concluida localmente; harness e evidencia
+  externa pendentes.
 - Responsavel: Codex.
 
 ## Fatos confirmados
@@ -65,6 +69,12 @@ verificado e ajuste test-only permanecem validos.
 
 ## Bloqueios
 
+O helper `buildCodingContent()` de
+`apps/web/scripts/coding-cycle-browser-e2e.mjs` ainda omite o
+`ExerciseType` obrigatorio. O write path atual valida esse campo, portanto a
+fixture deve ser atualizada para os tipos canonicos `function` e `standard-io`.
+Nao se deve restaurar ausencia de tipo, alias ou fallback para compatibilidade.
+
 O CDN local contem o manifest operacional `version: 1`. O browser E2E oficial
 exige o artifact de grading `schemaVersion: 2` com identidade congelada
 correspondente ao commit e falha
@@ -82,7 +92,8 @@ modulo sem ampliar o escopo da parte 3.
 ## Evidencias de validacao da etapa ativa
 
 Validacoes locais executadas sobre a implementacao. O browser E2E integral
-permanece reservado ao CI enquanto o artifact exato nao estiver no workspace.
+permanece reservado ao CI enquanto a fixture nao estiver canonica e o artifact
+exato nao estiver no workspace.
 
 | Data | Comando ou inspecao | Resultado | Escopo |
 | --- | --- | --- | --- |
@@ -133,16 +144,18 @@ permanece reservado ao CI enquanto o artifact exato nao estiver no workspace.
 
 ## Proxima acao exata
 
-Deixar o lane `coding` adquirir o artifact schema 2 exato e executar o browser
-E2E oficial. Com essa evidencia verde, registrar o resultado, concluir
-`CODE-UI-07` e iniciar a parte 4. Nao relaxar a verificacao nem substituir o
-artifact por um manifest local fabricado.
+Reconciliar a branch com `develop` e executar o subplano
+[`4.0`](../04-end-to-end-validation/00-entry-baseline-and-part-3-closure.md):
+corrigir a fixture para `ExerciseType`, deixar o lane `coding` adquirir o
+artifact schema 2 exato e executar o browser E2E oficial. Com a evidencia verde,
+registrar o resultado e concluir `CODE-UI-07`. Nao iniciar `CODE-E2E-01` antes
+disso nem substituir o artifact por um manifest local fabricado.
 
 ## Checklist de checkpoint
 
 Antes de interromper ou trocar de executor:
 
-- [x] baseline e worktree atualizados;
+- [x] baseline de avaliacao registrada;
 - [x] etapa e gate refletem o estado real;
 - [x] arquivos alterados listados;
 - [x] comandos e resultados registrados;

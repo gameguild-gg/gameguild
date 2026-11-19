@@ -22,8 +22,9 @@ Status permitidos: `investigar`, `preservar`, `pronto para migrar`, `migrando`,
 | painel code do SpeedGrader | `apps/web/src/app/[locale]/(speedgrader)/speedgrader/assessments/[assessmentId]/code-grader-panel.tsx` | `grader` | reusa o assessment grader migrado | `coding-surface` por composicao migrada | validado | code e itens nao-code permanecem funcionais |
 
 Os sete arquivos de teste focados desses fluxos e da bridge somam 77 testes
-verdes. O browser cycle integral permanece no lane `coding`, porque ele exige o
-artifact Toolchain schema 2 exato.
+verdes. O browser cycle integral permanece no lane `coding`: sua fixture deve
+emitir `ExerciseType` canonico e sua execucao exige o artifact Toolchain schema
+2 exato.
 
 ## Consumidores preservados
 

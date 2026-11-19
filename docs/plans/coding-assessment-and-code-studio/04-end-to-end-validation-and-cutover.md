@@ -1,54 +1,89 @@
-# Parte 4. Validacao end-to-end e cutover de coding grading
+# Parte 4. Validacao end-to-end e aceite do coding grading
 
-Status: planejado.
+Status: bloqueado na entrada `CODE-E2E-00`.
 
 ## Objetivo
 
 Provar o fluxo oficial de coding assessment por contratos, API, browser e
-personas reais antes de considerar a extracao concluida. A validacao deve dizer
-o que funciona, o que falta e a qual modulo pertence cada falha.
+personas reais. A parte 3 ja realizou a integracao dos consumidores de grading
+com `@game-guild/coding-surface`; esta parte valida e aceita esse cutover. Ela
+nao executa uma segunda migracao, nao remove o coding assignment preservado e
+nao altera o Emception para acomodar o harness.
 
-Pre-requisitos:
+O resultado deve dizer, com evidencia reproduzivel:
 
-- [`01`](./01-domain-contracts-and-typescript-adapter.md) concluido;
-- [`02`](./02-backend-code-adapter-boundary.md) concluido;
-- [`03`](./03-coding-surface-and-web-integration.md) concluido, incluindo os
-  quatro subplanos registrados em `03-coding-surface/` e seu estado persistente.
+- quais capacidades funcionam;
+- quais capacidades possuem bug, gap ou decisao pendente;
+- qual modulo possui cada falha;
+- se autoria, test run, tentativa, review e release concordam entre UI e API;
+- se `function` e `standard-io` usam o mesmo pipeline oficial sem fallback.
+
+## Estado de entrada
+
+- partes [`01`](./01-domain-contracts-and-typescript-adapter.md) e
+  [`02`](./02-backend-code-adapter-boundary.md) concluidas;
+- os cinco subplanos da
+  [`parte 03`](./03-coding-surface-and-web-integration.md) estao implementados
+  localmente;
+- `CODE-UI-07` ainda depende do lane `coding` com o artifact Emception schema
+  2 exato;
+- o runner de regressao atual ainda precisa emitir `ExerciseType` no payload
+  criado por `buildCodingContent()`;
+- a branch deve ser reconciliada com a `develop` antes da evidencia final.
+
+Esses pontos pertencem ao subplano `CODE-E2E-00`. Nenhum outro subplano desta
+parte pode ser declarado concluido enquanto essa entrada estiver aberta.
+
+## Identidades canonicas congeladas
+
+| Contrato | Valor aceito neste corte |
+| --- | --- |
+| assessment type | `code-assessment-type` |
+| assessment type version | `1` |
+| review handler | `code-wasm-review` |
+| review handler version | `1` |
+| submission payload schema | `code-files` |
+| exercise types | `function`, `standard-io` |
+
+Os testes devem usar somente essas identidades. Versoes inventadas, aliases e
+fallbacks silenciosos nao sao aceitaveis. Identidade desconhecida deve falhar
+fechada e produzir diagnostico sem tentar outro adapter ou handler.
 
 ## Principios
 
 - testes publicos ajudam o learner, mas o servidor continua autoritativo;
-- testes privados nao chegam ao browser learner;
-- `AuthorTest` e `OfficialSubmission` sao execucoes diferentes;
-- `AutomatedReview` avalia o que seu adapter suporta;
-- `InstructorReview`, quando configurado depois de automated, revisa o resultado
-  anterior e pode altera-lo com auditoria;
-- grade so fica learner-visible depois da politica de release;
+- testes privados nunca chegam ao browser learner, logs ou artifacts dele;
+- `AuthorTest` e `OfficialSubmission` sao execucoes independentes;
+- preview local nunca cria submission, score, gradebook ou release;
+- `AutomatedReview` avalia somente o que o adapter suporta;
+- `InstructorReview` pode revisar um resultado anterior com auditoria;
+- score e `maxScore` usam inteiros conforme os contratos de grading;
+- grade e feedback so ficam learner-visible depois da politica de release;
 - uma falha de infraestrutura nunca e convertida em resposta errada;
-- cada persona usa sessao e contexto independentes.
+- cada persona usa contexto e sessao independentes;
+- setup e cleanup usam APIs oficiais e ownership manifest, nunca escrita direta
+  no banco;
+- nenhuma tabela, migration, regra de autorizacao de plataforma ou fonte do
+  Emception e alterada para construir o harness.
 
 ## Baseline de regressao existente
 
-Este plano evolui, e nao substitui de imediato, o ciclo de coding presente na
+Este plano evolui, e nao substitui antecipadamente, o ciclo presente na
 `develop`:
 
-- `coding-cycle-browser-e2e.mjs` cobre o ciclo integrado atual;
-- `coding-cycle-web-runtime.mjs` prepara uma build web de producao isolada para
-  a jornada browser;
-- `coding-cycle-grading-observer.mjs` observa o acknowledgement causal de
-  grading sem depender do transporte RSC concreto;
+- `apps/web/scripts/coding-cycle-browser-e2e.mjs` cobre o ciclo integrado;
+- `apps/web/scripts/coding-cycle-web-runtime.mjs` prepara o runtime web isolado;
+- `apps/web/scripts/coding-cycle-grading-observer.mjs` observa o acknowledgement
+  causal sem depender do transporte RSC concreto;
 - os testes de observer, transport e web runtime protegem o harness;
-- a consulta direta de `RubricScoresPayload` e um diagnostico transitorio do
-  runner atual, nao um oracle aceitavel para o catalogo final.
+- a consulta direta de `RubricScoresPayload` e somente um diagnostico
+  transitorio do runner anterior, nunca um oracle de aceite.
 
-O runner monolitico permanece como regressao enquanto o novo catalogo nao
-demonstrar paridade. Sua remocao ou simplificacao exige evidencia de cobertura
-equivalente, nao apenas a existencia de novos testes.
+O runner anterior permanece como regressao ate que cada assertiva tenha um case
+ID e um oracle autorizado equivalente. Corrigir sua fixture canonica nao
+autoriza ampliar seu papel nem preservar payloads antigos por compatibilidade.
 
 ## Artefatos de validacao
-
-Criar uma area equivalente ao programa de quiz, sem compartilhar catalogo de
-capabilities especificas:
 
 ```text
 docs/testing/coding-grading/
@@ -57,233 +92,144 @@ docs/testing/coding-grading/
   capability-status.md
   product-heuristics.md
   reports/
+
+apps/web/test-results/coding-grading-validation/<run-id>/
 ```
 
 O catalogo executavel possui IDs estaveis. Reports gerados sao candidatos e nao
-alteram o status canonico sem revisao humana.
+alteram o status canonico sem revisao humana. Tokens, cookies, private tests,
+answer keys e secrets nao entram em artifacts.
 
 ## Matriz minima
 
-| ID inicial | Fluxo | Persona principal | Oracle |
+Cada fluxo aplicavel deve possuir casos para `function` e `standard-io`. Um
+tipo nao pode servir como proxy para o outro.
+
+| Eixo | Cobertura obrigatoria |
+| --- | --- |
+| autoria | criar, validar, salvar e reabrir definicao |
+| projecao | draft privado e delivery publica redigida |
+| test run | executar revisao candidata sem efeito academico |
+| learner | abrir, executar public tests e submeter oficialmente |
+| review | automated, instructor e composicao configurada |
+| release | retido, liberado e visivel em nova sessao |
+| seguranca | outsider, learner sem grant, tenant e private tests |
+| infraestrutura | timeout, cancelamento e worker indisponivel |
+| congelamento | mesma revisao, handler, payload e submission no regrade |
+
+A matriz inicial usa somente toolchains ja suportadas e estaveis. Expansoes de
+linguagem da parte 5 nao bloqueiam este gate.
+
+## Sequencia obrigatoria
+
+| Ordem | Subplano | IDs | Resultado exigido |
 | --- | --- | --- | --- |
-| `CG-AUTHOR-001` | criar e reabrir definicao | instructor | roundtrip canonico |
-| `CG-AUTHOR-002` | private/public tests | instructor | projecoes distintas |
-| `CG-TESTRUN-001` | executar revisao candidata | instructor | nenhum efeito academico |
-| `CG-LEARNER-001` | abrir atividade publicada | learner | somente delivery publica |
-| `CG-LEARNER-002` | preview de public tests | learner | resultado local, sem grade |
-| `CG-SUBMIT-001` | enviar arquivos oficiais | learner | submission e snapshot congelados |
-| `CG-REVIEW-AUTO-001` | revisar deterministicamente | system | report e score coerentes |
-| `CG-REVIEW-INSTRUCTOR-001` | revisar manualmente | instructor | override auditado |
-| `CG-RELEASE-001` | publicar resultado | instructor/system | learner ve grade e feedback permitidos |
-| `CG-SECURITY-001` | tentar obter private tests | learner/outsider | acesso negado sem vazamento |
-| `CG-SECURITY-002` | revisar sem grant | learner/outsider | comando negado e auditavel |
-| `CG-VERSION-001` | regrade congelado | instructor | mesma revisao, handler e submission |
+| 4.0 | [`Entrada, baseline e fechamento da parte 3`](./04-end-to-end-validation/00-entry-baseline-and-part-3-closure.md) | `CODE-E2E-00`, `CODE-UI-07` | branch reconciliada, fixture canonica e lane exato verdes |
+| 4.1 | [`Catalogo de capabilities e oracles`](./04-end-to-end-validation/01-capability-catalog-and-oracles.md) | `CODE-E2E-01` | casos estaveis, ownership e oracles autorizados |
+| 4.2 | [`Lifecycle de cenarios`](./04-end-to-end-validation/02-scenario-lifecycle.md) | `CODE-E2E-02` | personas, checkpoints e cleanup idempotentes |
+| 4.3 | [`Contratos, API e seguranca`](./04-end-to-end-validation/03-contract-api-and-security.md) | `CODE-E2E-03` | pipeline servidor e negativos comprovados |
+| 4.4 | [`Browser por persona`](./04-end-to-end-validation/04-browser-personas.md) | `CODE-E2E-04` | jornada oficial comprovada nos dois tipos |
+| 4.5 | [`Laboratorio web`](./04-end-to-end-validation/05-web-validation-lab.md) | `CODE-E2E-05` | preparo e inspecao humana sem CLI de coding |
+| 4.6 | [`Aceite e integracao em develop`](./04-end-to-end-validation/06-acceptance-and-develop-integration.md) | `CODE-E2E-06`, `CODE-E2E-07` | catalogo revisado e PR integrado preparado |
 
-A matriz inicial usa apenas toolchains ja suportadas e estaveis. C#,
-JavaScript, TypeScript, SQL e Ruby nao bloqueiam este gate; cada uma entra
-somente depois de atingir o estado exigido em seu subplano da parte 5.
+Cada subplano depende do gate anterior. O estado real fica em
+[`IMPLEMENTATION-STATE.md`](./04-end-to-end-validation/IMPLEMENTATION-STATE.md),
+nao apenas em relatos da conversa.
 
-## Etapas
+## Protocolo de contexto persistente
 
-### `CODE-E2E-01`. Fechar oracles e catalogo
+Antes de executar qualquer subplano, ler:
 
-Implementacao:
+1. este indice e o subplano ativo;
+2. [`IMPLEMENTATION-STATE.md`](./04-end-to-end-validation/IMPLEMENTATION-STATE.md);
+3. [`DECISIONS.md`](./04-end-to-end-validation/DECISIONS.md);
+4. o estado da
+   [`parte 03`](./03-coding-surface/IMPLEMENTATION-STATE.md);
+5. [`DUPLICATION-REGISTER.md`](./DUPLICATION-REGISTER.md);
+6. o `AGENTS.md` aplicavel;
+7. `docs/testing/coding-grading/AGENT_PROTOCOL.md`, depois que existir.
 
-- definir expected state para UI, API, grade result, release e auditoria;
-- mapear cada caso para owner: coding, adapter, assessments, surface, app ou
-  Emception;
-- definir status `pass`, `bug`, `partial`, `missing`, `decision-needed`,
-  `harness-gap`, `external-blocker` e `not-applicable`;
-- definir evidencia sanitizada e politica de retencao de reports;
-- registrar commit, ambiente e versoes dos adapters em cada run;
-- mapear cada assertiva do runner existente para um case ID ou classifica-la
-  explicitamente como diagnostico transitorio.
+Ao iniciar, interromper ou concluir uma etapa, registrar baseline, arquivos
+alterados, comandos realmente executados, resultados, bloqueios e proxima acao
+exata. Decisoes que mudem fronteiras, oracles, privacidade, ownership ou
+sequencia entram em `DECISIONS.md` antes da implementacao.
 
-Gate:
+## Laboratorio web alvo
 
-- nenhum caso depende de inspecao direta do banco para passar;
-- `RubricScoresPayload` possui um oracle autorizado por API ou UI antes que o
-  probe direto existente deixe de ser apenas diagnostico;
-- cada skip possui ID, motivo e tracking;
-- answer keys, private tests, cookies e tokens nao entram em artifacts.
+O laboratorio deve estender o contrato generico existente
+`GradingScenarioAdapter`. O adapter de code fica em:
 
-### `CODE-E2E-02`. Criar fixtures e lifecycle isolado
-
-Implementacao:
-
-- criar personas instructor, learner, reviewer autorizado e outsider;
-- preparar curso, enrollment, assessment, revisao e grading group pela API/UI
-  oficial;
-- executar explicitamente author -> submit -> approve -> publish nos cenarios
-  que exigem atividade learner; nao depender do worker de publicacao agendada;
-- usar nomes deterministas e ownership manifest para cleanup;
-- permitir checkpoint humano depois de authoring, learner-ready, review-ready e
-  released;
-- resetar somente recursos pertencentes ao manifest do run;
-- tornar o setup idempotente e diagnosticar residuos sem apagar dados alheios.
-
-Gate:
-
-- setup nao escreve diretamente no banco;
-- reset nao remove recurso sem ownership comprovado;
-- uma falha no meio pode ser retomada ou limpa com diagnostico;
-- o estado publicado e confirmado antes de abrir a jornada learner;
-- persona admin nao substitui os papeis testados.
-
-### `CODE-E2E-03`. Automatizar contratos e API
-
-Implementacao:
-
-- testar paridade das fixtures TypeScript/C#;
-- testar schemas, limites e redacao;
-- testar resolucao de versoes congeladas;
-- testar submission invalida, timeout, cancellation e worker indisponivel;
-- testar automated result, instructor override, release e regrade;
-- testar autorizacao negativa e tenant isolation.
-
-Gate:
-
-- erro tecnico permanece erro tecnico;
-- score usa somente inteiros e conserva `maxScore`;
-- private tests nao aparecem em response, logs ou evidence learner;
-- core de assessments nao precisa conhecer code para os casos passarem.
-
-### `CODE-E2E-04`. Automatizar browser por persona
-
-Implementacao:
-
-- usar contextos de browser separados;
-- provar autoria e reabertura;
-- provar que author test nao afeta gradebook;
-- provar tentativa learner, submission e estado aguardando review;
-- provar revisao instructor e release;
-- provar que refresh learner carrega a correcao publicada;
-- executar a jornada pesada sobre o runtime web de producao isolado ja
-  caracterizado, ou substituto com paridade comprovada;
-- manter a observacao de acknowledgement desacoplada do transporte concreto;
-- incluir screenshots/trace apenas em falha e sanitizar artifacts.
-
-Gate:
-
-- nenhum teste troca persona alterando apenas props ou localStorage;
-- UI e API concordam sobre estado e score;
-- refresh e nova sessao observam o mesmo resultado publicado;
-- negativos de acesso nao dependem de esconder botoes;
-- testes unitarios do observer, transport e web runtime passam separadamente
-  antes da jornada integrada;
-- a jornada de build/browser possui limite de concorrencia e nao disputa
-  memoria com outra suite pesada.
-
-### `CODE-E2E-05`. Disponibilizar laboratorio humano
-
-Implementacao:
-
-- integrar coding ao laboratorio web de validacao por um provider registrado,
-  sem introduzir condicionais de code no fluxo de quiz;
-- permitir preparar, atualizar, verificar e resetar cenarios pela interface;
-- oferecer URLs e credenciais locais curtas para cada persona;
-- mostrar checkpoint, recursos criados, capability e diagnosticos;
-- manter comandos destrutivos limitados ao manifest do cenario.
-
-Gate:
-
-- o fluxo humano nao exige CLI especifica de coding;
-- quiz e code podem contribuir cenarios sem depender um do outro;
-- a interface nao exibe segredo ou private test;
-- cleanup e verificacao usam as mesmas regras do E2E.
-
-### `CODE-E2E-06`. Cutover e auditoria final
-
-Implementacao:
-
-- executar o catalogo completo;
-- revisar reports e promover status manualmente;
-- atualizar o registro de duplicacoes com os arquivos efetivamente clonados;
-- remover somente implementacoes transitorias criadas dentro do novo fluxo;
-- preservar `@game-guild/emception-ui`, seus testes e seus consumidores;
-- preservar `tools/emception/**`, suas capabilities e todos os consumidores
-  que nao pertencem ao novo fluxo de grading;
-- atualizar documentos de tipos e arquitetura;
-- registrar blockers no subplano da linguagem correspondente na parte 5;
-- registrar questoes de Code Studio no plano 06, sem mistura-las ao aceite;
-- manter o runner anterior ate que todos os seus checks tenham case ID e oracle
-  equivalente, registrando qualquer probe de banco restante como divida do
-  harness e nunca como prova de aceite.
-
-Gate:
-
-- todos os casos obrigatorios estao `pass` ou possuem blocker externo aceito;
-- os fluxos de grading selecionados usam `coding-surface`;
-- consumidores de `emception-ui` fora do corte continuam funcionais;
-- toda duplicacao conhecida esta registrada e classificada;
-- nao existem condicionais de code no core generico;
-- validacao humana e automatica exercitam o mesmo produto;
-- CI executa o ciclo para mudancas nos novos packages e no `CodeAdapter`, sem
-  classifica-las automaticamente como mudanca de artifact Emception.
-
-### `CODE-E2E-07`. Integrar as partes 01 a 04 em `develop`
-
-Executar somente depois que todos os gates das partes 01, 02, 03 e 04 estiverem
-fechados.
-
-Implementacao:
-
-- atualizar a branch de trabalho com a `develop` mais recente e resolver
-  conflitos preservando os contratos e ownership definidos neste roadmap;
-- executar novamente contratos, testes backend, testes dos packages, ciclo
-  browser e verificacoes de arquitetura sobre o diff final;
-- revisar o diff completo para excluir trabalho das partes 05 e 06 e mudancas
-  alheias ao programa;
-- abrir um unico PR para `develop` cobrindo conjuntamente as partes 01 a 04;
-- anexar ao PR os comandos executados, resultados, case IDs, riscos residuais e
-  blockers externos aceitos.
-
-Gate:
-
-- todas as partes 01 a 04 estao concluidas, nao apenas implementadas;
-- o diff do PR corresponde ao dominio, adapter, backend, superficie e E2E
-  aprovados por estes planos;
-- a suite final passa sobre a branch ja reconciliada com `develop`;
-- o PR nao inclui expansao de linguagem nem refundacao do Code Studio;
-- nenhuma falha da parte alterada e mascarada como preexistente.
-
-## Validacao sugerida
-
-Os comandos finais devem ser consolidados em scripts estaveis, por exemplo:
-
-```bash
-pnpm --filter @game-guild/coding test
-pnpm --filter @game-guild/grading-adapter-code test
-pnpm --filter @game-guild/coding-surface test
-pnpm --filter @game-guild/emception-ui test
-dotnet test apps/api/tests/GameGuild.Learning.Assessments.UnitTests/GameGuild.Learning.Assessments.UnitTests.csproj --filter FullyQualifiedName~Code
-node --test apps/web/scripts/coding-cycle-grading-observer.test.mjs apps/web/scripts/coding-cycle-grading-transport.test.mjs apps/web/scripts/coding-cycle-web-runtime.test.mjs
-pnpm --filter @game-guild/web test:browser:coding-cycle
-dotnet build apps/api/GameGuild.sln
-pnpm --filter @game-guild/web build
+```text
+apps/web/src/lib/grading-scenarios/adapters/code/
 ```
 
-Quando a nova suite existir, o repositorio deve oferecer comandos separados de
-contracts, smoke e full. O smoke nao pode substituir o full no cutover.
-O ciclo browser, por construir e iniciar a aplicacao isoladamente, deve rodar
-como job pesado unico ou com concorrencia explicitamente limitada.
+e e registrado por `apps/web/src/lib/grading-scenarios/registry.server.ts`.
+A superficie humana permanece em
+`/workspace/learning/grading-validation`. Nao criar rota paralela em
+`/workspace/testing-lab` e nao criar CLI especifica de coding. Quiz e code
+contribuem adapters independentes ao mesmo lifecycle generico.
+
+## Artifact exato e CI
+
+O fluxo browser oficial exige o manifest Emception schema 2 produzido pela lane
+oficial. Manifest local schema 1, fixture fabricada ou relaxamento da
+verificacao nao fecha `CODE-UI-07` nem esta parte.
+
+O workflow `PR Verify` pode ser executado por `workflow_dispatch`; um draft PR
+tambem pode produzir a evidencia antes do PR final. Isso nao transforma a
+execucao intermediaria no PR de integracao das partes 01 a 04.
+
+## Comandos alvo
+
+O repositorio deve consolidar:
+
+```bash
+pnpm coding:validation:contracts
+pnpm coding:validation:smoke
+pnpm coding:validation:full
+```
+
+Esses comandos orquestram suites existentes; nao duplicam regras de produto.
+O browser pesado roda com um worker. Builds backend usam concorrencia limitada,
+por exemplo `-m:2`, para preservar recursos da maquina.
+
+No minimo, o full deve cobrir:
+
+- `@game-guild/coding`;
+- `@game-guild/grading-adapter-code`;
+- `@game-guild/coding-surface`;
+- `GameGuild.Learning.Assessments.CodeAdapter`;
+- `GameGuild.Learning.Assessments` e `GameGuild.Learning.Courses` afetados;
+- integracao PostgreSQL aplicavel;
+- observer, transport, runtime web e ciclo browser;
+- suites de arquitetura/autorizacao exigidas pelo `AGENTS.md`;
+- build backend warning-clean e build web.
+
+## Separacao entre achado e correcao
+
+O programa de validacao pode corrigir harness, fixtures, catalogo e
+instrumentacao. Um achado que exija mudar regra de produto, schema, migration,
+autorizacao de plataforma, Emception ou escopo de linguagem deve ser registrado
+com owner e reproducer, e tratado em trabalho separado. Nao remodelar o produto
+silenciosamente para fazer o teste passar.
 
 ## Criterios de conclusao
 
-- fluxo author -> publish -> learner -> review -> release -> learner esta
-  comprovado;
+- `CODE-UI-07` possui evidencia verde com artifact schema 2 exato;
+- `function` e `standard-io` passam pela identidade canonica congelada;
+- author -> publish -> learner -> review -> release -> learner esta comprovado;
 - author test nao gera efeitos academicos;
 - automated e instructor review possuem evidencia e auditoria;
-- privacidade e autorizacao tem casos negativos;
-- versoes congeladas continuam executaveis;
-- o ciclo anterior permanece verde ate existir paridade comprovada no catalogo;
-- nenhum aceite final depende de leitura direta do banco;
-- laboratorio humano e Playwright usam lifecycle oficial;
-- catalogo registra gaps sem mascarar falhas;
-- cutover ativou a nova superficie de grading sem alterar ou remover
-  `@game-guild/emception-ui`;
-- nenhuma fonte, capability ou comportamento default do Emception foi alterado
-  pelo cutover;
-- registro de duplicacoes esta completo e pronto para revisao com seu
-  responsavel;
-- as partes 01 a 04 estao prontas em um PR unico e validado para `develop`.
+- privacidade, tenant e autorizacao possuem casos negativos;
+- refresh e nova sessao learner observam somente resultado liberado;
+- erro tecnico permanece erro tecnico;
+- versoes congeladas continuam executaveis e identidades desconhecidas falham
+  fechadas;
+- nenhum aceite depende de leitura direta do banco;
+- `@game-guild/emception-ui`, `tools/emception/**` e consumidores fora do novo
+  grading permanecem preservados;
+- nenhum schema, migration ou modulo de plataforma e alterado pelo harness;
+- validacao humana e automatica exercitam o mesmo lifecycle;
+- o diff final nao inclui expansao de linguagem nem refundacao do Code Studio;
+- a branch final reconciliada com `develop` passa pelos gates aplicaveis antes
+  do PR integrado das partes 01 a 04.

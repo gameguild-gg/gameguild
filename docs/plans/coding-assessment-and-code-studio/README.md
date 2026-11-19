@@ -1,10 +1,11 @@
 # Coding assessment, grading adapter e refundacao do Code Studio
 
-Status: em implementacao; partes 1 e 2 concluidas.
+Status: em implementacao; partes 1 e 2 concluidas, parte 3 implementada
+localmente e parte 4 bloqueada em seu gate de entrada.
 
 Data: 2026-11-06.
 
-Atualizado: 2026-11-18.
+Atualizado: 2026-11-19.
 
 ## Objetivo
 
@@ -157,7 +158,7 @@ AIReview.
 | 1 | [`01`](./01-domain-contracts-and-typescript-adapter.md) | dominio coding e adapter TypeScript | contratos e testes de conformidade fechados |
 | 2 | [`02`](./02-backend-code-adapter-boundary.md) | modulo backend separado e core sem code | build, testes e arquitetura backend verdes |
 | 3 | [`03`](./03-coding-surface-and-web-integration.md) | coding-surface paralela e composicao web de grading, executada em cinco subplanos | cinco gates internos concluidos; contrato canonico unico; autoria, learner e grader de grading usando a nova superficie; emception-ui preservado |
-| 4 | [`04`](./04-end-to-end-validation-and-cutover.md) | E2E, auditoria de capabilities e cutover | fluxo oficial e negativos de acesso aprovados |
+| 4 | [`04`](./04-end-to-end-validation-and-cutover.md) | E2E, auditoria de capabilities e aceite do cutover ja realizado | `CODE-UI-07`, fluxo oficial e negativos de acesso aprovados |
 | 5 | [`05`](./05-emception-capability-and-language-review.md) | orquestracao da expansao aditiva de linguagens | baseline comum aprovada e decisao independente por linguagem |
 | 6 | [`06`](./06-code-studio-discovery-and-refoundation.md) | descoberta e eventual refundacao do Code Studio | decisao explicita de produto e arquitetura |
 
@@ -166,11 +167,19 @@ As fases 5 e 6 nao bloqueiam o fluxo inicial de coding assessment nas linguagens
 ja suportadas. Elas nao autorizam por si mesmas mudancas no Emception.
 
 A parte 3 possui sequencia interna obrigatoria: caracterizacao e decisoes,
-fundacao do package, perfis e personas, e por fim integracao web com CI. O
-estado, as decisoes, o mapa de consumidores e os gaps de capability ficam em
+fundacao do package, perfis e personas, integracao web com CI e consolidacao do
+contrato canonico. O estado, as decisoes, o mapa de consumidores e os gaps de
+capability ficam em
 [`03-coding-surface/`](./03-coding-surface/). Esses arquivos devem ser
 atualizados em cada checkpoint para que a execucao nao dependa da memoria de
-uma conversa ou de uma IA. Concluir apenas um subplano nao libera a parte 4.
+uma conversa ou de uma IA. O subplano `4.0` existe somente para fechar a fixture
+canonica e a evidencia CI restante de `CODE-UI-07`; as demais etapas da parte 4
+continuam bloqueadas ate esse gate.
+
+A parte 4 tambem possui sequencia interna obrigatoria. Catalogo, lifecycle,
+contratos/API, browser, laboratorio web e aceite ficam em
+[`04-end-to-end-validation/`](./04-end-to-end-validation/), com estado e
+decisoes persistentes para que a validacao nao dependa da conversa.
 
 A parte 5 e executada por subplanos. O baseline comum precede todos; JavaScript
 precede TypeScript; Ruby, SQL e C# podem avancar independentemente depois da
@@ -209,7 +218,7 @@ as partes 1, 3, 4 e 5.
 | 1 | contratos GameGuild descrevem identidades e reports sem importar Emception | nenhuma |
 | 2 | backend recebe reports por portas proprias; nao altera o runtime browser | nenhuma |
 | 3 | `coding-surface` compoe somente APIs publicas e se adapta a elas | nenhuma |
-| 4 | o cutover troca apenas consumidores de grading explicitamente selecionados | nenhuma |
+| 4 | valida e aceita o cutover dos consumidores de grading realizado na parte 3 | nenhuma |
 | 5 | pode propor novas capabilities e linguagens de forma aditiva | nenhuma; breaking change fica fora deste programa |
 | 6 | Code Studio futuro consome capabilities publicas existentes | nenhuma |
 
@@ -279,11 +288,12 @@ executada como parte do grading.
 
 ### `CUTOVER-GATE`
 
-O cutover deste programa troca somente os fluxos de grading explicitamente
-selecionados para `coding-surface`. Ele nao autoriza remover ou modificar
-`@game-guild/emception-ui`, seus aliases, testes ou demais consumidores. Codigo
-substituido dentro dos fluxos novos so e removido depois que os consumidores
-desse escopo foram migrados e os testes adjacentes passaram.
+O cutover deste programa ja trocou, na parte 3, somente os fluxos de grading
+explicitamente selecionados para `coding-surface`. A parte 4 valida e aceita
+essa integracao; nao executa uma segunda migracao. O gate nao autoriza remover
+ou modificar `@game-guild/emception-ui`, seus aliases, testes, o coding
+assignment preservado ou demais consumidores. Qualquer cleanup posterior exige
+trabalho separado e evidencia de cobertura equivalente.
 
 ### `DUPLICATION-GATE`
 
