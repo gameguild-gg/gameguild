@@ -615,9 +615,26 @@ namespace GameGuild.API.Database.Migrations
                             definition := regexp_replace(definition,
                                 '\((\s*)"Id", "RiskDecisionId", "PostingGroupId"',
                                 '(\1"Id", "ConsumptionKind", "RiskDecisionId", "PostingGroupId"', 'g');
-                            definition := replace(definition,
-                                'VALUES (gen_random_uuid(), p_risk_decision_id',
-                                'VALUES (gen_random_uuid(), 2, p_risk_decision_id');
+                            -- Anchor the kind value to the risk-burn INSERT
+                            -- itself: the risk-audit-evidence INSERT in the
+                            -- same posting bodies (kept separate by the T2.1
+                            -- deferral) also starts its VALUES with
+                            -- (gen_random_uuid(), p_risk_decision_id, and the
+                            -- bare prefix needle injected the kind literal
+                            -- there too — 8 expressions into 7 columns,
+                            -- surfacing only when a writer actually executed
+                            -- past the burn (the schema-only rehearsal and
+                            -- the mirrored Down both miss it: Down strips
+                            -- the bogus literal symmetrically, so the
+                            -- round-trip stays byte-identical while the Up
+                            -- state is wrong). The negative lookahead skips
+                            -- every occurrence followed by a string literal
+                            -- (the audit INSERT's 'posting-authorized'); the
+                            -- consumption INSERT's next expression is always
+                            -- a parameter (p_posting_id / p_operation_id).
+                            definition := regexp_replace(definition,
+                                '(VALUES \(gen_random_uuid\(\), )p_risk_decision_id(?!, '')',
+                                '\12, p_risk_decision_id', 'g');
                             -- The Marketplace policy verification blocks: the
                             -- domain predicate rides first (so the per-domain
                             -- partial uniques and window indexes stay
@@ -1610,9 +1627,14 @@ namespace GameGuild.API.Database.Migrations
                             definition := regexp_replace(definition,
                                 '\((\s*)"Id", "ConsumptionKind", "RiskDecisionId", "PostingGroupId"',
                                 '(\1"Id", "RiskDecisionId", "PostingGroupId"', 'g');
-                            definition := replace(definition,
-                                'VALUES (gen_random_uuid(), 2, p_risk_decision_id',
-                                'VALUES (gen_random_uuid(), p_risk_decision_id');
+                            -- Mirrors the anchored Up needle (see there):
+                            -- strips the kind literal only where the next
+                            -- expression is NOT a string literal, so the
+                            -- risk-audit-evidence INSERT is untouched in
+                            -- both directions.
+                            definition := regexp_replace(definition,
+                                '(VALUES \(gen_random_uuid\(\), )2, p_risk_decision_id(?!, '')',
+                                '\1p_risk_decision_id', 'g');
                             definition := replace(definition, unified_policy_head, legacy_policy_head);
                             definition := replace(definition, unified_policy_head_crlf, legacy_policy_head_crlf);
                             definition := replace(definition,
