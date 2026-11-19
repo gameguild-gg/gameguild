@@ -11,6 +11,6 @@
     ".": "./src/index.js"
   },
   "devDependencies": {
-    "prettier": "3.10.1"
+    "prettier": "3.9.10"
   }
 }
