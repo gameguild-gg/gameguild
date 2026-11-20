@@ -12,33 +12,48 @@ complete implementation blueprint. Typed family authoring, diagnosis,
 reference preparation/results, preview fidelity, realistic host constraints,
 capability combinations and recovery states still need design evidence.
 The required [01a iteration](./01a-prototype-workflows-and-critical-review.md)
-records UX-F01..06, measured observations and their objective/human gates.
-Apply [GOVERNANCE.md](./GOVERNANCE.md) to the next execution. The historical
-layout observations below remain valid only within their stated scope.
+records UX-F01..06 and their objective/human gates. Its automated remediation
+was implemented on 2026-11-20; explicit human design acceptance remains pending.
+Apply [GOVERNANCE.md](./GOVERNANCE.md) to the next execution. Historical layout
+observations below retain only their stated scope.
 
 ## Reviewable layout
 
 Open [the layout prototype](./layout-prototype.html) directly in a browser.
 It is a standalone design specimen with synthetic data. No authentication,
 runtime, server save, grading or submission is connected. The current specimen
-keeps execution and persistence disabled. In 01a, explicit synthetic state
-transitions may replace those disabled controls so complete interactions can
-be reviewed; they must never be reported as real execution/persistence. Its simple
-textareas are layout placeholders, not a proposed replacement for Monaco or
-the existing content editors. Changing the family loads another specimen;
-production transformations require the lossless confirmation in `CS-REF-08`.
+has explicit synthetic state transitions for complete design walkthroughs.
+Recorded outcomes are defined for the supplied example sources/cases; other
+edits report an unrecorded response instead of pretending to compile code.
+Source regions now resemble the intended editor composition: explorer,
+independent file tabs, numbered/colorized source, cursor status and immutable
+learner support. Native text editing remains a design placeholder, not Monaco
+or a replacement for existing editor/runtime libraries. File creation/rename
+and confirmed deletion belong to the author; learner file-management policy
+is not invented from permission to edit a supplied buffer. Closing tabs never
+deletes files. Family, signature and environment changes show impact and
+support lossless cancellation before applying a transaction.
 
-The Instructor/Learner controls and Curriculum toggle allow inspection in
-different contexts. The prototype supports keyboard tab navigation and
-switching exercise families. Graphics demonstrates panel placement only;
-the painted rectangle is not Emception execution evidence and does not pass
-`CS-REF-10`.
+Study controls select blank/function/I/O/stress examples, learner context and
+failure responses. Curriculum/Settings preferences model host space. Narrow
+screens collapse study controls and host sidebars; focused problem/code/cases/
+results views remain reachable. Graphics has move/stop/reopen/focus specimens
+and a separate recorded terminal echo. These do not prove Emception execution
+or pass `CS-REF-10/11`.
+
+Author recovery and acknowledged saves are scoped cloned **in-memory** records
+for the current tab. Simulate reload/reopen controls illustrate the lifecycle;
+actual page refresh starts again. No teacher data enters browser storage.
+Learner and preview files/scratch are independent; the submission specimen
+freezes files and retains released-host feedback independently of execution
+errors. Editing scratch invalidates diagnostics without changing the submitted
+file version. Authoring reference checks and academic evaluation remain distinct.
 
 | Task | Proposed composition | Why / acceptance |
 | --- | --- | --- |
 | Problem | full-width statement, examples and constraints; compact family selector | long text has space; `CS-REF-01`, `02`, `06` |
 | Environment | language separate from environment; only proven capabilities selectable | no preset-as-exercise-family; `CS-REF-10`, `11`, `18` |
-| Starter code | file list beside a focused editor; a single function signature where applicable | no runtime or terminal needed to prepare source; `CS-REF-02`, `12` |
+| Starter code | shared source workbench with explorer/tabs and separate file policy; collapsible function signature where applicable | source preparation resembles solving without mixing test forms/output; no runtime boot; `CS-REF-02`, `12` |
 | Tests | selectable case list beside a spacious, family-specific case editor; stack when narrow | configuration stays out of the console; `CS-REF-01`, `02`, `13`, `17` |
 | Validate exercise | protected reference/wrong-solution validation and a separate learner preview | exercise preparation, not learner grading; `CS-REF-05`, `19` |
 | Solve | problem alongside editor when space allows; cases/output/optional canvas in focused views | experiment separately from submit; `CS-REF-03`, `04`, `14` |
@@ -49,7 +64,7 @@ and heading; do not abbreviate it to Validate or Validation. It checks the
 prepared exercise, not student work. Official learner evaluation, scores,
 review and release remain in Assessments/Grading. See `CS-ADR-019`.
 
-### Layout observations
+### Historical layout observations (2026-11-19)
 
 The automated layout inspection used one Chromium instance and sequential
 contexts at 1600x1000, 1120x900 and 390x844. There were 69 checks across task

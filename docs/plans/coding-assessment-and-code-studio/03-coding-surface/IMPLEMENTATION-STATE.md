@@ -1,13 +1,13 @@
 # Coding surface implementation state
 
-Ultima atualizacao: 2026-11-19.
+Ultima atualizacao: 2026-11-20.
 
 Current status: functional baseline and canonical consolidation 3.5 completed
 locally. Refoundation 3.6 has started: `CODE-UX-01` is partial, with a concrete
-product model/layout prototype and repaired browser fixture. Critical review
-found six design gaps; the required 3.6.1a remediation is planned, not implemented.
-Exact artifact availability and compound-value product disposition also remain
-open. Design remediation can proceed independently of those prerequisites.
+product model, interactive design prototype and repaired browser fixture.
+The 3.6.1a remediation and editor-fidelity follow-up are implemented; 30 tests pass.
+Explicit human design acceptance, verified artifact availability and compound-
+value product disposition remain open. No later production gate was entered.
 The production UI has not been cut over to the refounded model.
 
 Este e o handoff mutavel da parte 3. Atualize-o com fatos observados. Nao marque
@@ -46,40 +46,53 @@ um gate como concluido sem registrar a evidencia executada.
 ## Etapa ativa
 
 - Subplan: 3.6.1, with required [3.6.1a design remediation](./06-refoundation/01a-prototype-workflows-and-critical-review.md).
-- Current gate: `CODE-UX-01`; next implementation slice is `UXP-01`.
+- Current gate: `CODE-UX-01`; 01a terminal work complete, human review pending.
 - State: partial. Product model, ownership, runtime matrix, resource budget and
   fixture repair are recorded in `CS-ADR-014` through `016` and
   [`PRODUCT-MODEL.md`](./06-refoundation/PRODUCT-MODEL.md).
-  Governance/remediation are recorded in `CS-ADR-017` and `018`.
+  Governance/remediation are recorded in `CS-ADR-017` through `022`.
   Design is not approved; exact-source artifact is unavailable;
   `CS-REF-18` disposition is pending.
 - Responsavel: Codex.
 
 ### Current compact checkpoint
 
-- Active stage: naming clarification completed and audited under CS-ADR-019.
-  UXP-01..06 implementation not started.
-- Allowed task delta: prototype tab copy, refoundation task labels and shared
-  state/ADRs. No application, runtime, grading contract or upstream change.
-- Naming contract: authoring tab/heading use Validate exercise; technical
-  preparation stays distinct from Assessments/Grading learner evaluation.
-  Verify the accessible tab name, panel heading and narrow-layout visibility.
+- Baseline: `8c6c31b459a994e7f7f6fd7d0166d8446632a377`,
+  `feature/coding-grading`; the prior naming changes were committed during
+  the earlier read-only discovery. UXP-07 preserved that execution's dirty
+  documentation/prototype worktree; no commit, stage or production edit.
+- Active row/stage: UXP-07 automated audit completed after the requested
+  editor-fidelity correction. UXP-01..07 regression passes; overall CODE-UX-01
+  and explicit human acceptance remain open.
+- Allowed files: `06-refoundation/prototype/`, `layout-prototype.html`,
+  active plan/model/gate documents, this ledger and shared ADRs. No production
+  application, dependency manifest, runtime, database or upstream edits.
+- Contract: strict JSDoc-checked browser scripts with TypeScript presentation
+  types; standalone HTML remains directly openable. CS-ADR-020 records this
+  disposable design implementation and simulated fixture boundary.
 - Contract: [governance](./06-refoundation/GOVERNANCE.md), atomic UXP rows and
   [terminal gates](./06-refoundation/QUALITY-GATES.md). This file fulfills the
   `state.md` role; do not create a second mutable tracker.
-- Acceptance IDs: UX-F01..06 map to UXP-01..06 and existing CS-REF rows.
-- Terminal evidence: earlier G-DOC checked 46 documents, 165 local links and
-  24 atomic rows. Current naming check failed before the copy change and passed
-  afterward in desktop/mobile; diff whitespace is clean. UXP contract and
-  behavior suites remain planned; this label-only check does not close them.
-- Runtime: blocked by artifact provenance; no new runtime check this turn.
+- Acceptance IDs: UX-F01..06 map to UXP-01..06 and existing CS-REF rows;
+  UXP-07 adds editor/file workflow evidence under the same design gate.
+- Terminal evidence: strict typecheck/lint exit 0; 14 contract tests and 16
+  required browser journeys passed together, no skips. Every selected UXP ID
+  is enforced; page/context and browser disposal are asserted. Detailed red /
+  green evidence is in the execution record below.
+  Node subprocess/browser checks ran outside the restricted sandbox; its
+  file-only summary did not establish that individual contract tests ran.
+- Runtime: last real preflight remains exit 1 (unverified frozen toolchain);
+  not rerun for the visual-only follow-up. No stack, compiler, API, database
+  or production build was started.
 - Human: design acceptance pending; earlier agent inspection is not approval.
-- Next exact action: UXP-01 specification and typed presentation contracts,
-  followed by failing tests before behavioral implementation.
+- Next exact action: perform/record the human walkthrough from 01a against the
+  directly openable HTML. Obtain the CS-ADR-015 compound-value disposition and
+  verified runtime artifact before closing CODE-UX-01 or entering CODE-UX-02.
+  Simulated persistence is per-tab memory; durable recovery remains 3.6.2.
 
 | Gate da refundacao | Estado | Evidencia necessaria |
 | --- | --- | --- |
-| `CODE-UX-01` | partial / open | model, ownership, public probes and fixture tests recorded; 3.6.1a design remediation/approval, artifact/preflight success and compound scope pending |
+| `CODE-UX-01` | partial / open | 3.6.1a interactive design and 30 checks recorded; human design acceptance, artifact/preflight success and compound scope pending |
 | `CODE-UX-02` | nao iniciado | contratos, recuperacao de drafts, revisoes e projecoes autorizadas |
 | `CODE-UX-03` | nao iniciado | runtime real, canvas/terminal, cancelamento e recursos |
 | `CODE-UX-04` | nao iniciado | autoria completa dos dois tipos e validacao pelo professor |
@@ -287,6 +300,124 @@ these bootstrap failures were not the behavioral red evidence. The checks
 used the already-installed Chrome outside the sandbox, one browser, closed
 afterward. No application stack, build, installation or real runtime was run.
 
+### 3.6.1a interactive prototype execution - 2026-11-20
+
+Baseline: `8c6c31b459a994e7f7f6fd7d0166d8446632a377`, clean worktree after
+the user committed prior naming changes. This execution changed only the HTML,
+its new `06-refoundation/prototype/` directory and shared documentation/ADRs.
+Production packages, Emception/UI, dependency manifests, auth/platform, API,
+migrations and developer commands have no task delta. No consumer cutover.
+
+All rows followed specification/contracts, strict compilation, an independent
+behavioral red, minimal implementation, then Builder/Auditor checks:
+
+| Slice | Behavioral red / audited defect | Green design evidence |
+| --- | --- | --- |
+| UXP-01 | absent title/blank draft controls | shell, keyboard tasks, malformed states and bounded harness |
+| UXP-02 | absent signature/family fields; duplicate environment field/panel ID | function and I/O from blank, type-specific values, stable case CRUD, explicit empty output and compatible environments |
+| UXP-03 | absent reference/preview controls | correct/wrong records, stale candidate identity, edited/redacted preview, independent files and escaping |
+| UXP-04 | absent learner entry | wrong/expected/actual, absent oracle, compile/error/cancel/stale states, frozen acknowledgement and preserved host feedback |
+| UXP-05 | absent save/panel controls; clipped long names/lost case scroll/mobile label collision in capture review | retained failures/conflicts, scoped cloned recovery, lossless cancel, panels, focused views and keyboard reachability |
+| UXP-06 | incomplete selection accepted; unknown fixture/unsafe IDs; no-op typed commands; unavailable capability; modal return focus; pending signature and scratch changes incorrectly affecting submission | all 13 frozen browser oracles and 11 Node tests pass; cases are required by exact ID, no skip/zero-case success; same-agent adversarial audit completed |
+
+Terminal checks use installed Node 24.16.0, TypeScript 6.0.3, ESLint 10.13.0,
+Playwright 1.64.1 and existing Chrome. The shell lacks Node on PATH, so commands
+used `/home/miguel/.nvm/versions/node/v24.16.0/bin/node` directly with the root
+`node_modules/typescript/bin/tsc` and `node_modules/eslint/bin/eslint.js`.
+No dependency was installed. Node subprocess/Chrome checks ran outside the
+restricted sandbox; its earlier file-only summary was not accepted as proof.
+
+```bash
+node node_modules/typescript/bin/tsc --project docs/plans/coding-assessment-and-code-studio/03-coding-surface/06-refoundation/prototype/tsconfig.json --noEmit
+node node_modules/eslint/bin/eslint.js --no-inline-config --max-warnings=0 docs/plans/coding-assessment-and-code-studio/03-coding-surface/06-refoundation/prototype
+taskset -c 0-9 node --test --test-concurrency=1 docs/plans/coding-assessment-and-code-studio/03-coding-surface/06-refoundation/prototype/contracts.test.mjs docs/plans/coding-assessment-and-code-studio/03-coding-surface/06-refoundation/prototype/workflows.test.mjs
+```
+
+Results: types/lint exit 0, final cumulative run 24/24 tests, zero skipped,
+about 12 seconds including all refreshed captures. Source formatting uses the
+installed Prettier. G-DOC exit 0: 47 documents, 168 local links, all 24 atomic
+rows populated and all 22 CS-REF IDs preserved; new sources are ASCII and
+`git diff --check` is clean. All task paths are confined to this docs subtree.
+Final capture audit also reproduced a selected case leaving the visible list
+after a mobile/desktop transition. An explicit failing viewport assertion was
+added; selection scrolling was fixed and the full 24-test gate passed again.
+The exact task is also reviewable through the prototype's frozen checklist.
+Application/API/Emception build and security suites are inapplicable to this
+documentation-only design fixture; they were not rerun or claimed passed.
+
+Captures are ignored artifacts in
+`apps/web/test-results/coding-surface-refoundation/`: six `uxp05-teacher-*` /
+`uxp05-learner-*` images at 1600x1000, 1280x720 and 390x844, plus
+`uxp06-teacher-io.png` and three `uxp06-canvas-*` images. Teacher/learner and
+canvas captures were visually inspected. Canvas pixels, movement, stop/reopen
+and distinct echo input are synthetic design checks, not Emception conformance.
+
+Observed resources: one browser/page, seven reported Chromium processes with
+summed RSS 858 MiB, Node RSS 132 MiB; the RSS sum double-counts shared memory
+and is a single sample, not a peak/physical-memory benchmark. CPU affinity
+`0-9` reserves two of 12 cores. Entry MemAvailable 15,718 MiB; no heavy stack
+or compiler started. Browser/context disposal passed; no services left by the
+prototype. Production runtime budgets remain unproven.
+
+Actual frozen-toolchain preflight was rerun using the command in G-PREFLIGHT:
+exit 1, `Code grading requires verified artifacts matching its frozen toolchain.`
+No permissive manifest, upstream edit or producer launch was used. The earlier
+exact-name GitHub query remains historical evidence, not a new remote query.
+
+Human: pending. UXP-06 automation and same-agent audit do not approve usability.
+No implicit acceptance of scalar-only scope or runtime support. Saved/recovery
+records are in-memory for the open tab; actual refresh restarts the design
+study. Independent runtime and durable persistence remain later requirements.
+
+### UXP-07 editor-fidelity follow-up - 2026-11-20
+
+Specification/contracts preceded behavioral changes. The strict contract
+compiled before interaction implementation. An explicit new command-schema
+test failed before validation was added; all three new browser oracles failed
+on absent source tabs/explorer, not on harness/bootstrap. The earlier dirty
+prototype work was preserved. Allowed files stayed within the prototype,
+HTML entry and its current plan/model/gates/ADR/ledger.
+
+Builder: a shared editor composition now covers author, learner and redacted
+preview. Open tabs, explorer, colorized/numbered native text, per-file caret/
+scroll, code modification markers and read-only support represent the intended
+Monaco-backed experience without loading Monaco or a runtime. Author creation
+and rename reject traversal/path collisions; deletion requires confirmation;
+tab closure never deletes buffers. Signature configuration collapses outside
+editing; learner study controls collapse on mobile entry to preserve code space.
+Reference/incorrect preparation uses the same visual editor, separately from
+the supplied learner files. No new learner file-management policy was assumed.
+
+Auditor (same-agent): caught an explorer drawer intercepting tabs at constrained
+width, missing keyboard focus after closing the last tab and support-file edits
+reusing an old recorded verdict. Those causes were fixed; a Node test reproduced
+the simulation defect before the fix. Current file sets reach the simulation
+and unrecorded support/source combinations cannot fabricate results. Added
+empty-tab, save-marker, read-only, per-file position, Tab/Escape and forced-color
+checks. No types, lint rules or required assertions were suppressed.
+
+Terminal: the same G-PROT commands above pass after the final changes, exit 0:
+strict TypeScript, ESLint without warnings, and 30/30 tests (14 Node + 16 browser),
+zero skips, 14.6 seconds. One Chrome, sequential pages, CPU affinity 0-9 leaves
+two cores free. Network/compiler workers remain absent; context/browser cleanup
+passes. No stack, dependency installation, heavy build or service was started.
+
+Six additional captures `uxp07-author-editor-*` / `uxp07-learner-editor-*`
+are in the same ignored output directory. Inspected author 1600/1280/390 and
+learner 1280/390 captures; the browser also asserts mobile code height >=120 px,
+command reachability and no page overflow. Native rendering is a design
+specimen, not proof of editor language services or public runtime integration.
+The earlier measured RSS sample is historical, not a new resource benchmark.
+
+G-DOC passed: 47 Markdown documents, 168 valid relative links, all 25 atomic
+rows populated, ASCII prototype sources and clean `git diff --check`. The
+read-only AST check identifies specification tables by both Slice and
+Specification headers; evidence/checklist tables are not misclassified as
+six-column atomic specifications.
+Current instructions and CS-ADR-022 record the updated seven-slice selector.
+Human design acceptance, compound-value disposition and verified artifact
+obligations remain pending; no production gate was entered or waived.
+
 ## Arquivos alterados pela implementacao
 
 - contrato canonico unico de coding, sem aliases de compatibilidade;
@@ -306,12 +437,12 @@ afterward. No application stack, build, installation or real runtime was run.
 
 Continue [`3.6.1`](./06-refoundation/01-product-model-and-evidence-baseline.md):
 
-1. Start `UXP-01` in [3.6.1a](./06-refoundation/01a-prototype-workflows-and-critical-review.md):
-   read the active contracts/invariants, record allowed files, specify the
-   prototype states and validate their types before implementing interactions.
-   Then write independent failing oracles and implement only that slice.
-   Continue UXP-02..06 sequentially, including explicit human design review.
-   Artifact availability does not block these design-only steps.
+1. Perform the instructor/learner human walkthrough in
+   [3.6.1a](./06-refoundation/01a-prototype-workflows-and-critical-review.md)
+   using its directly openable HTML. UXP-01..07 automated work is implemented;
+   record explicit acceptance or concrete findings, then address only those
+   findings through the same contract/test cycle. Do not repeat discovery or
+   mark human acceptance from the 30 passing automated checks.
 2. Separately record the product response to the scalar/compound-value question
    in `CS-ADR-015` and `EMC-GAP-001`; no answer is currently recorded. Obtain
    a verified producer result for the exact source identity to test.

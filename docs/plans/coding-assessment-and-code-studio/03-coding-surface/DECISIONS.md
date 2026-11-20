@@ -408,6 +408,67 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
 - Affects: prototype copy and refoundation terminology only; existing internal
   IDs and contracts are unchanged. This does not complete any UXP slice.
 
+## `CS-ADR-020`. Disposable, typed interactive design specimen
+
+- Date: 2026-11-20.
+- Status: accepted execution choice within UXP-01; not product acceptance.
+- Decision: keep the HTML entry directly openable with classic browser scripts,
+  checked using strict TypeScript/JSDoc and separate presentation types. Node
+  tests inspect the same scripts; Playwright owns one browser, sequential pages
+  and cleanup. No bundler, new dependency, application server or human CLI.
+- Fixtures: incomplete drafts, stable identities and declared synthetic outcomes
+  model interactions only. No source interpreter, compiler, academic scoring or
+  actual persistence command. Unknown fixture inputs cannot invent a verdict.
+- Isolation: preview receives an explicit redacted projection and independent
+  scratch/files. Teacher data in this public design specimen is synthetic;
+  this is not an authentication or production secrecy proof.
+- Acceptance: UXP terminal evidence, human design acceptance, artifact provenance
+  and compound-value scope remain separate obligations. Production never imports
+  these disposable scripts. CS-ADR-019's Validate exercise naming is retained.
+- Affects: UXP-01..06 inside CODE-UX-01 only.
+
+## `CS-ADR-021`. Prototype audit completion is distinct from product acceptance
+
+- Date: 2026-11-20.
+- Status: accepted technical handoff; human design acceptance pending.
+- Decision: UXP-01..06 now have an implemented interactive specimen, a frozen
+  oracle checklist and strict terminal evidence. Preserve the five author tasks,
+  typed family-specific cases, independent preview and separate learner work.
+  The production implementation still follows 3.6.2..3.6.6 after gate closure.
+- Evidence: 11 contract tests and 13 browser journeys, no skips; inspected
+  1600x1000, 1280x720 and 390x844 captures. Same-agent Auditor fixed typed-command,
+  capability, focus, long-case layout, pending-signature and scratch/file-version
+  defects without relaxing checks. This is not an independent human review.
+- Simulation boundary: examples have declared recorded outcomes; arbitrary code
+  is not evaluated. Save/recovery is scoped per-tab memory with a simulation
+  label, never actual server durability. Preview submits no academic work.
+  Canvas pixels and terminal echo are presentation specimens only.
+- Open obligations: explicit human walkthrough, CS-ADR-015 compound-value
+  disposition and a verified exact-source runtime artifact. The actual
+  toolchain preflight still fails closed. CODE-UX-01 and production gates stay
+  open; no upstream/platform, dependency or database change is authorized here.
+
+## `CS-ADR-022`. Represent the editor composition in the design specimen
+
+- Date: 2026-11-20.
+- Status: requested design iteration implemented; human acceptance pending.
+- Context: plain source forms did not resemble the intended Monaco-backed
+  author/learner workflow, obscuring how file operations would actually fit.
+- Decision: add UXP-07 within 3.6.1a. One disposable visual workbench composes
+  numbered/colorized native editing, explorer, open tabs, per-file caret/scroll
+  and modification indicators. Author file creation/rename checks relative
+  paths and collisions; deletion is confirmed. Closing tabs never deletes data.
+  Learner/preview retain supplied-file permissions; no new academic policy.
+- Boundary: no actual Monaco/Emception initialization, compiler, alternate VFS,
+  dependency or upstream/UI change. The same visual editor treats protected
+  reference solutions separately, outside learner delivery. Unsupported file
+  sets report unrecorded simulation outcomes instead of invented verdicts.
+- Gate: strict contracts/lint, required behavioral oracles and captures at
+  1600x1000, 1280x720 and 390x844; independent human/runtime gates remain open.
+- Consequence: production may replace the native-text specimen with declared
+  Monaco/public runtime integration while preserving the accepted interactions.
+  Visual similarity is not API, language-service or runtime conformance.
+
 ## Modelo para novas decisoes
 
 ```text

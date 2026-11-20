@@ -1,11 +1,11 @@
 # Part 3.6. Coding surface refoundation
 
-Status: in progress; `CODE-UX-01` is partial. Model/prototype and fixture repair
-are recorded; critical UX review requires the additional 3.6.1a iteration.
-Exact artifact and compound-value disposition also remain pending.
+Status: in progress; `CODE-UX-01` is partial. The 3.6.1a interactive prototype
+and its automated audit are implemented. Explicit human design acceptance,
+exact artifact and compound-value disposition remain pending.
 Production refoundation and product acceptance are not complete.
 
-Updated: 2026-11-19.
+Updated: 2026-11-20.
 
 Gate IDs: `CODE-UX-01` through `CODE-UX-06`.
 
@@ -114,7 +114,10 @@ one-way wizard.
 - Problem covers statement, examples, constraints and learner-facing resources.
 - Environment separates language from runtime and compatible tools.
 - Starter code distinguishes editable files, supplied support files and
-  teacher-only reference material.
+  teacher-only reference material. Prototype this with the intended explorer,
+  file tabs and source editor composition, not generic source form fields;
+  closing a tab is independent from deleting a file. Production editor/runtime
+  integration is still separate from visual design evidence.
 - Tests provides a compact case list and type-specific editor, duplication,
   public/private visibility and useful validation errors.
 - Validate exercise checks reference and deliberately incorrect solutions,
@@ -230,12 +233,12 @@ acceptance of a tracked limitation; an agent cannot downgrade it to optional
 merely to finish. Do not claim broad competitor parity for a deliberately
 restricted exercise set.
 
-The initial layout specimen is not an accepted implementation blueprint.
-The critical review found missing typed authoring, diagnosis, faithful preview,
-host-constrained layout, capability compatibility and recovery states. Close
+The initial layout specimen was replaced by a typed interactive design study.
+Its 24 automated checks cover the six findings, with inspected desktop/mobile
+captures. Perform the explicit human walkthrough in
 [3.6.1a](./06-refoundation/01a-prototype-workflows-and-critical-review.md)
-before treating its design as approved. A working compiler is not needed to
-resolve those design questions; simulated behavior still cannot prove runtime.
+before treating its design as approved. Simulated behavior does not establish
+runtime, API persistence or official grading. Production phases remain gated.
 
 Excluded: new languages, a new general IDE, Code Studio/Lexical, a replacement
 grading engine, plagiarism/proctoring, AI assistants, multiplayer, private tests

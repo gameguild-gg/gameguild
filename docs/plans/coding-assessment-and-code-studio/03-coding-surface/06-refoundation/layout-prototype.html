@@ -1,243 +1,26 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Coding surface - task layout study</title>
-  <style>
-    :root { color-scheme: dark; font-family: system-ui, sans-serif; color: #e6e7e9; background: #111214; font-size: 14px; letter-spacing: 0; }
-    * { box-sizing: border-box; min-width: 0; }
-    [hidden] { display: none !important; }
-    body { margin: 0; }
-    button, input, select, textarea { font: inherit; color: inherit; }
-    button, select { cursor: pointer; }
-    button { border: 1px solid #414348; border-radius: 4px; padding: 8px 12px; background: #24262a; }
-    button:disabled { cursor: default; opacity: .45; }
-    :focus-visible { outline: 2px solid #61c9d5; outline-offset: 3px; }
-    button[aria-selected="true"], button[aria-pressed="true"] { color: #81e2eb; background: #20383b; border-color: #4f8b91; }
-    input, textarea, select { width: 100%; border: 1px solid #4b4d53; border-radius: 4px; background: #191b1e; padding: 10px; }
-    textarea { resize: vertical; line-height: 1.7; min-height: 112px; }
-    label { display: grid; gap: 8px; margin: 0 0 20px; line-height: 1.5; }
-    h1 { font-size: 24px; margin: 0; font-weight: 650; }
-    h2 { font-size: 19px; margin: 0 0 22px; }
-    h3 { font-size: 14px; margin: 0 0 14px; }
-    p { line-height: 1.65; }
-    small, .muted { color: #a7abb3; }
-    code, pre, .source { font-family: ui-monospace, monospace; }
-    code { overflow-wrap: anywhere; }
-    pre { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.8; margin: 0; }
-    .study-bar { display: flex; gap: 14px; padding: 10px 16px; align-items: center; flex-wrap: wrap; border-bottom: 1px solid #383a40; }
-    .study-bar strong { margin-right: auto; font-size: 13px; color: #bac0c9; }
-    .study-bar label { display: flex; margin: 0; align-items: center; }
-    .study-bar input { width: auto; }
-    .host { display: grid; grid-template-columns: 220px minmax(0, 1fr); min-height: calc(100dvh - 60px); }
-    .curriculum { padding: 22px 14px; border-right: 1px solid #383a40; background: #16171a; }
-    .curriculum p { margin: 0 0 26px; }
-    .curriculum div { padding: 12px 8px; overflow-wrap: anywhere; }
-    .curriculum .current { border-left: 2px solid #61c9d5; background: #203034; }
-    .content { container-type: inline-size; }
-    .exercise-header { display: flex; gap: 16px; align-items: center; padding: 24px; border-bottom: 1px solid #383a40; }
-    .exercise-header h1 { flex: 1; }
-    .draft { color: #e4be7a; font-size: 12px; }
-    .authoring-tabs, .output-tabs { display: flex; gap: 4px; padding: 10px 24px; border-bottom: 1px solid #383a40; flex-wrap: wrap; }
-    [role="tab"] { border: 1px solid transparent; background: none; }
-    .task { padding: 28px 24px; }
-    .task-heading { display: flex; gap: 18px; align-items: start; justify-content: space-between; flex-wrap: wrap; margin-bottom: 28px; }
-    .task-heading h2 { margin: 0; }
-    .family { display: flex; align-items: center; gap: 10px; }
-    .family label { margin: 0; }
-    .family select { width: auto; }
-    .form-wide { max-width: 1100px; }
-    .fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
-    .source { min-height: 350px; tab-size: 2; color: #bce3cb; }
-    .file-layout { display: grid; grid-template-columns: 210px minmax(0, 1fr); border-block: 1px solid #383a40; }
-    .file-list { padding: 18px 10px; border-right: 1px solid #383a40; }
-    .file-list p { padding: 8px; margin: 0 0 8px; }
-    .file-list .active { background: #26383b; }
-    .file-editor { padding: 20px; }
-    .file-editor label { margin-bottom: 0; }
-    .test-layout { display: grid; grid-template-columns: minmax(200px, 290px) minmax(0, 1fr); gap: 28px; }
-    .case-list { display: grid; gap: 8px; align-content: start; }
-    .case-list button { text-align: left; padding: 16px; }
-    .case-list span { display: block; margin-top: 7px; font-size: 12px; color: #b4bbc5; }
-    .private { color: #e4be7a; }
-    .case-detail { border-left: 1px solid #383a40; padding-left: 28px; }
-    .validation-row { display: flex; gap: 20px; align-items: center; justify-content: space-between; border-bottom: 1px solid #383a40; padding: 18px 0; flex-wrap: wrap; }
-    .validation-row p { margin: 4px 0 0; }
-    .solver { display: grid; grid-template-columns: minmax(260px, .9fr) minmax(0, 1.4fr); }
-    .problem { padding: 28px 24px; border-right: 1px solid #383a40; }
-    .problem pre { border-left: 2px solid #5c858a; padding: 10px 16px; margin: 18px 0; background: #1c2023; }
-    .problem h3 { margin-top: 28px; }
-    .workspace-bar { display: flex; gap: 10px; align-items: center; padding: 12px 18px; border-bottom: 1px solid #383a40; flex-wrap: wrap; }
-    .workspace-bar strong { margin-right: auto; }
-    .editor-wrap { padding: 18px; }
-    .output-tabs { padding: 8px 12px; }
-    .output-panel { padding: 22px 18px; min-height: 210px; }
-    .output-panel canvas { display: block; width: 100%; max-width: 480px; aspect-ratio: 2 / 1; background: #181a1d; }
-    .check { display: flex; gap: 10px; align-items: center; }
-    .check input { width: auto; }
-    .notice { color: #e4be7a; margin: 0 0 18px; }
-    .host.no-sidebar { grid-template-columns: minmax(0, 1fr); }
-    @container (max-width: 750px) {
-      .solver, .test-layout, .file-layout { grid-template-columns: minmax(0, 1fr); }
-      .problem, .file-list { border-right: 0; border-bottom: 1px solid #383a40; }
-      .case-detail { padding-left: 0; border-left: 0; }
-      .case-list { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-      .fields { grid-template-columns: minmax(0, 1fr); gap: 0; }
-    }
-    @media (max-width: 700px) {
-      .host { grid-template-columns: minmax(0, 1fr); }
-      .curriculum { display: none; }
-      .exercise-header { padding: 18px 16px; flex-wrap: wrap; }
-      .exercise-header h1 { flex-basis: 100%; }
-      .authoring-tabs { padding: 8px; }
-      .task, .problem { padding: 22px 16px; }
-      .case-list { grid-template-columns: minmax(0, 1fr); }
-      .file-editor { padding: 16px 0; }
-    }
-  </style>
-</head>
-<body>
-  <div class="study-bar">
-    <strong>Coding exercise / Layout study</strong>
-    <button type="button" data-persona="author" aria-pressed="true">Instructor</button>
-    <button type="button" data-persona="learner" aria-pressed="false">Learner</button>
-    <label><input id="sidebar" type="checkbox" checked> Curriculum</label>
-  </div>
-  <div class="host" id="host">
-    <aside class="curriculum" id="curriculum" aria-label="Curriculum">
-      <p><strong>Programming fundamentals</strong></p>
-      <div>Introduction</div>
-      <div class="current">Add two numbers</div>
-      <div>Next lesson</div>
-    </aside>
-    <main class="content">
-      <header class="exercise-header"><h1>Add two numbers</h1><span class="draft" id="draft-label">Draft</span><button type="button" disabled id="save">Save draft</button></header>
-      <section id="author" aria-label="Exercise authoring">
-        <nav class="authoring-tabs" role="tablist" aria-label="Authoring tasks">
-          <button type="button" role="tab" id="tab-problem" aria-controls="problem" aria-selected="true" data-task="problem">Problem</button>
-          <button type="button" role="tab" id="tab-environment" aria-controls="environment" aria-selected="false" tabindex="-1" data-task="environment">Environment</button>
-          <button type="button" role="tab" id="tab-starter" aria-controls="starter" aria-selected="false" tabindex="-1" data-task="starter">Starter code</button>
-          <button type="button" role="tab" id="tab-tests" aria-controls="tests" aria-selected="false" tabindex="-1" data-task="tests">Tests</button>
-          <button type="button" role="tab" id="tab-validate" aria-controls="validate" aria-selected="false" tabindex="-1" data-task="validate">Validate exercise</button>
-        </nav>
-        <section class="task" role="tabpanel" id="problem" aria-labelledby="tab-problem">
-          <div class="task-heading"><h2>Problem</h2><div class="family"><label for="family">Exercise type</label><select id="family"><option value="function">Implement a function</option><option value="standard-io">Input and output</option></select></div></div>
-          <div class="form-wide">
-            <label>Statement<textarea id="statement">Implement add(a, b). Return the sum of the two integers.</textarea></label>
-            <div class="fields"><label>Example input<textarea id="example-input">a = 2, b = 3</textarea></label><label>Example output<textarea>5</textarea></label></div>
-            <label>Constraints<textarea>Both integers are between -100 and 100.</textarea></label>
-          </div>
-        </section>
-        <section class="task" role="tabpanel" id="environment" aria-labelledby="tab-environment" hidden>
-          <h2>Environment</h2>
-          <div class="fields form-wide"><label>Language<select><option>C++</option><option>C</option></select></label><label>Environment<select><option>Clang + WASI</option><option>C++ + SDL3</option><option>C++ + raylib</option></select></label></div>
-          <label class="check"><input type="checkbox" id="graphics"> Graphics output</label>
-          <label class="check"><input type="checkbox" checked> Allow editing supplied source files</label>
-          <label class="check"><input type="checkbox"> Allow learner-created files</label>
-        </section>
-        <section class="task" role="tabpanel" id="starter" aria-labelledby="tab-starter" hidden>
-          <h2>Starter code</h2>
-          <label id="signature">Function signature<input value="int add(int a, int b)" readonly></label>
-          <div class="file-layout"><aside class="file-list" aria-label="Starter files"><p class="active">solution.cpp</p><p><small>Editable / Learner-visible</small></p></aside><div class="file-editor"><label>solution.cpp<textarea class="source" id="starter-source" spellcheck="false">int add(int a, int b) {
-  return 0;
-}</textarea></label></div></div>
-        </section>
-        <section class="task" role="tabpanel" id="tests" aria-labelledby="tab-tests" hidden>
-          <div class="task-heading"><h2>Test cases</h2><small>2 public / 1 private</small></div>
-          <div class="test-layout">
-            <div class="case-list" aria-label="Test cases"><button type="button" data-case="0" aria-pressed="true">Positive numbers<span>Public</span></button><button type="button" data-case="1" aria-pressed="false">Zero<span>Public</span></button><button type="button" data-case="2" aria-pressed="false">Negative numbers<span class="private">Private</span></button></div>
-            <div class="case-detail"><h3 id="case-title">Positive numbers</h3><div class="fields"><label>Visibility<select id="case-visibility"><option>Public</option><option>Private</option></select></label><label>Weight<input type="number" value="1" min="1"></label></div><label id="arguments-label">Arguments<textarea id="arguments">a = 2
-b = 3</textarea></label><label>Expected result<textarea id="expected">5</textarea></label><button type="button" disabled>Duplicate case</button></div>
-          </div>
-        </section>
-        <section class="task" role="tabpanel" id="validate" aria-labelledby="tab-validate" hidden>
-          <h2>Validate exercise</h2>
-          <div class="validation-row"><div><strong>Reference solution</strong><p class="muted">Instructor-only</p></div><button type="button" disabled>Run reference</button></div>
-          <div class="validation-row"><div><strong>Incorrect solution</strong><p class="muted">Test whether cases detect a defect</p></div><button type="button" disabled>Run incorrect solution</button></div>
-          <div class="validation-row"><div><strong>Learner preview</strong><p class="muted">Public problem, starter files and cases</p></div><button type="button" id="preview">Open preview</button></div>
-          <p class="notice">Exercise not validated</p>
-        </section>
-      </section>
-      <section id="learner" aria-label="Learner workspace" hidden>
-        <div class="solver">
-          <article class="problem"><h2>Problem</h2><p id="learner-statement">Implement add(a, b). Return the sum of the two integers.</p><h3>Example</h3><pre id="learner-example">Input: a = 2, b = 3
-Output: 5</pre><h3>Constraints</h3><p>Both integers are between -100 and 100.</p></article>
-          <section aria-label="Code workspace"><div class="workspace-bar"><strong>C++ / solution.cpp</strong><button type="button" disabled>Run tests</button><button type="button" disabled>Submit solution</button></div><div class="editor-wrap"><label>solution.cpp<textarea class="source" id="learner-source" spellcheck="false">int add(int a, int b) {
-  return 0;
-}</textarea></label></div>
-            <nav class="output-tabs" role="tablist" aria-label="Execution panels"><button type="button" role="tab" id="out-cases" aria-controls="panel-cases" aria-selected="true" data-output="cases">Cases</button><button type="button" role="tab" id="out-output" aria-controls="panel-output" aria-selected="false" tabindex="-1" data-output="output">Output</button><button type="button" role="tab" id="out-canvas" aria-controls="panel-canvas" aria-selected="false" tabindex="-1" data-output="canvas" hidden>Canvas</button></nav>
-            <section class="output-panel" role="tabpanel" id="panel-cases" aria-labelledby="out-cases"><label>Custom input<textarea id="scratch">a = 2
-b = 3</textarea></label><button type="button" disabled>Run custom input</button></section>
-            <section class="output-panel" role="tabpanel" id="panel-output" aria-labelledby="out-output" hidden><p class="muted">No execution yet.</p></section>
-            <section class="output-panel" role="tabpanel" id="panel-canvas" aria-labelledby="out-canvas" hidden><canvas id="canvas" width="480" height="240" aria-label="Graphics panel layout specimen"></canvas></section>
-          </section>
-        </div>
-      </section>
-    </main>
-  </div>
-  <script>
-    const $ = (id) => document.getElementById(id);
-    function selectTab(button, attribute, panelPrefix = '') {
-      const nav = button.parentElement;
-      for (const item of nav.querySelectorAll('button[role="tab"]')) {
-        const selected = item === button;
-        item.setAttribute('aria-selected', String(selected));
-        item.tabIndex = selected ? 0 : -1;
-        $(panelPrefix + item.getAttribute(attribute)).hidden = !selected;
-      }
-    }
-    for (const nav of document.querySelectorAll('[role="tablist"]')) {
-      nav.addEventListener('keydown', (event) => {
-        if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return;
-        const tabs = [...nav.querySelectorAll('[role="tab"]')].filter((tab) => !tab.hidden);
-        const index = tabs.indexOf(document.activeElement);
-        if (index < 0) return;
-        event.preventDefault();
-        const next = event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : (index + (event.key === 'ArrowRight' ? 1 : -1) + tabs.length) % tabs.length;
-        tabs[next].click(); tabs[next].focus();
-      });
-    }
-    document.querySelectorAll('[data-task]').forEach((button) => button.addEventListener('click', () => selectTab(button, 'data-task')));
-    document.querySelectorAll('[data-output]').forEach((button) => button.addEventListener('click', () => selectTab(button, 'data-output', 'panel-')));
-    function persona(mode) {
-      $('author').hidden = mode !== 'author'; $('learner').hidden = mode !== 'learner';
-      $('save').hidden = mode !== 'author'; $('draft-label').hidden = mode !== 'author';
-      document.querySelectorAll('[data-persona]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.persona === mode)));
-    }
-    document.querySelectorAll('[data-persona]').forEach((button) => button.addEventListener('click', () => persona(button.dataset.persona)));
-    $('preview').addEventListener('click', () => persona('learner'));
-    $('sidebar').addEventListener('change', () => { $('curriculum').hidden = !$('sidebar').checked; $('host').classList.toggle('no-sidebar', !$('sidebar').checked); });
-    const examples = [{ name: 'Positive numbers', a: 2, b: 3 }, { name: 'Zero', a: 0, b: 7 }, { name: 'Negative numbers', a: -4, b: -3 }];
-    function showCase(index) {
-      const item = examples[index]; const isFunction = $('family').value === 'function';
-      $('case-title').textContent = item.name; $('case-visibility').value = index === 2 ? 'Private' : 'Public';
-      $('arguments-label').firstChild.textContent = isFunction ? 'Arguments' : 'Standard input';
-      $('arguments').value = isFunction ? `a = ${item.a}\nb = ${item.b}` : `${item.a} ${item.b}`;
-      $('expected').value = String(item.a + item.b);
-      document.querySelectorAll('[data-case]').forEach((button) => button.setAttribute('aria-pressed', String(Number(button.dataset.case) === index)));
-    }
-    document.querySelectorAll('[data-case]').forEach((button) => button.addEventListener('click', () => showCase(Number(button.dataset.case))));
-    $('family').addEventListener('change', () => {
-      const isFunction = $('family').value === 'function';
-      const text = isFunction ? 'Implement add(a, b). Return the sum of the two integers.' : 'Read two integers from standard input. Print their sum followed by a newline.';
-      $('statement').value = text; $('learner-statement').textContent = text; $('signature').hidden = !isFunction;
-      $('example-input').value = isFunction ? 'a = 2, b = 3' : '2 3';
-      $('learner-example').textContent = `Input: ${$('example-input').value}\nOutput: 5`;
-      $('scratch').value = $('example-input').value;
-      $('starter-source').value = isFunction ? 'int add(int a, int b) {\n  return 0;\n}' : '#include <iostream>\nint main() {\n  int a, b;\n  std::cin >> a >> b;\n  std::cout << 0 << "\\n";\n}';
-      $('learner-source').value = $('starter-source').value; showCase(0);
-    });
-    $('graphics').addEventListener('change', () => {
-      $('out-canvas').hidden = !$('graphics').checked;
-      if (!$('graphics').checked) $('out-cases').click();
-    });
-    const ctx = $('canvas').getContext('2d');
-    ctx.fillStyle = '#181a1d'; ctx.fillRect(0, 0, 480, 240);
-    ctx.strokeStyle = '#393d42';
-    for (let x = 0; x < 480; x += 24) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 240); ctx.stroke(); }
-    for (let y = 0; y < 240; y += 24) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(480, y); ctx.stroke(); }
-    ctx.fillStyle = '#6dc6bd'; ctx.fillRect(156, 72, 168, 96);
-  </script>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Coding exercise - interactive design study</title>
+    <link rel="stylesheet" href="./prototype/styles.css" />
+    <script src="./prototype/schemas.js" defer></script>
+    <script src="./prototype/fixtures.js" defer></script>
+    <script src="./prototype/model.js" defer></script>
+    <script src="./prototype/html.js" defer></script>
+    <script src="./prototype/code-view.js" defer></script>
+    <script src="./prototype/author-view.js" defer></script>
+    <script src="./prototype/simulation.js" defer></script>
+    <script src="./prototype/recovery.js" defer></script>
+    <script src="./prototype/learner-view.js" defer></script>
+    <script src="./prototype/view.js" defer></script>
+  </head>
+  <body>
+    <div class="study-bar">
+      <strong>Coding exercise / Interactive design study</strong><span>Synthetic responses / No server connection</span
+      ><button type="button" id="study-toggle" aria-expanded="true">Study controls</button>
+    </div>
+    <div id="app"></div>
+  </body>
 </html>

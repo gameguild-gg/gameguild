@@ -41,7 +41,7 @@ Adopted: 2026-11-19, by explicit product instruction (Meta-Harness).
 | --- | --- |
 | `docs/plans/coding-assessment-and-code-studio/03-coding-surface/` | shared state, ADRs, consumers and upstream gaps |
 | `06-refoundation/` below that directory | product evidence, this governance, gates and prototype plans |
-| `06-refoundation/prototype/` (planned) | isolated typed design fixture and bounded tests; never imported by production |
+| `06-refoundation/prototype/` | isolated typed design fixture and bounded tests; never imported by production |
 | `packages/features/coding/src/` | framework-independent contracts, parsers and transformations |
 | `packages/features/grading-adapter-code/src/` | pure translation between coding and generic grading |
 | `packages/features/coding-surface/src/` | reusable task views, local state and public runtime integration |

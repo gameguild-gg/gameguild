@@ -33,10 +33,11 @@ needed for a documentation-only change.
 
 ## G-PROT: typed prototype and behavioral evidence
 
-The following files are **planned**, owned by the first atomic slice of
-[01a](./01a-prototype-workflows-and-critical-review.md). They do not exist yet
-and must not be reported as passed. Use declared TypeScript, Node's test runner
-and Playwright; do not add a second app, dependency or human scenario CLI.
+The following files are implemented by
+[01a](./01a-prototype-workflows-and-critical-review.md). Recorded results belong
+in the shared ledger; file existence alone never passes a gate. Use declared
+TypeScript, Node's test runner and Playwright; do not add a second app,
+dependency or human scenario CLI.
 The prototype tsconfig must enable strict checking and include every typed
 presentation contract and fixture. Do not omit an inconvenient source file or
 weaken the repository's applicable rules to make this isolated check pass.
@@ -57,9 +58,28 @@ Keep the existing HTML entry usable; record its exact preview artifact/URL.
 Tests select completed atomic slices explicitly; each selection must report
 the required IDs and reject zero tests or missing cases. Intermediate slices
 run their contract plus existing regression cases; final prototype approval
-requires all `UXP-01` through `UXP-06` oracles with no required skips.
+requires all `UXP-01` through `UXP-07` oracles with no required skips.
 Outputs go to ignored `apps/web/test-results/coding-surface-refoundation/`.
 The harness is design validation infrastructure, not an execution engine.
+
+The implemented fixture uses classic JavaScript scripts with strict JSDoc
+checking and TypeScript contracts, so the HTML also opens directly without a
+server/build. All presentation/fixture sources are included in the strict
+tsconfig. The harness uses the installed Playwright Chromium, or the existing
+Chrome channel when that bundled executable is unavailable; it installs nothing.
+Sandbox bootstrap/subprocess failures are not behavioral red or passing evidence.
+
+Default selection runs all seven slices: 16 required browser oracles, plus the
+separate Node contract suite. For an intermediate slice use
+`CODING_PROTOTYPE_SLICES=UXP-01,UXP-02` on the workflow command. The selector
+enforces every required ID in [the checklist](./prototype/REVIEW-CHECKLIST.md),
+not merely one surviving case per slice. Never use intermediate selection to
+claim the final gate passed. The bounded local final run uses CPU affinity
+`0-9` on the observed 12-core machine, reserving two cores.
+UXP-07 covers author file CRUD, tab closure/reopening, independent learner
+buffers, read-only support, caret/scroll, keyboard escape, contrast and
+desktop/mobile editor captures. The editor is a presentation specimen, not
+evidence of Monaco or Emception integration.
 
 ## G-CONTRACT: coding and adapter contracts
 

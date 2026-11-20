@@ -1,8 +1,8 @@
 # 3.6.1. Product model and evidence baseline
 
-Status: partial execution; prototype quality remediation, exact artifact and
-compound-value product disposition pending. Gate: `CODE-UX-01`.
-Updated: 2026-11-19.
+Status: partial execution; prototype automation/remediation implemented, human
+design acceptance, exact artifact and compound-value disposition pending.
+Gate: `CODE-UX-01`. Updated: 2026-11-20.
 
 Execution evidence: [`PRODUCT-MODEL.md`](./PRODUCT-MODEL.md), the
 [layout specimen](./layout-prototype.html), and the shared

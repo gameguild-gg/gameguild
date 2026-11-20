@@ -1,14 +1,15 @@
 # 3.6.1a. Prototype workflows and critical review
 
-Status: planned; required design remediation inside current `CODE-UX-01`.
-Updated: 2026-11-19. This is not a new production phase or an accepted redesign.
+Status: interactive prototype and automated audit implemented; explicit human
+design walkthrough/acceptance pending inside `CODE-UX-01`.
+Updated: 2026-11-20. This is not production cutover or design approval.
 
 ## Invariants, topology and dependencies
 
 Apply [GOVERNANCE.md](./GOVERNANCE.md) before any work. The relevant graph is
 prototype presentation -> explicit fixture contracts; test harness -> declared
 TypeScript/Node/Playwright. Production never imports the prototype. The allowed
-scope is this directory's HTML/evidence and planned `prototype/` sources/tests,
+scope is this directory's HTML/evidence and isolated `prototype/` sources/tests,
 plus shared state/ADRs. Runtime, API, database, auth and upstream source are
 outside this design iteration.
 
@@ -87,8 +88,20 @@ reference [QUALITY-GATES.md](./QUALITY-GATES.md).
 | `UXP-04` | learner runs samples/scratch, diagnoses a fault, corrects, then submits | immutable samples, private scratch, typed result states, frozen acknowledgement and later-edit state | wrong answer shows expected/actual; compile error is distinct; custom no-oracle gives only output; cancel/stale work cannot overwrite current state; submit captures visible files once | learner cases/results and explicit run/cancel/submit/status transitions, all simulated | G-PROT-flow for UXP-01..04; resolves UX-F02 |
 | `UXP-05` | preserve work through navigation, draft failures and layout changes | change impact/cancel/confirm; persistence/recovery transitions; selected task/focus/panel state | cancelled changes preserve exact values; failed save is not Saved; reopen restores simulated scoped draft; active controls reachable with both host panels; keyboard/focus survives resizing | recovery/error/conflict states, adaptive teacher layouts, focused learner navigation and optional graphics/terminal placement | G-PROT-flow for UXP-01..05; inspected stress captures; resolves UX-F04/F06 |
 | `UXP-06` | challenge both complete journeys using different data and errors | frozen review checklist with acceptance IDs and unresolved-findings record | all required workflow cases run; no silent skips; review exposes fixture-vs-runtime boundary; check findings against evidence | fix root causes within the current design and update model/ADRs | full G-PROT-flow + G-DOC; adversarial Auditor pass; explicit human design review |
+| `UXP-07` | represent the intended editor/file workflow before human acceptance | shared visual workbench, stable file IDs, open tabs, per-file caret/scroll and protected support | author creates/renames/removes files without losing edits; closing tabs never deletes files; learner buffers and read-only support survive navigation; inspect desktop/mobile | numbered/colorized editor specimen, explorer, file tabs and author file commands; no Monaco/runtime boot or new library | strict G-PROT-contract, red-before-green UXP-07 browser journeys, full regression gate and captures; human acceptance remains separate |
 
 ## Interaction and layout requirements
+
+The source regions must resemble the planned Monaco-backed workbench, not
+generic form textareas. Use the same explorer/tab/editor arrangement for
+author, learner and preview; preserve buffers, selection and scroll per file.
+Show read-only support and local modifications explicitly. Tab closure is
+navigation, never file deletion. Author file creation/rename validates paths
+and duplicates; deletion requires confirmation. Learner file creation/rename
+is not inferred from editor access: this iteration retains supplied-file
+permissions, rather than inventing a new product policy. Native editing plus
+syntactic coloring/line numbers may simulate the editor; no claim of Monaco,
+language-service or public runtime integration follows from visual fidelity.
 
 Keep the five task views navigable in any order, with one shared draft. Show
 incomplete/error state where it matters and a navigable readiness summary.
@@ -150,6 +163,44 @@ Record completion, confusion, unnecessary navigation and recovery. Human review
 may reject a terminal-green design. Resolution of UX-F01..06 is required before
 design approval; any scope change must be explicit, not an agent's waiver.
 Do not label this as authenticated competitor benchmarking or live E2E.
+
+## Reviewable implementation
+
+Open [layout-prototype.html](./layout-prototype.html) directly. The Study controls
+select blank/function/I/O/20-case examples and simulated failure responses.
+They collapse on narrow screens. The five author tasks and the independent
+learner/preview views use current draft data. See the
+[frozen oracle checklist](./prototype/REVIEW-CHECKLIST.md).
+
+UXP-01..06 retain their earlier terminal evidence. The subsequent UXP-07
+editor-fidelity iteration adds a shared visual workbench for starter code,
+reference/incorrect solutions and learner/preview files. It includes colored
+source, line numbers, cursor status, real editable buffers, file tabs, an
+explorer, and author create/rename/confirmed-delete commands. Closing a tab
+does not delete its file. Per-file caret/scroll and code changes are retained;
+supplied read-only support remains protected in learner/preview contexts.
+
+The current gate selects 14 Node contract tests and 16 sequential browser
+journeys, with no required skips. Same-agent Auditor and capture inspection
+are recorded in the shared ledger, separately from human acceptance. These
+editor interactions are a visual/native-text specimen, not loaded Monaco,
+language services, a VFS or a real execution engine. No dependency was added.
+
+This specimen uses strict JSDoc-checked scripts plus TypeScript presentation
+contracts. It consumes no production module, server or Emception runtime.
+Only declared synthetic source/case combinations have recorded outcomes.
+Unknown combinations report an unrecorded response. Sample execution, canvas
+pixels, echo input and submission acknowledgements are design evidence only.
+Unrecorded file sets/support contents also cannot reuse an example verdict.
+
+Saved/recovery data lives in scoped, cloned in-memory stores for the open tab.
+**Simulate reload** and **Reopen saved draft** model recovery; an actual browser
+refresh starts the study again. Nothing private is written to browser storage.
+Durable authorized recovery and API concurrency belong to 3.6.2 onward.
+
+Before closing 01a, record the explicit human walkthrough above, including any
+remaining confusion or requested design changes. Artifact/scope prerequisites
+still independently block closure of the parent gate.
 
 ## Handoff
 

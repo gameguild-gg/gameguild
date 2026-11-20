@@ -1,0 +1,18 @@
+{
+  "extends": "../../../../../../packages/tooling/typescript/tsconfig.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "moduleDetection": "legacy",
+    "types": [],
+    "composite": false,
+    "incremental": false,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "skipLibCheck": false,
+    "noEmit": true,
+    "exactOptionalPropertyTypes": true
+  },
+  "include": ["*.ts", "*.js"]
+}
