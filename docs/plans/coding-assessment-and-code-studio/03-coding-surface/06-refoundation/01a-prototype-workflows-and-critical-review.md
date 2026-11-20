@@ -102,8 +102,12 @@ areas. I/O/code/long statements retain the space they need. Public examples
 and executable sample cases must have an explicit relationship; the author
 must not unknowingly maintain contradictory copies.
 
-Validate shows where to edit the reference/wrong solutions and which candidate
-and cases were tested. Distinguish mismatch from compile/infrastructure error.
+**Validate exercise** shows where to edit the reference/wrong solutions and
+which candidate and cases were tested. Its tab and heading must use that
+explicit name (or a localized equivalent), never bare Validate/Validation.
+Include an accessible-name assertion in UXP-03. This is authoring preparation,
+not the Assessments/Grading evaluation of learner submissions.
+Distinguish mismatch from compile/infrastructure error.
 Preview reflects current edits and has a clear return path. Neither path
 creates an official attempt or grants access to private material.
 

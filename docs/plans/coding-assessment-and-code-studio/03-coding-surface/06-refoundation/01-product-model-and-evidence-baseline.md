@@ -52,7 +52,7 @@ checks do not approve array scope, runtime support or the overall gate.
    and the learner journey from first opening to released feedback. Include
    incomplete work, failed execution, reopening and reviewing a frozen attempt.
 3. Define task layouts for Problem, Environment, Starter code, Tests and
-   Validate. Prototype the learner problem/editor/results composition too.
+   Validate exercise. Prototype the learner problem/editor/results composition too.
    Inspect wide, constrained-by-sidebar and mobile containers. Do not approve a
    fixed inspector width or the current component tree as the product model.
    Complete [3.6.1a](./01a-prototype-workflows-and-critical-review.md): the

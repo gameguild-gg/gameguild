@@ -107,8 +107,9 @@ restriction. See `CS-REF-18` in the acceptance matrix.
 ### Instructor
 
 Provide task views for **Problem**, **Environment**, **Starter code**, **Tests**
-and **Validate**. Labels may be localized. These are navigable views with a
-shared draft, not a mandatory one-way wizard.
+and **Validate exercise**. Localized labels must also explicitly name the
+exercise. These are navigable views with a shared draft, not a mandatory
+one-way wizard.
 
 - Problem covers statement, examples, constraints and learner-facing resources.
 - Environment separates language from runtime and compatible tools.
@@ -116,8 +117,10 @@ shared draft, not a mandatory one-way wizard.
   teacher-only reference material.
 - Tests provides a compact case list and type-specific editor, duplication,
   public/private visibility and useful validation errors.
-- Validate exercises reference and deliberately incorrect solutions, then
-  opens the actual learner presentation with redacted data.
+- Validate exercise checks reference and deliberately incorrect solutions,
+  then opens the actual learner presentation with redacted data. This prepares
+  the exercise; it does not evaluate learner submissions, create official
+  attempts, assign grades or release results. Those remain in Assessments/Grading.
 
 Use the available central workspace. Text authoring and large case tables can
 use full width; configuring a selected case can sit beside code. Resizable,
@@ -162,7 +165,7 @@ or launches a second runtime for each tab.
 | 3.6.1a | [Prototype workflows and critical review](./06-refoundation/01a-prototype-workflows-and-critical-review.md) | required design checkpoint inside `CODE-UX-01` | typed, stateful teacher/learner journeys; six review findings resolved; human design review |
 | 3.6.2 | [Domain, drafts and data boundaries](./06-refoundation/02-domain-drafts-and-data-boundaries.md) | `CODE-UX-02` | coherent contracts, recoverable drafts, revisions and private/public projections |
 | 3.6.3 | [Workbench, runtime and capabilities](./06-refoundation/03-workbench-runtime-and-capabilities.md) | `CODE-UX-03` | tested execution foundation, graphics/terminal integration and resource lifecycle |
-| 3.6.4 | [Instructor authoring and validation](./06-refoundation/04-instructor-authoring-and-validation.md) | `CODE-UX-04` | teacher can create, validate, save and reopen both exercise families |
+| 3.6.4 | [Instructor authoring and exercise validation](./06-refoundation/04-instructor-authoring-and-validation.md) | `CODE-UX-04` | teacher can create, validate, save and reopen both exercise families |
 | 3.6.5 | [Learner and review experiences](./06-refoundation/05-learner-and-review-experiences.md) | `CODE-UX-05` | solve, experiment, recover, submit and inspect the correct snapshot |
 | 3.6.6 | [Web integration and acceptance](./06-refoundation/06-web-integration-and-acceptance.md) | `CODE-UX-06` | integrated representative journeys, human acceptance and explicit handoff |
 

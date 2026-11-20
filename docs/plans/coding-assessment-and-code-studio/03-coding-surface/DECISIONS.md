@@ -395,6 +395,19 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   it cannot waive CS-REF-18/21 or imply approval of CS-ADR-015's scalar limit.
 - Affects: UX-F01..06, existing CS-REF acceptance mappings and current handoff.
 
+## `CS-ADR-019`. Name authoring validation explicitly
+
+- Date: 2026-11-19.
+- Status: accepted by explicit product instruction.
+- Decision: use **Validate exercise** for the authoring tab, heading and task
+  references; localized labels must also name the exercise explicitly.
+- Boundary: this checks exercise configuration and reference/incorrect
+  solutions. Assessments/Grading separately evaluates learner submissions,
+  assigns official scores and controls review/release. No academic effects
+  belong to the authoring validation task.
+- Affects: prototype copy and refoundation terminology only; existing internal
+  IDs and contracts are unchanged. This does not complete any UXP slice.
+
 ## Modelo para novas decisoes
 
 ```text

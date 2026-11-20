@@ -57,16 +57,21 @@ um gate como concluido sem registrar a evidencia executada.
 
 ### Current compact checkpoint
 
-- Active stage: documentation audit passed; UXP-01..06 implementation not started.
-- Allowed task delta: refoundation plans, shared state/ADRs and parent links.
-  Existing application changes are preserved, not part of this documentation task.
+- Active stage: naming clarification completed and audited under CS-ADR-019.
+  UXP-01..06 implementation not started.
+- Allowed task delta: prototype tab copy, refoundation task labels and shared
+  state/ADRs. No application, runtime, grading contract or upstream change.
+- Naming contract: authoring tab/heading use Validate exercise; technical
+  preparation stays distinct from Assessments/Grading learner evaluation.
+  Verify the accessible tab name, panel heading and narrow-layout visibility.
 - Contract: [governance](./06-refoundation/GOVERNANCE.md), atomic UXP rows and
   [terminal gates](./06-refoundation/QUALITY-GATES.md). This file fulfills the
   `state.md` role; do not create a second mutable tracker.
 - Acceptance IDs: UX-F01..06 map to UXP-01..06 and existing CS-REF rows.
-- Terminal evidence: G-DOC passed; 46 Markdown documents, 165 local links,
-  24 atomic rows and command targets checked. Prototype contract and behavior
-  tests are planned, with no red/green evidence yet.
+- Terminal evidence: earlier G-DOC checked 46 documents, 165 local links and
+  24 atomic rows. Current naming check failed before the copy change and passed
+  afterward in desktop/mobile; diff whitespace is clean. UXP contract and
+  behavior suites remain planned; this label-only check does not close them.
 - Runtime: blocked by artifact provenance; no new runtime check this turn.
 - Human: design acceptance pending; earlier agent inspection is not approval.
 - Next exact action: UXP-01 specification and typed presentation contracts,
@@ -265,6 +270,22 @@ Passing layout checks have not been promoted to UX or runtime acceptance.
 | Node 24.16.0 read-only gate-target/manifest audit | exit 0; 14 existing command paths and six package manifests checked | planned prototype files are explicitly future deliverables, not executed tests |
 | `git diff --check -- docs/plans/coding-assessment-and-code-studio` | exit 0 | documentation whitespace |
 | Auditor self-review against Meta-Harness and entry scope | no new boundary violation identified; tiered context and next action reconciled; upstream/dev scripts have no diff | same-agent review, not independent human design acceptance |
+
+### Authoring terminology correction - 2026-11-19
+
+Baseline: clean worktree at `efcc1c69fe`. User explicitly requested the label
+**Validate exercise** to distinguish authoring preparation from learner grading.
+Only prototype copy and plan/state/ADR wording changed; internal IDs, behavior,
+production code and grading contracts are unchanged.
+
+Playwright/Node inline check: exact tab-name assertion failed before the edit
+(exit 1, zero matches), then passed with keyboard navigation, panel/heading,
+status and overflow checks at 1280x720 and 390x844 (exit 0). Mobile capture
+was visually inspected. Captures: `/tmp/coding-surface-label-20261119/`.
+The default Playwright browser was absent and sandbox launch was denied;
+these bootstrap failures were not the behavioral red evidence. The checks
+used the already-installed Chrome outside the sandbox, one browser, closed
+afterward. No application stack, build, installation or real runtime was run.
 
 ## Arquivos alterados pela implementacao
 

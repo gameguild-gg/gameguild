@@ -1,4 +1,4 @@
-# 3.6.4. Instructor authoring and validation
+# 3.6.4. Instructor authoring and exercise validation
 
 Status: planned. Gate: `CODE-UX-04`. Depends on `CODE-UX-03`.
 
@@ -29,7 +29,9 @@ implementation -> Quality gate; see [QUALITY-GATES.md](./QUALITY-GATES.md).
 ## Work
 
 1. Implement a dedicated authoring surface with a simple exercise-family
-   selector and task views: Problem, Environment, Starter code, Tests, Validate.
+   selector and task views: Problem, Environment, Starter code, Tests, Validate
+   exercise. The last task checks exercise preparation, not learner grading;
+   keep its explicit name in the tab, heading and localized labels.
    Use the accepted draft and typed family registry. Shared state survives view
    changes; navigation is not restricted to a linear wizard.
 2. Provide space according to the task: full-width problem/case editing, a

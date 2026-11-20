@@ -10,6 +10,10 @@ Adopted: 2026-11-19, by explicit product instruction (Meta-Harness).
 2. Coding owns problems, signatures, files and technical cases. Grading owns
    official attempts, academic scores, review and release. Surface execution
    produces diagnostic evidence; it never becomes the academic authority.
+   Name the authoring task **Validate exercise**, not bare Validate/Validation.
+   It checks the prepared exercise with reference/incorrect solutions; it is
+   not the Assessments/Grading workflow for evaluating learner submissions.
+   Localized labels must retain that explicit exercise scope.
 3. The host owns authentication, persistence, concurrency, routing and official
    commands. Packages consume typed ports; they do not import app internals.
 4. Preserve `tools/emception/**` and `packages/infrastructure/ui-emception/**`.

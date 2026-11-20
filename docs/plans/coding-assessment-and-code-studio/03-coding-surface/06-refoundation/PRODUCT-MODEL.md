@@ -40,9 +40,14 @@ the painted rectangle is not Emception execution evidence and does not pass
 | Environment | language separate from environment; only proven capabilities selectable | no preset-as-exercise-family; `CS-REF-10`, `11`, `18` |
 | Starter code | file list beside a focused editor; a single function signature where applicable | no runtime or terminal needed to prepare source; `CS-REF-02`, `12` |
 | Tests | selectable case list beside a spacious, family-specific case editor; stack when narrow | configuration stays out of the console; `CS-REF-01`, `02`, `13`, `17` |
-| Validate | protected reference/wrong-solution validation and a separate learner preview | distinguish validation from solving; `CS-REF-05`, `19` |
+| Validate exercise | protected reference/wrong-solution validation and a separate learner preview | exercise preparation, not learner grading; `CS-REF-05`, `19` |
 | Solve | problem alongside editor when space allows; cases/output/optional canvas in focused views | experiment separately from submit; `CS-REF-03`, `04`, `14` |
 | Review | the solving regions receive frozen submitted files and authorized evidence | never restore the learner's current draft into a review; `CS-REF-15`, `16` |
+
+**Validate exercise** is the explicit authoring task name, including its tab
+and heading; do not abbreviate it to Validate or Validation. It checks the
+prepared exercise, not student work. Official learner evaluation, scores,
+review and release remain in Assessments/Grading. See `CS-ADR-019`.
 
 ### Layout observations
 
