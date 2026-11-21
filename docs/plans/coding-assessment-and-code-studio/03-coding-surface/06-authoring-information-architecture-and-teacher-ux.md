@@ -3,7 +3,9 @@
 Status: in progress; `CODE-UX-01` closed on 2026-11-21. The 3.6.1a interactive prototype
 and its automated audit are implemented. The user approved the prototype
 design and initial scalar-only function scope on 2026-11-20. The baseline
-documentation/contract audit passed; `UX02-A` is now being implemented.
+documentation/contract audit passed. UX02-A contracts and UX02-B persistence
+preparation are implemented/tested in scope; their broader G-API gate remains
+open. UX02-C and production integration are not complete.
 Compatible 4.5.2 assets
 are published; local synchronization and execution checks belong to `CODE-UX-03`,
 not to a mandatory Emception build or IDE publication.

@@ -589,6 +589,43 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
 - Affects: UX02-A; CS-REF-06/07/09/22 contract preparation. It does not close
   their production acceptance or CODE-UX-02 by itself.
 
+## `CS-ADR-026`. Revision-bound Learning persistence and author-only recovery
+
+- Date: 2026-11-21.
+- Status: implemented/tested UX02-B preparation inside CS-ADR-014/025 boundaries;
+  broader G-API and production integration remain open.
+- Persistence: coding-surface consumes a typed port. The web host uses existing
+  authorized Learning get/save actions and JSON/revision storage; token/tenant
+  come from the authenticated server context, not the local isolation scope.
+  No endpoint, server store, platform rule, table or migration is added.
+- Concurrency: one in-flight request freezes the draft being sent. Saved needs
+  its exact next revision and body acknowledgement. Newer edits stay unsaved;
+  failures retain them. A conflict cannot retry automatically even after a
+  failed reload. Explicit discard/reload cannot erase edits made in flight.
+- Metadata: the host supplies an atomic revision/payload pair. A newer coding
+  reload cannot authorize a write with an older title, settings or metadata.
+  The lesson coordinator must adopt the whole acknowledged/reloaded lesson
+  and remain the single save loop; the new port is not a second autosave.
+  This integration is required at the planned UI cutover, not claimed done now.
+- Recovery: private reference/case buffers stay in the authorized author session.
+  Checkpoints are cloned memory values, bound to tenant/actor/course/content
+  and draft/publication revisions. Cross-scope/stale recovery is rejected.
+  Dispose or changed scope prevents a late response from reviving old state.
+  Acknowledged work recovers from the server on another device/refresh;
+  unsynced memory does not survive page closure/refresh and is never called Saved.
+  No private draft is put in browser/learner storage or error logs.
+- Failures: unauthorized, conflict, invalid-data and unavailable remain explicit.
+  Invalid snapshots, cyclic/non-serializable metadata or wrong acknowledgements
+  cannot turn into saved state. Raw private exceptions are not exposed/logged.
+- Evidence: strict contracts before behavior; initial missing implementations
+  failed the planned oracles. Same-agent audit then reproduced six concrete
+  lifecycle/identity/metadata defects before their fixes. Both families share
+  the backend fixture. Terminal details are in the single implementation ledger.
+- Preservation: active editor/writers, canonical definitions, official grading,
+  published data, generated client, dependencies and Emception/UI stay unchanged.
+  No compiler/build/publication prerequisite is introduced. Actual publication/
+  projections are UX02-C; human/runtime acceptance remains separate.
+
 ## Modelo para novas decisoes
 
 ```text

@@ -41,6 +41,8 @@ None of these consumers was cut over to the refounded product in `CODE-UX-01`.
 | `coding-activity-client.tsx` | obtains frozen runtime delivery; maintains host submission keys and local namespace | keep official commands and contextual identity; replace solving composition and freeze retry payload |
 | `assessment-grader.tsx` and SpeedGrader | server snapshot/submitted files and authorized review commands | retain frozen-source ownership; integrate read-only review presentation |
 | `coding-surface-bridge.ts` | converts PascalCase content and rejects a missing explicit type | evolve with owned contracts; incomplete draft is a separate model |
+| `authoring-persistence.ts` in coding-surface | new tested session/port; no runtime, storage or host imports | bind only to authenticated authoring; exact save ack, conflict lock, scoped memory recovery and disposal |
+| `learning-draft-persistence.ts` in the web host | new tested bridge through existing Learning actions; not installed in the production editor | lesson coordinator supplies revision-bound metadata and owns the only save loop; no direct published upsert |
 | `coding-cycle-browser-e2e.mjs` | historical mixed stdio/function diagnostic cycle | canonical fixture imported with explicit `ExerciseType`; compatible assets are published, but local refresh/preflight and real execution remain pending; no mandatory runtime build (`CS-ADR-024`) |
 
 Detailed reuse/replace/remove reasons and the ownership trace are in

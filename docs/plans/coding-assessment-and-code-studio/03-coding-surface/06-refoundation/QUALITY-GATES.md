@@ -227,10 +227,14 @@ blocked. Never weaken compilation, provenance or isolation to force a run.
 ## G-REGRESSION and G-FINAL
 
 ```bash
-pnpm --filter @game-guild/emception-ui test --maxWorkers=1
+pnpm --filter @game-guild/emception-ui test
 node --test --test-concurrency=1 scripts/ci/tests/classify-release-changes.test.mjs scripts/ci/tests/pr-required-gate.test.mjs
 git diff --check
 ```
+
+The preserved Emception UI package already runs `jest --runInBand`. Do not
+append `--maxWorkers=1`: Jest rejects combining those two scheduling options.
+Its declared script is sequential and runs the same complete required suite.
 
 `G-REGRESSION` also requires an Auditor check of the entry/task delta for
 preserved upstream/platform paths and forbidden imports or suppressions.

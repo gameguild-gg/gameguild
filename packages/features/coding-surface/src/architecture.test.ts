@@ -1,12 +1,12 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { extname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import ts from 'typescript';
 
 describe('coding surface architecture', () => {
   it('depends only on public boundaries', () => {
     const source = readProductionSource(import.meta.dirname);
-    const specifiers = [...source.matchAll(/(?:\bfrom\s+|\bimport\s*\(\s*)['"]([^'"]+)['"]/g)]
-      .map((match) => match[1]);
+    const specifiers = [...source.matchAll(/(?:\bfrom\s+|\bimport\s*\(\s*)['"]([^'"]+)['"]/g)].map((match) => match[1]);
     for (const specifier of specifiers) {
       expect(specifier).not.toContain('@game-guild/emception-ui');
       expect(specifier).not.toContain('apps/web');
@@ -14,13 +14,37 @@ describe('coding surface architecture', () => {
       expect(specifier).not.toContain('/src/');
     }
   });
+
+  it('keeps the draft session independent from UI, runtime and browser storage', () => {
+    for (const name of ['authoring-persistence.ts', 'authoring-persistence-types.ts']) {
+      const source = readFileSync(join(import.meta.dirname, name), 'utf8');
+      const file = ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true);
+      for (const statement of file.statements) {
+        if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) continue;
+        expect(['@game-guild/coding', './authoring-persistence-types']).toContain(statement.moduleSpecifier.text);
+      }
+      expect(source).not.toMatch(/\b(?:localStorage|sessionStorage|indexedDB|Worker|window)\b/);
+    }
+  });
+
+  it('exposes the owned persistence port and session through the public entry point', () => {
+    const source = readFileSync(join(import.meta.dirname, 'index.ts'), 'utf8');
+    const file = ts.createSourceFile('index.ts', source, ts.ScriptTarget.Latest, true);
+    const exported = file.statements.flatMap((statement) =>
+      ts.isExportDeclaration(statement) && statement.moduleSpecifier && ts.isStringLiteral(statement.moduleSpecifier) ? [statement.moduleSpecifier.text] : [],
+    );
+    expect(exported).toContain('./authoring-persistence');
+    expect(exported).toContain('./authoring-persistence-types');
+  });
 });
 
 function readProductionSource(directory: string): string {
-  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(directory, entry.name);
-    if (entry.isDirectory()) return readProductionSource(path);
-    if (entry.name.endsWith('.test.ts') || entry.name.endsWith('.test.tsx') || !['.ts', '.tsx'].includes(extname(entry.name))) return [];
-    return [readFileSync(path, 'utf8')];
-  }).join('\n');
+  return readdirSync(directory, { withFileTypes: true })
+    .flatMap((entry) => {
+      const path = join(directory, entry.name);
+      if (entry.isDirectory()) return readProductionSource(path);
+      if (entry.name.endsWith('.test.ts') || entry.name.endsWith('.test.tsx') || !['.ts', '.tsx'].includes(extname(entry.name))) return [];
+      return [readFileSync(path, 'utf8')];
+    })
+    .join('\n');
 }

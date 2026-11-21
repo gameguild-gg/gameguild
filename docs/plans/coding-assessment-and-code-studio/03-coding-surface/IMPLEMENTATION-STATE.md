@@ -2,6 +2,112 @@
 
 Ultima atualizacao: 2026-11-21.
 
+## Execution record: UX02-B persistence preparation - 2026-11-21
+
+- Entry: committed UX02-A at `bb9cb883c7db6065a812449d5ed7bfd126245c38`,
+  tree `01ab03dd3b781e8774da66a355e4c4ba2c0369df`, clean `feature/coding-grading`;
+  user requested continuation. No merge or automatic commit.
+- The broader UX02-A G-API failure/resource stop remains open. Governance
+  permits unaffected checks within their own boundary; this continuation
+  prepares and tests host persistence/recovery without closing UX02-A,
+  entering UX02-C or cutting over the production editor.
+- Specification: incomplete coding documents use Learning's existing
+  revisioned authoring draft. Server Saved requires the exact write ack;
+  edits made during that write remain unsaved. Failures/conflicts retain
+  buffers and cannot silently overwrite another author. Reload/discard is
+  explicit. Recovery checkpoints are cloned, author-only in-memory values,
+  scoped to tenant/actor/course/content and base draft/publication revisions.
+  No private solutions/cases are written to browser storage. A refresh or
+  another device can recover acknowledged server data, not unsynced memory.
+- Allowed edits: new persistence/session contracts and focused tests in
+  `packages/features/coding-surface/src/`; its exports/architecture checks;
+  a host bridge and focused tests in `apps/web/src/lib/coding-assignment/`;
+  shared plan/state/ADRs. Existing Learning actions and authorization remain
+  the server boundary; no second endpoint/store or active writer is added.
+- Implemented: surface persistence/session ports and host bridge through the
+  existing authorized Learning actions. A single in-flight save freezes its
+  payload; only an exact body/revision acknowledgement advances Saved. A
+  conflict stays locked even if reload fails. Scope changes/disposal prevent
+  late responses from reviving a previous actor's state. Host metadata is read
+  atomically with its revision; reload cannot enable a write using old metadata.
+- Contract stage passed before behavior: strict surface types, two initial
+  schema/port fixtures and lint; full web TypeScript validated the host port
+  and fixtures. Missing public behavior then failed 22 session / 16 host
+  oracles before implementation. Callback tests now import their pure module;
+  public export/import boundaries have separate architecture/type assertions.
+  Initial ES library/readonly fixture errors were corrected in tests without
+  weakening compiler settings; they are not behavioral red evidence.
+- Same-agent Auditor reproduced and fixed: lost conflict lock after failed
+  reload; receiver-dependent recovery callback; changed body at the same
+  revision; incomplete scope accepted by the host; cyclic metadata classified
+  as a network failure; stale metadata overwrite after a newer coding reload.
+  Malformed acknowledgements are invalid data, never Saved. Required oracles
+  were retained. Both families use the same JSON fixtures as backend tests.
+- Gate: G-CONTRACT/G-SURFACE; focused host bridge and existing Learning
+  authoring/workspace tests, strict changed-file lint, G-WEB typecheck when
+  safely budgeted. Existing UX02-A EF persistence/rejection evidence remains
+  scoped as recorded below; no new backend change is planned. Full G-API and
+  production browser/human acceptance remain open, not implicitly waived.
+- Resources: entry MemAvailable 13,937 MiB; sequential checks, one JS worker,
+  <=4096 MiB JS heap and CPU affinity 0-9 (two of twelve cores reserved).
+  Do not repeat the twice-stopped API-wide compilation in this slice.
+- No active editor/writer, generated client, API production source, table,
+  migration, platform, Emception/UI, dev command or dependency was changed.
+  This is tested integration preparation, not production UI cutover or human
+  acceptance. The lesson coordinator must own the single save loop and adopt
+  the whole acknowledged/reloaded lesson revision before issuing another write.
+- Next: preserve the open broader gate; prepare the UX02-C published-data
+  inventory and immutable publication/projection contract. Do not claim that
+  an authoring draft is already publishable, or enter CODE-UX-03 runtime work.
+
+### Builder / Auditor results for UX02-B preparation
+
+Both roles were performed by the same agent. All selected final cases below
+passed without skips; external/open gates were not rerun or relabeled green.
+
+| Command / check | Result | Scope / limitation |
+| --- | --- | --- |
+| G-CONTRACT, coding and adapter typechecks/tests and strict package lint | exit 0; 49 + 15 tests | canonical executable contracts unchanged |
+| G-SURFACE, typecheck, tests and strict lint | exit 0; 46 tests, 32 more than the committed baseline | memory-only lifecycle, ack/conflict/scope protections; no runtime/compiler |
+| G-WEB focused selection: new `learning-draft-persistence.test.ts`, existing bridge, authoring actions and authoring workspace | exit 0; 106 tests, including 22 new host cases | real Server Actions with mocked HTTP; no API server or browser claim |
+| Full web `tsc --noEmit --pretty false` and strict changed-file ESLint | exit 0 | 4096 MiB heap ceiling; no ignored type/lint diagnostics |
+| Courses `--no-build --no-restore --filter FullyQualifiedName~CodingDraft` | exit 0; 4/4 | existing unchanged compiled service tests; EF InMemory roundtrip/conflict, not PostgreSQL HTTP |
+| CodeAdapter `--no-build --no-restore --filter FullyQualifiedName~AuthorOnlyDraft` | exit 0; 2/2 | existing unchanged compiled draft-discriminator rejection cases |
+| Preserved `@game-guild/emception-ui test`; release-classifier/required-gate Node suites | exit 0; 27 + 54 tests | no upstream/UI/CI source changes or publication |
+| G-DOC, task-delta/negative-constraint review and official `needs_source_release()` on all 14 changed/new paths | 47 documents, 165 valid local links, 25 atomic rows; classifier false; whitespace clean | no runtime/IDE producer required; no production/human acceptance inferred |
+| Broader G-API / full solution build | still open; not retried | previously recorded Authentication failure and twice-stopped API compilation remain; no new backend source change |
+
+New implementation paths: surface `authoring-persistence.ts`,
+`authoring-persistence-types.ts`, their contract/behavior tests and public
+exports/architecture tests; host `learning-draft-persistence.ts` and its test.
+CS-ADR-026 and the consumer map describe the required coordinator integration.
+
+Commands use installed Node/pnpm, CPU affinity `0-9`, one Vitest worker and
+sequential groups. The web lint runs from `apps/web` against exactly its two
+new files with `--no-inline-config --max-warnings=0`; package lint covers all
+three owned source directories. The G-WEB selection adds the new host test to
+the three existing gate files. No dependency/tool was installed. An ephemeral
+`/tmp/coding-ux02b-resource-guard.mjs` guards only owned processes, reserving
+4 GiB system MemAvailable and stopping above 6 GiB owned RSS; this is not a
+committed CLI or developer-command change. No API compile, Next build, runtime,
+Docker, migration, data reset or background service was started.
+
+Final resource observations: combined sampled owned-process RSS peaked at
+826 MiB for G-WEB tests, 1404 MiB for full web types, 518 MiB for preserved
+Emception UI tests and 326/311 MiB for the focused compiled backend cases.
+The monitor includes descendants with separate process groups. Earlier
+contract-stage full web types sampled 1551 MiB; all monitored commands stayed
+well below the existing guard. RSS sums can double-count shared pages; these
+are observations, not a physical-memory/runtime performance benchmark.
+Two CPU cores remained reserved, and no resource stop was needed in this slice.
+
+Bootstrap corrections are not product failures/passes: Jest rejected the old
+G-REGRESSION invocation combining the package's existing `--runInBand` with
+`--maxWorkers=1`. The plan command now uses the declared sequential test script;
+all 27 cases ran. No protected package/config was edited. The Markdown audit
+resolved unified/remark-parse from the declared react-markdown dependency
+context after a direct web lookup failed; no library was installed.
+
 ## Execution record: UX02-A - 2026-11-21
 
 - Entry: `f5436065e9f67e29967e77bbc22a8e9185b9e6fe`, tree
@@ -105,7 +211,9 @@ Current status: functional baseline and canonical consolidation 3.5 completed
 locally. `CODE-UX-01` closed on 2026-11-21 after its corrected audit.
 `CODE-UX-02` is in progress: UX02-A draft contracts and pure transformations
 are implemented, but its broader security gate has an external failure.
-UX02-B/C have not started. The production UI has not been cut over to the
+UX02-B persistence/session ports and host-action integration are implemented
+and tested in scope; formal closure and the production cutover remain open.
+UX02-C has not started. The production UI has not been cut over to the
 refounded model. Compatible published assets still require local refresh and
 real execution checks in CODE-UX-03, not an upstream IDE build/publication.
 
@@ -140,28 +248,30 @@ um gate como concluido sem registrar a evidencia executada.
 | Parte 3.3 | concluida | dois perfis, quatro modos, privacy e contrato canonico cobertos |
 | Parte 3.4 | em validacao final | consumidores e CI migrados; runner fixture now emits canonical `ExerciseType`; local asset refresh and real browser E2E remain pending |
 | Parte 3.5 | concluida localmente | `CANON-01` a `CANON-06` concluidos; validacao local verde, com fixture do runner e browser CI ainda pendentes no fechamento de `CANON-07` |
-| Parte 3.6 | in progress | `CODE-UX-01` closed; UX02-A implemented, formal G-API gate open for external failure/resource stop; production cutover not complete |
+| Parte 3.6 | in progress | `CODE-UX-01` closed; UX02-A and UX02-B preparation implemented/tested in scope, formal G-API gate open; UX02-C and production cutover not complete |
 
 ## Etapa ativa
 
 - Subplan: [3.6.2 domain and drafts](./06-refoundation/02-domain-drafts-and-data-boundaries.md).
-- Current gate: `CODE-UX-02`, slice UX02-A formal gate open. Its contract and
-  persistence evidence is green; broader Authentication has its known throttle
-  failure and API-wide compilation exceeded its resource guard. No downstream
-  row/gate is marked complete.
+- Current gate: `CODE-UX-02`, UX02-B in-scope audit recorded; formal broader
+  UX02-A/B gate remains open. Authentication has its known throttle failure
+  and API-wide compilation exceeded its resource guard. UX02-C/runtime/production
+  acceptance is not marked complete.
 - Design and initial scalar-only scope remain approved. ADRs 014-024 retain
   ownership/governance/artifact decisions; ADR025 records the new author-only
-  draft. Actual local artifact preflight remains a CODE-UX-03 obligation.
+  draft; ADR026 records revision-bound host persistence and memory-only recovery.
+  Actual local artifact preflight remains a CODE-UX-03 obligation.
 - Responsavel: Codex.
 
 ### Current compact checkpoint
 
-- Baseline: `f5436065e9f67e29967e77bbc22a8e9185b9e6fe`, tree
-  `916eced726bb8da768be2229f80308df4ad6ca9f`, clean entry on
+- Baseline: `bb9cb883c7db6065a812449d5ed7bfd126245c38`, tree
+  `01ab03dd3b781e8774da66a355e4c4ba2c0369df`, clean entry on
   `feature/coding-grading`. No fetch, merge, commit or stage.
-- Active row/stage: UX02-A / audit recorded, broader G-API unresolved. Allowed files and executed red/green
-  evidence are in the execution record above. No schema/platform/Emception,
-  host writer, canonical definition or generated-client edit.
+- Active row/stage: UX02-B preparation / in-scope audit recorded, broader
+  G-API unresolved. New session/host ports are tested but no active host writer
+  or UI was replaced. Allowed files/red-green evidence are recorded above.
+  No schema/platform/Emception, canonical definition or generated-client edit.
 - Contract: distinct author-only draft, stable identities, raw incomplete
   buffers, one signature, separate language/runtime/toolchain and protected
   validation solutions. It cannot enter definition/delivery/official grading
@@ -169,25 +279,27 @@ um gate como concluido sem registrar a evidencia executada.
 - Acceptance: CS-REF-06/07/09/22 contract preparation only; their production
   persistence/recovery/projection acceptance stays open in UX02-B/C and later
   browser/human gates. CS-REF-18 retains its accepted initial-scope limitation.
-- Terminal: coding, adapter and surface typechecks/lint pass; last full
-  coding/adapter/surface/bridge runs pass 49/15/14/5 tests. Full Courses,
-  CodeAdapter, Assessments and Authorization suites pass. Authentication has
-  the pre-existing email-resend throttle failure; API.UnitTests compilation
-  was resource-stopped twice and the full build was not run. No required skip
-  or false green is accepted.
+- Terminal: current coding/adapter/surface typechecks/lint pass; package tests
+  pass 49/15/46. G-WEB selected tests pass 106, full web TypeScript and lint pass.
+  Unchanged compiled backend persistence/rejection cases pass 4+2, without
+  rebuild. Full backend-suite results below are the prior UX02-A evidence;
+  Authentication still has the recorded email-resend failure and API compilation
+  was stopped twice. The full build was not run. No false green or required skip.
 - Runtime: no asset download/refresh, compiler/IDE build, runtime boot or dev
   stack. Local schema-1 artifacts remain a UX03 preparation obligation.
 - Human: prototype and initial scalar scope approved on 2026-11-20, not
   production usability or runtime approval. No new acceptance is inferred.
-- Next exact action: resolve the recorded external security failure and API
-  resource-budget disposition. Do not mark CODE-UX-02 complete or skip UX02-B/C.
-  Once the required gate is green, continue host persistence/recovery ports in UX02-B,
-  then immutable publication/projection in UX02-C. No IDE release prerequisite.
+- Next exact action: UX02-C specification/read-only published-use inventory;
+  identify the official statement/revision and wire/projection boundaries
+  before changing them. Preserve the open broader G-API owner/resource
+  disposition; do not close CODE-UX-02 or start CODE-UX-03 with missing evidence.
+  UX02-B ports must be integrated by the sole lesson save coordinator at the
+  planned UI cutover, not installed as a second autosave loop. No IDE release.
 
 | Gate da refundacao | Estado | Evidencia necessaria |
 | --- | --- | --- |
 | `CODE-UX-01` | complete | corrected contract/document/design/preparation audit passed on 2026-11-21; no runtime/build claim |
-| `CODE-UX-02` | in progress / gate open | UX02-A implemented; in-scope checks pass, broader Authentication failure/API compilation resource stop remain; UX02-B/C not started |
+| `CODE-UX-02` | in progress / gate open | UX02-A and UX02-B preparation implemented/tested in scope; broader Authentication/API resource gate remains open; UX02-C and production integration pending |
 | `CODE-UX-03` | nao iniciado | refresh compatible published assets and pass local preflight before real runtime, canvas/terminal, cancellation and resource checks |
 | `CODE-UX-04` | nao iniciado | autoria completa dos dois tipos e validacao pelo professor |
 | `CODE-UX-05` | nao iniciado | resolucao, envio, recuperacao e revisao por persona |
@@ -600,11 +712,14 @@ Continue [`3.6.2`](./06-refoundation/02-domain-drafts-and-data-boundaries.md):
    Do not repeat the prototype work or mislabel that approval as production
    runtime/usability acceptance. Initial scalar-only scope is also explicitly
    accepted in CS-ADR-015; compound support remains tracked in EMC-GAP-001.
-2. Resolve the broader UX02-A gate without hiding the external Authentication
-   failure or API compilation resource stop. Once it is green, continue UX02-B persistence/recovery
-   ports, then UX02-C publication/projection. Inventory actual persisted published
-   exercises before a breaking interpretation. Apply the mandatory atomic cycle;
-   do not compile or publish Emception for this domain/draft work.
+2. Retain the implemented/tested UX02-A contracts and UX02-B persistence ports.
+   Prepare UX02-C through read-only published-use inventory and its immutable
+   publication/projection specification. The broader Authentication failure and
+   API resource stop are still open, not resolved by the independent UX02-B
+   checks. No production/runtime gate is closed or skipped. Follow the atomic
+   cycle and resolve the required broader gate with its owner/resource
+   disposition before dependent acceptance. Do not compile/publish Emception
+   for this domain/draft work or install a second lesson autosave writer.
 3. Before CODE-UX-03 real execution, preserve old generated CDN/release copies,
    explicitly refresh the compatible pinned published assets and pass both
    local manifest checks in G-PREFLIGHT. The current helper can retain schema 1;
