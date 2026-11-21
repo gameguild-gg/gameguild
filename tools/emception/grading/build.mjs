@@ -23,7 +23,8 @@ function runNode(args, failureMessage) {
 await generateBrowserManifestUrl(root);
 await runNode([require.resolve('typescript/bin/tsc'), '-p', 'grading/tsconfig.json'],
   'Trusted Code browser runtime types failed.');
-await runNode(['--test', 'grading/toolchain-binding.test.mjs', 'grading/worker-diagnostics.test.mjs', 'grading/browser-launch-options.test.mjs'],
+await runNode(['--test', 'grading/toolchain-binding.test.mjs', 'grading/worker-diagnostics.test.mjs', 'grading/browser-launch-options.test.mjs',
+  'grading/execution-budget.test.mjs', 'grading/browser-budget.test.mjs'],
   'Frozen Code toolchain contracts failed.');
 await build({
   configFile: false,

@@ -4,6 +4,9 @@ import { resolveBuild, ToolchainPreset, type TestPlan } from 'emception';
 import { buildAssessmentExecutionPlan } from '../../../packages/infrastructure/ui-emception/src/assessment/plan';
 import { createAssessmentWorkspaceConfig, type CodingLanguage } from '../../../packages/infrastructure/ui-emception/src/assessment/presets';
 import type { CodingAssessmentDefinition } from '../../../packages/infrastructure/ui-emception/src/assessment/types';
+import { executeBudgetedCode, type CodeBudgetedOperation } from './execution-budget.js';
+
+const EXECUTION_BUDGET = Object.freeze({ timeLimitMs: 30_000, outputLimitBytes: 2_000_000 });
 
 interface CodeWorkerRequest {
   definition: CodingAssessmentDefinition;
@@ -28,23 +31,36 @@ export async function executeCodeAssessment(request: CodeWorkerRequest): Promise
     throw new Error('This Code adapter requires a native compilation preset.');
   }
   const api = await createEmception({ tty: 'none', manifestUrl: '/cdn/manifest.json' });
+  let disposed = false;
+  const dispose = () => {
+    if (disposed) return;
+    disposed = true;
+    api.dispose();
+  };
   try {
+    let failed = false;
     let infrastructureFailure: unknown;
-    const compile = api.compileAndRun.bind(api);
-    api.compileAndRun = async (...args) => {
+    let rejectFailure: (error: unknown) => void = () => undefined;
+    const failure = new Promise<never>((_resolve, reject) => { rejectFailure = reject; });
+    const protect = async (execute: CodeBudgetedOperation['execute']) => {
+      if (failed) throw infrastructureFailure;
       try {
-        const result = await compile(...args);
-        if (result.timedOut || result.stdout.length + result.stderr.length > 2_000_000) {
-          throw new Error('Code execution exceeded its runtime or output budget.');
-        }
-        return result;
-      } catch (error) { infrastructureFailure = error; throw error; }
+        return await executeBudgetedCode(EXECUTION_BUDGET, { execute, dispose });
+      } catch (error) {
+        failed = true;
+        infrastructureFailure = error;
+        rejectFailure(error);
+        throw error;
+      }
     };
+    const compile = api.compileAndRun.bind(api);
+    api.compileAndRun = (source, options) => protect(onOutput => compile(source, {
+      ...options, stdout: onOutput, stderr: onOutput,
+    }));
     const run = api.run.bind(api);
-    api.run = async (...args) => {
-      try { return await run(...args); }
-      catch (error) { infrastructureFailure = error; throw error; }
-    };
+    api.run = (command, argv, options) => protect(onOutput => run(command, argv, {
+      ...options, stdout: onOutput, stderr: onOutput,
+    }));
     await api.workspace.setBuild(build);
     for (const [path, file] of Object.entries(files)) {
       const data = file.encoding === 'base64'
@@ -58,17 +74,19 @@ export async function executeCodeAssessment(request: CodeWorkerRequest): Promise
     const plan: TestPlan = {
       ...execution.plan,
       build,
-      timeoutMsPerCase: 30_000,
+      timeoutMsPerCase: EXECUTION_BUDGET.timeLimitMs,
     };
     const overlay = execution.overlay.map((file) => ({ ...file, path: canonical(file.path) }));
-    const report = await withWorkspaceOverlay(api.workspace, overlay,
-      () => runTests(api, plan));
+    // A terminated runtime cannot restore its scratch VFS. Failure must settle
+    // independently of pending overlay cleanup; the host then closes the context.
+    const report = await Promise.race([failure, withWorkspaceOverlay(api.workspace, overlay,
+      () => runTests(api, plan))]);
     // The reusable preview engine represents errors as failed cases. Official
     // grading must distinguish a failed student test from unavailable execution.
-    if (infrastructureFailure) throw infrastructureFailure;
+    if (failed) throw infrastructureFailure;
     if (report.cases.length !== plan.cases.length) throw new Error('Incomplete Code test report.');
     return report.cases.map((test) => test.passed);
   } finally {
-    api.dispose();
+    dispose();
   }
 }
