@@ -2,6 +2,11 @@
 
 Status: planned. Gate: `CODE-UX-02`. Depends on `CODE-UX-01`.
 
+Entry does not require an Emception build, IDE publication or actual runtime
+boot. This phase validates domain/draft/persistence behavior without compiler
+execution; compatible local artifacts and G-PREFLIGHT are required before
+the real runtime checks in `CODE-UX-03` (`CS-ADR-024`).
+
 ## Invariants and boundaries
 
 Apply [GOVERNANCE.md](./GOVERNANCE.md) before specification. Allowed scope is

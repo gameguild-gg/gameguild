@@ -1,8 +1,11 @@
 # Part 3.6. Coding surface refoundation
 
 Status: in progress; `CODE-UX-01` is partial. The 3.6.1a interactive prototype
-and its automated audit are implemented. Explicit human design acceptance,
-exact artifact and compound-value disposition remain pending.
+and its automated audit are implemented. The user approved the prototype
+design and initial scalar-only function scope on 2026-11-20. Baseline closure
+still needs its recorded documentation/contract audit. Compatible 4.5.2 assets
+are published; local synchronization and execution checks belong to `CODE-UX-03`,
+not to a mandatory Emception build or IDE publication.
 Production refoundation and product acceptance are not complete.
 
 Updated: 2026-11-20.
@@ -164,7 +167,7 @@ or launches a second runtime for each tab.
 
 | Order | Subplan | Gate | Required result |
 | --- | --- | --- | --- |
-| 3.6.1 | [Product model and evidence baseline](./06-refoundation/01-product-model-and-evidence-baseline.md) | `CODE-UX-01` | accepted workflows, ownership, capability matrix and executable test preconditions |
+| 3.6.1 | [Product model and evidence baseline](./06-refoundation/01-product-model-and-evidence-baseline.md) | `CODE-UX-01` | accepted workflows, ownership, capability matrix and runtime preparation contract |
 | 3.6.1a | [Prototype workflows and critical review](./06-refoundation/01a-prototype-workflows-and-critical-review.md) | required design checkpoint inside `CODE-UX-01` | typed, stateful teacher/learner journeys; six review findings resolved; human design review |
 | 3.6.2 | [Domain, drafts and data boundaries](./06-refoundation/02-domain-drafts-and-data-boundaries.md) | `CODE-UX-02` | coherent contracts, recoverable drafts, revisions and private/public projections |
 | 3.6.3 | [Workbench, runtime and capabilities](./06-refoundation/03-workbench-runtime-and-capabilities.md) | `CODE-UX-03` | tested execution foundation, graphics/terminal integration and resource lifecycle |
@@ -173,18 +176,29 @@ or launches a second runtime for each tab.
 | 3.6.6 | [Web integration and acceptance](./06-refoundation/06-web-integration-and-acceptance.md) | `CODE-UX-06` | integrated representative journeys, human acceptance and explicit handoff |
 
 Each production gate requires its predecessor. The 3.6.1a iteration belongs
-inside the active first gate and can run while artifact acquisition or the
-compound-value decision is pending; it cannot waive either obligation.
+inside the active first gate. Product/contract work in `CODE-UX-01/02` does not
+require a compiler build, a new upstream release or a successful runtime boot.
+Real execution remains required in `CODE-UX-03` and subsequent runtime gates;
+it is not waived by design approval or contract checks.
 Small feasibility probes and test infrastructure preparation belong in 3.6.1;
 do not implement later production phases under the label of discovery. Each
 subplan's atomic sequence uses the mandatory cycle and named command gates.
 
 ## Remove the validation dependency cycle
 
-Canonical fixture repair, exact artifact acquisition and harness preflight are
-prerequisites for this refoundation's real-browser checks. Perform them in
-`CODE-UX-01`, using existing repository mechanisms and without weakening
-identity/provenance verification. This does not close `CODE-UI-07` by itself.
+`CODE-UX-01` records the canonical fixture, frozen runtime binding, lightweight
+preflight tests and resource budget. Before real runtime checks in `CODE-UX-03`,
+synchronize the compatible published assets and pass actual local preflight.
+Do not postpone this preparation until part 4.0 or require it before the pure
+domain/draft work in `CODE-UX-02`. This does not close `CODE-UI-07` by itself.
+
+Consume the existing public Emception runtime; do not publish its independent
+IDE or modify its CI to develop coding-surface. Version 4.5.2 is already
+published and its manifest passed the frozen binding check on 2026-11-20.
+The local schema-1 copies still need replacement through a backed-up,
+verified synchronization. `CS-ADR-024` defines this distinction and the
+conditional exact-source CI path. A local toolchain build is a fallback only
+when compatible artifacts cannot be obtained, not a planned prerequisite.
 
 Component-level layout tests can run without a compiler artifact, but they do
 not prove execution. An unavailable artifact blocks the affected runtime gate;
@@ -234,11 +248,13 @@ merely to finish. Do not claim broad competitor parity for a deliberately
 restricted exercise set.
 
 The initial layout specimen was replaced by a typed interactive design study.
-Its 24 automated checks cover the six findings, with inspected desktop/mobile
-captures. Perform the explicit human walkthrough in
-[3.6.1a](./06-refoundation/01a-prototype-workflows-and-critical-review.md)
-before treating its design as approved. Simulated behavior does not establish
-runtime, API persistence or official grading. Production phases remain gated.
+Its 30 automated checks cover the six findings and editor composition, with
+inspected desktop/mobile captures. The user explicitly approved its design
+on 2026-11-20; preserve that decision without inventing task-by-task human logs
+or repeating prototype work. See
+[3.6.1a](./06-refoundation/01a-prototype-workflows-and-critical-review.md).
+Simulated behavior does not establish runtime, API persistence or official
+grading. Production phases and their human/runtime acceptance remain gated.
 
 Excluded: new languages, a new general IDE, Code Studio/Lexical, a replacement
 grading engine, plagiarism/proctoring, AI assistants, multiplayer, private tests

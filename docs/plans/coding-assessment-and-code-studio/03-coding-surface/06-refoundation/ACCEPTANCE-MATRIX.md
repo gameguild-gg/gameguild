@@ -1,6 +1,6 @@
 # Refoundation acceptance matrix
 
-Status: planned requirements, not executed results. Updated: 2026-11-19.
+Status: planned requirements, not executed results. Updated: 2026-11-20.
 
 These IDs are stable requirements for part 3.6, not a second executable
 capability catalog. Part 4 maps them to its catalog and reuses evidence rather
@@ -10,6 +10,12 @@ than creating conflicting statuses. Record actual results in the part 3
 `Required` means no completion without evidence. `Decision-gated` means either
 implemented evidence or an explicit product/owner-approved limitation with a
 tracking reference. The implementing agent cannot unilaterally defer it.
+
+Product disposition recorded on 2026-11-20: the user explicitly approved the
+prototype design and initial simple-type function scope. CS-REF-18 uses its
+accepted-limitation branch, tracked by CS-ADR-015 and EMC-GAP-001. This does
+not mark arrays/matrices as supported or any production/runtime requirement
+as passed. CODE-UX-06 human acceptance remains separate.
 
 | ID | Requirement and observable oracle | Primary gate | Evidence | Scope |
 | --- | --- | --- | --- | --- |
@@ -33,7 +39,7 @@ tracking reference. The implementing agent cannot unilaterally defer it.
 | `CS-REF-18` | Array/matrix function cases have a coherent typed model and proven browser/server execution, or an explicitly accepted upstream limitation and follow-up | `CODE-UX-01` decision; `02`/`03` implementation if feasible | public API feasibility + conformance evidence or approved disposition | Decision-gated |
 | `CS-REF-19` | Instructor learner-preview uses the same solving components with redacted data and independent scratch state; private validation remains a separate tool and has no academic effects | `CODE-UX-04` | projection + browser + API/event assertions | Required |
 | `CS-REF-20` | Preserved Emception UI and unrelated consumers remain untouched; coding changes trigger consumer validation without forcing a producer release | `CODE-UX-06` | diff/import/CI classification + regressions | Required |
-| `CS-REF-21` | Canonical fixture and exact artifact preflight are ready before real runtime checks; wrong identity fails closed | `CODE-UX-01` | harness/preflight tests + artifact provenance | Required |
+| `CS-REF-21` | Canonical fixture and frozen-binding local artifact preflight are ready before real runtime checks; wrong identity fails closed; no compulsory source build for unchanged-runtime consumers | `CODE-UX-01` preparation contract; `CODE-UX-03` actual assets/preflight | harness/preflight tests + pinned artifact integrity and conditional CI provenance | Required |
 | `CS-REF-22` | Owned contract changes agree across UI, API, snapshots and adapters; any actual storage change includes its migration and upgrade coverage | `CODE-UX-02` | parity/integration/architecture + migration tests if applicable | Required |
 
 ## Prototype review mapping

@@ -78,8 +78,9 @@ suites required by `AGENTS.md`. Storage changes additionally need migration
 validation. Record exact project/filter commands rather than claiming that a
 subset proves a full suite.
 
-Use the canonical coding-cycle preflight prepared in `CODE-UX-01`, then focused
-one-worker Playwright journeys and existing consumer CI. Run backend/web builds
+Use the canonical fixture specified in `CODE-UX-01` and actual local artifact
+preflight completed in `CODE-UX-03`, then focused one-worker Playwright journeys
+and existing consumer CI. Run backend/web builds
 with bounded concurrency where required by the diff; keep at least two cores
 available when hardware permits. Do not run full builds alongside browser
 execution. Do not disable typechecks, analyzers or provenance to pass.
@@ -110,8 +111,8 @@ services and clean up only resources created by the validation run.
 ## Handoff to part 4
 
 Update `../IMPLEMENTATION-STATE.md` with the final commit/evidence and mark
-`CODE-UX-06` complete only after its gate. The fixture, exact artifact and
-preflight should already be ready; 4.0 revalidates them on the reconciled branch
+`CODE-UX-06` complete only after its gate. The fixture, compatible pinned assets
+and local preflight should already be ready; 4.0 revalidates them on the reconciled branch
 and closes `CODE-UI-07` using official lane evidence if still pending.
 
 Part 4 then expands scenario coverage, authorized API oracles, security cases

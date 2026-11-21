@@ -1,7 +1,8 @@
 # Emception capability gaps for coding surface
 
-Status: public compound-value limitation confirmed in `CODE-UX-01`; product
-disposition remains pending. No upstream change has been made.
+Status: public compound-value limitation confirmed in `CODE-UX-01`; initial
+scalar-only scope explicitly accepted by the user on 2026-11-20. Compound
+support remains deferred. No upstream change has been made.
 
 Este arquivo registra somente necessidades que nao podem ser atendidas pelos
 entrypoints publicos do Emception instalado. Preferencia de API, conveniencia ou
@@ -20,17 +21,24 @@ exports instalados antes de afirmar suporte a uma combinacao.
 | ID | Capability necessaria | Caso de uso | Consumidor | Evidencia nos exports publicos | Fallback | Estado |
 | --- | --- | --- | --- | --- | --- | --- |
 | N/A | nenhuma confirmada | editor, VFS e test runner | coding-surface | `@gameguild/emception-browser` fornece `createEmception()` headless; `emception/testing` fornece planos e resultados; Monaco e a camada de edicao do host | N/A | rejeitado |
-| `EMC-GAP-001` | argumentos/retornos funcionais compostos | exercicios com arrays e matrizes | coding e coding-surface; executor oficial | installed public harness rejects Array inputs/returns; public generic/custom cases do not supply a typed transport; official validator is scalar-only | explicit product disposition and upstream owner proposal, without string encoding | confirmado |
+| `EMC-GAP-001` | argumentos/retornos funcionais compostos | exercicios com arrays e matrizes | coding e coding-surface; executor oficial | installed public harness rejects compound values; official validator is scalar-only | initial simple-type scope explicitly accepted; typed compound support remains a follow-up, without string encoding | fallback aceito |
 
 ### `EMC-GAP-001`. Valores funcionais compostos
 
 - Data: 2026-11-19.
-- Status: confirmed public boundary; scope decision pending (`CS-ADR-015`).
+- Status: confirmed public boundary; initial scalar-only scope explicitly
+  accepted on 2026-11-20 (`CS-ADR-015`), compound support not implemented.
 - Subplano: decisao em `CODE-UX-01`; caso `CS-REF-18`.
 - Evidence: on 2026-11-19, an actual import of installed `emception/testing`
   generated an integer harness and rejected Array inputs, Array returns and
   nested arrays with `Array/Dictionary parameter types not supported in v1`.
   `mapCppType` also rejects Array/Dictionary. This probe did not boot a compiler.
+- Rechecked on 2026-11-20 at HEAD `40a8470b46`, using the installed public
+  ESM import `emception/testing` from `apps/web`: four scalar harnesses succeed;
+  six compound probes reject Array/Dictionary inputs/types/returns, including
+  nested arrays. No private import, new dependency or compiler boot. Product
+  acceptance of the initial scalar-only scope was subsequently given explicitly
+  by the user; no support was inferred from the rejection probes.
 - Other public paths inspected: `TestPlan` exposes generic doctest/custom
   callbacks, not an alternative typed compound function contract. The official
   worker uses the retained assessment mapper/public harness; Courses validation
@@ -46,8 +54,8 @@ exports instalados antes de afirmar suporte a uma combinacao.
 - Nao autorizado: modificar Emception, criar harness concorrente ou esconder a
   limitacao com inputs tratados como strings sem contrato tipado.
 - Follow-up: implement the public typed harness/transport with the Emception
-  owner, then TS/backend parity and browser/server conformance; or explicitly
-  approve the limited initial algorithm scope. No external issue was published
+  owner, then TS/backend parity and browser/server conformance. The limited
+  initial algorithm scope is now explicitly approved. No external issue was published
   during this task. The capability matrix is in
   [`PRODUCT-MODEL.md`](./06-refoundation/PRODUCT-MODEL.md).
 
@@ -61,16 +69,17 @@ prova do caminho publico, nao apenas um painel de logs.
 
 ## Pre-condicao de artifact, nao capability gap
 
-O browser cycle local encontrou um manifest CDN schema 1, enquanto o contrato
-V3 exige o artifact schema 2 correspondente ao commit. Isso e uma pre-condicao
-de supply chain e provenance, nao uma API ausente no Emception. O lane `coding`
-adquire o artifact exato e valida sua identidade antes do E2E; a superficie nao
-usa import privado nem pede mudanca upstream para contornar essa condicao.
+The local browser cycle found a schema-1 CDN manifest, while the grading
+binding requires schema 2, the frozen version/ABI/lock hash, receipt and
+fingerprint. This is an artifact precondition, not a missing public API.
 
-Current artifact evidence: both local manifests remain `version: 1`; the
-release has no provenance record. The exact HEAD/tree GitHub Actions query
-returned zero artifacts. `CODE-UX-01` records this separately as infrastructure
-unavailability; there is no acquisition or successful runtime preflight to claim.
+On 2026-11-20, published 4.5.2 Toolchain/Core CDN manifests passed that binding
+check. The local copies still fail and need an explicit backed-up refresh
+before CODE-UX-03 execution; no full artifact download or local runtime pass
+has been recorded. `CS-ADR-024` withdraws the mandatory source-build/build-only
+CI proposal. The existing source classifier still requires exact-source
+provenance when applicable; unchanged-runtime consumers can reuse published
+assets. No upstream IDE deployment, source change or new release is required.
 
 Status permitidos: `investigando`, `confirmado`, `fallback aceito`,
 `proposta upstream`, `resolvido upstream`, `escopo reduzido` e `rejeitado`.

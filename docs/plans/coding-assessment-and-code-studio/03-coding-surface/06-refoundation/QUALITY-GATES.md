@@ -147,14 +147,67 @@ remains blocked with evidence; do not fix another owner's module opportunistical
 
 ## G-PREFLIGHT and G-RUNTIME: verified execution
 
+`G-PREFLIGHT-UNIT` is the lightweight command below. It belongs to the baseline
+and does not compile a toolchain or prove local artifact/runtime readiness.
+
 ```bash
 node --test --test-concurrency=1 apps/web/scripts/coding-cycle-toolchain-support.test.mjs apps/web/scripts/coding-cycle-editor-support.test.mjs apps/web/scripts/coding-cycle-web-runtime.test.mjs
-node --input-type=module -e 'import { verifyCodingCycleToolchain } from "./apps/web/scripts/coding-cycle-toolchain-support.mjs"; await verifyCodingCycleToolchain("./tools/emception/artifacts/toolchain/release/cdn/manifest.json");'
 ```
 
-Both commands are required for `G-PREFLIGHT`; unit tests do not substitute for
-the actual release check or its producer/acquisition provenance. The current
-local release is known to fail. Preserve the exact identity requirements.
+`G-ARTIFACT-POLICY` preserves the existing conditional CI producer contract:
+
+```bash
+python3 -B -m unittest discover -s scripts/ci/tests -p acquire_emception_release_test.py
+```
+
+The classifier does not require a new source artifact merely for changes to
+coding-surface, coding, grading-adapter-code or these plans. Its actual source
+scope also includes dependency manifests/lockfiles and selected host/CI files;
+inspect the complete changed-path set, not only the feature package. When the
+classifier requires a producer, retain exact-source provenance and existing CI
+verification. No CI rule is changed by this plan (`CS-ADR-024`).
+
+### Asset preparation before UX03-A real execution
+
+1. Record the current frozen binding and actual artifact directories. Compatible
+   4.5.2 assets already exist in the published packages. On 2026-11-20 their
+   schema-2 manifests passed `requireFrozenCodeToolchain()`; that observation
+   is not a complete download, file-integrity check or successful execution.
+2. Preserve existing generated release/CDN copies in an owned ignored backup
+   before replacing anything. Do not overwrite an unowned release or delete
+   historical binaries needed by existing snapshots. This preparation changes
+   generated assets only, not tracked Emception/runtime/IDE sources.
+3. Reuse the existing `sync:emception` published-package path. Its legacy
+   compatibility branch may retain a schema-1 source, and `dev:fast` skips
+   synchronization when the web manifest exists. A refresh must therefore
+   explicitly preserve/move aside the obsolete development copy first; merely
+   rerunning dev or sync is not evidence that it refreshed. Record the source
+   package/version, registry archive integrity and source/served asset locations.
+
+```bash
+pnpm --filter @game-guild/web run sync:emception
+```
+
+4. Reject a fallback to 4.4.0 for the current 4.5.2 grading binding. Run the
+   actual checks below against the synchronized files, then the bounded runtime
+   tests. Never repair the manifest by hand or change the frozen binding to
+   make obsolete assets pass.
+
+`G-PREFLIGHT` requires G-PREFLIGHT-UNIT plus this actual local check in
+`CODE-UX-03`, before execution. Neither a public manifest check nor a successful
+sync message substitutes for these local checks or the later browser gate.
+
+```bash
+node --input-type=module -e 'import { verifyCodingCycleToolchain } from "./apps/web/scripts/coding-cycle-toolchain-support.mjs"; for (const path of ["./tools/emception/artifacts/toolchain/release/cdn/manifest.json", "./apps/web/public/emception/manifest.json"]) await verifyCodingCycleToolchain(path);'
+```
+
+A local toolchain build is only a fallback if compatible artifacts cannot be
+obtained or an explicitly required runtime change needs source validation.
+Use the existing documented build/verification path and measured resource
+budget; do not add it to every dev startup. No local build is currently required
+to obtain 4.5.2. Do not dispatch `emception.yml` or publish the independent IDE
+to prepare our dev environment; its manual entry has unrelated deployment
+effects. The former build-only CI proposal is withdrawn by `CS-ADR-024`.
 
 `G-RUNTIME` adds the existing browser cycle, only after resource/preflight
 prerequisites pass:

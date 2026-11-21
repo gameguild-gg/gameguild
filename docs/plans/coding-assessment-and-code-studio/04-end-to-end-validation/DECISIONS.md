@@ -1,6 +1,6 @@
 # Decisoes da parte 4
 
-Atualizado: 2026-11-19.
+Atualizado: 2026-11-20.
 
 ## Decisoes vigentes
 
@@ -28,8 +28,11 @@ intermediarios do roadmap.
 
 ### `D-04-05`. Somente o artifact exato fecha o browser gate
 
-O artifact Emception schema 2 deve vir do produtor oficial. Manifest fabricado,
-schema 1 ou verificacao relaxada nao fecha `CODE-UI-07`.
+Schema-2 assets must match the frozen executable identity. Existing published
+packages are valid consumer inputs; exact-source producer provenance remains
+required when the existing CI classifier selects it. A fabricated manifest,
+schema 1 or relaxed check cannot close `CODE-UI-07`. This does not require
+building or publishing the independent IDE for a coding-surface UI commit.
 
 ### `D-04-06`. Achado e correcao sao trabalhos distintos
 
@@ -51,16 +54,20 @@ decisao separada.
 
 ### `D-04-09`. Evidencia intermediaria nao substitui o PR final
 
-`workflow_dispatch` ou draft PR podem produzir o artifact e executar a lane.
-O PR final continua sendo a integracao conjunta das partes 01 a 04 depois de
-todos os gates.
+The existing `PR Verify` entry or a draft PR can execute the consumer lane.
+This does not authorize dispatching Emception's independent IDE deployment.
+Source artifact production remains conditional on the existing classifier.
+The final PR still integrates parts 01 through 04 after their gates pass.
 
 ### `D-04-10`. Preparacao de fixture/artifact ocorre antes da refundacao
 
-`CODE-UX-01` prepara fixture canonica, artifact exato e preflight para permitir
-os testes reais da 3.6. A parte 4.0 revalida esses pre-requisitos na branch
-reconciliada e fecha `CODE-UI-07` com evidencia oficial, sem depender de uma
-primeira preparacao que antes criava ciclo entre 3.6 e 4.0.
+Updated by part 3 `CS-ADR-024`: `CODE-UX-01` prepares the canonical fixture,
+frozen-binding contract and lightweight tests. `CODE-UX-02` does not depend on
+compiler execution. `CODE-UX-03` synchronizes compatible published assets and
+passes actual local preflight before real runtime checks. Part 4.0 revalidates
+these on the reconciled branch and closes `CODE-UI-07` with official evidence.
+The prior unconditional source-build/artifact requirement is withdrawn,
+without weakening conditional CI provenance or creating a dependency cycle.
 
 Os casos `CS-REF-*` da refundacao sao requisitos a mapear ao catalogo desta
 parte, nao uma segunda fonte de status executavel. Evidencia antiga so e

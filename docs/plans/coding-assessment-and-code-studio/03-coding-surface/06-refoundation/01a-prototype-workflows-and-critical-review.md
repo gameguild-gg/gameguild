@@ -1,8 +1,8 @@
 # 3.6.1a. Prototype workflows and critical review
 
-Status: interactive prototype and automated audit implemented; explicit human
-design walkthrough/acceptance pending inside `CODE-UX-01`.
-Updated: 2026-11-20. This is not production cutover or design approval.
+Status: interactive prototype and automated audit implemented; prototype design
+explicitly approved by the user on 2026-11-20 inside `CODE-UX-01`.
+Updated: 2026-11-20. This is not production cutover or runtime acceptance.
 
 ## Invariants, topology and dependencies
 
@@ -18,10 +18,11 @@ remain the ownership baseline. Product contracts are implemented in 3.6.2;
 prototype contracts describe presentation states/events and synthetic examples.
 No new library, general IDE, compiler, grading policy or scenario CLI.
 
-This work can proceed while the artifact and array/matrix decision remain
-pending. Use currently evidenced scalar examples without claiming that the
-product has accepted permanent scalar-only scope. Closing 01a does not close
-the independent infrastructure/compound-value obligations of `CODE-UX-01`.
+The initial scalar-only function scope is explicitly accepted in CS-ADR-015;
+arrays/matrices remain a tracked future capability, not a permanent exclusion
+or an implemented feature. Design/contract work does not depend on an Emception
+build or publication. Actual local artifact preflight belongs to `CODE-UX-03`
+under `CS-ADR-024`; closing 01a does not establish runtime readiness.
 
 ## Findings to resolve
 
@@ -149,6 +150,12 @@ Assertions must cover reachability and focus, not only horizontal overflow:
 
 ## Human walkthrough and acceptance
 
+Recorded product response, 2026-11-20: the user explicitly approved the current
+prototype design. This is design acceptance, not a claim that the user supplied
+a task-by-task walkthrough log or that production acceptance passed. The
+following journeys remain the review script, including the real application
+review required later in CODE-UX-06.
+
 Instructor: start blank, create a function with a different name/data from the
 default, add public/private cases, introduce and repair an invalid value, prepare
 reference/wrong solutions, validate, change the draft, inspect faithful preview,
@@ -198,9 +205,10 @@ Saved/recovery data lives in scoped, cloned in-memory stores for the open tab.
 refresh starts the study again. Nothing private is written to browser storage.
 Durable authorized recovery and API concurrency belong to 3.6.2 onward.
 
-Before closing 01a, record the explicit human walkthrough above, including any
-remaining confusion or requested design changes. Artifact/scope prerequisites
-still independently block closure of the parent gate.
+The explicit design approval is recorded above. No additional human task
+observations were supplied. Baseline documentation/contract closure is separate
+from actual asset preflight in `CODE-UX-03`; production human/runtime review
+remains required.
 
 ## Handoff
 
@@ -209,8 +217,9 @@ captures; update the shared ledger and ADRs instead of another state file.
 Map UXP evidence to `CS-REF-*` as design evidence only. Prototype work does not
 promote runtime capabilities or replace production acceptance.
 
-Return to [3.6.1](./01-product-model-and-evidence-baseline.md) for the remaining
-artifact and compound-value obligations. Then proceed through 3.6.2..3.6.6,
+Return to [3.6.1](./01-product-model-and-evidence-baseline.md) for its baseline
+closure audit and runtime-preparation handoff. The initial compound-value
+disposition is recorded in CS-ADR-015. Then proceed through 3.6.2..3.6.6,
 preserving the accepted behaviors while replacing simulated ports with real
 host/runtime contracts. Reuse justified test scenarios, not the prototype's
 throwaway implementation as a new architecture constraint.

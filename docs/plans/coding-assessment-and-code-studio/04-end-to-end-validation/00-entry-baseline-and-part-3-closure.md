@@ -7,7 +7,7 @@ IDs: `CODE-E2E-00`, `CODE-UI-07`.
 ## Objetivo
 
 Estabelecer uma baseline atual da `develop`, revalidar o harness preparado na
-3.6.1 para o contrato entregue e obter a evidencia exata que ainda falta para
+3.6.1/3.6.3 para o contrato entregue e obter a evidencia exata que ainda falta para
 concluir a parte 3. Este subplano e pre-condicao dos demais; ele nao cria o novo
 programa de validacao.
 
@@ -16,9 +16,10 @@ Pre-requisito adicional: concluir
 com autoria, resolucao e recursos de execucao aceitos. Nao congelar o E2E sobre
 a composicao antiga que injeta formularios no output do workbench.
 
-A correcao inicial da fixture, aquisicao do artifact exato e preflight foram
-antecipados para `CODE-UX-01`, pois a propria refundacao precisa deles. Aqui
-esses pre-requisitos sao revalidados, nao desbloqueados pela primeira vez.
+Fixture/binding preparation belongs to `CODE-UX-01`; actual synchronization of
+compatible published assets and local preflight belongs to `CODE-UX-03`, before
+runtime execution. There is no mandatory upstream IDE build/publication.
+Here those prerequisites are revalidated, not unlocked for the first time.
 
 ## Implementacao
 
@@ -34,9 +35,12 @@ esses pre-requisitos sao revalidados, nao desbloqueados pela primeira vez.
    alias ou fallback para preservar payload antigo.
 5. Executar os testes unitarios do observer, transport e runtime web.
 6. Executar o preflight do ciclo de coding.
-7. Verificar o artifact Emception schema 2 exato adquirido pelos mecanismos
-   oficiais; readquirir se a identidade mudou e executar o browser E2E pelo
-   `PR Verify` via `workflow_dispatch` ou draft PR.
+7. Verify the schema-2 assets against the frozen executable identity and
+   refresh them if it changed. Run official browser E2E through `PR Verify`
+   using its existing supported entry. Preserve exact-source acquisition when
+   the changed-path classifier requires it; otherwise consume the matching
+   published package. Do not dispatch the independent Emception deployment
+   merely to generate assets (`CS-ADR-024` in part 3).
 8. Registrar a evidencia no estado da parte 3 e marcar `CODE-UI-07` concluido
    somente depois da lane verde.
 
@@ -45,7 +49,8 @@ esses pre-requisitos sao revalidados, nao desbloqueados pela primeira vez.
 - branch reconciliada e baseline persistida;
 - fixture do runner usa somente identidades canonicas;
 - ambos os tipos de exercicio possuem cobertura identificavel;
-- artifact schema 2 exato foi produzido e verificado pela lane oficial;
+- the official lane verifies the pinned schema-2 assets and any applicable
+  exact-source producer provenance; no compulsory new release for UI changes;
 - browser E2E oficial passou sem manifest fabricado ou verificacao relaxada;
 - nenhuma fonte de `tools/emception/**` ou `@game-guild/emception-ui` foi
   alterada;
@@ -55,7 +60,8 @@ esses pre-requisitos sao revalidados, nao desbloqueados pela primeira vez.
 
 - mudanca da `develop` que invalide o contrato atual deve ser caracterizada e
   decidida antes de adaptar o runner;
-- indisponibilidade do produtor exato mantem `CODE-UI-07` aberto;
+- incompatible assets or missing required source provenance keep `CODE-UI-07`
+  open; a missing producer for an out-of-scope consumer commit is not a blocker;
 - falha real do produto nao pode ser escondida como falha do harness.
 
 ## Fora do escopo

@@ -126,10 +126,12 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
 - Status: aceita.
 - Contexto: o CDN versionado presente no workspace ainda usa manifest schema 1,
   mas o coding cycle V3 exige schema 2, receipt, fingerprint e identidade
-  congelada correspondente ao commit testado.
-- Decisao: o lane `coding` adquire o artifact Toolchain exato pelo helper
-  oficial, valida sua identidade e somente depois monta o runtime e executa o
-  browser E2E. A verificacao local e do CI permanece fail-closed.
+  congelada do adapter, nao um novo compilador para cada commit de UI.
+- Decisao: validar a identidade Toolchain antes de montar o runtime e executar
+  o browser E2E. O helper oficial exige artifact do source exato somente quando
+  sua classificacao de mudancas o determina; caso contrario, o consumidor usa
+  o pacote versionado existente. A verificacao local e do CI permanece
+  fail-closed. A correcao desta distincao esta em `CS-ADR-024`.
 - Alternativas rejeitadas: relaxar o verificador, aceitar o artifact legado ou
   fabricar manualmente manifest e provenance.
 - Consequencias: os testes de package, componentes, API e runtime podem passar
@@ -254,9 +256,11 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
 - Status: aceita.
 - Contexto: 3.6 exigia runtime/browser reais, mas a fixture canonica e a
   aquisicao do artifact estavam somente em 4.0, bloqueado pela propria 3.6.
-- Decisao: `CODE-UX-01` prepara fixture, artifact exato e preflight com os
-  mecanismos existentes. Os testes reais dos subplanos usam essa preparacao;
-  4.0 revalida na branch reconciliada e fecha a evidencia oficial de `CODE-UI-07`.
+- Decisao atualizada em 2026-11-20 (`CS-ADR-024`): `CODE-UX-01` prepara fixture,
+  contrato de artefatos e testes leves; `CODE-UX-03` sincroniza os binarios
+  publicados compativeis e passa preflight local antes da execucao real.
+  `CODE-UX-02` nao depende de build ou boot do compilador. 4.0 revalida na branch
+  reconciliada e fecha a evidencia oficial de `CODE-UI-07`.
 - Alternativas rejeitadas: esperar 4.0 para testar 3.6; substituir execucao real
   por mocks; relaxar provenance; ou declarar aceite E2E so com preflight verde.
 - Consequencias: gates de produto e gate CI conservam evidencias distintas;
@@ -321,17 +325,19 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
 ## `CS-ADR-015`. Compound values require an explicit upstream disposition
 
 - Date: 2026-11-19.
-- Status: proposal; no scope reduction has been approved.
+- Status: initial scalar-only scope explicitly accepted by the user on
+  2026-11-20; compound support remains deferred, not implemented.
 - Evidence: the installed public `emception/testing` entry point successfully
   generates an integer function harness and rejects Array parameters, returns
   and nested array values. The source and official Courses validator retain a
   scalar-only contract. Generic custom test callbacks are not a typed compound
   function transport provided by the runtime.
-- Proposal: continue the initial function/I/O experience with the four
+- Decision: continue the initial function/I/O experience with the four
   currently supported scalar kinds, record `EMC-GAP-001` with the Emception
   owner, and add arrays/matrices only through a coherent public harness and
-  official executor contract. Product acceptance of that temporary limit is
-  pending; otherwise the function scope remains blocked on upstream work.
+  official executor contract. The user explicitly answered yes to the initial
+  simple-type scope. This resolves the CS-REF-18 product disposition, not
+  array/matrix capability or browser/server execution conformance.
 - No workaround: no private imports, upstream patch, parallel compiler/harness
   or unexplained conversion of arrays to strings.
 - Affects: `CS-REF-18`, `CODE-UX-01` and subsequent supported-family options.
@@ -339,16 +345,21 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
 ## `CS-ADR-016`. Verified artifacts and measured budgets are distinct from layout
 
 - Date: 2026-11-19.
-- Status: accepted technical execution rule; artifact availability is blocked.
-- Decision: keep `verifyCodingCycleToolchain()` and the exact-source producer/
-  acquisition mechanism intact. A schema-1 local manifest or successful
-  prototype is not official execution evidence. Preserve the existing release
-  directory; do not overwrite it or manufacture a schema-2 manifest.
+- Status: accepted technical execution rule; source-build assumption corrected
+  by `CS-ADR-024`. Published compatible assets exist; local refresh is pending.
+- Decision: keep `verifyCodingCycleToolchain()` and conditional exact-source
+  CI acquisition intact. Consumers may reuse the matching published package;
+  a schema-1 local manifest or successful prototype is not official execution
+  evidence. Preserve old generated assets before an owned refresh; do not
+  overwrite an unowned release or manufacture a schema-2 manifest.
 - Evidence: the actual local manifest fails preflight. GitHub's read-only
   exact-name query for HEAD `723eeeb84589cfb23b0def630ee46ead02890acc`,
   tree `c1236b3e35c0da3eed4e79135eb6b7090b91863f`, returned zero artifacts.
   No artifact was downloaded. Fixture contract tests and all 26 lightweight
   preflight tests pass independently of that missing runtime evidence.
+- Subsequent evidence, 2026-11-20: published 4.5.2 manifests pass the frozen
+  binding check. The earlier current-HEAD artifact query did not test this
+  consumer path and does not justify a mandatory source build.
 - Resource rule: one browser worker, one execution, sequential builds and at
   least two logical CPUs left free. Use the measured host entry criteria and
   startup/output/cleanup thresholds in `PRODUCT-MODEL.md`. Never start the
@@ -378,7 +389,8 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
 ## `CS-ADR-018`. Resolve prototype workflow gaps before design approval
 
 - Date: 2026-11-19.
-- Status: remediation plan accepted; design and implementation still pending.
+- Status: remediation implemented; design subsequently accepted on 2026-11-20
+  (`CS-ADR-022`). Historical findings below explain the iteration.
 - Evidence: critical review identified UX-F01..06. The prototype's preview
   ignores edited problem/starter; typed authoring and failure/validation/
   recovery states are missing; realistic host constraints require another
@@ -391,8 +403,9 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
 - Boundary: no real runtime/API/database or official grading in this prototype.
   Simulated controls are allowed for design inspection and labeled as such.
   Product contract implementation remains in CODE-UX-02 onward.
-- Dependency: this iteration can proceed while artifacts/scope are pending;
-  it cannot waive CS-REF-18/21 or imply approval of CS-ADR-015's scalar limit.
+- Dependency: design/contract work does not require runtime boot. The user
+  separately accepted initial scalar scope in CS-ADR-015; actual local asset
+  readiness remains required before CODE-UX-03 execution under CS-ADR-024.
 - Affects: UX-F01..06, existing CS-REF acceptance mappings and current handoff.
 
 ## `CS-ADR-019`. Name authoring validation explicitly
@@ -430,7 +443,8 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
 ## `CS-ADR-021`. Prototype audit completion is distinct from product acceptance
 
 - Date: 2026-11-20.
-- Status: accepted technical handoff; human design acceptance pending.
+- Status: accepted technical handoff; human design and scalar-scope acceptance
+  subsequently recorded in `CS-ADR-015/022`.
 - Decision: UXP-01..06 now have an implemented interactive specimen, a frozen
   oracle checklist and strict terminal evidence. Preserve the five author tasks,
   typed family-specific cases, independent preview and separate learner work.
@@ -443,15 +457,17 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   is not evaluated. Save/recovery is scoped per-tab memory with a simulation
   label, never actual server durability. Preview submits no academic work.
   Canvas pixels and terminal echo are presentation specimens only.
-- Open obligations: explicit human walkthrough, CS-ADR-015 compound-value
-  disposition and a verified exact-source runtime artifact. The actual
-  toolchain preflight still fails closed. CODE-UX-01 and production gates stay
-  open; no upstream/platform, dependency or database change is authorized here.
+- Current obligations: baseline documentation/contract closure and subsequent
+  real runtime/production acceptance. `CS-ADR-024` corrects the former universal
+  exact-source artifact requirement; local synchronized assets still need
+  actual preflight in CODE-UX-03. No upstream/platform, dependency or database
+  change is authorized here.
 
 ## `CS-ADR-022`. Represent the editor composition in the design specimen
 
 - Date: 2026-11-20.
-- Status: requested design iteration implemented; human acceptance pending.
+- Status: design iteration implemented; prototype design explicitly accepted
+  by the user on 2026-11-20. Production usability/runtime acceptance remains open.
 - Context: plain source forms did not resemble the intended Monaco-backed
   author/learner workflow, obscuring how file operations would actually fit.
 - Decision: add UXP-07 within 3.6.1a. One disposable visual workbench composes
@@ -468,6 +484,74 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
 - Consequence: production may replace the native-text specimen with declared
   Monaco/public runtime integration while preserving the accepted interactions.
   Visual similarity is not API, language-service or runtime conformance.
+
+## `CS-ADR-023`. Artifact production must not deploy the independent IDE
+
+- Date: 2026-11-20.
+- Status: safety finding retained; proposed build-only CI prerequisite
+  withdrawn and superseded by `CS-ADR-024`. No workflow change or dispatch.
+- Evidence: committed HEAD `40a8470b4694e4b092b270ec8160aa07f34d6739`, tree
+  `5d59e6bbbbc88e092fdca19ffa43a30a23d0dbc9`, has no producer runs/artifacts.
+  The real manifest check still fails. The inspected green workflow
+  [44523205221](https://github.com/gameguild-gg/gameguild/actions/runs/44523205221)
+  skipped the producer and uploaded no artifact.
+- Correction to earlier handoff: `publish_packages: false` does not make the
+  current manual workflow build-only. Its `deploy-pages` condition explicitly
+  includes every `workflow_dispatch`. Using it as previously suggested could
+  publish a feature-branch IDE to the shared GitHub Pages environment.
+- Boundary: do not dispatch that path, replace an unowned local release,
+  fabricate provenance, accept unrelated binaries or relax frozen identity.
+- Planning correction: the absence of a producer result for a consumer commit
+  was not evidence that a new toolchain or a CI change was required. Compatible
+  4.5.2 manifests are published. The old proposal is not an open owner decision
+  or a blocker for CODE-UX-01/02; use the consumer path in `CS-ADR-024`.
+- Acceptance retained: verified local frozen identity before real execution,
+  actual runtime conformance and no unintended deployment. A manifest check,
+  workflow dispatch or overall green status alone is not runtime acceptance.
+- Affects: artifact preparation before CODE-UX-03 and CS-REF-21; no platform,
+  runtime/IDE, CI, schema or migration changes are required by this correction.
+
+## `CS-ADR-024`. Consume published runtime assets without rebuilding the IDE
+
+- Date: 2026-11-20.
+- Status: accepted by explicit user instruction to correct the plan.
+- Invariant: coding-surface owns its web UI and consumes public Emception APIs.
+  It neither publishes the independent IDE nor changes its source, consumers
+  or release workflow to validate our product.
+- Evidence: npm metadata returns 4.5.2 for both `emception` and
+  `@gameguild/emception-toolchain`. The
+  [Toolchain manifest](https://cdn.jsdelivr.net/npm/@gameguild/emception-toolchain@4.5.2/cdn/manifest.json)
+  and [Core CDN manifest](https://cdn.jsdelivr.net/npm/emception@4.5.2/cdn/manifest.json)
+  both pass `requireFrozenCodeToolchain(CODE_TOOLCHAIN_V3, manifest)`.
+  Local canonical/web manifests remain schema 1 and fail. No full artifact
+  download, local synchronization, compiler build or runtime execution occurred.
+- Decision: reuse the pinned published assets. Before real execution, preserve
+  old generated copies, synchronize using the existing host path and verify
+  actual local source/served manifests. Do not accept a stale legacy copy or
+  the helper's 4.4.0 fallback for the current grading binding. `dev:fast` only
+  syncs missing assets; the sync helper can retain schema 1. An explicit,
+  backed-up refresh is needed, not just a dev restart.
+- CI distinction: `needs_source_release()` applies exact HEAD/tree provenance
+  only to its classified source changes. Preserve this rule and inspect all
+  changed paths, including dependency manifests/lockfiles. Feature-package or
+  documentation changes do not universally require a producer run. A local
+  pinned consumer manifest check does not replace required CI provenance.
+- Sequence: CODE-UX-01 owns product/design/contract preparation and lightweight
+  tests; CODE-UX-02 owns domain/draft behavior without compiler execution.
+  CODE-UX-03 owns actual asset readiness/G-PREFLIGHT before real runtime tests.
+  CS-REF-21 remains required there; CODE-UI-07 still needs official browser CI.
+  No unexecuted gate is marked complete by this documentation correction.
+- Fallback only: a local source build may be used if compatible assets cannot
+  be obtained or a separately approved runtime change requires it. Reuse the
+  existing build/verification path under measured CPU/memory limits; it is not
+  required for the published 4.5.2 assets and must not run on every dev startup.
+- Negative constraints: no hand-written manifest/provenance, relaxed binding,
+  silent version fallback, destructive replacement, mandatory IDE deployment,
+  new release, CI rewrite or package publication. G-PREFLIGHT and real browser
+  execution remain separate from the passing remote manifest observation.
+- Supersedes: the mandatory build-only producer proposal in CS-ADR-023 and the
+  unconditional artifact/preflight ordering in CS-ADR-007/013/016/021.
+- Affects: UX01-C, UX03-A, CS-REF-21 and part 4 artifact terminology/handoff.
 
 ## Modelo para novas decisoes
 

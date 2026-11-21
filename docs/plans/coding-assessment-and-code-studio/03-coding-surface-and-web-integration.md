@@ -77,14 +77,17 @@ All of 3.6 now follows the mandatory
 and [terminal quality gates](./03-coding-surface/06-refoundation/QUALITY-GATES.md).
 The critical prototype review requires
 [3.6.1a](./03-coding-surface/06-refoundation/01a-prototype-workflows-and-critical-review.md)
-inside `CODE-UX-01`. This design-only iteration can proceed while artifact or
-compound-value decisions are pending; it neither approves the existing
-specimen nor waives those independent obligations.
+inside `CODE-UX-01`. The user has approved its prototype design and initial
+scalar scope; this is not production/runtime acceptance.
 
-`CODE-UX-01` prepara a fixture canonica, artifact exato e preflight antes dos
-testes reais da refundacao. Isso remove a dependencia circular com
-[`4.0`](./04-end-to-end-validation/00-entry-baseline-and-part-3-closure.md), que
-depois revalida a branch e fecha a evidencia oficial restante de `CODE-UI-07`.
+`CODE-UX-01` prepares the canonical fixture, frozen-binding contract and
+lightweight tests. `CODE-UX-02` does not require a compiler build or boot.
+Before real execution, `CODE-UX-03` refreshes compatible published assets and
+passes actual local preflight. `CS-ADR-024` corrects the former mandatory
+build/publication requirement; exact-source CI acquisition stays conditional
+on the existing classifier. This removes the dependency cycle with
+[`4.0`](./04-end-to-end-validation/00-entry-baseline-and-part-3-closure.md), which
+then revalidates the branch and closes the remaining official `CODE-UI-07` evidence.
 `CODE-E2E-00` e o programa abrangente da parte 4 continuam depois de `CODE-UX-06`.
 
 ## Protocolo de contexto persistente

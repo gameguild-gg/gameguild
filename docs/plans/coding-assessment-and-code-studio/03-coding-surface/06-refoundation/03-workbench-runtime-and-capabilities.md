@@ -23,11 +23,19 @@ implementation -> Quality gate; see [QUALITY-GATES.md](./QUALITY-GATES.md).
 
 | Slice | Specification | Contract / schema | Test oracle | Minimal implementation | Quality gate |
 | --- | --- | --- | --- | --- | --- |
-| UX03-A | specify supported operations by family/environment/mode | capability resolver inputs and discriminated available/unavailable states | unsupported combinations unavailable; no workers on form navigation; no official commands on local run | lazy runtime port and basic workbench regions | contract compilation, G-SURFACE + G-PREFLIGHT |
+| UX03-A | specify runtime asset preparation and supported operations by family/environment/mode | frozen artifact binding, capability resolver inputs and discriminated available/unavailable states | installed assets pass preflight; wrong identity fails; unsupported combinations unavailable; no workers on form navigation; no official commands on local run | backed-up synchronization of published assets, lazy runtime port and basic workbench regions | contract compilation, G-SURFACE + G-PREFLIGHT; CS-REF-21 before real execution |
 | UX03-B | distinguish batch I/O, interactive terminal, graphics and diagnostic outcomes | channel/run/result contracts with candidate identity and authorized comparisons | real stdin delivery, visible graphics/input/resize, expected/actual diff and separate compiler/timeout failures | public APIs connected to declared terminal/editor/canvas controls | G-SURFACE + focused G-RUNTIME for CS-REF-10/11/13; mocks insufficient |
 | UX03-C | define stop, context switch and bounded resource ownership | cancellation/disposal/stale-callback lifecycle and measurable budgets | one active run; old callbacks cannot overwrite; five-cycle cleanup/memory observations | lifecycle cleanup and stale-result presentation | G-SURFACE + G-RUNTIME for CS-REF-12 + G-REGRESSION; Auditor inspects measurements |
 
 ## Work
+
+Before real execution in UX03-A, perform the asset preparation in
+[G-PREFLIGHT](./QUALITY-GATES.md). Published 4.5.2 manifests were checked as
+compatible; the local schema-1 copies still need refreshing. Preserve old
+generated assets before replacement, synchronize the pinned published package
+and check the actual local source and served manifests. No source edit,
+upstream IDE publication or mandatory local compiler build is needed.
+Follow `CS-ADR-024` if artifact availability or changed CI scope differs.
 
 1. Implement a tested capability resolver from family requirements, environment
    support, assignment settings and authorized mode. Distinguish a hidden

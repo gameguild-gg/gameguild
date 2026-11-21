@@ -179,11 +179,15 @@ e etapas em [`06-refoundation/`](./03-coding-surface/06-refoundation/).
 O estado, as decisoes, o mapa de consumidores e os gaps de capability ficam em
 [`03-coding-surface/`](./03-coding-surface/). Esses arquivos devem ser
 atualizados em cada checkpoint para que a execucao nao dependa da memoria de
-uma conversa ou de uma IA. `CODE-UX-01` antecipa a fixture canonica, o artifact
-exato e o preflight exigidos pela validacao da refundacao. O subplano `4.0`
-inicia depois de `CODE-UX-06`, revalida essa preparacao na branch reconciliada e
-fecha a evidencia CI restante de `CODE-UI-07`. As demais etapas da parte 4
-continuam bloqueadas ate esses gates; nao ha dependencia circular de harness.
+uma conversa ou de uma IA. `CODE-UX-01` prepares the canonical fixture,
+frozen-binding contract and lightweight tests. `CODE-UX-02` does not require
+an Emception build or boot; before real execution, `CODE-UX-03` synchronizes
+compatible published assets and passes actual local preflight. A new upstream
+IDE release/publication is not a consumer prerequisite (`CS-ADR-024`).
+Subplan `4.0` starts after `CODE-UX-06`, revalidates that preparation on the
+reconciled branch and closes the remaining official CI evidence of `CODE-UI-07`.
+The rest of part 4 remains blocked until those gates; no harness dependency
+cycle or relaxed identity/provenance check is introduced.
 
 A parte 4 tambem possui sequencia interna obrigatoria. Catalogo, lifecycle,
 contratos/API, browser, laboratorio web e aceite ficam em

@@ -6,8 +6,12 @@ Current status: functional baseline and canonical consolidation 3.5 completed
 locally. Refoundation 3.6 has started: `CODE-UX-01` is partial, with a concrete
 product model, interactive design prototype and repaired browser fixture.
 The 3.6.1a remediation and editor-fidelity follow-up are implemented; 30 tests pass.
-Explicit human design acceptance, verified artifact availability and compound-
-value product disposition remain open. No later production gate was entered.
+The user explicitly approved the prototype design and initial simple-type
+function scope. Compatible 4.5.2 manifests are published and pass the frozen
+binding check; local assets still need refreshing before real execution in
+CODE-UX-03. The mandatory build/build-only CI prerequisite was a planning
+error, corrected by CS-ADR-024. CODE-UX-01 awaits its baseline closure audit,
+not a compiler build. No later production gate was entered.
 The production UI has not been cut over to the refounded model.
 
 Este e o handoff mutavel da parte 3. Atualize-o com fatos observados. Nao marque
@@ -39,62 +43,78 @@ um gate como concluido sem registrar a evidencia executada.
 | Parte 3.1 | concluida | buscas de consumidores, contratos e exports publicos registradas em 2026-11-18 |
 | Parte 3.2 | concluida | package isolado, 14 testes e typecheck verdes |
 | Parte 3.3 | concluida | dois perfis, quatro modos, privacy e contrato canonico cobertos |
-| Parte 3.4 | em validacao final | consumidores e CI migrados; runner fixture now emits canonical `ExerciseType`; real browser E2E remains exact-artifact blocked |
+| Parte 3.4 | em validacao final | consumidores e CI migrados; runner fixture now emits canonical `ExerciseType`; local asset refresh and real browser E2E remain pending |
 | Parte 3.5 | concluida localmente | `CANON-01` a `CANON-06` concluidos; validacao local verde, com fixture do runner e browser CI ainda pendentes no fechamento de `CANON-07` |
 | Parte 3.6 | in progress | `CODE-UX-01` model/prototype/fixture work recorded; no new product gate has passed |
 
 ## Etapa ativa
 
 - Subplan: 3.6.1, with required [3.6.1a design remediation](./06-refoundation/01a-prototype-workflows-and-critical-review.md).
-- Current gate: `CODE-UX-01`; 01a terminal work complete, human review pending.
+- Current gate: `CODE-UX-01`; 01a automation and design approval recorded;
+  baseline documentation/contract closure audit pending. Actual local artifact
+  preflight is a CODE-UX-03 obligation, not an entry dependency of CODE-UX-02.
 - State: partial. Product model, ownership, runtime matrix, resource budget and
   fixture repair are recorded in `CS-ADR-014` through `016` and
   [`PRODUCT-MODEL.md`](./06-refoundation/PRODUCT-MODEL.md).
-  Governance/remediation are recorded in `CS-ADR-017` through `022`.
-  Design is not approved; exact-source artifact is unavailable;
-  `CS-REF-18` disposition is pending.
+  Governance/remediation and consumer/producer boundaries are recorded in
+  `CS-ADR-017` through `024`.
+  Design is approved; compatible published assets exist but are not synced;
+  `CS-REF-18` initial scalar-only disposition is explicitly accepted.
 - Responsavel: Codex.
 
 ### Current compact checkpoint
 
-- Baseline: `8c6c31b459a994e7f7f6fd7d0166d8446632a377`,
-  `feature/coding-grading`; the prior naming changes were committed during
-  the earlier read-only discovery. UXP-07 preserved that execution's dirty
-  documentation/prototype worktree; no commit, stage or production edit.
-- Active row/stage: UXP-07 automated audit completed after the requested
-  editor-fidelity correction. UXP-01..07 regression passes; overall CODE-UX-01
-  and explicit human acceptance remain open.
-- Allowed files: `06-refoundation/prototype/`, `layout-prototype.html`,
-  active plan/model/gate documents, this ledger and shared ADRs. No production
-  application, dependency manifest, runtime, database or upstream edits.
+- Baseline: `40a8470b4694e4b092b270ec8160aa07f34d6739`, tree
+  `5d59e6bbbbc88e092fdca19ffa43a30a23d0dbc9`, `feature/coding-grading`.
+  User committed/pushed the prototype. This correction preserves the nine
+  planning/state files already dirty on entry. No fetch, commit, stage or
+  production edit here.
+- Active row/stage: planning correction after UX01-C closure audit. The user
+  requested removal of the mistaken mandatory build prerequisite. Design and
+  initial scalar-only scope remain approved. CS-ADR-024 supersedes the old
+  build-only CI proposal; no such owner decision is pending for this work.
+- Allowed files: current plan/model/gates, shared state/ADRs and capability
+  gaps. Only documentation changed. Runtime/IDE, CI workflows, packages, API,
+  dependency manifests, database and developer services remain untouched.
 - Contract: strict JSDoc-checked browser scripts with TypeScript presentation
   types; standalone HTML remains directly openable. CS-ADR-020 records this
   disposable design implementation and simulated fixture boundary.
 - Contract: [governance](./06-refoundation/GOVERNANCE.md), atomic UXP rows and
   [terminal gates](./06-refoundation/QUALITY-GATES.md). This file fulfills the
   `state.md` role; do not create a second mutable tracker.
-- Acceptance IDs: UX-F01..06 map to UXP-01..06 and existing CS-REF rows;
-  UXP-07 adds editor/file workflow evidence under the same design gate.
+- Acceptance IDs: UX-F01..06 / UXP-01..07 design approved; CS-REF-18 uses its
+  explicitly accepted initial-scope limitation with EMC-GAP-001 follow-up.
+  CS-REF-21 records baseline preparation now and requires actual local asset
+  readiness/preflight in CODE-UX-03 before real execution; it is not passed.
 - Terminal evidence: strict typecheck/lint exit 0; 14 contract tests and 16
   required browser journeys passed together, no skips. Every selected UXP ID
   is enforced; page/context and browser disposal are asserted. Detailed red /
   green evidence is in the execution record below.
-  Node subprocess/browser checks ran outside the restricted sandbox; its
-  file-only summary did not establish that individual contract tests ran.
-- Runtime: last real preflight remains exit 1 (unverified frozen toolchain);
-  not rerun for the visual-only follow-up. No stack, compiler, API, database
-  or production build was started.
-- Human: design acceptance pending; earlier agent inspection is not approval.
-- Next exact action: perform/record the human walkthrough from 01a against the
-  directly openable HTML. Obtain the CS-ADR-015 compound-value disposition and
-  verified runtime artifact before closing CODE-UX-01 or entering CODE-UX-02.
-  Simulated persistence is per-tab memory; durable recovery remains 3.6.2.
+  Additional closure checks: coding 15, adapter 15, canonical bridge 5,
+  lightweight preflight 26 and acquisition 36 tests passed. Package typechecks
+  and focused strict lint pass. These are unit/design/contract checks, not a
+  successful actual artifact preflight or production E2E.
+- Runtime: local canonical/web schema-1 manifests still fail frozen binding.
+  Published 4.5.2 Toolchain/Core manifests pass the same binding check; this
+  proves manifest compatibility only. Four scalar public harness probes pass
+  and six compound probes reject as expected; no compiler or real stack boot,
+  complete artifact download, local synchronization or producer dispatch.
+- Human: on 2026-11-20 the user explicitly approved the prototype design and
+  answered yes to initial simple-type scope. This is not production acceptance
+  or a supplied task-by-task human log. No Emception source/CI publication work
+  is authorized or required by the corrected consumer plan.
+- Next exact action: audit CODE-UX-01 against its corrected documentation,
+  contract, design and preparation obligations, then enter CODE-UX-02 after
+  that gate closes. Before real execution in CODE-UX-03, preserve old generated
+  assets, refresh the pinned published package and pass actual local preflight
+  under the resource budget. No upstream build/deployment prerequisite.
+  In-memory prototype recovery is not production durability.
 
 | Gate da refundacao | Estado | Evidencia necessaria |
 | --- | --- | --- |
-| `CODE-UX-01` | partial / open | 3.6.1a interactive design and 30 checks recorded; human design acceptance, artifact/preflight success and compound scope pending |
+| `CODE-UX-01` | partial / open | design and initial simple-type scope approved; 30 design checks recorded; baseline closure audit/preparation handoff pending, no build dependency |
 | `CODE-UX-02` | nao iniciado | contratos, recuperacao de drafts, revisoes e projecoes autorizadas |
-| `CODE-UX-03` | nao iniciado | runtime real, canvas/terminal, cancelamento e recursos |
+| `CODE-UX-03` | nao iniciado | refresh compatible published assets and pass local preflight before real runtime, canvas/terminal, cancellation and resource checks |
 | `CODE-UX-04` | nao iniciado | autoria completa dos dois tipos e validacao pelo professor |
 | `CODE-UX-05` | nao iniciado | resolucao, envio, recuperacao e revisao por persona |
 | `CODE-UX-06` | nao iniciado | integracao, matriz de aceite e revisao humana |
@@ -134,8 +154,9 @@ um gate como concluido sem registrar a evidencia executada.
 ## Decisoes abertas
 
 `CS-ADR-017` adopts the Meta-Harness protocol for all of 3.6; `CS-ADR-018`
-records the additional design iteration. The user authorized this planning,
-not acceptance of the existing specimen or a scalar-only product scope.
+records the additional design iteration. The user subsequently explicitly
+approved the prototype design and initial scalar-only function scope on
+2026-11-20. This does not approve a production cutover or CI deployment.
 
 `CS-ADR-014` records the actual field ownership/persistence trace and the
 single Learning draft/publication model. `PRODUCT-MODEL.md` contains the
@@ -143,12 +164,16 @@ teacher/learner journeys, component dispositions, runtime matrix and budgets.
 Implementation of these domain choices belongs to `CODE-UX-02`; no database
 schema or platform module was changed.
 
-`EMC-GAP-001` is now confirmed through actual installed public API calls:
+`EMC-GAP-001` is confirmed through actual installed public API calls:
 scalar harness generation succeeds; Array inputs, returns and nested values
 are rejected. The official validator is also scalar-only. `CS-ADR-015`
-proposes an explicit initial scalar scope with an upstream follow-up; a
-product question has been issued, but no answer/acceptance is recorded yet.
-Do not silently convert the limitation into an approved scope reduction.
+now records the explicit user acceptance of initial scalar scope with an
+upstream follow-up. Compound support remains unimplemented, not implicitly
+supported or permanently excluded.
+The installed ESM public export was re-probed at HEAD `40a8470b46` with the
+same boundary result. CS-ADR-023 retains the discovered manual producer
+deployment side effect; CS-ADR-024 withdraws the unnecessary build-only CI
+proposal and records the compatible published consumer path.
 
 ## Bloqueios
 
@@ -163,13 +188,13 @@ A entrada da parte 4 continua bloqueada por `CODE-UX-01` a `CODE-UX-06`.
 O browser E2E deve provar o modelo refundado, e nao congelar como aceita a
 composicao antiga. Preflight verde nao substitui aceite de produto ou CI.
 
-Both local manifests remain `version: 1`, and the release has no provenance
-record. The real preflight rejects that artifact. A read-only GitHub query
-for artifact `emception-web-723eeeb84589cfb23b0def630ee46ead02890acc-c1236b3e35c0da3eed4e79135eb6b7090b91863f`
-returned zero results. No exact artifact can currently be acquired.
-This infrastructure blocker is independent from the successful 26 preflight
-unit tests. Preserve compiler identity/provenance checks and the existing
-release directory. See `CS-ADR-016` and `PRODUCT-MODEL.md` for the next action.
+The real local preflight still rejects the schema-1 assets. Compatible 4.5.2
+manifests are available from published packages; the earlier zero-result
+current-HEAD GitHub queries do not establish a consumer artifact shortage.
+Actual synchronization/local verification is pending before CODE-UX-03
+execution, not a blocker requiring an Emception build before CODE-UX-02.
+Preserve compiler identity, applicable CI provenance and old generated assets.
+See `CS-ADR-024` and `QUALITY-GATES.md` for the backed-up refresh path.
 
 Resource entry: 31,806 MiB RAM, 6,486 MiB available, 9,391 MiB swap used,
 12 logical CPUs. No full stack/build was started. The historical cycle
@@ -418,6 +443,65 @@ Current instructions and CS-ADR-022 record the updated seven-slice selector.
 Human design acceptance, compound-value disposition and verified artifact
 obligations remain pending; no production gate was entered or waived.
 
+### UX01-C closure audit - 2026-11-20
+
+Historical audit: its mandatory exact-source/build-only CI interpretation and
+next-action proposal below were superseded by CS-ADR-024. Test observations
+remain evidence of their stated scope, not runtime or production acceptance.
+
+Baseline is the committed prototype `40a8470b46`, with clean entry worktree.
+Scope was read-only technical validation plus the current documentation;
+the artifact/compound decisions were not bypassed by starting production work.
+
+| Check | Current result | Meaning |
+| --- | --- | --- |
+| strict prototype typecheck/lint and full sequential design suite | exit 0; 30/30 tests, zero skips, 14.3 seconds | committed design/contract regression only |
+| coding and grading-adapter-code typechecks, focused ESLint | exit 0, no warnings | no schema/type/lint weakening |
+| coding package suite | 15/15 | current owned contracts |
+| grading-adapter-code package suite | 15/15 | pure adapter parity |
+| real canonical bridge focused suite | 5/5 | current fixture, required family and private-data redaction |
+| preflight/editor/runtime-launch unit suites | 26/26, zero skips | no Next, Docker, API or WASM boot; mocked child processes |
+| official acquisition unit suite | 36/36 | mocked GitHub, digests/provenance/archive/producer-step checks, no download; duplicate-ZIP warnings are intentional negative fixtures |
+| installed public ESM harness probe, cwd apps/web | 4 scalar harnesses pass; 6 compound probes reject | no compiler boot or private imports; not full execution conformance |
+| current exact-source producer/artifact API queries | 0 runs, 0 artifacts | no available producer result for the current committed source |
+| actual frozen manifest check | exit 1: verified artifact matching frozen toolchain required | G-PREFLIGHT not passed |
+
+Commands used the installed Node 24.16.0 and package-local Vitest 5.0.5,
+TypeScript 6.0.3, ESLint 10.13.0 and Chrome. Package tests ran with
+`node node_modules/vitest/vitest.mjs run --maxWorkers=1` from their workspace;
+the bridge selected `src/lib/coding-assignment/coding-surface-bridge.test.ts`
+from `apps/web`. Package types used root TypeScript with their explicit
+`--project .../tsconfig.json --noEmit --pretty false`; no tool was installed.
+The public probe used ESM `import ... from 'emception/testing'`, not a CJS
+require resolver or an upstream private file. Preflight and prototype commands
+are in QUALITY-GATES; acquisition used the existing Python unittest suite.
+
+Resource entry: MemAvailable 14,992 MiB, swap used 8,467 MiB. All checks stayed
+lightweight, sequential and CPU-affined to 0-9 (two cores reserved), one browser
+with disposed pages/contexts. No full application/API/compiler build, producer,
+release write, database, dependency installation or background service.
+Python bytecode created by its tests was removed; only docs remain changed.
+
+Read-only cloud review: latest successful workflow run 44523205221 skipped
+the producer and uploaded no artifacts; overall green is not release evidence.
+Current manual `emception.yml` would also deploy the IDE to GitHub Pages even
+with `publish_packages: false`. This contradicts the earlier safe-dispatch
+assumption. CS-ADR-023 records that safety finding; its build-only proposal
+was subsequently withdrawn by CS-ADR-024. No remote workflow/issue/publication
+change was performed.
+
+Human questions presented: accept the design after its walkthrough; approve
+temporary scalar-only function scope or require compound support first; hand
+build-only CI changes to the Emception owner or authorize that CI-only scope
+here. These historical questions are not current instructions: design/scalar
+scope was explicitly accepted and the unnecessary CI proposal withdrawn.
+No automatic human acceptance or gate completion was inferred.
+
+Final documentation audit: 47 documents, 168 valid local links and 25 complete
+atomic rows; `git diff --check` passes. Explicit diff against runtime/IDE, CI,
+apps/packages, scripts and root AGENTS is empty. Only the six current planning/
+state documents changed; no unrelated source or generated bytecode remains.
+
 ## Arquivos alterados pela implementacao
 
 - contrato canonico unico de coding, sem aliases de compatibilidade;
@@ -437,30 +521,80 @@ obligations remain pending; no production gate was entered or waived.
 
 Continue [`3.6.1`](./06-refoundation/01-product-model-and-evidence-baseline.md):
 
-1. Perform the instructor/learner human walkthrough in
-   [3.6.1a](./06-refoundation/01a-prototype-workflows-and-critical-review.md)
-   using its directly openable HTML. UXP-01..07 automated work is implemented;
-   record explicit acceptance or concrete findings, then address only those
-   findings through the same contract/test cycle. Do not repeat discovery or
-   mark human acceptance from the 30 passing automated checks.
-2. Separately record the product response to the scalar/compound-value question
-   in `CS-ADR-015` and `EMC-GAP-001`; no answer is currently recorded. Obtain
-   a verified producer result for the exact source identity to test.
-   `.github/workflows/emception.yml` supports `workflow_dispatch` with
-   `publish_packages: false`; running it is separate from publishing packages.
-   After committed source/producer identity is agreed, use the existing
-   acquisition mechanism in a suitable checkout without overwriting this
-   unowned legacy release. Run the real frozen-toolchain preflight.
-3. Recheck memory against the recorded budget before any full stack run.
+1. Retain the explicit user design approval recorded for
+   [3.6.1a](./06-refoundation/01a-prototype-workflows-and-critical-review.md).
+   Do not repeat the prototype work or mislabel that approval as production
+   runtime/usability acceptance. Initial scalar-only scope is also explicitly
+   accepted in CS-ADR-015; compound support remains tracked in EMC-GAP-001.
+2. Complete the CODE-UX-01 baseline closure audit under the corrected gates,
+   then enter CODE-UX-02 using CS-ADR-014. Inventory actual persisted published
+   exercises before a breaking interpretation. Apply the mandatory atomic
+   cycle; do not compile or publish Emception to begin this domain/draft work.
+3. Before CODE-UX-03 real execution, preserve old generated CDN/release copies,
+   explicitly refresh the compatible pinned published assets and pass both
+   local manifest checks in G-PREFLIGHT. The current helper can retain schema 1;
+   rerunning sync/dev without a backed-up refresh is not readiness evidence.
+   Inspect actual changed-path classification for conditional CI provenance.
+4. Recheck memory against the recorded budget before any full stack run.
    Preserve the existing developer environment; do not reset data or stop
    unrelated processes to make room.
-4. Only after design approval, product disposition and runtime prerequisites
-   close `CODE-UX-01`, enter `CODE-UX-02` using `CS-ADR-014`. Inventory actual
-   persisted published exercises before a breaking interpretation. Apply the
-   mandatory atomic cycle and terminal gate to each subsequent slice.
+   Use a local toolchain build only if compatible assets cannot be obtained
+   or a separately approved runtime change genuinely requires one. No such
+   need is established for the already published 4.5.2 assets.
 
 Nao iniciar o programa abrangente `CODE-E2E-00` antes de `CODE-UX-06` nem
 declarar qualidade de concorrencia apenas com a reescrita dos documentos.
+
+### Subsequent product response - 2026-11-20
+
+The user explicitly approved (1) the current prototype design and (2) the
+initial simple-type function scope. These decisions are now recorded in
+CS-ADR-015/022, 01a, the product model and CS-REF-18 disposition. No task-by-task
+human test log, production acceptance or compound-runtime support was invented.
+For (3), the user requested an explanation of the build; this is not approval
+to modify CI, dispatch a workflow, deploy the IDE or publish packages. Only
+documentation was updated; no build or new test run was necessary for these
+recorded decisions. Its then-current artifact prerequisite was later corrected
+by CS-ADR-024; it is not an instruction to wait for a compiler build.
+
+### Consumer artifact planning correction - 2026-11-20
+
+The user explicitly requested correction of the mandatory Emception build /
+publication dependency. CS-ADR-024 records the replacement policy. Changes
+are confined to the plans and shared handoffs; existing design/scalar-scope
+approval, strict runtime checks, historical data and upstream ownership stay.
+
+Read-only evidence gathered immediately before this update:
+
+- npm metadata returned HTTP 200/version 4.5.2 for both public packages.
+- Toolchain/Core CDN manifests returned HTTP 200/schema 2/version 4.5.2 and
+  passed the current frozen version/ABI/lock/receipt/fingerprint check.
+- Actual local canonical/web manifests are schema 1 and fail that check;
+  other conventional local staged manifest locations were absent.
+- Six classifier probes distinguish feature/docs consumers from runtime and
+  lockfile changes; the 36 existing acquisition tests passed. No CI rule was
+  changed, and required exact-source provenance is not bypassed.
+
+This is manifest/policy evidence, not a full download, byte-level asset audit,
+local refresh, browser execution, CODE-UX-01 closure or production acceptance.
+The next executor follows the current action list above, not superseded
+build-only instructions in historical records. No runtime/IDE, CI, app source,
+database, dependency or developer-service change is part of this update.
+
+Documentation Builder/Auditor pass (same agent, not independent product review):
+
+| Check | Result | Scope |
+| --- | --- | --- |
+| installed Node read-only link/atomic-table/dependency audit | exit 0; 47 documents, 168 local links, 7 specification tables and 25 complete atomic rows | validates baseline/UX03 ownership and required safeguards, not runtime behavior |
+| `python3 -B -m unittest discover -s scripts/ci/tests -p acquire_emception_release_test.py` | exit 0; 36 tests | existing conditional acquisition contract; duplicate-ZIP warnings are intentional negative fixtures |
+| six direct `needs_source_release()` probes | exit 0; feature/domain/adapter/docs false, runtime and lockfile true | no classifier edit or new source-build requirement |
+| `git diff --check -- docs/plans/coding-assessment-and-code-studio` and changed-path review | exit 0; only planning Markdown changed | preserves the pre-existing dirty plan changes; no app/runtime/IDE/CI edits |
+
+The read-only audit uses filesystem APIs after sandbox child-process denial;
+atomic-shape checks target specification tables, not historical result/checklist
+tables. No production type/lint rule was relaxed and no unexecuted runtime,
+full build or product gate was marked passed. No heavy test was needed for
+this documentation-only correction.
 
 ## Checklist de checkpoint
 

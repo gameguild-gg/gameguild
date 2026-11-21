@@ -13,7 +13,9 @@ reference preparation/results, preview fidelity, realistic host constraints,
 capability combinations and recovery states still need design evidence.
 The required [01a iteration](./01a-prototype-workflows-and-critical-review.md)
 records UX-F01..06 and their objective/human gates. Its automated remediation
-was implemented on 2026-11-20; explicit human design acceptance remains pending.
+was implemented on 2026-11-20. The user then explicitly approved the prototype
+design and initial simple-type function scope (CS-ADR-015/022); this is not
+production usability or runtime approval.
 Apply [GOVERNANCE.md](./GOVERNANCE.md) to the next execution. Historical layout
 observations below retain only their stated scope.
 
@@ -182,7 +184,7 @@ No production support claim follows from an export alone.
 | standard I/O / C++ or C, clang/WASI | compile/run with batch stdin and stdout/stderr | `createEmception`, `workspace.setBuild`, `runTests`, `compileAndRun` | Code grading worker builds native sources and runs the full plan | source/export available; real browser/server proof blocked by artifact |
 | function / C++, scalar values | generate typed C++ harness, run doctest report | `emception/testing.generateDoctestHarness`, overlay, `runTests` | trusted worker uses the retained assessment plan builder with the same public harness | actual public import generated integer harness; no compiler execution in this gate |
 | function / C | signature/harness linkage | same public harness with C source toolchain | native presets exist; generated harness uses C++ linkage/types | do not advertise every scalar/language combination before conformance, especially string parameters |
-| function / arrays or matrices | typed compound input/return | `mapCppType`, `generateDoctestHarness` | Courses validator and canonical coding schemas currently allow four scalar kinds only | public import rejects Array parameters, array returns and nested array values; `EMC-GAP-001`, product disposition pending |
+| function / arrays or matrices | typed compound input/return | `mapCppType`, `generateDoctestHarness` | Courses validator and canonical coding schemas currently allow four scalar kinds only | public import rejects compound values; initial scalar-only scope explicitly accepted; compound support deferred under `EMC-GAP-001` / CS-ADR-015 |
 | supported native program / interactive stdin | terminal bytes or stream, stdout/stderr | `createEmception` with xterm, `BrowserStdin` callback, `run` | official cases use fixed stdin; interactivity is local experimentation | requires cross-origin-isolation/stream/cancellation proof; log text is insufficient |
 | native graphics / SDL3, raylib or Allegro | canvas build/start/input/stop | `api.canvas.build`, `start`, `buildAndStart`, `stop`, `CanvasSession` | current worker is a finite test runner, not a visual judge | exports and runtime profiles exist; family/environment compatibility and actual artifact execution remain unproven |
 | project / SQL / new languages | future contracts/runtimes | no claim in this cut | not offered by this plan | out of scope; do not expose inert options |
@@ -252,13 +254,32 @@ Local `apps/web/public/emception/manifest.json` and
 Code grading requires verified artifacts matching its frozen toolchain.
 ```
 
-A read-only GitHub Actions query for
-`emception-web-723eeeb84589cfb23b0def630ee46ead02890acc-c1236b3e35c0da3eed4e79135eb6b7090b91863f`
-returned `total_count: 0`. No exact-source artifact was available to acquire.
-The existing acquisition script remains authoritative: do not overwrite the
-old local release, manufacture provenance or bind grading to an unrelated
-compiler. Acquisition needs a verified producer result for the source identity
-that will be tested, followed by its preflight.
+On 2026-11-20, read-only npm metadata confirmed that both `emception@4.5.2`
+and `@gameguild/emception-toolchain@4.5.2` are published. The
+[Toolchain manifest](https://cdn.jsdelivr.net/npm/@gameguild/emception-toolchain@4.5.2/cdn/manifest.json)
+and [Core CDN manifest](https://cdn.jsdelivr.net/npm/emception@4.5.2/cdn/manifest.json)
+both passed `requireFrozenCodeToolchain(CODE_TOOLCHAIN_V3, manifest)`:
+schema 2, artifact 4.5.2, ABI `emception-browser-v1`, matching lock hash,
+receipt hash and fingerprint fields. This establishes manifest compatibility,
+not a downloaded/verified complete toolchain or successful browser execution.
+
+The earlier zero-artifact GitHub queries do not prove that these compatible
+published assets are unavailable. Exact current-HEAD/tree acquisition is a
+conditional CI rule for its classified source changes, not a universal
+requirement of consuming public runtime APIs. Keep that rule and its provenance
+checks intact when applicable. See `CS-ADR-024`; the mandatory source-build /
+build-only CI proposal is withdrawn, not pending owner approval.
+
+Before UX03-A real execution, preserve the old generated assets and refresh
+the pinned package through the existing synchronization path. Both the
+canonical development release and web-served CDN must pass local preflight.
+The sync helper may retain schema-1 assets and `dev:fast` only checks manifest
+existence, so simply restarting dev is not a refresh. Follow the backed-up
+preparation in `QUALITY-GATES.md`; never fabricate a manifest, overwrite an
+unowned release or silently accept the legacy fallback for grading.
+No local toolchain build, upstream IDE deployment or package publication is
+required to obtain the already published version. No complete artifact was
+downloaded, local release replaced or runtime booted during the read-only check.
 
 The real browser-cycle fixture now emits `ExerciseType: "function"` and is
 tested through the actual canonical wire bridge. It deliberately retains the
@@ -282,7 +303,10 @@ not evidence that all current exercises are disposable.
 ## Entry result
 
 The model, ownership decisions, prototype, resource budget and fixture repair
-are reviewable. `CODE-UX-01` remains partial: exact artifact/preflight success
-is blocked externally, and compound-value scope needs a product disposition.
+are reviewable. `CODE-UX-01` awaits its documentation/contract closure audit,
+not a compiler build. Prototype design and initial scalar-only scope are
+explicitly accepted; compound function support remains a tracked follow-up,
+not a claim of runtime capability. Local asset synchronization and actual
+preflight remain pending under `CODE-UX-03`.
 No downstream gate is marked complete. Human usability acceptance remains in
 `CODE-UX-06`, distinct from these automated layout checks.

@@ -41,7 +41,7 @@ None of these consumers was cut over to the refounded product in `CODE-UX-01`.
 | `coding-activity-client.tsx` | obtains frozen runtime delivery; maintains host submission keys and local namespace | keep official commands and contextual identity; replace solving composition and freeze retry payload |
 | `assessment-grader.tsx` and SpeedGrader | server snapshot/submitted files and authorized review commands | retain frozen-source ownership; integrate read-only review presentation |
 | `coding-surface-bridge.ts` | converts PascalCase content and rejects a missing explicit type | evolve with owned contracts; incomplete draft is a separate model |
-| `coding-cycle-browser-e2e.mjs` | historical mixed stdio/function diagnostic cycle | fixture now imported from `coding-cycle-fixture.mjs` with explicit `ExerciseType`; real execution remains artifact-blocked |
+| `coding-cycle-browser-e2e.mjs` | historical mixed stdio/function diagnostic cycle | canonical fixture imported with explicit `ExerciseType`; compatible assets are published, but local refresh/preflight and real execution remain pending; no mandatory runtime build (`CS-ADR-024`) |
 
 Detailed reuse/replace/remove reasons and the ownership trace are in
 [`PRODUCT-MODEL.md`](./06-refoundation/PRODUCT-MODEL.md) and `CS-ADR-014`.

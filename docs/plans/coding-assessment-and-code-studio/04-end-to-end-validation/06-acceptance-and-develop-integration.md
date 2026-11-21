@@ -51,7 +51,8 @@ evidencia de CI. Eles nao substituem o PR final integrado.
 - nenhum aceite final depende de leitura direta do banco;
 - toda duplicacao conhecida esta registrada;
 - nao existem condicionais de code no core generico;
-- artifact exato e browser E2E estao verdes;
+- frozen artifact identity, applicable source provenance and official browser
+  E2E checks pass; no new upstream release is forced merely for UI changes;
 - builds e suites obrigatorias passam na branch reconciliada;
 - o diff do PR corresponde somente ao dominio, adapter, backend, surface,
   integracao e validacao aprovados nas partes 01 a 04.
@@ -62,4 +63,3 @@ Implementacoes transitorias so podem ser removidas em trabalho separado com
 evidencia de cobertura equivalente. Um bug encontrado pelo programa deve ser
 corrigido no modulo owner e revalidado; nao reduzir o catalogo para obter
 verde.
-

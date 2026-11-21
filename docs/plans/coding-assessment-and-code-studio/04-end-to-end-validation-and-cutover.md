@@ -30,14 +30,21 @@ O resultado deve dizer, com evidencia reproduzivel:
   aceite antes do programa abrangente desta parte;
 - `CODE-UI-07` ainda depende do lane `coding` com o artifact Emception schema
   2 exato;
-- a preparacao de fixture canonica, artifact exato e preflight ocorre em
-  `CODE-UX-01`, antes dos testes reais da refundacao;
+- `CODE-UX-01` prepares the fixture/frozen-binding contract; `CODE-UX-03`
+  synchronizes compatible published assets and passes local preflight before
+  real execution. No mandatory Emception build or IDE publication is required;
 - a branch deve ser reconciliada com a `develop` antes da evidencia final.
 
 O subplano `CODE-E2E-00` revalida essa preparacao apos reconciliar a branch e
 fecha a evidencia CI restante. Ele nao bloqueia a aquisicao de artifact ou a
 correcao de fixture necessarias a 3.6. Nenhum outro subplano desta parte pode
 ser declarado concluido enquanto essa entrada estiver aberta.
+
+Here, an exact artifact means the frozen executable version/ABI/lock identity,
+not a new runtime release for every coding UI commit. Existing CI requires
+exact HEAD/tree producer provenance only for its classified source changes.
+Preserve that rule; published consumer assets do not substitute for source
+provenance when it is required. See part 3 `CS-ADR-024`.
 
 ## Identidades canonicas congeladas
 

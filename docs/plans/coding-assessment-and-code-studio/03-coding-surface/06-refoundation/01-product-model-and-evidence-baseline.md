@@ -1,13 +1,14 @@
 # 3.6.1. Product model and evidence baseline
 
-Status: partial execution; prototype automation/remediation implemented, human
-design acceptance, exact artifact and compound-value disposition pending.
+Status: partial execution; prototype design and initial scalar-only function
+scope accepted by the user on 2026-11-20. Baseline closure audit pending;
+local artifact synchronization/runtime preflight is tracked in `CODE-UX-03`.
 Gate: `CODE-UX-01`. Updated: 2026-11-20.
 
 Execution evidence: [`PRODUCT-MODEL.md`](./PRODUCT-MODEL.md), the
 [layout specimen](./layout-prototype.html), and the shared
 [implementation state](../IMPLEMENTATION-STATE.md). Ownership is recorded in
-`CS-ADR-014`; scope/provenance decisions in `015` and `016`. No downstream
+`CS-ADR-014`; scope/provenance decisions in `015`, `016` and `024`. No downstream
 gate has passed.
 
 ## Invariants and boundaries
@@ -36,12 +37,29 @@ implementation -> Quality gate. Commands are in
 
 | Slice | Specification | Contract / schema | Test oracle | Minimal implementation | Quality gate |
 | --- | --- | --- | --- | --- | --- |
-| UX01-A | inventory ownership, capabilities and actual data boundaries | field map, public API signatures and feasibility fixture expectations | supported/rejected function values and canonical wire requirements | bounded public probes, fixture repair and evidence/ADRs | G-DOC + relevant G-CONTRACT/G-WEB + preflight unit command; actual runtime check reported separately |
-| UX01-B | resolve the six critical design findings | presentation states/events and complete teacher/learner task contract | UXP-01..06 oracles in 01a | isolated typed prototype iteration | complete 01a: G-PROT-flow + inspected/human design evidence |
-| UX01-C | establish runtime test prerequisites and product scope | exact artifact binding, resource budget and explicit compound-value disposition | wrong identity fails; verified release passes; required decision is recorded | supported artifact acquisition/preflight, no manifest fabrication | G-PREFLIGHT + G-DOC; all CODE-UX-01 obligations and decisions recorded |
+| UX01-A | inventory ownership, capabilities and actual data boundaries | field map, public API signatures and feasibility fixture expectations | supported/rejected function values and canonical wire requirements | bounded public probes, fixture repair and evidence/ADRs | G-DOC + relevant G-CONTRACT/G-WEB + G-PREFLIGHT-UNIT; actual runtime check reported separately |
+| UX01-B | resolve the six critical design findings and requested editor fidelity | presentation states/events and complete teacher/learner task contract | UXP-01..07 oracles in 01a | isolated typed prototype iteration | complete 01a: G-PROT-flow + inspected/human design evidence |
+| UX01-C | specify runtime preparation and resolve product scope | frozen artifact binding, conditional producer policy, resource budget and explicit compound-value disposition | unit fixtures reject wrong identity; consumer changes do not universally require a source build; product decision is recorded | documented published-asset synchronization handoff to UX03-A, no manifest fabrication or mandatory build | G-PREFLIGHT-UNIT + G-ARTIFACT-POLICY + G-DOC; baseline obligations and runtime handoff recorded |
 
-UX01-B can proceed while UX01-C is externally blocked. Its passing terminal
-checks do not approve array scope, runtime support or the overall gate.
+UX01-B/C do not depend on compiling or booting Emception. Their passing terminal
+checks do not establish runtime support or production acceptance.
+
+### Current closure requirements
+
+At HEAD `40a8470b4694e4b092b270ec8160aa07f34d6739`, the prototype is
+committed and its design automation is implemented. On 2026-11-20 the user
+explicitly approved the design and initial simple-type function scope
+(CS-ADR-015/022). Completing the parent gate requires its documentation,
+contract and design audit, with the runtime handoff recorded explicitly.
+No real runtime/production acceptance follows from the prototype approval.
+
+The earlier requirement for a producer artifact tied to every current HEAD/tree
+was a planning error, corrected by `CS-ADR-024`. Published 4.5.2 manifests pass
+the frozen binding check; local schema-1 assets still fail. Refresh and verify
+the actual local assets before runtime work in `CODE-UX-03`, not before pure
+contracts in `CODE-UX-02`. No Emception build, CI change, workflow dispatch,
+IDE deployment or npm publication is a prerequisite of this baseline.
+Existing conditional producer/provenance checks remain intact when applicable.
 
 ## Work
 
@@ -81,10 +99,11 @@ checks do not approve array scope, runtime support or the overall gate.
    startup and cleanup observations. Record measurable acceptance thresholds
    before large browser runs. Do not arbitrarily increase heaps to hide leaks.
 9. Repair the existing coding-cycle canonical fixture, including required
-   `ExerciseType`, and its focused tests. Acquire the exact artifact through
-   repository-supported producer/consumer mechanisms and run preflight. Reuse
-   the current harness; no manual manifest, private import, new coding CLI or
-   relaxed provenance check. Record `CS-REF-21` separately from product success.
+   `ExerciseType`, and its focused tests. Record the frozen binding, existing
+   asset synchronization path and lightweight preflight/CI-classification
+   evidence. Hand actual local asset synchronization and G-PREFLIGHT to UX03-A
+   under `CS-REF-21`; reuse the current harness. No manual manifest, private
+   import, new coding CLI or relaxed identity/provenance check is permitted.
 
 ## Decisions that must be explicit
 
@@ -115,9 +134,10 @@ do not seek approval for every local component extraction.
   legacy code. Emception preservation boundaries are unchanged.
 - Capability matrix and compound-value disposition include evidence, owner and
   follow-up; no unsupported option is described as operational.
-- Canonical fixture/preflight tests pass and the exact artifact is available
-  for required runtime checks. If not, record an infrastructure blocker, not
-  a successful gate. Preparation itself does not close `CODE-UI-07`.
+- Canonical fixture/preflight unit and applicable CI-classification tests pass.
+  The runtime handoff names the compatible published version, local refresh
+  requirement and G-PREFLIGHT checks in UX03-A. Pending synchronization is not
+  baseline failure or runtime success. This does not close `CODE-UI-07`.
 - Resource budget and safe test commands are recorded. Screenshots/prototypes
   are design evidence, not evidence that execution already works.
 
