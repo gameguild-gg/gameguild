@@ -1,9 +1,9 @@
 # 3.6.1. Product model and evidence baseline
 
-Status: partial execution; prototype design and initial scalar-only function
-scope accepted by the user on 2026-11-20. Baseline closure audit pending;
+Status: completed on 2026-11-21; prototype design and initial scalar-only function
+scope accepted by the user on 2026-11-20. Baseline closure audit passed;
 local artifact synchronization/runtime preflight is tracked in `CODE-UX-03`.
-Gate: `CODE-UX-01`. Updated: 2026-11-20.
+Gate: `CODE-UX-01`. Updated: 2026-11-21.
 
 Execution evidence: [`PRODUCT-MODEL.md`](./PRODUCT-MODEL.md), the
 [layout specimen](./layout-prototype.html), and the shared
@@ -49,9 +49,13 @@ checks do not establish runtime support or production acceptance.
 At HEAD `40a8470b4694e4b092b270ec8160aa07f34d6739`, the prototype is
 committed and its design automation is implemented. On 2026-11-20 the user
 explicitly approved the design and initial simple-type function scope
-(CS-ADR-015/022). Completing the parent gate requires its documentation,
-contract and design audit, with the runtime handoff recorded explicitly.
+(CS-ADR-015/022). Its documentation, contract and design audit is now complete,
+with the runtime handoff recorded explicitly.
 No real runtime/production acceptance follows from the prototype approval.
+The 2026-11-21 closure reran strict prototype typecheck/lint, all 30 design
+checks, 26 lightweight preflight checks, coding/adapter/bridge regressions and
+the 36 acquisition-policy checks. The documentation audit passed for all
+168 local links and 25 atomic rows. See the shared ledger for actual commands.
 
 The earlier requirement for a producer artifact tied to every current HEAD/tree
 was a planning error, corrected by `CS-ADR-024`. Published 4.5.2 manifests pass

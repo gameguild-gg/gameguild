@@ -1,0 +1,60 @@
+{
+  "function": {
+    "type": "coding-authoring-draft",
+    "schemaVersion": 1,
+    "exerciseType": "function",
+    "environment": { "language": "cpp", "runtime": "wasi" },
+    "problem": {
+      "statement": "Return the sum of two integers.",
+      "examples": [{ "id": "example-1", "input": "2, 3", "output": "5", "explanation": "Add the values." }],
+      "constraints": ["Inputs are small integers."]
+    },
+    "toolchain": {
+      "key": "cpp-emception",
+      "version": "4.5.2",
+      "runtimeAbi": "emception-browser-v1",
+      "artifactDigest": "sha256:405e9f1fdd936ba31e11247fa1f901eaee24c4fcf641e343505df75c3d539b37"
+    },
+    "files": [{ "id": "main-file", "path": "main.cpp", "encoding": "text", "content": "int sum(int a, int b) { return 0; }", "mutable": true, "visibility": "public" }],
+    "entryPoint": { "path": "main.cpp" },
+    "functionSignature": {
+      "name": "sum",
+      "parameters": [{ "name": "a", "type": "integer" }, { "name": "b", "type": "integer" }],
+      "returnType": "integer"
+    },
+    "tests": [{
+      "id": "addition",
+      "name": "Addition",
+      "visibility": "public",
+      "weightUnits": "100",
+      "kind": "function",
+      "cases": [{ "id": "positive", "inputs": [{ "type": "integer", "text": "2" }, { "type": "integer", "text": "3" }], "expected": { "type": "integer", "text": "5" } }]
+    }],
+    "validationSolutions": [{ "id": "reference", "name": "Reference", "role": "reference", "files": [{ "fileId": "main-file", "path": "main.cpp", "content": "// SYNTHETIC-TEACHER-REFERENCE\nint sum(int a, int b) { return a + b; }" }] }],
+    "limits": { "timeLimitMs": "5000", "memoryLimitBytes": "134217728", "outputLimitBytes": "1048576", "maxFileCount": "100" },
+    "allowLearnerCreatedFiles": false
+  },
+  "standard-io": {
+    "type": "coding-authoring-draft",
+    "schemaVersion": 1,
+    "exerciseType": "standard-io",
+    "environment": { "language": "cpp", "runtime": "wasi" },
+    "problem": { "statement": "Read two numbers and print their sum.", "examples": [], "constraints": [] },
+    "toolchain": {
+      "key": "cpp-emception",
+      "version": "4.5.2",
+      "runtimeAbi": "emception-browser-v1",
+      "artifactDigest": "sha256:405e9f1fdd936ba31e11247fa1f901eaee24c4fcf641e343505df75c3d539b37"
+    },
+    "files": [{ "id": "main-file", "path": "main.cpp", "encoding": "text", "content": "int main() { return 0; }", "mutable": true, "visibility": "public" }],
+    "entryPoint": { "path": "main.cpp" },
+    "functionSignature": null,
+    "tests": [
+      { "id": "empty-output", "name": "Intentionally empty", "visibility": "public", "weightUnits": "1", "kind": "stdio", "stdin": "", "expected": { "stdout": "", "stderr": null, "exitCode": "" } },
+      { "id": "incomplete", "name": "Unfinished expectation", "visibility": "private", "weightUnits": "", "kind": "stdio", "stdin": "2 3", "expected": { "stdout": null, "stderr": null, "exitCode": "not yet" } }
+    ],
+    "validationSolutions": [],
+    "limits": { "timeLimitMs": "", "memoryLimitBytes": "134217728", "outputLimitBytes": "1048576", "maxFileCount": "100" },
+    "allowLearnerCreatedFiles": false
+  }
+}

@@ -553,6 +553,42 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   unconditional artifact/preflight ordering in CS-ADR-007/013/016/021.
 - Affects: UX01-C, UX03-A, CS-REF-21 and part 4 artifact terminology/handoff.
 
+## `CS-ADR-025`. Incomplete authoring is a separate, non-executable document
+
+- Date: 2026-11-21.
+- Status: accepted implementation detail of CS-ADR-014; implemented and audited
+  in scope. UX02-A's broader G-API gate remains open (external test/resource stop).
+- Contract: `coding-authoring-draft`, not a falsely typed
+  `CodingAuthoringDefinition`. Problem, one function signature, starter/support
+  files, stable test/case IDs, explicit language/runtime selection, frozen
+  toolchain identity and isolated reference/incorrect solutions belong to
+  this author-only JSON. Numeric/boolean edits remain text buffers while
+  incomplete. A missing I/O expectation is `null`; empty stdout is `""`.
+- Boundary: parsers enforce bounded shape/IDs and reject injected academic or
+  validation-result fields. Incomplete semantic values may be saved, but the
+  document cannot pass existing definition/delivery/official adapter parsers.
+  Selecting a runtime does not assert that the combination can execute.
+- Changes: family/signature/environment/toolchain changes require an impact
+  plan and explicit confirmation. Cancel returns a cloned current draft;
+  confirmation of a stale baseline fails. Compatible parameter values match
+  unique names/types, not guessed positions or ambiguous names. Duplication
+  takes fresh IDs from the host, never random IDs or browser state in coding.
+- Persistence: reuse the existing Learning JSON draft/revision boundary;
+  tests use the same synthetic JSON fixtures in TS and the actual EF-backed
+  authoring service. No new server store, API DTO, platform module, migration,
+  generated client or new writer is introduced in this slice. Production
+  persistence ports/recovery and immutable publication are UX02-B/C work.
+- Preservation: canonical definitions, active host writers, retained snapshots
+  and historical migrations are unchanged. No automatic data conversion is
+  run. Explicit import rejects mixed families or conflicting signatures rather
+  than discarding existing tests. Published-data counts remain unknown; an
+  authorized inventory/disposition is still required before a breaking cutover.
+- Rejected: making canonical parsers permissive, treating private starter files
+  as reference solutions, embedding validation/grade state in the draft, inferring
+  environment from a preset/file name, and claiming frontend-only persistence.
+- Affects: UX02-A; CS-REF-06/07/09/22 contract preparation. It does not close
+  their production acceptance or CODE-UX-02 by itself.
+
 ## Modelo para novas decisoes
 
 ```text

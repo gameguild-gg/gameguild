@@ -1,14 +1,15 @@
 # Part 3.6. Coding surface refoundation
 
-Status: in progress; `CODE-UX-01` is partial. The 3.6.1a interactive prototype
+Status: in progress; `CODE-UX-01` closed on 2026-11-21. The 3.6.1a interactive prototype
 and its automated audit are implemented. The user approved the prototype
-design and initial scalar-only function scope on 2026-11-20. Baseline closure
-still needs its recorded documentation/contract audit. Compatible 4.5.2 assets
+design and initial scalar-only function scope on 2026-11-20. The baseline
+documentation/contract audit passed; `UX02-A` is now being implemented.
+Compatible 4.5.2 assets
 are published; local synchronization and execution checks belong to `CODE-UX-03`,
 not to a mandatory Emception build or IDE publication.
 Production refoundation and product acceptance are not complete.
 
-Updated: 2026-11-20.
+Updated: 2026-11-21.
 
 Gate IDs: `CODE-UX-01` through `CODE-UX-06`.
 

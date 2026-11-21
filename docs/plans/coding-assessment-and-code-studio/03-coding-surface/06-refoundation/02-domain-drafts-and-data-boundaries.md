@@ -1,6 +1,18 @@
 # 3.6.2. Domain, drafts and data boundaries
 
-Status: planned. Gate: `CODE-UX-02`. Depends on `CODE-UX-01`.
+Status: in progress; UX02-A contracts, transformations and backend draft
+roundtrip/conflict evidence are implemented. Its broader G-API gate remains
+open because of the pre-existing Authentication throttle failure and the
+API-wide compilation resource stop. The full solution build was not run.
+UX02-B/C are not started. See the shared ledger for commands and evidence.
+Gate: `CODE-UX-02`. Depends on `CODE-UX-01` (closed on 2026-11-21).
+
+The new author-only `coding-authoring-draft` contract lives in
+`packages/features/coding/src/authoring-draft*`. Its shared synthetic fixture
+is `packages/features/coding/fixtures/coding-authoring-drafts.json`.
+The canonical executable/wire contract and current production editor are
+unchanged in UX02-A; this is not a cutover or a second server draft store.
+Typed draft changes do not constitute publication validation or runtime support.
 
 Entry does not require an Emception build, IDE publication or actual runtime
 boot. This phase validates domain/draft/persistence behavior without compiler

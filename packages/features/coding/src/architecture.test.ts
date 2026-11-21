@@ -18,6 +18,8 @@ describe('coding package boundaries', () => {
 
   it('exports the parsers and learner-safe projector from its public entrypoint', () => {
     expect(publicApi.parseCodingAuthoringDefinition).toBeTypeOf('function');
+    expect(publicApi.parseCodingAuthoringDraft).toBeTypeOf('function');
+    expect(publicApi.codingDraftOperations.planChange).toBeTypeOf('function');
     expect(publicApi.parseCodingSubmission).toBeTypeOf('function');
     expect(publicApi.parseCodingExecutionReport).toBeTypeOf('function');
     expect(publicApi.projectCodingDefinitionForLearner).toBeTypeOf('function');

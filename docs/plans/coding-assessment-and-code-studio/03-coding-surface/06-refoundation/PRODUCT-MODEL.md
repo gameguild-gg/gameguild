@@ -303,8 +303,8 @@ not evidence that all current exercises are disposable.
 ## Entry result
 
 The model, ownership decisions, prototype, resource budget and fixture repair
-are reviewable. `CODE-UX-01` awaits its documentation/contract closure audit,
-not a compiler build. Prototype design and initial scalar-only scope are
+passed the `CODE-UX-01` documentation/contract closure audit on 2026-11-21,
+without a compiler build. Prototype design and initial scalar-only scope are
 explicitly accepted; compound function support remains a tracked follow-up,
 not a claim of runtime capability. Local asset synchronization and actual
 preflight remain pending under `CODE-UX-03`.

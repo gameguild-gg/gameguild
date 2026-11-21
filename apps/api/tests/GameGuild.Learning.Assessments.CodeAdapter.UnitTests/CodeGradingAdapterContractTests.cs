@@ -1,5 +1,6 @@
 using FluentAssertions;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using GameGuild.Learning.Assessments.Grading.Abstractions;
 using GameGuild.Learning.Assessments.Grading.Contracts;
 using GameGuild.Learning.Courses;
@@ -12,6 +13,21 @@ namespace GameGuild.Learning.Assessments.CodeAdapter.Tests;
 
 public sealed class CodeGradingAdapterContractTests
 {
+    [Theory]
+    [InlineData("function")]
+    [InlineData("standard-io")]
+    public void AuthorOnlyDraft_CannotBecomeAnOfficialAssessmentDefinition(string family)
+    {
+        var draft = JsonNode.Parse(Definition().GetRawText())
+            ?? throw new InvalidOperationException("The valid definition fixture is required.");
+        draft["Type"] = "coding-authoring-draft";
+        draft["ExerciseType"] = family;
+
+        Action publish = () => Adapter().ProjectAuthoring(JsonSerializer.SerializeToElement(draft));
+
+        publish.Should().Throw<JsonException>().WithMessage("*coding-assignment*");
+    }
+
     [Fact]
     public void Module_ResolvesVersionedCodeAdapterForOfficialSubmissions()
     {

@@ -10,6 +10,89 @@ namespace GameGuild.Learning.Courses.UnitTests.Authoring;
 
 public sealed class ProgramContentAuthoringServiceTests
 {
+    [Theory]
+    [InlineData("function")]
+    [InlineData("standard-io")]
+    public async Task CodingDraft_SharedContractSurvivesSaveAndReopenWithoutPublishing(string family)
+    {
+        await using var context = CreateContext();
+        var content = PublishedContent("Coding draft", "Published instructions");
+        content.Type = ProgramContentType.Code;
+        content.LessonFormat = null;
+        context.Add(content);
+        await context.SaveChangesAsync();
+        var actorId = Guid.NewGuid();
+        var service = new ProgramContentAuthoringService(context);
+        var initial = await service.GetOrCreateDraft(content.ProgramId, content.Id, actorId, CancellationToken.None);
+        var payload = initial.Payload with { JsonBody = ReadCodingDraftFixture(family) };
+
+        var saved = await service.SaveDraft(content.ProgramId, content.Id, initial.Revision, payload, actorId, CancellationToken.None);
+        context.ChangeTracker.Clear();
+        var reopened = await new ProgramContentAuthoringService(context)
+            .GetOrCreateDraft(content.ProgramId, content.Id, actorId, CancellationToken.None);
+
+        reopened.Revision.Should().Be(saved.Revision).And.Be(initial.Revision + 1);
+        reopened.Payload.JsonBody.Should().NotBeNull();
+        var reopenedDocument = reopened.Payload.JsonBody ?? throw new InvalidOperationException("Coding draft was lost.");
+        JsonElement.DeepEquals(reopenedDocument, payload.JsonBody!.Value).Should().BeTrue();
+        var published = await context.Set<ProgramContent>().SingleAsync(candidate => candidate.Id == content.Id);
+        published.JsonBody.Should().BeNull("saving an author-only draft cannot modify learner content");
+        published.Body.Should().Be("Published instructions");
+        (await context.Set<ProgramContentPublicationAudit>().CountAsync()).Should().Be(0);
+        if (family == "standard-io")
+        {
+            var tests = reopenedDocument.GetProperty("tests");
+            tests[0].GetProperty("expected").GetProperty("stdout").GetString().Should().BeEmpty();
+            tests[1].GetProperty("expected").GetProperty("stdout").ValueKind.Should().Be(JsonValueKind.Null);
+            reopenedDocument.GetProperty("limits").GetProperty("timeLimitMs").GetString().Should().BeEmpty();
+        }
+        else
+        {
+            reopenedDocument.GetProperty("validationSolutions")[0]
+                .GetProperty("files")[0].GetProperty("content").GetString().Should().Contain("SYNTHETIC-TEACHER-REFERENCE");
+        }
+    }
+
+    [Theory]
+    [InlineData("function")]
+    [InlineData("standard-io")]
+    public async Task CodingDraft_StaleExpectedRevisionCannotOverwriteTheSharedFixture(string family)
+    {
+        await using var context = CreateContext();
+        var content = PublishedContent("Coding conflict", "Published instructions");
+        content.Type = ProgramContentType.Code;
+        content.LessonFormat = null;
+        context.Add(content);
+        await context.SaveChangesAsync();
+        var actorId = Guid.NewGuid();
+        var service = new ProgramContentAuthoringService(context);
+        var initial = await service.GetOrCreateDraft(content.ProgramId, content.Id, actorId, CancellationToken.None);
+        var payload = initial.Payload with { JsonBody = ReadCodingDraftFixture(family) };
+        var saved = await service.SaveDraft(content.ProgramId, content.Id, initial.Revision, payload, actorId, CancellationToken.None);
+
+        var stale = () => service.SaveDraft(content.ProgramId, content.Id, initial.Revision,
+            payload with { Title = "Stale overwrite" }, Guid.NewGuid(), CancellationToken.None);
+
+        await stale.Should().ThrowAsync<AuthoringRevisionConflictException>();
+        context.ChangeTracker.Clear();
+        var reopened = await service.GetOrCreateDraft(content.ProgramId, content.Id, actorId, CancellationToken.None);
+        reopened.Revision.Should().Be(saved.Revision);
+        reopened.Payload.Title.Should().Be("Coding conflict");
+        JsonElement.DeepEquals(reopened.Payload.JsonBody!.Value, payload.JsonBody!.Value).Should().BeTrue();
+    }
+
+    private static JsonElement ReadCodingDraftFixture(string family)
+    {
+        for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
+        {
+            var path = Path.Combine(directory.FullName, "packages", "features", "coding", "fixtures", "coding-authoring-drafts.json");
+            if (!File.Exists(path)) continue;
+            using var fixture = JsonDocument.Parse(File.ReadAllText(path));
+            return fixture.RootElement.GetProperty(family).Clone();
+        }
+        throw new FileNotFoundException("The shared coding authoring draft contract fixture is required.");
+    }
+
     [Fact]
     public async Task SaveAndPublish_ValidatesAssetManifestAndPromotesPrivateAssets()
     {

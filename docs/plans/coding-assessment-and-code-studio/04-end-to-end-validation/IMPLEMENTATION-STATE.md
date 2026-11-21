@@ -1,6 +1,6 @@
 # Estado de implementacao da parte 4
 
-Atualizado: 2026-11-20.
+Atualizado: 2026-11-21.
 
 ## Baseline observada
 
@@ -11,7 +11,7 @@ Atualizado: 2026-11-20.
 - relacao com `origin/develop`: 188 commits atras e 7 a frente;
 - parte 3: implementacao local consolidada ate 3.5; refundacao 3.6 em seis
   etapas planejadas e `CODE-UI-07` pendente;
-- etapa ativa: fora da parte 4; `CODE-UX-01` na parte 3.6;
+- etapa ativa: fora da parte 4; `CODE-UX-02` na parte 3.6;
 - current dependency: part 4 stays blocked until `CODE-UX-06`. Fixture/binding
   preparation belongs to `CODE-UX-01`; actual asset synchronization and local
   preflight belongs to `CODE-UX-03`. Part 4 revalidates both with official CI.
@@ -23,8 +23,9 @@ atualiza-la antes de iniciar implementacao.
 
 | Etapa | Estado | Evidencia ou bloqueio |
 | --- | --- | --- |
-| `CODE-UX-01` | partial / open | design and initial scalar scope explicitly accepted; baseline closure audit/handoff pending; no compiler-build prerequisite |
-| `CODE-UX-02` a `CODE-UX-06` | nao iniciado | depende do gate anterior; layout-only evidence does not certify runtime or product acceptance |
+| `CODE-UX-01` | complete | corrected baseline audit passed on 2026-11-21; no compiler/IDE build prerequisite |
+| `CODE-UX-02` | in progress / gate open | UX02-A implemented with draft persistence evidence; G-API has the pre-existing Authentication failure and API compilation resource stop; see the single part 3 ledger |
+| `CODE-UX-03` a `CODE-UX-06` | nao iniciado | depende do gate anterior; layout-only evidence does not certify runtime or product acceptance |
 | `CODE-E2E-00` | bloqueado | depende de `CODE-UX-06`; revalida preparacao da 3.6.1/3.6.3 e fecha evidencia oficial |
 | `CODE-UI-07` | pendente | exige artifact Emception schema 2 e browser E2E oficial |
 | `CODE-E2E-01` | nao iniciado | depende de `CODE-E2E-00` |
@@ -61,8 +62,8 @@ atualiza-la antes de iniciar implementacao.
 
 ## Proxima acao exata
 
-Follow the shared part 3 ledger: audit baseline closure in `CODE-UX-01`, then
-domain/draft work in `CODE-UX-02`. Do not repeat the approved prototype or wait
+Follow the shared part 3 ledger: complete the open `CODE-UX-02` audit and
+remaining host/revision work. Do not repeat the approved prototype or wait
 for an unnecessary Emception build/IDE release. Before real execution in
 `CODE-UX-03`, preserve old generated assets, synchronize the compatible pinned
 published package and pass actual local preflight. Then complete the rest of
