@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { ReviewCapabilityRegistry, parseScoreValue } from '@game-guild/grading';
 import { codingContractFixture } from '@game-guild/coding/testing';
-import { parseCodingExecutionReport, parseCodingSubmission } from '@game-guild/coding';
+import { compileCodingAuthoringDraft, parseCodingExecutionReport, parseCodingSubmission } from '@game-guild/coding';
+import draftFixtures from '../../coding/fixtures/coding-authoring-drafts.json';
 import { codeAdapterFixture } from './testing';
 import { allocateCodeTestScores } from './allocation';
 import { codeAssessmentTypeAdapter } from './adapter';
@@ -10,6 +11,21 @@ import { CODE_ASSESSMENT_TYPE_ADAPTER, CODE_AUTOMATED_REVIEW_HANDLER, CODE_EXECU
 import { createCodeSubmissionEnvelope } from './responses';
 
 describe('code grading adapter', () => {
+  it('UX02-C: retains a frozen problem and IDs without delivering protected reference replacements', () => {
+    const source = compileCodingAuthoringDraft(draftFixtures.function);
+    const projected = codeAssessmentTypeAdapter.projectAuthoring({ ...codeAdapterFixture.input, definition: source });
+    source.problem!.statement = 'A later problem';
+    source.files[0]!.content = 'A later starter';
+    const delivery = codeAssessmentTypeAdapter.createDelivery('revision-frozen', 'a'.repeat(64), projected);
+    expect(delivery.definitionRevisionId).toBe('revision-frozen');
+    expect(delivery.items.code?.learnerPayload.definition.problem?.statement).toBe('Return the sum of two integers.');
+    expect(delivery.items.code?.learnerPayload.definition.publicTests[0]?.id).toBe('addition');
+    expect(delivery.items.code?.learnerPayload.definition.files[0]?.id).toBe('main-file');
+    expect(JSON.stringify(delivery)).not.toContain('SYNTHETIC-TEACHER-REFERENCE');
+    expect(JSON.stringify(projected)).toContain('SYNTHETIC-TEACHER-REFERENCE');
+    expect(JSON.stringify(projected)).not.toContain('A later problem');
+  });
+
   it('uses the single canonical adapter, handler, and payload identities', () => {
     expect(CODE_ASSESSMENT_TYPE_ADAPTER).toEqual({ key: 'code-assessment-type', version: '1' });
     expect(CODE_AUTOMATED_REVIEW_HANDLER).toEqual({ key: 'code-wasm-review', version: '1' });

@@ -2,6 +2,188 @@
 
 Ultima atualizacao: 2026-11-21.
 
+## Execution record: UX02-C publication preparation - 2026-11-21
+
+- Entry: `68a9d5e702950d4b0b77f6705e2d59ca76c1123e`, tree
+  `1d0a75bb6f143fb62cc76e65d33441a41c66e194`, clean
+  `feature/coding-grading`. Active stage: specification, then contracts/tests.
+  The broader Authentication/API resource gate remains open; no waiver.
+- Actual local inventory: started only this project's existing PostgreSQL
+  volume `game-guild-postgres-data`, used `default_transaction_read_only=on`,
+  then stopped the container. Counts: 721 contents, two coding definitions,
+  neither with Problem; 712 drafts, none coding; 1353 assessment revisions
+  and 555 submissions, none coding. No IDs, user content or credentials were
+  collected; no writes, migration, reset or old-volume reinterpretation.
+  These local counts do not assert anything about remote databases.
+- Preservation decision: additive optional problem/reference and stable-ID
+  fields, omitted when absent. Retained definitions/snapshots keep their old
+  interpretation and serialization; no automatic backfill or fabricated
+  problem/solution. New draft compilation must validate complete values.
+  Existing JSON/revision storage fits; no table, migration or V2 adapter.
+- Specification: the coding definition owns the problem. Published projections
+  freeze it, technical cases and reference solutions; learner projections
+  explicitly exclude references/private cases/files. Reference solutions are
+  replacements for public editable text files, never compilation starter files.
+  Explicit file/test/case IDs survive content edits; historical absent IDs
+  retain the existing bridge's deterministic mapping. A later source edit
+  cannot change an earlier frozen delivery or submitted-file binding.
+- Allowed files: coding contracts/schemas/draft compiler/projections and tests;
+  code adapter fixtures/tests; Courses coding JSON DTOs/validator;
+  CodeAdapter publication/projection paths and focused integration tests;
+  web coding wire types/bridge and tests; generated client only through the
+  official OpenAPI generator; shared state/ADRs/consumer map/subplan.
+  No active UI writer, platform, generic grading policy, Emception/UI, dev
+  command, dependency, release workflow or database schema change.
+- Required boundary expansion: Courses `CodingAssignmentContentService`
+  has its own enrolled-learner projection in addition to the official adapter.
+  Include that method and its existing endpoint/service tests in the allowlist;
+  both projections must strip the new protected solutions before DTOs ship.
+  Share the adapter's unchanged canonical path algorithm from an owned Courses
+  helper so metadata validation can use it without a reverse dependency.
+- Acceptance IDs: `UX02-C-PROBLEM`, `UX02-C-PRIVATE`, `UX02-C-REVISION`,
+  `UX02-C-STABLE-ID`, `UX02-C-INCOMPLETE`, `UX02-C-HISTORY`.
+  Gates: strict contract types/schema fixtures before consumers; behavioral
+  red before minimal implementation; G-CONTRACT/G-SURFACE/G-WEB and focused
+  affected G-API, official client generation if DTOs change, G-REGRESSION,
+  same-agent negative/data/import audit. Runtime/compiler and human acceptance
+  remain separate. No repeat of the twice-stopped full API compile without
+  a recorded resource disposition.
+- Resource entry: MemAvailable 13,604 MiB. Sequential one-worker checks,
+  CPU affinity 0-9, 4096 MiB Node heap, <=6144 MiB owned RSS and >=4096 MiB
+  system available memory. No compiler/Next/full stack is needed for domain
+  preparation. Record actual commands, red evidence and remaining gates below.
+- New bounded API resource disposition: after the owned module builds passed
+  below 1.1 GiB RSS, allow one API architecture/build attempt needed to capture
+  the official changed DTO contract. Use one MSBuild worker, no shared compiler,
+  workstation GC and a 2 GiB managed heap hard limit per process; retain the
+  unchanged 6 GiB owned-RSS / 4 GiB available / four-minute stop guard. This
+  reduces the earlier unbounded compiler allocation, not the quality gate.
+  If it fails, record the generator/API gate as open; never hand-edit generated
+  output or report an old host assembly as current contract evidence.
+- The API attempt stopped at 240 seconds before producing a current host
+  assembly: owned RSS peaked at 2682 MiB, available memory stayed >=11187 MiB,
+  no owned process survived. The supervisor's exit is 1, not the terminated
+  CLI's 0. Old 2026-11-19 assemblies were explicitly rejected as evidence.
+  One host-only build may now use 600 seconds with the same 2 GiB managed
+  limit, unchanged RSS/available thresholds and CPU reservation. This changes
+  measured compilation time only, not heap, assertions or analyzer strictness;
+  default lightweight-command budget stays 240 seconds. No memory-pressure
+  failure or kernel OOM occurred, and no tool/dependency is installed.
+- That host-only build failed after 323265 ms with Roslyn's managed
+  `OutOfMemoryException` inside the explicit 2 GiB compiler heap limit.
+  Owned RSS peaked at 2683 MiB; system available memory stayed >=10904 MiB.
+  No kernel OOM or surviving compiler process. Do not automatically raise the
+  heap or retry. Current OpenAPI capture/client generation and API architecture
+  evidence remain open; old host binaries are not current evidence.
+- Explicit user exception: a targeted grading-worker change is authorized,
+  not a change to the IDE, `@game-guild/emception-ui` or the upstream runtime.
+  Additional allowed files are `tools/emception/grading/browser.ts`, a typed
+  execution-budget helper and its focused Node tests, and the worker build's
+  explicit test selection. The existing public `dispose()` can terminate the
+  owned worker. Public browser `run()` currently ignores `timeoutMs` and
+  exposes no per-program memory limit; never claim these are enforced merely
+  because a draft or `TestPlan` contains numbers.
+- Worker slice WB-A: validate a positive safe-integer time/output contract;
+  meaningful red tests for an unresolved operation, streamed UTF-8 output,
+  exact boundary, settled-output fallback, cleanup and sanitized failure;
+  implement cancellation only through the public API. Existing 30-second /
+  2,000,000-byte defaults remain until WB-B's published configuration mapping.
+  Time covers each compile-and-run invocation; output includes its compiler
+  and program streams. Exceeding a resource budget is execution unavailable,
+  never a fabricated zero grade. Gates: strict worker tsc, strict changed-file
+  lint and the worker's bounded Node suites. Real compiler execution is later
+  UX03 evidence, not inferred from a fake API.
+- WB-B remains structurally paused pending the requested memory-capability
+  decision. Do not remove its field, silently ignore it, invent a memory
+  monitor or modify the protected runtime. Official source-release provenance
+  classification must be recorded after a grading-worker source change;
+  this exception does not authorize IDE deployment or CI-policy relaxation.
+- WB-A contract gate passed before behavior: strict grading tsc and the
+  positive safe-integer schema case. Six of nine behavioral cases then failed
+  for the intended budget defects; the minimal guard now passes all nine.
+  Add `grading/browser-budget.test.mjs` to the allowed tests: use Node's
+  module hooks to replace only public collaborators with a fake API, proving
+  stream plumbing, rejection instead of a score, disposal and prompt failure
+  even when overlay cleanup cannot settle. No test executes compiler code.
+
+### Builder / Auditor results for UX02-C preparation
+
+Same-agent Builder and adversarial Auditor. This is publication metadata and
+worker-safety preparation, not completed UX02-C, UI cutover or runtime proof.
+
+- Implemented: optional published problem and protected validation solutions,
+  stable file/test/case identities, explicit draft compilation, both learner
+  projection boundaries, and exclusion of teacher solutions from official
+  student execution. Existing absent fields serialize as absent. No adapter
+  version, relational change, migration, automatic conversion or data reset.
+- Strict contract fixtures passed before consumer behavior. Initial red
+  evidence: seven valid draft compilations; twelve of fifteen backend metadata
+  cases; nine of ten web publication cases. Separate audit regressions then
+  reproduced mixed-family acceptance, total problem-size bypass without a
+  reference, extra private fields and a lost `__proto__` file-map key.
+  Fixes retained the independent assertions, strict types and lint rules.
+- Two revision tests use the actual AssessmentAuthoringService, EF InMemory
+  persistence, immutable published revisions and a persisted submission.
+  Publishing a later edited problem/file leaves the first snapshot/hash and
+  submission binding unchanged. This is not PostgreSQL HTTP/browser evidence.
+- WB-A's nine guard cases and four worker-composition cases pass. The latter
+  first reproduced three failures. Deadline/output cancellation disposes only
+  the owned public runtime, stops later compiler calls and can reject while
+  terminated-VFS cleanup is still pending. Existing fixed 30-second / 2 MB
+  defaults remain; author-configured limits have NOT yet been wired/published.
+
+| Command / check | Result | Scope / limitation |
+| --- | --- | --- |
+| Coding, grading-adapter-code and coding-surface typechecks/tests and strict package lint | exit 0; 78 / 16 / 46 tests | no compiler/runtime boot |
+| G-WEB six-file selection: publication, bridge, client, draft persistence, Learning authoring and workspace | exit 0; 141 tests | publication suite adds 14; API collaborators mocked |
+| Full web `tsc --noEmit --pretty false`; strict changed-file web lint | exit 0 | two unsafe-array-spread diagnostics fixed without suppressions |
+| Courses full test project, warning-clean build | exit 0; 903 tests | new service-level learner redaction case; EF InMemory |
+| CodeAdapter full test project, warning-clean build | exit 0; 93 tests | metadata, official execution boundary and two persisted revision cases |
+| Assessments full test project, warning-clean build | exit 0; 453 tests | includes neighboring Quiz adapter contracts |
+| Authorization full unit suite | exit 0; 2815 tests | current unchanged platform/security source |
+| Authentication full unit suite | exit 1; 4572 passed, one failed | existing `GenerateEmailCodeAsync_ThrottlesResendsWithinSixtySeconds`; no source/test change |
+| Grading worker strict tsc and explicit-root strict ESLint on its five changed/new files | exit 0 | no ignored files, disabled rules, IDE build or asset publication |
+| Worker new focused Node tests | exit 0; 13/13 | fake public collaborators, not real WASM execution |
+| Full existing + new worker Node selection | exit 1; 60/62 passed | two pre-existing historical-identity/source-constant assertions remain unresolved |
+| Preserved `@game-guild/emception-ui test` | exit 0; 27 tests | package and UI source unchanged |
+| Quiz validation neighbors: bounded web validation tests, MFA/support contracts, grading and Quiz adapter tests | exit 0; 16 + 39 + 16 + 12 tests | one-worker equivalents of the root contract command; no browser/canonical-status promotion |
+| Release classifier and required-gate Node suites | exit 0; 54 tests | no CI source/config changed |
+| G-DOC structured Markdown audit and whitespace check | exit 0; 47 documents, 165 valid local links, 25 atomic rows in seven tables | no missing/empty atomic stage; no broken local link |
+| API host build / architecture tests / official OpenAPI-client generation | open | recorded managed compiler OOM / earlier time stop; no stale-host or manual-generation substitute |
+
+Worker failure reproducer: `node --test --test-concurrency=1
+tools/emception/grading/toolchain-binding.test.mjs`. Its assertions named
+`version 1 matches the server adapter source constants` and `version 2 ...`
+expect old 4.4.0 / 4.5.1 identities inside the current C# adapter source. A
+read-only comparison of that source at entry HEAD `68a9d5e702` proves those
+literals were already absent; current identity 4.5.2 is present. Retained Node
+identity validation still passes. Do not remove historical tests/identities or
+reintroduce adapter versions to hide the disagreement. Reconcile the historical
+contract/disposition before calling the complete worker gate green.
+
+Commands use installed Node/pnpm, CPU affinity 0-9, one Vitest worker and
+sequential checks. Backend commands use `--no-restore -m:1 -nr:false
+-p:UseSharedCompilation=false -p:TreatWarningsAsErrors=true`, workstation GC
+and the recorded 2 GiB per-process managed heap cap. Independent guards remain
+6 GiB owned RSS / 4 GiB system available. Sampled final peaks: web lint 1978 MiB,
+web tests 803 MiB, CodeAdapter 566 MiB, Assessments 646 MiB, Authorization
+771 MiB and Authentication 1071 MiB. No resource stop in these final suites;
+the earlier host failure remains separately recorded.
+
+Official `needs_source_release()` now returns true for the five changed/new
+`tools/emception/grading/` paths. This is a real required CI-provenance gate,
+not permission to dispatch the standalone IDE deployment or fabricate a
+manifest. No runtime bundle, compiler, CDN refresh, browser, Next server,
+release or remote workflow was started. The only temporary service was the
+project PostgreSQL read-only inventory above; it was stopped afterwards.
+
+Final audit preserves platform modules, generic grading policy, IDE/UI/public
+runtime, dependency manifests, CI and dev commands. New worker positive timer
+cleanup uses Node's clock mock rather than requiring the host to finish within
+five wall-clock milliseconds. All 13 focused worker cases still pass; no
+required skip or relaxed assertion was introduced. The temporary resource and
+Markdown auditors live only under `/tmp`, not in the developer workflow.
+
 ## Execution record: UX02-B persistence preparation - 2026-11-21
 
 - Entry: committed UX02-A at `bb9cb883c7db6065a812449d5ed7bfd126245c38`,
@@ -213,8 +395,10 @@ locally. `CODE-UX-01` closed on 2026-11-21 after its corrected audit.
 are implemented, but its broader security gate has an external failure.
 UX02-B persistence/session ports and host-action integration are implemented
 and tested in scope; formal closure and the production cutover remain open.
-UX02-C has not started. The production UI has not been cut over to the
-refounded model. Compatible published assets still require local refresh and
+UX02-C publication metadata and WB-A safety preparation are implemented/tested
+in scope; full wire/configuration parity and broader gates remain open. The
+production UI has not been cut over to the refounded model. Published assets
+still require local refresh and
 real execution checks in CODE-UX-03, not an upstream IDE build/publication.
 
 Este e o handoff mutavel da parte 3. Atualize-o com fatos observados. Nao marque
@@ -248,58 +432,70 @@ um gate como concluido sem registrar a evidencia executada.
 | Parte 3.3 | concluida | dois perfis, quatro modos, privacy e contrato canonico cobertos |
 | Parte 3.4 | em validacao final | consumidores e CI migrados; runner fixture now emits canonical `ExerciseType`; local asset refresh and real browser E2E remain pending |
 | Parte 3.5 | concluida localmente | `CANON-01` a `CANON-06` concluidos; validacao local verde, com fixture do runner e browser CI ainda pendentes no fechamento de `CANON-07` |
-| Parte 3.6 | in progress | `CODE-UX-01` closed; UX02-A and UX02-B preparation implemented/tested in scope, formal G-API gate open; UX02-C and production cutover not complete |
+| Parte 3.6 | in progress | `CODE-UX-01` closed; UX02-A/B and UX02-C metadata preparation tested; full configuration/wire, G-API, historical-worker and production gates remain open |
 
 ## Etapa ativa
 
 - Subplan: [3.6.2 domain and drafts](./06-refoundation/02-domain-drafts-and-data-boundaries.md).
-- Current gate: `CODE-UX-02`, UX02-B in-scope audit recorded; formal broader
-  UX02-A/B gate remains open. Authentication has its known throttle failure
-  and API-wide compilation exceeded its resource guard. UX02-C/runtime/production
-  acceptance is not marked complete.
+- Current gate: `CODE-UX-02`, UX02-C metadata/WB-A in-scope evidence recorded.
+  Full configuration/wire mapping, the memory decision, official generated
+  client, API architecture/security and historical-worker contract remain open.
+  No runtime/production/human acceptance is inferred from this preparation.
 - Design and initial scalar-only scope remain approved. ADRs 014-024 retain
   ownership/governance/artifact decisions; ADR025 records the new author-only
-  draft; ADR026 records revision-bound host persistence and memory-only recovery.
+  draft; ADR026 records revision-bound host persistence and memory-only recovery;
+  ADR027 publication metadata; ADR028 the user-approved grading-worker exception.
   Actual local artifact preflight remains a CODE-UX-03 obligation.
 - Responsavel: Codex.
 
 ### Current compact checkpoint
 
-- Baseline: `bb9cb883c7db6065a812449d5ed7bfd126245c38`, tree
-  `01ab03dd3b781e8774da66a355e4c4ba2c0369df`, clean entry on
+- Baseline: `68a9d5e702950d4b0b77f6705e2d59ca76c1123e`, tree
+  `1d0a75bb6f143fb62cc76e65d33441a41c66e194`, clean entry on
   `feature/coding-grading`. No fetch, merge, commit or stage.
-- Active row/stage: UX02-B preparation / in-scope audit recorded, broader
-  G-API unresolved. New session/host ports are tested but no active host writer
-  or UI was replaced. Allowed files/red-green evidence are recorded above.
-  No schema/platform/Emception, canonical definition or generated-client edit.
+- Active row/stage: UX02-C metadata and WB-A guard preparation / audit recorded.
+  Canonical/DTO metadata and both learner projections now preserve problems/IDs
+  and strip references. The authorized worker change is only grading safety;
+  IDE/UI/upstream runtime, platform, database schema and generated client are
+  untouched. Active host writers and production UI remain unchanged.
 - Contract: distinct author-only draft, stable identities, raw incomplete
   buffers, one signature, separate language/runtime/toolchain and protected
-  validation solutions. It cannot enter definition/delivery/official grading
-  paths. Existing drafts/revisions/data are not automatically rewritten.
+  validation solutions. Only explicit complete compilation creates a canonical
+  definition; incomplete drafts remain rejected by official grading. Published
+  source snapshots freeze problems/IDs/references; only public data is delivered.
+  Existing stored drafts/revisions/data are not automatically rewritten.
 - Acceptance: CS-REF-06/07/09/22 contract preparation only; their production
   persistence/recovery/projection acceptance stays open in UX02-B/C and later
   browser/human gates. CS-REF-18 retains its accepted initial-scope limitation.
-- Terminal: current coding/adapter/surface typechecks/lint pass; package tests
-  pass 49/15/46. G-WEB selected tests pass 106, full web TypeScript and lint pass.
-  Unchanged compiled backend persistence/rejection cases pass 4+2, without
-  rebuild. Full backend-suite results below are the prior UX02-A evidence;
-  Authentication still has the recorded email-resend failure and API compilation
-  was stopped twice. The full build was not run. No false green or required skip.
+- Terminal: current coding/adapter/surface types/lint pass; tests 78/16/46.
+  Web selection 141, full web types/lint, Courses 903, CodeAdapter 93,
+  Assessments 453, Authorization 2815, preserved UI 27 and CI 54 pass.
+  Authentication repeats its one known failure (4572/4573); full worker tests
+  are 60/62, with two baseline historical-identity assertions unresolved.
+  New guard/composition tests are 13/13. Host build hit its 2 GiB managed cap;
+  no API architecture pass, full solution build or official client regeneration.
 - Runtime: no asset download/refresh, compiler/IDE build, runtime boot or dev
-  stack. Local schema-1 artifacts remain a UX03 preparation obligation.
+  stack. Fixed worker safety budgets are now real cancellation guards but
+  configurable draft limits are not yet published/applied. Memory enforcement
+  is NOT claimed. Local schema-1 assets remain a UX03 obligation, and worker
+  source changes trigger exact-source CI provenance under the existing policy.
 - Human: prototype and initial scalar scope approved on 2026-11-20, not
   production usability or runtime approval. No new acceptance is inferred.
-- Next exact action: UX02-C specification/read-only published-use inventory;
-  identify the official statement/revision and wire/projection boundaries
-  before changing them. Preserve the open broader G-API owner/resource
-  disposition; do not close CODE-UX-02 or start CODE-UX-03 with missing evidence.
+- Next exact action: obtain the requested memory-capability disposition, then
+  finish WB-B/full draft-to-wire publication mapping, including persisted
+  limits, explicit entry point and environment/toolchain fidelity. Trace and
+  test these contracts before wiring production consumers. Reconcile the two
+  baseline historical-worker assertions without discarding history; obtain a
+  current authorized OpenAPI capture and use the official generator. Preserve
+  the Authentication/API resource disposition; do not close CODE-UX-02 or
+  start CODE-UX-03 with missing evidence.
   UX02-B ports must be integrated by the sole lesson save coordinator at the
   planned UI cutover, not installed as a second autosave loop. No IDE release.
 
 | Gate da refundacao | Estado | Evidencia necessaria |
 | --- | --- | --- |
 | `CODE-UX-01` | complete | corrected contract/document/design/preparation audit passed on 2026-11-21; no runtime/build claim |
-| `CODE-UX-02` | in progress / gate open | UX02-A and UX02-B preparation implemented/tested in scope; broader Authentication/API resource gate remains open; UX02-C and production integration pending |
+| `CODE-UX-02` | in progress / gate open | UX02-A/B and UX02-C metadata/WB-A preparation tested; full wire/configuration, memory decision, generated client, API and historical-worker gates remain open |
 | `CODE-UX-03` | nao iniciado | refresh compatible published assets and pass local preflight before real runtime, canvas/terminal, cancellation and resource checks |
 | `CODE-UX-04` | nao iniciado | autoria completa dos dois tipos e validacao pelo professor |
 | `CODE-UX-05` | nao iniciado | resolucao, envio, recuperacao e revisao por persona |
@@ -712,14 +908,14 @@ Continue [`3.6.2`](./06-refoundation/02-domain-drafts-and-data-boundaries.md):
    Do not repeat the prototype work or mislabel that approval as production
    runtime/usability acceptance. Initial scalar-only scope is also explicitly
    accepted in CS-ADR-015; compound support remains tracked in EMC-GAP-001.
-2. Retain the implemented/tested UX02-A contracts and UX02-B persistence ports.
-   Prepare UX02-C through read-only published-use inventory and its immutable
-   publication/projection specification. The broader Authentication failure and
-   API resource stop are still open, not resolved by the independent UX02-B
-   checks. No production/runtime gate is closed or skipped. Follow the atomic
-   cycle and resolve the required broader gate with its owner/resource
-   disposition before dependent acceptance. Do not compile/publish Emception
-   for this domain/draft work or install a second lesson autosave writer.
+2. Retain the tested UX02-A/B ports and UX02-C metadata/immutable-revision
+   evidence. The local read-only inventory is complete, not a remote-data claim.
+   Resolve the memory-capability decision before full wire/configuration
+   mapping. Current DTO generation remains blocked by the recorded host build;
+   no hand-edited generated artifact. Authentication and the two pre-existing
+   historical-worker assertions remain open. Follow the atomic cycle and
+   recorded owner/resource dispositions; do not call a partial gate green,
+   install a second lesson autosave or compile/deploy the standalone IDE.
 3. Before CODE-UX-03 real execution, preserve old generated CDN/release copies,
    explicitly refresh the compatible pinned published assets and pass both
    local manifest checks in G-PREFLIGHT. The current helper can retain schema 1;

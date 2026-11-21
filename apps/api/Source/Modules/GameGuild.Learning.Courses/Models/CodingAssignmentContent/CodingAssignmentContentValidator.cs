@@ -36,6 +36,11 @@ public sealed class CodingAssignmentContentValidator : AbstractValidator<CodingA
 
     public CodingAssignmentContentValidator()
     {
+        RuleFor(x => x)
+            .Must(CodingPublicationMetadataValidator.IsValid)
+            .WithMessage("Coding publication problem, reference replacements or stable identities are invalid.")
+            .WithErrorCode("invalid_coding_publication_metadata");
+
         RuleFor(x => x.Type)
             .Equal("coding-assignment").WithErrorCode("invalid_type");
 

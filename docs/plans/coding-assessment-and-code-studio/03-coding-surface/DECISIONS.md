@@ -626,6 +626,61 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   No compiler/build/publication prerequisite is introduced. Actual publication/
   projections are UX02-C; human/runtime acceptance remains separate.
 
+## `CS-ADR-027`. Additive, revision-bound coding publication metadata
+
+- Date: 2026-11-21.
+- Status: metadata, explicit draft compiler and immutable-revision tests
+  implemented/audited in scope. Full configuration/wire mapping, official
+  client generation and broader gates remain open. No production UI cutover.
+- Inventory: current local database has two coding contents without Problem,
+  no coding drafts, revisions or submissions. Read-only counts and the entry
+  commit are recorded in the single ledger; remote usage remains unknown.
+- Decision: extend existing coding JSON with optional problem, private
+  validation solutions and explicit file/test/case IDs. Absent fields stay
+  absent on serialization. Do not rewrite historical data, invent its missing
+  statement, renumber its tests or add another adapter/version/storage model.
+  A complete new draft compiles explicitly; saving an incomplete draft is
+  not publication. Existing revision infrastructure freezes the entire source.
+- Privacy: learner projection is an explicit allowlist; reference/incorrect
+  solutions are author-only replacements, not private starter/support files.
+  They are excluded from learner delivery and official learner execution.
+  No new browser storage, logs, asset URLs or academic policy.
+- Proof: shared synthetic contract fixtures, historical serialization,
+  incomplete-value rejection, stable identity, nested private canaries and
+  old-revision delivery/submission tests before consumer cutover.
+- Schema disposition: existing JSON columns and immutable revisions suffice;
+  no relational change or migration is justified. Limits/runtime readiness
+  and teaching UX are not established by these publication metadata tests.
+- Affects: UX02-C, CS-REF-06/07/09/22; preserved Emception/UI and all platform
+  modules remain read-only.
+
+## `CS-ADR-028`. Scoped grading-worker budget enforcement
+
+- Date: 2026-11-21.
+- Status: targeted worker exception explicitly approved by the user. The
+  published memory-limit disposition is a separate unanswered structural gate.
+  Nine guard and four composition cases pass; the complete worker gate still
+  has two pre-existing historical-identity assertions. No real runtime claim.
+- Boundary: only `tools/emception/grading/browser.ts`, its execution-budget
+  helper/tests and the worker build test selection may change. IDE,
+  `@game-guild/emception-ui`, public Emception implementations and compiler
+  harnesses remain preserved. Continue to consume their public APIs.
+- Observation: browser `run()` does not forward the public `timeoutMs` and
+  reports `timedOut: false`. There is no public per-program memory control.
+  Setting `TestPlan.timeoutMsPerCase` is therefore not proof of cancellation.
+- Decision: guard each grading compile-and-run with a deadline and combined
+  UTF-8 stdout/stderr byte budget; dispose only that owned runtime on failure.
+  Failures must settle the official request even if overlay cleanup cannot
+  complete on the terminated runtime. Budget failures remain infrastructure
+  failures, distinct from a student assertion failure or a zero grade.
+- Sequence: prove the guard independently before published configuration
+  wiring. Preserve existing defaults and data interpretation in this first
+  slice. No claimed memory enforcement, new executor, adapter version,
+  dependency or change to academic grading policy.
+- Consequence: worker source may activate existing source-release provenance
+  requirements. Check the official classifier; do not waive it or publish the
+  standalone IDE as part of this domain phase. Real execution remains UX03.
+
 ## Modelo para novas decisoes
 
 ```text

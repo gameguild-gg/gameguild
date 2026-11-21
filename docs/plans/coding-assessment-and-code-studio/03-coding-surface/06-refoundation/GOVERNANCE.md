@@ -19,6 +19,11 @@ Adopted: 2026-11-19, by explicit product instruction (Meta-Harness).
 4. Preserve `tools/emception/**` and `packages/infrastructure/ui-emception/**`.
    Consume supported public exports. An unavailable capability follows
    `EMCEPTION-GATE`; it does not justify a private import or another executor.
+   Explicit exception approved on 2026-11-21 (`CS-ADR-028`): only the grading
+   worker entry, execution-budget helper/tests and build test selection may
+   change for time/output cancellation. This does not authorize changes to
+   the IDE, UI, public runtime implementation or compiler, or claim support
+   for configurable memory. Preserve the normal CI provenance requirements.
 5. Preserve published revisions, submitted files and historical migrations.
    Inventory actual stored data before changing interpretation. A necessary
    storage change follows `SCHEMA-GATE`, with a real migration and upgrade proof.
@@ -52,7 +57,7 @@ Adopted: 2026-11-19, by explicit product instruction (Meta-Harness).
 | `apps/api/Source/Modules/GameGuild.Learning.Assessments.CodeAdapter/` | server-side code adapter |
 | `apps/api/Source/GameGuild.API/` | host registration and product-specific bridges |
 | `apps/api/tests/` | affected contract, domain, integration and architecture tests |
-| `tools/emception/`, `packages/infrastructure/ui-emception/` | preserved upstream product and UI; read-only for this workstream |
+| `tools/emception/`, `packages/infrastructure/ui-emception/` | preserved upstream product and UI; read-only except the explicitly authorized grading-worker scope in CS-ADR-028 |
 | platform modules listed in root `AGENTS.md` | no coding-specific edits or dependencies |
 
 ## Dependency graph

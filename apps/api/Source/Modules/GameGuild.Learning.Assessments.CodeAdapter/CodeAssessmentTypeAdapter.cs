@@ -119,6 +119,7 @@ public sealed class CodeAssessmentTypeAdapter : IAssessmentTypeAdapter
         var definition = ReadDefinition(projectedItem.GetProperty("definition"));
         var publicDefinition = definition with
         {
+            ValidationSolutions = null,
             Data = definition.Data with
             {
                 Files = definition.Data.Files.Where(pair => pair.Value.Visibility == "Public").ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.Ordinal),
@@ -195,7 +196,7 @@ public sealed class CodeAssessmentTypeAdapter : IAssessmentTypeAdapter
             throw new InvalidOperationException("Code review requires its frozen version " + Version + " toolchain.");
         }
 
-        var result = await _executor.ExecuteAsync(definition, files, toolchain, cancellationToken).ConfigureAwait(false);
+        var result = await _executor.ExecuteAsync(definition with { ValidationSolutions = null }, files, toolchain, cancellationToken).ConfigureAwait(false);
         var tests = definition.Tests.Public.Concat(definition.Tests.Private).ToArray();
         if (result.Passed.Count != tests.Length || result.ReceiptHash.Length != 64 || result.ReceiptHash.Any(character => !char.IsAsciiHexDigitLower(character)))
         {
@@ -225,17 +226,7 @@ public sealed class CodeAssessmentTypeAdapter : IAssessmentTypeAdapter
         return definition;
     }
 
-    public static string CanonicalFilePath(string path)
-    {
-        var relative = path.StartsWith("/home/user/", StringComparison.Ordinal) ? path[11..] : path.StartsWith("/user/", StringComparison.Ordinal) ? path[6..] : path;
-        var segments = relative.Split('/');
-        if (relative.Length is 0 or > 240 || relative.StartsWith('/') || relative.Contains('\\') || relative.Contains(':') || relative.Any(char.IsControl) || segments.Any(segment => segment is "" or "." or "..") || segments.Any(segment => segment.StartsWith("functional_", StringComparison.Ordinal) && segment.EndsWith("_test.cpp", StringComparison.Ordinal)))
-        {
-            throw new JsonException("Code workspace path is invalid or reserved.");
-        }
-
-        return "/home/user/" + relative;
-    }
+    public static string CanonicalFilePath(string path) => CodingAssignmentPath.Normalize(path);
 
     private static void RequireProperties(JsonElement element, params string[] properties)
     {

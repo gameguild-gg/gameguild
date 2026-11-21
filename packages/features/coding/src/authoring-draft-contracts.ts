@@ -3,18 +3,16 @@ import type {
   CodingAuthoringFile,
   CodingExerciseType,
   CodingFunctionParameter,
+  CodingProblem,
   CodingScalarType,
   CodingToolchainIdentity,
+  CodingValidationSolution,
   CodingVisibility,
 } from './contracts';
 
 export const CODING_DRAFT_TYPE = 'coding-authoring-draft' as const;
 
-export interface CodingProblem {
-  statement: string;
-  examples: { id: string; input: string; output: string; explanation: string }[];
-  constraints: string[];
-}
+export type { CodingProblem, CodingValidationSolution } from './contracts';
 
 export interface CodingFunctionSignature {
   name: string;
@@ -58,13 +56,6 @@ export interface CodingDraftFunctionTest extends CodingDraftTestBase {
 }
 
 export type CodingDraftTest = CodingDraftStdioTest | CodingDraftFunctionTest;
-
-export interface CodingValidationSolution {
-  id: string;
-  name: string;
-  role: 'reference' | 'incorrect';
-  files: { fileId: string; path: string; content: string }[];
-}
 
 /** Author-only document for Learning's JSON draft, not an executable definition. */
 export interface CodingAuthoringDraft {

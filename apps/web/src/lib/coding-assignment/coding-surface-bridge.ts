@@ -31,7 +31,7 @@ export function codingAssignmentToDraftDefinition(
   content: CodingAssignmentContent,
 ): CodingAuthoringDefinition {
   const files = Object.entries(content.Data.Files).map(([path, file]) => ({
-    id: stableIdentifier('file', path),
+    id: file.Id ?? stableIdentifier('file', path),
     path,
     encoding: file.Encoding,
     content: file.Content,
@@ -45,11 +45,23 @@ export function codingAssignmentToDraftDefinition(
   const entryPoint = files.find((file) => /(^|\/)main\.(?:c|cc|cpp|cxx)$/i.test(file.path) && file.visibility === 'public' && file.encoding === 'text')
     ?? files.find((file) => file.visibility === 'public' && file.encoding === 'text');
   const draftEntryPoint = entryPoint ?? files[0];
+  const metadata = {
+    ...(content.Problem == null ? {} : { problem: {
+      statement: content.Problem.Statement,
+      examples: content.Problem.Examples.map(example => ({ id: example.Id, input: example.Input, output: example.Output, explanation: example.Explanation })),
+      constraints: [...content.Problem.Constraints],
+    } }),
+    ...(content.ValidationSolutions == null ? {} : { validationSolutions: content.ValidationSolutions.map(solution => ({
+      id: solution.Id, name: solution.Name, role: solution.Role,
+      files: solution.Files.map(file => ({ fileId: file.FileId, path: file.Path, content: file.Content })),
+    })) }),
+  };
   if (!draftEntryPoint) {
     return {
       schemaVersion: CODING_AUTHORING_SCHEMA_VERSION,
       type: CODING_CONTENT_TYPE,
       exerciseType: explicitExerciseType(content.ExerciseType),
+      ...metadata,
       toolchain: toolchainIdentity(content.Environment.Language),
       files: [],
       tests,
@@ -63,6 +75,7 @@ export function codingAssignmentToDraftDefinition(
     schemaVersion: CODING_AUTHORING_SCHEMA_VERSION,
     type: CODING_CONTENT_TYPE,
     exerciseType: explicitExerciseType(content.ExerciseType),
+    ...metadata,
     toolchain: toolchainIdentity(content.Environment.Language),
     files,
     tests,
@@ -118,7 +131,7 @@ function explicitExerciseType(value: CodingAssignmentContent['ExerciseType']): C
 
 function toCanonicalTest(test: Test, visibility: 'public' | 'private', index: number): CodingTest {
   const common = {
-    id: stableIdentifier('test', `${visibility}:${index}:${JSON.stringify(test)}`),
+    id: test.Id ?? stableIdentifier('test', `${visibility}:${index}:${JSON.stringify(test)}`),
     name: test.Name ?? undefined,
     visibility,
     weightUnits: Math.max(1, Math.round((test.Weight ?? 1) * 100)),
@@ -144,7 +157,7 @@ function toCanonicalTest(test: Test, visibility: 'public' | 'private', index: nu
       returnType: test.Function.ReturnType.Type,
     },
     cases: test.Cases.map((testCase, caseIndex) => ({
-      id: stableIdentifier('case', `${common.id}:${caseIndex}`),
+      id: testCase.Id ?? stableIdentifier('case', `${common.id}:${caseIndex}`),
       inputs: testCase.Inputs.map((input) => scalarValue(input.Type, input.Content)),
       expected: scalarValue(testCase.Expected.Type, testCase.Expected.Content),
     })),

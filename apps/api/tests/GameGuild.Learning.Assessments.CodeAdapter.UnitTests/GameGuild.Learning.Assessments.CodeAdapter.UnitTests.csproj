@@ -23,6 +23,8 @@
     </ItemGroup>
 
     <ItemGroup>
+        <EmbeddedResource Include="..\..\..\..\packages\features\coding\fixtures\coding-publication-cases.json"
+                          LogicalName="GameGuild.Coding.Fixtures.coding-publication-cases.json" />
         <EmbeddedResource Include="..\..\..\..\packages\features\coding\fixtures\coding-contract-cases.json"
                           LogicalName="GameGuild.Coding.Fixtures.coding-contract-cases.json" />
         <EmbeddedResource Include="..\..\..\..\packages\features\grading-adapter-code\fixtures\code-adapter-cases.json"

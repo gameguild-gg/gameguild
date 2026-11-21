@@ -13,6 +13,7 @@ import {
   type CodingAuthoringDefinition,
   type CodingExecutionReport,
   type CodingLearnerDelivery,
+  type CodingProblem,
   type CodingSubmission,
 } from './contracts';
 import { CodingValidationError } from './errors';
@@ -22,7 +23,6 @@ const identifierPattern = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/;
 const toolchainPartPattern = /^[A-Za-z0-9][A-Za-z0-9._+:/-]{0,127}$/;
 const functionNamePattern = /^[A-Za-z_][A-Za-z0-9_]{0,127}$/;
 const decimalPattern = /^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$/;
-const sha256DigestPattern = /^sha256:[0-9a-f]{64}$/;
 const sha256Pattern = /^[0-9a-f]{64}$/;
 
 const identifier = z.string().regex(identifierPattern, 'Expected a stable identifier.');
@@ -35,7 +35,7 @@ const toolchainSchema = z
     key: z.string().regex(toolchainPartPattern),
     version: z.string().regex(toolchainPartPattern),
     runtimeAbi: z.string().regex(toolchainPartPattern),
-    artifactDigest: z.string().regex(sha256DigestPattern),
+    artifactDigest: z.templateLiteral(['sha256:', z.string().regex(sha256Pattern)]),
   })
   .strict();
 
@@ -96,6 +96,23 @@ const entryPointSchema = z
     symbol: z.string().regex(functionNamePattern).optional(),
   })
   .strict();
+
+const problemSchema = z.object({
+  statement: boundedText.refine(value => value.trim().length > 0, 'A published problem needs a statement.'),
+  examples: z.array(z.object({
+    id: identifier, input: boundedText, output: boundedText, explanation: boundedText,
+  }).strict()).max(100),
+  constraints: z.array(boundedText.refine(value => value.trim().length > 0, 'A constraint must not be blank.')).max(100),
+}).strict().superRefine((problem, context) => {
+  addDuplicateIssues(problem.examples.map(example => example.id), context, ['examples'], 'example ID');
+});
+
+const validationSolutionsSchema = z.array(z.object({
+  id: identifier,
+  name: z.string().min(1).max(256).refine(value => value.trim().length > 0, 'A solution needs a name.'),
+  role: z.enum(['reference', 'incorrect']),
+  files: z.array(z.object({ fileId: identifier, path: pathSchema, content: boundedText }).strict()).min(1).max(MAX_CODING_FILES),
+}).strict()).max(100);
 
 const scalarTypeSchema = z.enum(['string', 'boolean', 'integer', 'float']);
 const scalarValueSchema = z.discriminatedUnion('type', [
@@ -199,6 +216,8 @@ const authoringSchema = z
     schemaVersion: z.literal(CODING_AUTHORING_SCHEMA_VERSION),
     type: z.literal(CODING_CONTENT_TYPE),
     exerciseType: exerciseTypeSchema,
+    problem: problemSchema.optional(),
+    validationSolutions: validationSolutionsSchema.optional(),
     toolchain: toolchainSchema,
     files: z.array(authoringFileSchema).min(1).max(MAX_CODING_FILES),
     tests: z.array(testSchema).min(1).max(MAX_CODING_TESTS),
@@ -238,6 +257,7 @@ const learnerDeliverySchema = z
     schemaVersion: z.literal(CODING_DELIVERY_SCHEMA_VERSION),
     type: z.literal(CODING_CONTENT_TYPE),
     exerciseType: exerciseTypeSchema,
+    problem: problemSchema.optional(),
     toolchain: toolchainSchema,
     files: z.array(learnerFileSchema).min(1).max(MAX_CODING_FILES),
     publicTests: z.array(learnerTestSchema).max(MAX_CODING_TESTS),
@@ -333,22 +353,26 @@ const executionReportSchema = z
   });
 
 export function parseCodingAuthoringDefinition(value: unknown): CodingAuthoringDefinition {
-  return parse(authoringSchema, value, 'Coding authoring definition') as CodingAuthoringDefinition;
+  return parse(authoringSchema, value, 'Coding authoring definition');
 }
 
 export function parseCodingLearnerDelivery(value: unknown): CodingLearnerDelivery {
-  return parse(learnerDeliverySchema, value, 'Coding learner delivery') as CodingLearnerDelivery;
+  return parse(learnerDeliverySchema, value, 'Coding learner delivery');
 }
 
 export function parseCodingSubmission(value: unknown): CodingSubmission {
-  return parse(submissionSchema, value, 'Coding submission') as CodingSubmission;
+  return parse(submissionSchema, value, 'Coding submission');
 }
 
 export function parseCodingExecutionReport(value: unknown): CodingExecutionReport {
-  return parse(executionReportSchema, value, 'Coding execution report') as CodingExecutionReport;
+  return parse(executionReportSchema, value, 'Coding execution report');
 }
 
-function parse(schema: z.ZodType, value: unknown, label: string): unknown {
+export function parseCodingProblem(value: unknown): CodingProblem {
+  return parse(problemSchema, value, 'Coding problem');
+}
+
+function parse<T>(schema: z.ZodType<T>, value: unknown, label: string): T {
   const result = schema.safeParse(value);
   if (result.success) return structuredClone(result.data);
   throw new CodingValidationError(
@@ -362,16 +386,47 @@ function parse(schema: z.ZodType, value: unknown, label: string): unknown {
 
 function validateAuthoringDefinition(
   definition: {
+    exerciseType: z.infer<typeof exerciseTypeSchema>;
     files: z.infer<typeof authoringFileSchema>[];
     tests: z.infer<typeof testSchema>[];
     limits: z.infer<typeof limitsSchema>;
     entryPoint: z.infer<typeof entryPointSchema>;
+    problem?: z.infer<typeof problemSchema>;
+    validationSolutions?: z.infer<typeof validationSolutionsSchema>;
   },
   context: z.RefinementCtx,
 ): void {
   addDuplicateIssues(definition.files.map(({ id }) => id), context, ['files'], 'file ID');
   addDuplicateIssues(definition.files.map(({ path }) => path), context, ['files'], 'file path');
   addDuplicateIssues(definition.tests.map(({ id }) => id), context, ['tests'], 'test ID');
+  const solutions = definition.validationSolutions ?? [];
+  if (solutions.length > 0 && definition.problem === undefined) {
+    context.addIssue({ code: 'custom', message: 'Protected solutions require their published problem.', path: ['problem'] });
+  }
+  if (definition.problem !== undefined) {
+    const first = definition.tests[0];
+    const signature = first?.kind === 'function' ? JSON.stringify(first.function) : undefined;
+    if (definition.tests.some(test => definition.exerciseType === 'function'
+      ? test.kind !== 'function' || JSON.stringify(test.function) !== signature
+      : test.kind !== 'stdio')) {
+      context.addIssue({ code: 'custom', message: 'A published problem requires one exercise family and coherent signature.', path: ['tests'] });
+    }
+    if (definition.exerciseType === 'function' ? first?.kind !== 'function' || definition.entryPoint.symbol !== first.function.name
+      : definition.entryPoint.symbol !== undefined) {
+      context.addIssue({ code: 'custom', message: 'The entry point must match the published exercise signature.', path: ['entryPoint'] });
+    }
+  }
+  addDuplicateIssues(solutions.map(solution => solution.id), context, ['validationSolutions'], 'solution ID');
+  solutions.forEach((solution, index) => {
+    addDuplicateIssues(solution.files.map(file => file.fileId), context, ['validationSolutions', index, 'files'], 'solution file ID');
+    solution.files.forEach((replacement, fileIndex) => {
+      const file = definition.files.find(authored => authored.id === replacement.fileId);
+      if (!file || file.path !== replacement.path || !file.mutable || file.visibility !== 'public' || file.encoding !== 'text') {
+        context.addIssue({ code: 'custom', message: 'A solution may replace only its identified public editable text file.',
+          path: ['validationSolutions', index, 'files', fileIndex] });
+      }
+    });
+  });
   if (definition.files.length > definition.limits.maxFileCount) {
     context.addIssue({ code: 'custom', message: 'Authored files exceed limits.maxFileCount.', path: ['limits', 'maxFileCount'] });
   }

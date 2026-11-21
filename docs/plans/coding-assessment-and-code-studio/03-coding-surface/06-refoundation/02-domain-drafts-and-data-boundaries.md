@@ -7,7 +7,12 @@ API-wide compilation resource stop. The full solution build was not run.
 UX02-B persistence/session ports and the host bridge are implemented and tested
 in scope; unaffected checks proceeded under the governance's external-failure
 rule, not a waiver of the broader gate. No production editor/writer cutover.
-UX02-C has not started. See the shared ledger for commands and evidence.
+UX02-C problem/reference/identity metadata, immutable revision tests and the
+authorized WB-A worker safety guard are implemented/tested in scope. Full
+published configuration/wire mapping, the memory-capability decision, current
+official client generation and broader gates remain open. The full worker
+selection also has two pre-existing historical-identity assertions that must
+be reconciled without deleting history. See the ledger for actual evidence.
 Gate: `CODE-UX-02`. Depends on `CODE-UX-01` (closed on 2026-11-21).
 
 The new author-only `coding-authoring-draft` contract lives in
@@ -103,6 +108,29 @@ implementation -> Quality gate; see [QUALITY-GATES.md](./QUALITY-GATES.md).
    Do not hand-edit generated artifacts. Unknown identities fail closed.
 
 ## Compatibility and persistence guard
+
+### Remaining UX02-C boundary work
+
+The shared fixture `packages/features/coding/fixtures/coding-publication-cases.json`
+now exercises both families and unchanged historical serialization. It does
+not yet prove a complete draft-to-wire publication path. Finish these steps
+before closing the atomic row:
+
+1. Resolve `EMC-GAP-002`: do not silently persist/ignore an unsupported memory
+   limit. The user approved a targeted grading-worker change (`CS-ADR-028`),
+   not upstream runtime or IDE changes. WB-A applies the existing fixed time /
+   output safety defaults; WB-B owns explicit published configuration mapping.
+2. Trace and roundtrip limits, explicit entry point, environment and frozen
+   toolchain through draft compilation, wire DTO, validation, revision,
+   learner/reviewer projection and official execution. Reject unsupported
+   combinations/identities instead of substituting a current/default value.
+3. Obtain a current host OpenAPI capture and run the official client generator.
+   The bounded host build failed inside its managed memory cap; do not use
+   stale binaries, hand-edit generated output or automatically raise the cap.
+4. Reconcile the two pre-existing historical-worker identity assertions and
+   the existing Authentication test failure with their recorded dispositions.
+   Worker edits activate exact-source CI provenance; no gate waiver or IDE
+   deployment is implied. Existing metadata/unit passes are not full closure.
 
 Replace development-only interfaces without gratuitous V2/compatibility layers.
 Do not erase real published revisions or reinterpret submissions after the

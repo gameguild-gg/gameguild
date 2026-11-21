@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace GameGuild.Learning.Courses;
 
 /// <summary>
@@ -5,6 +7,9 @@ namespace GameGuild.Learning.Courses;
 /// </summary>
 public sealed record BundleFileMeta
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Id { get; init; }
+
     /// <summary>Raw file content (text or base64-encoded bytes).</summary>
     public required string Content { get; init; }
 

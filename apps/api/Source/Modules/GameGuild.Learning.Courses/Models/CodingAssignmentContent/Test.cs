@@ -11,6 +11,9 @@ namespace GameGuild.Learning.Courses;
 [JsonDerivedType(typeof(FunctionalTestGroup), "functional")]
 public abstract record Test
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Id { get; init; }
+
     /// <summary>Relative weight used to compute total score. Defaults to 1.0; must be &gt;= 0.</summary>
     public double Weight { get; init; } = 1.0;
 
@@ -49,6 +52,9 @@ public sealed record FunctionalTestGroup : Test
 /// </summary>
 public sealed record FunctionalTestCase
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Id { get; init; }
+
     public required FunctionParameter[] Inputs { get; init; }
 
     public required FunctionParameter Expected { get; init; }

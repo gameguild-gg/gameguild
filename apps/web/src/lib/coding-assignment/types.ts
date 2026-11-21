@@ -16,6 +16,8 @@
  * enum values (`"string"`/`"boolean"`/`"integer"`/`"float"`).
  */
 
+import { parseCodingProblem } from '@game-guild/coding';
+
 // ---------------------------------------------------------------------------
 // Wire types
 // ---------------------------------------------------------------------------
@@ -51,6 +53,7 @@ export interface TestFunctionData {
 }
 
 interface TestBase {
+  readonly Id?: string | null;
   readonly Weight?: number;
   readonly Name?: string | null;
 }
@@ -64,6 +67,7 @@ export interface StandardTest extends TestBase {
 }
 
 export interface FunctionalTestCase {
+  readonly Id?: string | null;
   readonly Inputs: readonly FunctionParameter[];
   readonly Expected: FunctionParameter;
 }
@@ -77,6 +81,7 @@ export interface FunctionalTestGroup extends TestBase {
 export type Test = StandardTest | FunctionalTestGroup;
 
 export interface BundleFileMeta {
+  readonly Id?: string | null;
   readonly Content: string;
   readonly Encoding: FileEncoding;
   readonly Visibility: FileVisibility;
@@ -103,10 +108,25 @@ export interface GradingConfig {
   readonly MaxScore: number;
 }
 
+export interface CodingProblem {
+  readonly Statement: string;
+  readonly Examples: readonly { readonly Id: string; readonly Input: string; readonly Output: string; readonly Explanation: string }[];
+  readonly Constraints: readonly string[];
+}
+
+export interface CodingValidationSolution {
+  readonly Id: string;
+  readonly Name: string;
+  readonly Role: 'reference' | 'incorrect';
+  readonly Files: readonly { readonly FileId: string; readonly Path: string; readonly Content: string }[];
+}
+
 export interface CodingAssignmentContent {
   readonly Type: 'coding-assignment';
   readonly Version: 1;
   readonly ExerciseType: CodingExerciseType;
+  readonly Problem?: CodingProblem | null;
+  readonly ValidationSolutions?: readonly CodingValidationSolution[] | null;
   readonly Environment: CodingEnvironment;
   readonly Data: WorkspaceData;
   readonly Tests: TestSuite;
@@ -257,6 +277,8 @@ export function normalizeTestFunctionData(v: unknown): TestFunctionData | null {
 
 export function normalizeFunctionalTestCase(v: unknown): FunctionalTestCase | null {
   if (!isRecord(v)) return null;
+  const identity = optionalIdentity(v);
+  if (!identity) return null;
   const inputs = v.Inputs ?? v.inputs;
   if (!Array.isArray(inputs)) return null;
   const normalizedInputs: FunctionParameter[] = [];
@@ -268,6 +290,7 @@ export function normalizeFunctionalTestCase(v: unknown): FunctionalTestCase | nu
   const expected = normalizeFunctionParameter(v.Expected ?? v.expected);
   if (!expected) return null;
   return {
+    ...identity,
     Inputs: normalizedInputs,
     Expected: expected,
   };
@@ -275,6 +298,8 @@ export function normalizeFunctionalTestCase(v: unknown): FunctionalTestCase | nu
 
 export function narrowFunctionalTestGroup(v: unknown): FunctionalTestGroup | null {
   if (!isRecord(v)) return null;
+  const identity = optionalIdentity(v);
+  if (!identity) return null;
   const kind = v.kind ?? v.Kind;
   if (kind !== TEST_KIND.Functional) return null;
   const fn = normalizeTestFunctionData(v.Function ?? v.function);
@@ -292,6 +317,7 @@ export function narrowFunctionalTestGroup(v: unknown): FunctionalTestGroup | nul
   const rawName = v.Name ?? v.name;
   const name = typeof rawName === 'string' ? rawName : undefined;
   return {
+    ...identity,
     kind: TEST_KIND.Functional,
     Function: fn,
     Cases: cases,
@@ -302,6 +328,8 @@ export function narrowFunctionalTestGroup(v: unknown): FunctionalTestGroup | nul
 
 export function narrowStandardTest(v: unknown): StandardTest | null {
   if (!isRecord(v)) return null;
+  const identity = optionalIdentity(v);
+  if (!identity) return null;
   const kind = v.kind ?? v.Kind;
   if (kind !== TEST_KIND.Standard) return null;
   const stdout = v.Stdout ?? v.stdout;
@@ -312,6 +340,7 @@ export function narrowStandardTest(v: unknown): StandardTest | null {
   const weight = v.Weight ?? v.weight;
   const name = v.Name ?? v.name;
   return {
+    ...identity,
     kind: TEST_KIND.Standard,
     Stdout: stdout,
     ...(typeof stdin === 'string' || stdin === null ? { Stdin: stdin } : {}),
@@ -334,6 +363,15 @@ export function narrowSuite(raw: unknown): TestSuite | null {
   if (!isRecord(raw)) return null;
   const rawPublic = raw.Public ?? raw.public;
   const rawPrivate = raw.Private ?? raw.private;
+  const entries: unknown[] = [
+    ...Array.from<unknown>(Array.isArray(rawPublic) ? rawPublic : []),
+    ...Array.from<unknown>(Array.isArray(rawPrivate) ? rawPrivate : []),
+  ];
+  if (entries.some(test => {
+    if (!isRecord(test)) return false;
+    const cases = test.Cases ?? test.cases;
+    return !optionalIdentity(test) || (Array.isArray(cases) && cases.some(testCase => isRecord(testCase) && !optionalIdentity(testCase)));
+  })) return null;
   const pub = Array.isArray(rawPublic)
     ? rawPublic.map(narrowTest).filter((t): t is Test => t !== null)
     : [];
@@ -341,6 +379,12 @@ export function narrowSuite(raw: unknown): TestSuite | null {
     ? rawPrivate.map(narrowTest).filter((t): t is Test => t !== null)
     : [];
   return { Public: pub, Private: priv };
+}
+
+function optionalIdentity(value: Record<string, unknown>): { Id?: string } | null {
+  const id = value.Id ?? value.id;
+  if (id === undefined || id === null) return {};
+  return typeof id === 'string' && /^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/.test(id) ? { Id: id } : null;
 }
 
 // ---------------------------------------------------------------------------
@@ -365,6 +409,10 @@ const WIRE_KEY_MAP: Record<string, string> = {
   function: 'Function', cases: 'Cases', functionName: 'FunctionName', parameters: 'Parameters', returnType: 'ReturnType',
   inputs: 'Inputs', expected: 'Expected',
   maxScore: 'MaxScore',
+  id: 'Id', fileId: 'FileId', path: 'Path', role: 'Role',
+  problem: 'Problem', statement: 'Statement', examples: 'Examples',
+  input: 'Input', output: 'Output', explanation: 'Explanation', constraints: 'Constraints',
+  validationSolutions: 'ValidationSolutions',
 };
 
 /**
@@ -377,21 +425,17 @@ const WIRE_KEY_MAP: Record<string, string> = {
 export function normalizeWireCasing(node: unknown): unknown {
   if (Array.isArray(node)) return node.map(normalizeWireCasing);
   if (!isRecord(node)) return node;
-  const out: Record<string, unknown> = {};
+  const entries: [string, unknown][] = [];
   for (const [key, value] of Object.entries(node)) {
     const renamed = WIRE_KEY_MAP[key] ?? key;
-    if (renamed !== 'Files') {
-      out[renamed] = normalizeWireCasing(value);
+    if (renamed !== 'Files' || Array.isArray(value)) {
+      entries.push([renamed, normalizeWireCasing(value)]);
       continue;
     }
-    const files: Record<string, unknown> = {};
     const map = isRecord(value) ? value : {};
-    for (const [path, meta] of Object.entries(map)) {
-      files[path] = normalizeWireCasing(meta);
-    }
-    out.Files = files;
+    entries.push(['Files', Object.fromEntries(Object.entries(map).map(([path, meta]) => [path, normalizeWireCasing(meta)]))]);
   }
-  return out;
+  return Object.fromEntries(entries);
 }
 
 /**
@@ -404,20 +448,88 @@ export function narrowCodingAssignmentContent(
   raw: unknown,
 ): CodingAssignmentContent | null {
   if (!isRecord(raw)) return null;
-  const source = normalizeWireCasing(raw) as Record<string, unknown>;
-  const type = source.Type ?? source.type;
-  if (type !== 'coding-assignment') return null;
-  const version = source.Version ?? source.version;
-  if (version !== 1) return null;
-  const tests = narrowSuite(source.Tests ?? source.tests);
+  const source = normalizeWireCasing(raw);
+  if (!isRecord(source) || source.Type !== 'coding-assignment' || source.Version !== 1
+    || (source.ExerciseType !== 'function' && source.ExerciseType !== 'standard-io')) return null;
+  const tests = narrowSuite(source.Tests);
   if (!tests) return null;
-  // Environment / Data / Grading are not polymorphic — trust the wire shape,
-  // the server validates via FluentValidation.
-  const exerciseType = source.ExerciseType;
-  if (exerciseType !== 'function' && exerciseType !== 'standard-io') return null;
+  const environment = source.Environment;
+  const data = source.Data;
+  const grading = source.Grading;
+  if (!isRecord(environment) || typeof environment.Language !== 'string' || typeof environment.Tools !== 'string'
+    || typeof environment.AllowStudentCreateFiles !== 'boolean'
+    || (environment.LibBundle != null && typeof environment.LibBundle !== 'string')
+    || !isRecord(data) || !isRecord(data.Files) || Array.isArray(data.Files)
+    || !isRecord(grading) || typeof grading.MaxScore !== 'number' || !Number.isFinite(grading.MaxScore)) return null;
+  const entries: [string, BundleFileMeta][] = [];
+  for (const [path, value] of Object.entries(data.Files)) {
+    if (!isRecord(value)) return null;
+    const identity = optionalIdentity(value);
+    if (!identity || typeof value.Content !== 'string' || (value.Encoding !== 'text' && value.Encoding !== 'base64')
+      || (value.Visibility !== 'Public' && value.Visibility !== 'Private') || typeof value.Modifiable !== 'boolean') return null;
+    entries.push([path, { ...identity, Content: value.Content, Encoding: value.Encoding, Visibility: value.Visibility, Modifiable: value.Modifiable }]);
+  }
+  const files = Object.fromEntries(entries);
+  const problem = source.Problem == null ? undefined : narrowProblem(source.Problem);
+  const solutions = source.ValidationSolutions == null ? undefined : narrowSolutions(source.ValidationSolutions);
+  if (problem === null || solutions === null) return null;
+  if (problem && (!isRecord(source.Tests) || !Array.isArray(source.Tests.Public) || !Array.isArray(source.Tests.Private)
+    || source.Tests.Public.length !== tests.Public.length || source.Tests.Private.length !== tests.Private.length)) return null;
+  if (problem && (Object.values(files).some(file => !file.Id) || [...tests.Public, ...tests.Private].some(test => !test.Id
+    || (test.kind === 'functional' && test.Cases.some(testCase => !testCase.Id))))) return null;
   return {
-    ...(source as unknown as CodingAssignmentContent),
-    ExerciseType: exerciseType,
+    Type: 'coding-assignment', Version: 1, ExerciseType: source.ExerciseType,
+    ...(problem === undefined ? {} : { Problem: problem }),
+    ...(solutions === undefined ? {} : { ValidationSolutions: solutions }),
+    Environment: { Language: environment.Language, Tools: environment.Tools, AllowStudentCreateFiles: environment.AllowStudentCreateFiles,
+      ...(environment.LibBundle === undefined ? {} : { LibBundle: environment.LibBundle }) },
+    Data: { Files: files },
     Tests: tests,
+    Grading: { MaxScore: grading.MaxScore },
   };
+}
+
+function narrowProblem(value: unknown): CodingProblem | null {
+  if (!isRecord(value) || typeof value.Statement !== 'string' || !Array.isArray(value.Examples)
+    || !Array.isArray(value.Constraints) || !onlyKeys(value, ['Statement', 'Examples', 'Constraints'])) return null;
+  const examples: CodingProblem['Examples'][number][] = [];
+  for (const example of value.Examples) {
+    if (!isRecord(example) || typeof example.Id !== 'string' || typeof example.Input !== 'string'
+      || typeof example.Output !== 'string' || typeof example.Explanation !== 'string'
+      || !onlyKeys(example, ['Id', 'Input', 'Output', 'Explanation'])) return null;
+    examples.push({ Id: example.Id, Input: example.Input, Output: example.Output, Explanation: example.Explanation });
+  }
+  const constraints: string[] = [];
+  for (const constraint of value.Constraints) {
+    if (typeof constraint !== 'string') return null;
+    constraints.push(constraint);
+  }
+  try {
+    parseCodingProblem({ statement: value.Statement, examples: examples.map(example => ({
+      id: example.Id, input: example.Input, output: example.Output, explanation: example.Explanation,
+    })), constraints });
+  } catch { return null; }
+  return { Statement: value.Statement, Examples: examples, Constraints: constraints };
+}
+
+function narrowSolutions(value: unknown): CodingValidationSolution[] | null {
+  if (!Array.isArray(value) || value.length > 100) return null;
+  const solutions: CodingValidationSolution[] = [];
+  for (const solution of value) {
+    if (!isRecord(solution) || typeof solution.Id !== 'string' || !optionalIdentity(solution) || typeof solution.Name !== 'string'
+      || (solution.Role !== 'reference' && solution.Role !== 'incorrect') || !Array.isArray(solution.Files) || solution.Files.length > 100
+      || !onlyKeys(solution, ['Id', 'Name', 'Role', 'Files'])) return null;
+    const files: CodingValidationSolution['Files'][number][] = [];
+    for (const file of solution.Files) {
+      if (!isRecord(file) || typeof file.FileId !== 'string' || !optionalIdentity({ Id: file.FileId })
+        || typeof file.Path !== 'string' || typeof file.Content !== 'string' || !onlyKeys(file, ['FileId', 'Path', 'Content'])) return null;
+      files.push({ FileId: file.FileId, Path: file.Path, Content: file.Content });
+    }
+    solutions.push({ Id: solution.Id, Name: solution.Name, Role: solution.Role, Files: files });
+  }
+  return solutions;
+}
+
+function onlyKeys(value: Record<string, unknown>, allowed: readonly string[]): boolean {
+  return Object.keys(value).every(key => allowed.includes(key));
 }

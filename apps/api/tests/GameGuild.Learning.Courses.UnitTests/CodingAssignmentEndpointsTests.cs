@@ -35,6 +35,29 @@ public sealed class CodingAssignmentEndpointsTests
         result.Data.Files.Should().ContainKey("main.cpp");
     }
 
+    [Fact]
+    public async Task GetPublicAsync_PreservesProblemButNeverReturnsAuthorReferenceSolutions()
+    {
+        await using var fixture = new ServiceFixture();
+        var programId = Guid.NewGuid();
+        var body = BuildFullContent() with
+        {
+            Problem = new CodingProblem { Statement = "Print ok.", Examples = [], Constraints = [] },
+            ValidationSolutions = [new CodingValidationSolution
+            {
+                Id = "reference", Name = "Reference", Role = "reference",
+                Files = [new CodingSolutionFile { FileId = "main-file", Path = "main.cpp", Content = "SYNTHETIC-TEACHER-REFERENCE" }],
+            }],
+        };
+        var content = PersistCodingContent(fixture, programId, body);
+        var learner = await fixture.Service.GetPublicAsync(programId, content.Id, Guid.NewGuid());
+        var author = await fixture.Service.GetFullAsync(programId, content.Id);
+        learner!.Problem!.Statement.Should().Be("Print ok.");
+        learner.ValidationSolutions.Should().BeNull();
+        System.Text.Json.JsonSerializer.Serialize(learner).Should().NotContain("SYNTHETIC-TEACHER-REFERENCE");
+        author!.ValidationSolutions.Should().ContainSingle();
+    }
+
     // ── (c) GET full view returns everything ──────────────────────────────────────
 
     [Fact]

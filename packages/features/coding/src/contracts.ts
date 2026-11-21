@@ -17,6 +17,19 @@ export type CodingVisibility = 'public' | 'private';
 export type CodingScalarType = 'string' | 'boolean' | 'integer' | 'float';
 export type CodingExerciseType = 'function' | 'standard-io';
 
+export interface CodingProblem {
+  statement: string;
+  examples: { id: string; input: string; output: string; explanation: string }[];
+  constraints: string[];
+}
+
+export interface CodingValidationSolution {
+  id: string;
+  name: string;
+  role: 'reference' | 'incorrect';
+  files: { fileId: string; path: string; content: string }[];
+}
+
 export interface CodingToolchainIdentity {
   key: string;
   version: string;
@@ -95,6 +108,10 @@ export interface CodingAuthoringDefinition {
   schemaVersion: typeof CODING_AUTHORING_SCHEMA_VERSION;
   type: typeof CODING_CONTENT_TYPE;
   exerciseType: CodingExerciseType;
+  /** Absent on retained definitions written before structured problems. */
+  problem?: CodingProblem;
+  /** Author-only replacements, never included in learner delivery or starter files. */
+  validationSolutions?: CodingValidationSolution[];
   toolchain: CodingToolchainIdentity;
   files: CodingAuthoringFile[];
   tests: CodingTest[];
@@ -117,6 +134,7 @@ export interface CodingLearnerDelivery {
   schemaVersion: typeof CODING_DELIVERY_SCHEMA_VERSION;
   type: typeof CODING_CONTENT_TYPE;
   exerciseType: CodingExerciseType;
+  problem?: CodingProblem;
   toolchain: CodingToolchainIdentity;
   files: CodingLearnerFile[];
   publicTests: CodingLearnerTest[];

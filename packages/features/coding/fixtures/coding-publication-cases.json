@@ -1,0 +1,36 @@
+{
+  "legacy": {
+    "Type": "coding-assignment", "Version": 1, "ExerciseType": "standard-io",
+    "Environment": { "Language": "cpp", "Tools": "clang", "LibBundle": null, "AllowStudentCreateFiles": false },
+    "Data": { "Files": { "main.cpp": { "Content": "int main(){}", "Encoding": "text", "Visibility": "Public", "Modifiable": true } } },
+    "Tests": { "Public": [{ "kind": "standard", "Weight": 1, "Name": null, "Stdin": null, "Stdout": "ok", "Stderr": null, "ExitCode": null }], "Private": [] },
+    "Grading": { "MaxScore": 100 }
+  },
+  "standard-io": {
+    "Type": "coding-assignment", "Version": 1, "ExerciseType": "standard-io",
+    "Problem": { "Statement": "Print the input.", "Examples": [{ "Id": "example-1", "Input": "hello", "Output": "hello", "Explanation": "Echo the text." }], "Constraints": ["One line."] },
+    "ValidationSolutions": [{ "Id": "reference", "Name": "Reference", "Role": "reference", "Files": [{ "FileId": "main-file", "Path": "/home/user/main.cpp", "Content": "// SYNTHETIC-TEACHER-REFERENCE" }] }],
+    "Environment": { "Language": "cpp", "Tools": "clang", "LibBundle": null, "AllowStudentCreateFiles": false },
+    "Data": { "Files": {
+      "/home/user/main.cpp": { "Id": "main-file", "Content": "int main(){}", "Encoding": "text", "Visibility": "Public", "Modifiable": true },
+      "/home/user/hidden.h": { "Id": "private-file", "Content": "SYNTHETIC-PRIVATE-FILE", "Encoding": "text", "Visibility": "Private", "Modifiable": false }
+    } },
+    "Tests": {
+      "Public": [{ "kind": "standard", "Id": "echo-public", "Weight": 1, "Name": "Echo", "Stdin": "hello", "Stdout": "hello", "Stderr": null, "ExitCode": 0 }],
+      "Private": [{ "kind": "standard", "Id": "echo-private", "Weight": 1, "Name": "Private", "Stdin": "secret", "Stdout": "SYNTHETIC-PRIVATE-EXPECTATION", "Stderr": null, "ExitCode": 0 }]
+    },
+    "Grading": { "MaxScore": 100 }
+  },
+  "function": {
+    "Type": "coding-assignment", "Version": 1, "ExerciseType": "function",
+    "Problem": { "Statement": "Return the sum of two integers.", "Examples": [{ "Id": "example-1", "Input": "2, 3", "Output": "5", "Explanation": "Add the values." }], "Constraints": ["Small integers."] },
+    "ValidationSolutions": [{ "Id": "reference", "Name": "Reference", "Role": "reference", "Files": [{ "FileId": "main-file", "Path": "/home/user/main.cpp", "Content": "// SYNTHETIC-TEACHER-REFERENCE\nint sum(int a,int b){return a+b;}" }] }],
+    "Environment": { "Language": "cpp", "Tools": "clang", "LibBundle": null, "AllowStudentCreateFiles": false },
+    "Data": { "Files": { "/home/user/main.cpp": { "Id": "main-file", "Content": "int sum(int a,int b){return 0;}", "Encoding": "text", "Visibility": "Public", "Modifiable": true } } },
+    "Tests": {
+      "Public": [{ "kind": "functional", "Id": "addition-public", "Weight": 1, "Name": "Addition", "Function": { "FunctionName": "sum", "Parameters": [{ "Type": "integer", "Name": "a" }, { "Type": "integer", "Name": "b" }], "ReturnType": { "Type": "integer" } }, "Cases": [{ "Id": "positive-case", "Inputs": [{ "Type": "integer", "Content": 2 }, { "Type": "integer", "Content": 3 }], "Expected": { "Type": "integer", "Content": 5 } }] }],
+      "Private": [{ "kind": "functional", "Id": "addition-private", "Weight": 1, "Name": "SYNTHETIC-PRIVATE-CASE", "Function": { "FunctionName": "sum", "Parameters": [{ "Type": "integer", "Name": "a" }, { "Type": "integer", "Name": "b" }], "ReturnType": { "Type": "integer" } }, "Cases": [{ "Id": "negative-case", "Inputs": [{ "Type": "integer", "Content": -2 }, { "Type": "integer", "Content": -3 }], "Expected": { "Type": "integer", "Content": -5 } }] }]
+    },
+    "Grading": { "MaxScore": 100 }
+  }
+}

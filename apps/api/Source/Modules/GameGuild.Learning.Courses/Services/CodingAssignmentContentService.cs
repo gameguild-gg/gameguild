@@ -211,6 +211,7 @@ public sealed class CodingAssignmentContentService(
 
         return source with
         {
+            ValidationSolutions = null,
             Data = source.Data with { Files = publicFiles },
             Tests = source.Tests with { Private = new List<Test>() }
         };
