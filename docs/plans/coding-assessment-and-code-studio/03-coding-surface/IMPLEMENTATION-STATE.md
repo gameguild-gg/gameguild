@@ -2,6 +2,142 @@
 
 Last updated: 2026-11-22.
 
+## Deferred corrections and instructor controls - 2026-11-22
+
+The user requested recording these follow-ups for later implementation. This
+is a documentation-only handoff, not authorization to implement them now or
+acceptance of a particular entry/scaffolding policy. The existing runtime
+[audit](./RUNTIME-RISK-VALIDATION-2026-11-22.md) retains the reproductions and
+qualifications. No new capability status or completed gate is inferred.
+
+### Runtime corrections
+
+Resume within [UX03-A/B](./06-refoundation/03-workbench-runtime-and-capabilities.md)
+after its prerequisites. Address false approval first; resolve the entry policy
+before dependent function/scaffolding changes. Independent work may proceed,
+but an affected capability cannot be advertised as ready while its oracle fails.
+
+| Finding | Deferred action | Acceptance requirement |
+| --- | --- | --- |
+| `CS-RUNTIME-COMPILE-FAILURE` | distinguish compilation/linking failure from a completed program before comparing output | invalid source with empty expected stdout cannot pass; valid empty-output programs and intentionally expected nonzero program exits remain valid controls |
+| `CS-RUNTIME-NATIVE-ENTRY` | decide whether the selected path means initial editor file or executable root; make learner responsibilities explicit | renamed main plus helpers works; competing/absent/duplicate main cases follow the reviewed contract, without breaking legitimate multi-file programs |
+| `CS-RUNTIME-FUNCTION-ABI` | compose language, harness linkage and startup through supported public APIs | an ordinary C/C++ function-only solution works without incidental main/extern-C boilerplate; helper files work when allowed; intentionally wrong solutions fail |
+| `CS-RUNTIME-GRAPHICS` | use the public canvas lifecycle for graphical diagnostics and define official execution support separately | real supported-artifact rendering/input/resize/cleanup; unsupported official execution is unavailable, not a passing WASI fallback, zero grade or invented visual judge |
+
+These corrections do not authorize new upstream edits. Preserve Emception
+core/browser/IDE/UI and use EMCEPTION-GATE if public composition is genuinely
+insufficient; the earlier targeted worker exception remains limited. Preserve
+published attempts/revisions and the distinction between compiler failure,
+learner error and unavailable infrastructure.
+
+### Instructor configuration proposals
+
+Revisit [UX04-A](./06-refoundation/04-instructor-authoring-and-validation.md)
+with the relevant UX02 contracts before adding controls. These are proposed
+enhancements, not confirmed defects or a newly accepted persistence model.
+
+- Preparation: let the instructor choose how much code is supplied versus
+  written by the learner. Function implementation, completing starter code and
+  writing a whole program are teaching choices; completion need not become a
+  third exercise family. Specify who supplies the driver/main, imports and
+  helpers instead of allowing a runtime defect to impose those requirements.
+- File freedom: reuse mutable/read-only files and allowLearnerCreatedFiles;
+  evaluate required files or narrower editable regions only if the teaching
+  task needs them. Do not claim those additional restrictions already exist.
+- Assistance: consider completion, snippets, formatting, static diagnostics,
+  correction suggestions, authored hints and optional AI assistance as separate
+  controls. Editor assistance is not AIReview or academic review policy.
+  Offer only capabilities proven for the selected language/environment.
+- Interaction: use a selector for mutually exclusive preparation choices and
+  switches/checkboxes for independent options. Reject contradictory settings;
+  do not expose every combination merely because it fits a boolean model.
+- Enforcement: future settings must roundtrip through draft/API/delivery and
+  remain bound to the published revision. The trusted submission/execution
+  boundary validates file rules; hiding or disabling controls is insufficient.
+  Disabling assistance must not hide actual execution/compiler errors. Editor
+  restrictions do not prevent use of tools outside the application.
+- Scope: defaults, precise option granularity and entry semantics remain open
+  until specification/ADR review. Reuse declared Monaco/public Emception APIs;
+  no library installation, platform change or speculative table/migration is
+  implied. A proven storage change still requires SCHEMA-GATE and its migration.
+
+### Resume and verification
+
+Before implementation, select one follow-up and record its allowed paths,
+contract, independent failing oracle and exact terminal gate in this ledger.
+Follow Specification -> Contract/schema -> Test -> Minimal implementation ->
+Quality gate. Apply G-CONTRACT/G-SURFACE and affected G-WEB/G-API for persisted
+settings; runtime fixes also need real-artifact G-RUNTIME controls, not mocks
+alone. Human UX acceptance and canonical capability review remain separate.
+
+Current edit scope: this ledger and links in the UX03/UX04 plans only. G-DOC
+requires parsed local-link/atomic-table checks and git diff --check. No product
+test, application build, runtime execution, merge or automatic commit is part
+of this documentation task.
+
+G-DOC passed: installed remark/GFM parsed 48 documents and checked 173 local
+links, both new heading anchors and all 25 atomic rows across seven specification
+tables. git diff --check also exited 0. The audit distinguishes specification
+tables from the existing three-column review checklist; no table was weakened.
+
+## Runtime-risk validation entry - 2026-11-22
+
+- User request: independently validate the four CS-RUNTIME findings, not fix
+  them or merge develop. Entry HEAD `e3402737304571e3c92e5b9a11bb3f2b26ec471c`,
+  clean worktree. No application/API/database startup or real personas needed;
+  this is an isolated executor audit, not an end-to-end academic grade/release.
+- Invariants: preserve production source, upstream IDE/UI/runtime, existing
+  generated assets and frozen identities. Do not replace an unavailable
+  compiler with a simulator and claim runtime evidence. Public API mocks can
+  establish composition only. No canonical capability status promotion.
+- Contract/oracles: CS-RUNTIME-COMPILE-FAILURE compares a valid empty-output
+  program with an invalid program under the same empty expectation; failed
+  compilation must not pass. CS-RUNTIME-NATIVE-ENTRY tests a renamed valid
+  main with helpers, a selected source without main plus another main, and
+  duplicate mains; distinguish observed linking from unspecified entry policy.
+  CS-RUNTIME-FUNCTION-ABI tests ordinary C/C++ functions with and without a
+  startup main and a compatible-linkage positive control. CS-RUNTIME-GRAPHICS
+  distinguishes the official WASI path from the public canvas lifecycle; a
+  preset label, error or blank canvas alone is not graphical runtime proof.
+- Sequence: verify current strict worker contracts; cheapest real-comparator
+  reproduction; frozen asset acquisition/preflight; actual current-source
+  worker tests with independent controls; adversarial classification/report.
+  Preparation/bootstrap failures are blockers, never behavioral red evidence.
+- Allowed edits: this ledger and the existing capability-gap record; isolated
+  synthetic audit fixtures/build/probes under /tmp. Add a compact report with
+  exact commands if findings are reproducible. No product implementation,
+  package/lockfile/CI changes, source release dispatch or automatic commit.
+- Resources: one browser/compiler at a time, four CPUs (0-3), ordinary <=10 GB
+  total owned RSS, >=4 GiB system headroom and bounded command deadlines.
+  Use the existing owned-process guard; stop no unrelated development service.
+  Published 4.5.2 metadata/manifest matches the frozen identity, but both
+  existing local manifests are schema 1. Acquire into scratch only; do not
+  overwrite them or infer asset readiness from the registry metadata.
+- Completed evidence: [runtime-risk report](./RUNTIME-RISK-VALIDATION-2026-11-22.md).
+  Three candidate bugs and one entry-policy decision, not four unquestioned
+  product defects. Thirteen real-worker probes plus two public-canvas controls;
+  explicit exit-0 C/C++ and compatible-linkage controls pass. Invalid source
+  is approved under an empty expectation, ordinary/function-only solutions
+  fail, and the entry file does not own main. Public canvas renders exact
+  pixels, whereas native compile/link/run exits 0 without running SDL callbacks.
+  The generic whole-worker graphics failure does not independently prove its
+  cause. The initial mismatched SDL fixture is discarded as harness evidence.
+- Publication assets: isolated exact 4.5.2 archive SRI and all 29 bundle hashes
+  pass; original local manifests remain untouched. Temporary bundles use
+  current public sources without changing them. Source hashes, receipts and
+  captures are retained in the ignored archive identified by the report.
+- Resource outcome: maximum sampled owned worker/browser RSS 5727 MiB,
+  minimum system available 12817 MiB; no OOM or guard stop. Four CPUs, one
+  browser/compiler at a time, no API/Next/database boot. Strict current worker
+  and fixture tsc pass. Desired-behavior red remains red; no rules were waived.
+- Next: review the entry-policy decision and correction scope. No product fix,
+  upstream edit, phase advancement, canonical status promotion, merge or
+  automatic commit is authorized or implied by validation.
+- Closing checks: unchanged worker Node suite 104/104, zero skips; strict
+  worker/fixture types and documentation audit pass (48 documents, 168 links,
+  seven atomic tables, 25 rows). Both canvas captures were visually inspected.
+  The desired native oracles still fail; existing unit green does not waive them.
+
 ## User-requested commit checkpoint - 2026-11-22
 
 The user requested separate reviewable commits before evaluating whether to
@@ -998,18 +1134,20 @@ um gate como concluido sem registrar a evidencia executada.
   available 5461 MiB, no stop/OOM or source/analyzer bypass. The full-solution
   Release attempt stopped at its ten-minute budget without OOM and did not pass.
   Ordinary checks remain <=10 GB; no concurrent heavy checks or IDE build.
-- Runtime/human: no compiler/browser/stack boot or new production UX acceptance.
-  Four independent source-audit risks are recorded as `CS-RUNTIME-*` blocking
-  oracles at UX03 entry. Existing schema-1 local assets still need preflight;
-  changed worker source requires the normal exact-source CI producer.
+- Runtime/human: isolated real-WASM worker and public-canvas diagnostics now
+  confirm three candidate bugs and one entry-policy decision; see the dated
+  report above. This is not full-stack, human UX or academic acceptance.
+  Existing schema-1 development assets remain unchanged; scratch schema-2
+  assets pass preflight. Normal exact-source CI provenance is still required.
 - Open decision: user asked whether to expand only the grading worker's
   public-API composition or defer execution acceptance. No implicit support
   reduction, upstream change or runtime-fidelity pass while waiting.
-- Next exact action: obtain the scope decision before dependent execution
-  changes. Final lint/types/doc checks and current host/client/selected API
-  checks are complete, not a reason to rerun the old OOM investigation. WB-B
-  remains partial and CODE-UX-02 open until fidelity acceptance is satisfied.
-  Keep the sole lesson coordinator and existing data.
+- Next exact action: review the dated runtime findings, decide entry semantics
+  and obtain correction scope before dependent implementation. Prior contract,
+  lint/types, host/client and selected API checks remain valid for their stated
+  source; no repeated OOM investigation is needed. WB-B remains partial and
+  CODE-UX-02 open until fidelity acceptance is satisfied. Keep the sole lesson
+  coordinator and existing data.
 
 | Gate da refundacao | Estado | Evidencia necessaria |
 | --- | --- | --- |

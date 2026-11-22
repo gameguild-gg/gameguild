@@ -46,6 +46,11 @@ configuration, a selected preset or a generated harness are not execution
 proof. Resolve them through supported public composition; otherwise apply
 EMCEPTION-GATE before changing upstream or reducing supported product scope.
 
+The [deferred follow-ups](../IMPLEMENTATION-STATE.md#deferred-corrections-and-instructor-controls---2026-11-22)
+record the real audit outcomes, correction order and pending entry/scaffolding
+decision. They are intentionally not implemented yet. Their deferral does not
+close this gate or turn an unsupported combination into an available one.
+
 1. Implement a tested capability resolver from family requirements, environment
    support, assignment settings and authorized mode. Distinguish a hidden
    optional panel from an unavailable operation and a missing required capability.

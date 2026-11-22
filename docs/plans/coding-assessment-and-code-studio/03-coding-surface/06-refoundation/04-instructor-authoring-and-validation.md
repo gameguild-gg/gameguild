@@ -15,6 +15,12 @@ An instructor creates and verifies a complete coding exercise without needing
 JSON, hidden IDE controls or knowledge of the current component implementation.
 The starting point is the teaching task, not a preloaded graphics demo.
 
+The [deferred instructor proposals](../IMPLEMENTATION-STATE.md#deferred-corrections-and-instructor-controls---2026-11-22)
+cover supplied-versus-learner-written code, file freedom and editor assistance.
+Before implementing them in UX04-A, specify compatible choices and complete the
+affected UX02 contracts/tests. Recording these proposals does not approve their
+defaults, add a new exercise family or move grading policy into this surface.
+
 ## Atomic sequence and terminal gates
 
 Each row completes Specification -> Contract/schema -> Test -> Minimal

@@ -94,6 +94,16 @@ These are source-audit findings requiring independent real-artifact tests in
 UX03, not newly approved upstream changes or successful runtime evidence.
 WB-B forwarding mocks must not be used to declare these capabilities available.
 
+Independent validation now exists in the candidate
+[2026-11-22 runtime report](./RUNTIME-RISK-VALIDATION-2026-11-22.md): real
+official-worker compilation confirms the false approval and function failures;
+the entry behavior is reproduced but its intended policy needs clarification.
+Public canvas renders verified pixels while the native path omits SDL
+callbacks. The whole-worker graphics failure alone remains non-diagnostic;
+the report distinguishes it from the successful public-API comparison and
+discards the first, mismatched SDL fixture. These are unresolved findings,
+not capability promotion, permission to alter upstream or a completed gate.
+
 | Oracle | Observation / source boundary | Required UX03 disposition |
 | --- | --- | --- |
 | `CS-RUNTIME-NATIVE-ENTRY` | `resolveBuild`/native `compileAndRun` compiles and links all supplied sources; placing the chosen entry first is not proof that its `main` is the executable root | execute a non-main-named entry, helpers and a competing/absent main; specify root semantics and reject an unsupported candidate rather than guessing |
