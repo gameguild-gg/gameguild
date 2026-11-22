@@ -52,12 +52,19 @@ for (const [version, identity] of [
   [2, CODE_TOOLCHAIN_V2],
   [3, CODE_TOOLCHAIN_V3],
 ]) {
-  test('version ' + version + ' matches the server adapter source constants', async () => {
-    const source = await readFile(
-      new URL('../../../apps/api/Source/Modules/GameGuild.Learning.Assessments.CodeAdapter/CodeAssessmentTypeAdapter.cs', import.meta.url),
-      'utf8',
-    );
-    for (const value of Object.values(identity)) assert.ok(source.includes('"' + value + '"'));
+  test('version ' + version + ' retains its own binding without current-compiler substitution', async () => {
+    if (version === 3) {
+      const source = await readFile(
+        new URL('../../../apps/api/Source/Modules/GameGuild.Learning.Assessments.CodeAdapter/CodeAssessmentTypeAdapter.cs', import.meta.url),
+        'utf8',
+      );
+      for (const value of Object.values(identity)) assert.ok(source.includes('"' + value + '"'));
+    } else {
+      const lock = JSON.parse(await readFile(new URL(`./frozen-toolchains/code-v${version}-lock.json`, import.meta.url), 'utf8'));
+      assert.equal(canonicalLockHash(lock), identity.toolchainLockHash);
+      assert.notEqual(identity.artifactVersion, CODE_TOOLCHAIN_V3.artifactVersion);
+      assert.throws(() => requireFrozenCodeToolchain(identity, manifestFor(CODE_TOOLCHAIN_V3)));
+    }
     assert.doesNotThrow(() => requireFrozenCodeToolchain(identity, manifestFor(identity)));
   });
 
