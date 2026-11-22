@@ -2,18 +2,24 @@
 
 Status: in progress; UX02-A contracts, transformations and backend draft
 roundtrip/conflict evidence are implemented. Its broader G-API gate remains
-open because of the pre-existing Authentication throttle failure and incomplete
-API host validation under local resource limits. These compiler/monitor failures
-are not a confirmed `dev:fast` regression. The full solution build was not run.
+open because of the pre-existing Authentication throttle failure and the
+full-solution command's time-budget stop. The current strict Release API host
+build passed under the user-approved monitored 14 GB profile, with zero
+warnings/errors, without disabling checks or changing dev:fast. The selected
+API architecture/security/OpenAPI suite also passed (382 tests). These results
+do not turn the incomplete full-solution build into a pass.
 UX02-B persistence/session ports and the host bridge are implemented and tested
 in scope; unaffected checks proceeded under the governance's external-failure
 rule, not a waiver of the broader gate. No production editor/writer cutover.
 UX02-C problem/reference/identity metadata, immutable revision tests and the
-authorized WB-A worker safety guard are implemented/tested in scope. Full
-published configuration/wire mapping under the accepted memory deferral, current
-official client generation and broader gates remain open. The full worker
-selection also has two pre-existing historical-identity assertions that must
-be reconciled without deleting history. See the ledger for actual evidence.
+authorized WB-A worker safety guard are implemented/tested in scope. WB-B adds
+explicit published configuration, inverse wire mapping, backend validation and
+revision preservation under the accepted RAM deferral. Historical worker
+assertions were reconciled without deleting history (CS-ADR-031). WB-B remains
+partial: actual official execution fidelity is not established by forwarding
+mocks. Four runtime risks, the pending scope decision and the broader G-API
+disposition remain recorded in the ledger. Current-source OpenAPI and official
+client generation, types, complete build and 1772 client tests passed.
 Gate: `CODE-UX-02`. Depends on `CODE-UX-01` (closed on 2026-11-21).
 
 The new author-only `coding-authoring-draft` contract lives in
@@ -120,23 +126,25 @@ before closing the atomic row:
 1. Apply the accepted `EMC-GAP-002` deferral (`CS-ADR-029`): configurable RAM
    remains explicitly unavailable in this delivery. Preserve historical data;
    do not silently persist/ignore a configured unsupported value. No upstream
-   runtime or IDE change is authorized. WB-A applies the existing fixed time /
-   output defaults; WB-B owns explicit published configuration mapping.
+   runtime or IDE change is authorized. WB-A retains legacy fixed defaults;
+   WB-B maps explicit published time/output with an unavailable RAM capability.
+   This is contract/composition evidence, not native execution acceptance.
 2. Trace and roundtrip limits, explicit entry point, environment and frozen
    toolchain through draft compilation, wire DTO, validation, revision,
    learner/reviewer projection and official execution. Reject unsupported
    combinations/identities instead of substituting a current/default value.
-3. Obtain a current host OpenAPI capture and run the official client generator.
-   The bounded verification builds either reached their managed heap cap or
-   were stopped by the 10 GB total-RSS monitor; the command/default-GC and
-   reduced-concurrency comparisons are recorded in the ledger. They did not
-   execute the ordinary `dev:fast` flow or demonstrate a development regression.
-   Finish a separately bounded compiler diagnosis before retrying exhausted
-   configurations. Do not exceed the authorized budget, omit analyzers or
-   migrations, use stale binaries, hand-edit generated output or treat resource
-   permission as a successful build result.
-4. Reconcile the two pre-existing historical-worker identity assertions and
-   the existing Authentication test failure with their recorded dispositions.
+3. Preserve the completed current-source OpenAPI v1 capture and official client
+   generation: all 2180 committed method/path operations match; only owned
+   coding schemas/types and generator metadata changed. Client types, full
+   ESM/CJS/DTS build, public-API types and 1772 tests pass. Existing DTS warnings
+   stay visible. The actual host build and 382 selected architecture tests pass;
+   the full-solution time stop remains a separate incomplete gate. Do not exceed
+   the budget, omit analyzers or migrations, use stale binaries or hand-edit
+   generated output. No dev:fast change or IDE deployment is required.
+4. Retain CS-ADR-031's reconciled historical-worker assertions and the external
+   Authentication failure with its recorded disposition. Resolve the four
+   CS-RUNTIME execution oracles and pending scope answer before claiming WB-B
+   official execution fidelity; forwarding mocks cannot close this acceptance.
    Worker edits activate exact-source CI provenance; no gate waiver or IDE
    deployment is implied. Existing metadata/unit passes are not full closure.
 

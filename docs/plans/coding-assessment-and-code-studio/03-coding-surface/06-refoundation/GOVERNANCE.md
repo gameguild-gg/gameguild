@@ -73,6 +73,9 @@ apps/web -> coding-surface -> coding -> zod
                          -> declared editor/UI libraries
 apps/web -> authorized API client and host persistence/command ports
 
+trusted grading worker wrapper -> owned transport/budget/frozen-binding guards
+                               -> public Emception execution/testing APIs
+
 API composition root -> Courses
                      -> Assessments
                      -> Assessments.CodeAdapter -> Assessments abstractions
@@ -89,6 +92,12 @@ coding-surface -X-> apps/web, Next.js, emception-ui or private Emception source
 Callback ports invert control without reversing these imports. Existing
 third-party dependencies are not authorization to install another library.
 Check public exports and declared dependencies before planning their use.
+The worker wrapper is the already product-specific grading boundary, not an
+Emception core/browser/IDE dependency on coding. It must not import feature
+implementations into its separately fingerprinted artifact. Its small typed
+wire/path guard deliberately mirrors the domain contract and has independent
+negative tests (CS-ADR-032). No manifest, installation, CI policy, upstream
+implementation or public-runtime export is changed.
 
 ## Mandatory atomic cycle
 

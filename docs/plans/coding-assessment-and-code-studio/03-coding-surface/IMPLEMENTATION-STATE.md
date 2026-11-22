@@ -1,6 +1,184 @@
 # Coding surface implementation state
 
-Ultima atualizacao: 2026-11-21.
+Last updated: 2026-11-22.
+
+## User-requested commit checkpoint - 2026-11-22
+
+The user requested separate reviewable commits before evaluating whether to
+merge develop. Preserve the completed validation evidence below; committing
+partial work does not close WB-B or authorize its four runtime corrections.
+
+| Commit | Responsibility |
+| --- | --- |
+| `511e10d26c` | coding execution contracts, draft compilation, projections and tests |
+| `0cbc7889cc` | owned backend DTOs/validation, response limits, revision and parity tests |
+| `0ef558955b` | web wire/publication bridge, tests and officially generated coding client schemas |
+| `921e844947` | targeted worker configuration/budget forwarding and import-boundary tests |
+| `852ddedd79` | historical toolchain tests bound to their retained locks/manifests |
+
+The sixth commit records this checkpoint, ADRs, duplication/consumer maps,
+validation results and the unresolved execution risks. No existing commit is
+rewritten, no push or merge is included, and no IDE/public runtime or migration
+change is introduced. Compare freshly fetched develop after this checkpoint;
+do not infer upstream fixes from branch names or an old tracking reference.
+
+## Execution record: UX02-C / WB-B configuration publication - 2026-11-21
+
+- Entry: `6d90892224`, clean `feature/coding-grading`, one local documentation
+  commit ahead of its tracking branch. The strict Release host build passed
+  at the preceding source revision with all 36 analyzer/generator inputs;
+  architecture/runtime/client gates were not thereby passed.
+- Active stage: specification, then contracts/schema, independent red tests,
+  minimal implementation and adversarial audit. Acceptance: CS-REF-06/07/09/22
+  and WB-B time/output/entry/environment/toolchain fidelity, not UI cutover.
+- Contract: optional additive `Execution` in existing coding JSON freezes
+  limits, entry point and toolchain; `Environment.Runtime` separates runtime
+  from language. Presence is all-or-nothing and validates the exact supported
+  environment/tools/identity. Legacy content without these fields retains its
+  historical interpretation; no automatic rewrite, version/alias or new table.
+  New explicit drafts may not silently fall back to defaults/current identity.
+- Memory: export an explicitly unavailable capability. Preserve any historical
+  configured canonical value and incomplete draft buffer; reject it on new
+  publication/execution rather than silently dropping it. A new draft uses an
+  empty RAM buffer and publishes no configured RAM value. Supported positive
+  time/output maxima remain 30,000 ms / 2,000,000 bytes; max files remains 100.
+- Allowed files: coding contracts/schemas/projection/draft compiler and focused
+  tests/fixtures; owned web coding types/bridge and focused tests; Courses
+  coding DTO/validator and CodeAdapter projection/response checks and tests;
+  the authorized grading worker entry/budget tests/build selection; official
+  generated client files only through its generator; these plan/state/ADR files.
+  Expand only for a demonstrated dependency. Preserve platform, migrations,
+  Emception IDE/UI/public runtime, CI policy, dev scripts and existing data.
+- Gates: strict coding/adapter/surface types; contract/publication and wire
+  roundtrip tests; Courses/CodeAdapter persistence/revision tests; strict worker
+  tsc/lint and bounded Node suites; G-WEB and affected G-API/architecture; official
+  current OpenAPI/client generation; documentation/import/privacy audit.
+  Existing Authentication failure stays owned externally; reconcile historical
+  worker assertions without removing historical fixtures or weakening policy.
+- Resources: sequential heavy commands, one test worker, four CPUs, >=4 GiB
+  system headroom. Ordinary checks use <=10 GB owned RSS; a required current
+  host build uses the demonstrated monitored <=14 GB profile, never an unbounded
+  command or IDE build. Record actual outcomes; no full-stack/browser start
+  is needed for contract-only evidence.
+- Contract gates passed: coding strict types + 13 execution-schema cases;
+  actual Courses Release build, warnings as errors, exit 0, no warnings/errors.
+  Web strict types passed with an 8 GiB managed Node heap, peak 6600 MiB RSS.
+- Behavioral red: domain publication 12 failures; web publication 5 failures;
+  backend Courses 97/120 and CodeAdapter 68/86 failures for the intended missing
+  validation/file-limit behavior. Worker 14/20 fail for ignored frozen values.
+  A first fake-clock harness run was interrupted after its cleanup hung; its
+  corrected complete red run has no cancelled/skipped cases and is the evidence.
+- In-scope implementation evidence so far: coding 96/96; web coding-assignment
+  103/103; worker composition 20/20 and strict tsc; domain/adapter strict lint.
+  Extra independent web red cases exposed weight clamping and scalar coercion;
+  fixed only for explicit configuration, preserving legacy interpretation.
+- Historical worker gate: record CS-ADR-031 before correcting its two stale
+  source-text assertions. Its subsequent complete selection passes 78/78.
+  Expand allowed files only to that existing test, the consumer/duplication map
+  and capability-gap/UX03 entry notes to record the necessary boundary trace.
+  No upstream implementation or runtime capability is authorized/inferred.
+- Independent read-only Auditor identified real-runtime risks: source ordering
+  alone does not prove native entry ownership; the C/C++ function harness has
+  language/linkage/startup prerequisites; the native WASI run path is not the
+  graphics canvas path; a nonzero compile result can pass an empty-output stdio
+  case if no exit expectation exists. Preserve these as blocking UX03 oracles,
+  not successful execution evidence or permission to edit upstream code.
+- Structural stop: WB-B execution-fidelity acceptance and CODE-UX-02 stay open.
+  The user was asked whether to expand only the grading worker's public-API
+  composition or defer execution acceptance to UX03. Pending that answer, do
+  not implement a parallel harness, modify upstream or silently reduce support.
+  Independent contract/build/client checks may continue; no UI cutover occurs.
+- Backend green: complete Courses 1145/1145 and CodeAdapter 179/179; actual
+  Release strict builds and tests, no skipped cases. Includes four revision
+  persistence tests, explicit limits/identity/path/merged-file bounds, scalar
+  parity, legacy absence and unknown-field negatives. The additional validation
+  red was 101/122 failed before fixing its causes, not a bootstrap failure.
+- Full solution attempt: strict `dotnet build apps/api/GameGuild.sln -c Release
+  --no-restore -m:1 -nr:false -p:UseSharedCompilation=false
+  -p:TreatWarningsAsErrors=true` was stopped at the 600000-ms command budget;
+  sampled peak 9694 MiB RSS, minimum available 8076 MiB, no OOM. The child CLI
+  returned 0 during termination, but the guard correctly returned 1. This is
+  NOT a successful build or permission to use an unfinished host capture.
+  No broader gate is waived. Finish the final owned parity tests, then attempt
+  the actual current host with warmed references and the same bounded profile.
+- Final Auditor parity red: 40/82 cases fail for lossy explicit weights,
+  invalid/duplicate/overlong parameter identifiers and null stdout, with
+  positive/legacy controls retained. Fix those causes only in new explicit
+  configuration, then rerun both complete affected backend suites.
+- Final affected backend green: Courses 1227/1227 and CodeAdapter 179/179,
+  zero skips, strict Release builds. Parent-owned sequential execution; sampled
+  peaks 856/588 MiB, elapsed 54377/16829 ms. This supersedes the earlier counts
+  only for the current implementation; no official native runtime was invoked.
+- Current host PASS: actual GameGuild.API Release + project references built
+  with all analyzers/generators and warnings as errors, zero warnings/errors.
+  No stale host or frozen generator substitute: source edits were finished
+  before the command. Elapsed 00:09:57.97 / guard 598285 ms; peak 13046 MiB RSS,
+  minimum available 5461 MiB, no stop/OOM. Four CPUs and 13.8 GB sampled ceiling.
+  This is not a passed full solution, architecture test, startup or native run.
+  Use the existing offline metadata exporter and official client generator
+  only after current v1 endpoint-coverage/config-schema checks; no worker boot.
+- OpenAPI/client source: existing offline exporter built strict Release, exit 0;
+  captured 1802 paths / 2371 schemas from the current host metadata. Host DLL,
+  Courses DLL and host XML hashes match the freshly built originals exactly.
+  The v1 selector excludes unversioned shell minimal endpoints; root is excluded
+  from description. All 2180 committed method/path operations match the capture,
+  no additions/removals, all four new execution schemas present. This is default
+  v1 metadata evidence, not live-host startup or deployment-env override proof.
+  Official generator exited 0 (52.8 s, 2186 MiB peak), changing only owned coding
+  types/schemas and generator metadata, including previously deferred metadata.
+  No manual generated edit, endpoint/module churn, API, database or worker boot.
+- API architecture initial invocation stopped at compiler CS0006 for the absent
+  Release test-support Finance assembly. No test executed; this is a build
+  prerequisite, not behavioral red or an authorization failure. Compile only
+  that existing support library, then rerun the unchanged test selection.
+- API architecture/security/OpenAPI PASS after the support build: 382/382,
+  no skips; actual current Release API/test binaries, strict warnings, 146840 ms,
+  peak 3357 MiB, minimum available 16656 MiB. No support/platform code edit.
+  This closes the selected architecture prerequisite, not the full solution
+  timeout, external Authentication failure or native-execution acceptance.
+- Client closing checks pass: official-config tsc, complete ESM/CJS/DTS build,
+  public-API type contract and 1772 unit tests (112 files, one worker). Resource
+  peaks 4985/3328/735/1261 MiB under the 9.5 GB guard; no Node heap override is
+  committed. The existing DTS private-export warnings for NetworkError/Transport
+  remain visible; no client transport/API implementation was changed.
+- Final boundary audit: the first worker mapping imported coding's runtime
+  parser. That would bundle a feature implementation into the upstream artifact
+  closure while the unchanged source classifier excludes feature-only changes.
+  Corrected this introduced coupling rather than widening CI or upstream scope:
+  local typed wire guard + existing worker budget/frozen-binding contracts,
+  independently tested for parity. No feature implementation import or new
+  dependency is left in the grading artifact.
+  The new AST import oracle failed before correction, with 45 positive/negative
+  composition cases already green; all 46 now pass without the feature loader.
+  Final worker selection: 104/104, zero skips, strict tsc exit 0. No native
+  execution was started; the runtime-fidelity stop is unchanged.
+- Earlier worker evidence was 87/87. Four unknown-field negatives and five
+  case-varied legacy labels were independently red. The latter preserve the
+  actual old exact-key lookup -> C++ fallback behavior; new explicit labels
+  remain strict and cannot use that fallback. No real runtime pass is claimed.
+- Root security: Authorization 2815/2815. Authentication repeats only its known
+  `GenerateEmailCodeAsync_ThrottlesResendsWithinSixtySeconds` failure:
+  4572/4573 passed. Keep the external failure visible and its module unchanged.
+- Final web regression selection: 181/181 across eight files (108 coding wire/
+  publication/session tests plus 73 authoring/grader consumer tests), zero skips,
+  12.8 s, sampled peak 834 MiB. No application/runtime boot or fixture reset.
+- Closing lint found two unsafe spreads after Array.isArray narrowed raw input
+  to any[]. Replace only those spreads with direct unknown-value validation of
+  each array; no assertion, suppression, type relaxation or behavior change.
+  The unchanged type-aware web lint selection then passed, zero warnings.
+  Root strict lint passed for coding, adapter, surface and changed worker files.
+  Current-source web tsc also passed after client generation (6133 MiB peak).
+  After the narrowing correction, the final repeat passes 181/181, zero skips
+  (17489 ms, 814 MiB peak), and web tsc again exits 0 (11692 ms, 1679 MiB peak).
+- Documentation/import audit: 47 documents, 166 valid local links, seven atomic
+  tables and 25 complete atomic rows, exit 0. Protected platform, upstream
+  IDE/UI/public runtime, developer launchers, dependency/CI configuration and
+  historical migrations remain untouched. All manual edits use owned paths;
+  generated types/metadata came only from the official generator.
+- Next: retain the completed contract/build/client/lint/type/document evidence
+  and obtain the runtime-scope disposition. No
+  production save coordinator or user interface changes now. Native execution
+  acceptance remains unproven and is not inferred from composition mocks.
 
 ## Execution record: user-approved 14 GB full-build measurement - 2026-11-21
 
@@ -773,81 +951,70 @@ um gate como concluido sem registrar a evidencia executada.
 | Parte 3.3 | concluida | dois perfis, quatro modos, privacy e contrato canonico cobertos |
 | Parte 3.4 | em validacao final | consumidores e CI migrados; runner fixture now emits canonical `ExerciseType`; local asset refresh and real browser E2E remain pending |
 | Parte 3.5 | concluida localmente | `CANON-01` a `CANON-06` concluidos; validacao local verde, com fixture do runner e browser CI ainda pendentes no fechamento de `CANON-07` |
-| Parte 3.6 | in progress | `CODE-UX-01` closed; UX02-A/B and UX02-C metadata preparation tested; full configuration/wire, G-API, historical-worker and production gates remain open |
+| Parte 3.6 | in progress | `CODE-UX-01` closed; UX02-C/WB-B contracts, wire, backend and current client checks pass; official execution fidelity and broader G-API disposition remain open |
 
 ## Etapa ativa
 
 - Subplan: [3.6.2 domain and drafts](./06-refoundation/02-domain-drafts-and-data-boundaries.md).
-- Current gate: `CODE-UX-02`, UX02-C metadata/WB-A in-scope evidence recorded.
-  Full configuration/wire mapping under the accepted memory deferral, official generated
-  client, API architecture/security and historical-worker contract remain open.
+- Current gate: `CODE-UX-02`, UX02-C/WB-B implementation and audit in progress.
+  Explicit configuration roundtrip/backend validation are tested; official
+  execution fidelity and the broader G-API disposition remain open. Current
+  host/client and selected architecture evidence are complete and recorded.
   No runtime/production/human acceptance is inferred from this preparation.
 - Design and initial scalar-only scope remain approved. ADRs 014-024 retain
   ownership/governance/artifact decisions; ADR025 records the new author-only
   draft; ADR026 records revision-bound host persistence and memory-only recovery;
   ADR027 publication metadata; ADR028 the user-approved grading-worker exception;
-  ADR029 the approved exercise-memory deferral and independent build budget.
+  ADR029 the approved exercise-memory deferral and independent build budget;
+  ADR030 the frozen execution contract; ADR031 the historical identity oracle;
+  ADR032 the worker's deliberately local transport guard/import boundary.
   Actual local artifact preflight remains a CODE-UX-03 obligation.
 - Responsavel: Codex.
 
 ### Current compact checkpoint
 
-- Baseline: `ec1ff97b50262e633931511229c574e3e1289536`, tree
-  `e9729dbb0ca3882deee3845540b54bacd6168b62`, clean entry on
-  `feature/coding-grading`. No fetch, merge, commit or stage.
-- Active row/stage: UX02-C metadata and WB-A guard preparation / audit recorded.
-  Canonical/DTO metadata and both learner projections now preserve problems/IDs
-  and strip references. The authorized worker change is only grading safety;
-  IDE/UI/upstream runtime, platform, database schema and generated client are
-  untouched. Active host writers and production UI remain unchanged.
-- Contract: distinct author-only draft, stable identities, raw incomplete
-  buffers, one signature, separate language/runtime/toolchain and protected
-  validation solutions. Only explicit complete compilation creates a canonical
-  definition; incomplete drafts remain rejected by official grading. Published
-  source snapshots freeze problems/IDs/references; only public data is delivered.
-  Existing stored drafts/revisions/data are not automatically rewritten.
-- Acceptance: CS-REF-06/07/09/22 contract preparation only; their production
-  persistence/recovery/projection acceptance stays open in UX02-B/C and later
-  browser/human gates. CS-REF-18 retains its accepted initial-scope limitation.
-- Terminal: current coding/adapter/surface types/lint pass; tests 78/16/46.
-  Web selection 141, full web types/lint, Courses 903, CodeAdapter 93,
-  Assessments 453, Authorization 2815, preserved UI 27 and CI 54 pass.
-  Authentication repeats its one known failure (4572/4573); full worker tests
-  are 60/62, with two baseline historical-identity assertions unresolved.
-  New guard/composition tests are 13/13. After the user authorized up to 10 GB
-  total RSS, the host compiler still failed at 6 GiB and then 8 GiB managed
-  heap, with sampled totals 6855/8916 MiB. No API architecture test ran; full
-  API tests, full solution build and official client generation remain open.
-  No source/test/analyzer was weakened. The later command comparison is recorded
-  at the top of this ledger: default-GC builds hit the external RSS stop, while
-  the budget-aware server-GC build returned managed OOM (8956 MiB total peak).
-  These are validation-resource failures, not a confirmed development regression
-  or proof that every safe configuration needs >10 GB. No test ran.
-- Runtime: no asset download/refresh, compiler/IDE build, runtime boot or dev
-  stack. Fixed worker safety budgets are now real cancellation guards but
-  configurable draft limits are not yet published/applied. Memory enforcement
-  is NOT claimed. Local schema-1 assets remain a UX03 obligation, and worker
-  source changes trigger exact-source CI provenance under the existing policy.
-- Human: prototype and initial scalar scope approved on 2026-11-20, not
-  production usability or runtime approval. No new acceptance is inferred.
-- Next exact action: separately profile the unresolved host compilation within
-  an explicit resource disposition; do not repeat the exhausted configurations,
-  increase the 10 GB allowance or bypass checks automatically. There is no
-  pending product decision. Independent WB-B/full draft-to-wire mapping
-  may proceed under CS-ADR-029, including persisted
-  limits, explicit entry point and environment/toolchain fidelity. Trace and
-  test these contracts before wiring production consumers. Reconcile the two
-  baseline historical-worker assertions without discarding history; obtain a
-  current authorized OpenAPI capture and use the official generator. Preserve
-  the Authentication/API resource disposition; do not close CODE-UX-02 or
-  start CODE-UX-03 with missing evidence.
-  UX02-B ports must be integrated by the sole lesson save coordinator at the
-  planned UI cutover, not installed as a second autosave loop. No IDE release.
+- Baseline: `6d90892224`, clean implementation entry on feature/coding-grading.
+  The user-requested commit sequence is recorded above; no merge or push is
+  authorized by that checkpoint. Allowed scope and validation evidence remain
+  in the WB-B execution record.
+- Active row/stage: UX02-C / WB-B audit and independent closing gates.
+  Execution/environment JSON, domain compilation, inverse wire bridge,
+  revision freezing, redaction and strict backend validation are implemented.
+  Time/output/file-limit forwarding has composition tests, not real native
+  conformance. Production UI/save coordinator and preserved IDE are unchanged.
+- Contract: legacy absence stays absent; no V2, rewrite, table or migration.
+  Unsupported configured RAM remains recoverable but rejects publication.
+  New explicit configuration cannot fall back to current/default identity,
+  drop malformed tests or coerce mismatched scalar values.
+- Terminal: coding/adapter/surface types pass; package tests 96/16/46. Complete
+  Courses 1227, CodeAdapter 179 and Assessments 453 pass. Final web selection
+  passes 181/181; worker 104/104 plus strict tsc. Authorization 2815 and selected
+  API architecture/security/OpenAPI 382 pass. Authentication retains its
+  external 4572/4573 result. Official current-source client generation, types,
+  complete ESM/CJS/DTS build, public-API types and 1772 tests pass; its two
+  existing private-export DTS warnings remain visible. No endpoint churn.
+- Resources: the current actual Release host build passed, zero warnings/errors,
+  under the approved monitored 14 GB profile; peak 13046 MiB, 598285 ms, minimum
+  available 5461 MiB, no stop/OOM or source/analyzer bypass. The full-solution
+  Release attempt stopped at its ten-minute budget without OOM and did not pass.
+  Ordinary checks remain <=10 GB; no concurrent heavy checks or IDE build.
+- Runtime/human: no compiler/browser/stack boot or new production UX acceptance.
+  Four independent source-audit risks are recorded as `CS-RUNTIME-*` blocking
+  oracles at UX03 entry. Existing schema-1 local assets still need preflight;
+  changed worker source requires the normal exact-source CI producer.
+- Open decision: user asked whether to expand only the grading worker's
+  public-API composition or defer execution acceptance. No implicit support
+  reduction, upstream change or runtime-fidelity pass while waiting.
+- Next exact action: obtain the scope decision before dependent execution
+  changes. Final lint/types/doc checks and current host/client/selected API
+  checks are complete, not a reason to rerun the old OOM investigation. WB-B
+  remains partial and CODE-UX-02 open until fidelity acceptance is satisfied.
+  Keep the sole lesson coordinator and existing data.
 
 | Gate da refundacao | Estado | Evidencia necessaria |
 | --- | --- | --- |
 | `CODE-UX-01` | complete | corrected contract/document/design/preparation audit passed on 2026-11-21; no runtime/build claim |
-| `CODE-UX-02` | in progress / gate open | UX02-A/B and UX02-C metadata/WB-A preparation tested; memory deferral accepted; full wire/configuration, generated client, API and historical-worker gates remain open |
+| `CODE-UX-02` | in progress / gate open | contract/wire/backend/current-client/selected-architecture checks pass; runtime fidelity, the full-solution time stop and external Authentication failure remain open |
 | `CODE-UX-03` | nao iniciado | refresh compatible published assets and pass local preflight before real runtime, canvas/terminal, cancellation and resource checks |
 | `CODE-UX-04` | nao iniciado | autoria completa dos dois tipos e validacao pelo professor |
 | `CODE-UX-05` | nao iniciado | resolucao, envio, recuperacao e revisao por persona |
@@ -1260,18 +1427,17 @@ Continue [`3.6.2`](./06-refoundation/02-domain-drafts-and-data-boundaries.md):
    Do not repeat the prototype work or mislabel that approval as production
    runtime/usability acceptance. Initial scalar-only scope is also explicitly
    accepted in CS-ADR-015; compound support remains tracked in EMC-GAP-001.
-2. Retain the tested UX02-A/B ports and UX02-C metadata/immutable-revision
-   evidence. The local read-only inventory is complete, not a remote-data claim.
-   Apply the accepted memory deferral in CS-ADR-029 during full configuration
-   mapping; this is no longer waiting for a user decision. Resume bounded API
-   validation under the separately authorized 10 GB total-RSS ceiling. The
-   6/8 GiB managed-heap attempts both failed before tests, below that RSS ceiling;
-   diagnose the host compiler before another retry. Current DTO generation
-   still requires an actual successful current host build;
-   no hand-edited generated artifact. Authentication and the two pre-existing
-   historical-worker assertions remain open. Follow the atomic cycle and
-   recorded owner/resource dispositions; do not call a partial gate green,
-   install a second lesson autosave or compile/deploy the standalone IDE.
+2. Retain the tested UX02-A/B ports and UX02-C/WB-B configuration and immutable
+   revision evidence. The local read-only inventory is not a remote-data claim.
+   RAM deferral is implemented; the historical worker assertions are reconciled.
+   Current strict host/selected architecture/client evidence is complete. Keep
+   the demonstrated monitored 14 GB profile for required host checks only;
+   ordinary checks remain <=10 GB. Do not repeat obsolete OOM diagnosis, disable
+   analyzers or hand-edit a generated client. Preserve the full-solution time
+   stop and external Authentication failure as incomplete broader gates.
+   Official execution fidelity is still blocked by the four CS-RUNTIME oracles
+   and the pending scope answer. Do not turn partial completion into gate
+   approval, install a second autosave or deploy the standalone IDE.
 3. Before CODE-UX-03 real execution, preserve old generated CDN/release copies,
    explicitly refresh the compatible pinned published assets and pass both
    local manifest checks in G-PREFLIGHT. The current helper can retain schema 1;

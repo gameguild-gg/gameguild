@@ -128,6 +128,7 @@ target pelo path real, registrar o commit exato de origem e descrever o delta.
 | `DUP-PL-011` | `diverged` | `ui-emception/src/index.ts` e `assessment/editor.ts` | `packages/features/coding-surface/src/index.ts` | organizacao da API publica | API tipada por modo e sem aliases legados |
 | `DUP-PL-012` | `diverged` | testes sob `ui-emception/src/assessment` e `src/components` | `packages/features/coding-surface/src/*.test.ts*` | privacy, modos, storage e boundary | testes originais permanecem; destino valida o contrato canonico |
 | `DUP-PL-013` | `diverged` | mocks sob `ui-emception/src/__mocks__` | mock local em `coding-surface.test.tsx` | fronteira publica do IDE | mock minimo do entrypoint publico, sem copiar internals |
+| `DUP-PL-014` | `diverged` | preserved assessment wire types/preset mapping; baseline `6d90892224` | web `execution-configuration.ts`, Courses coding execution DTO/validator and authorized grading `browser.ts` | explicit frozen environment, limits, entry and toolchain mapping | web uses the coding parser; independent C# and worker guards mirror the wire rules. Worker path normalization deliberately mirrors `coding/src/paths.ts`, reusing its own budget/frozen-binding constants instead of bundling feature code (CS-ADR-032). Negative/import-boundary tests protect this duplication; no IDE/UI/public-runtime extraction |
 
 ## Composicoes web afetadas
 

@@ -88,6 +88,25 @@ exports instalados antes de afirmar suporte a uma combinacao.
 
 ## Integracao ausente nao e capability upstream ausente
 
+### WB-B runtime audit risks - 2026-11-22
+
+These are source-audit findings requiring independent real-artifact tests in
+UX03, not newly approved upstream changes or successful runtime evidence.
+WB-B forwarding mocks must not be used to declare these capabilities available.
+
+| Oracle | Observation / source boundary | Required UX03 disposition |
+| --- | --- | --- |
+| `CS-RUNTIME-NATIVE-ENTRY` | `resolveBuild`/native `compileAndRun` compiles and links all supplied sources; placing the chosen entry first is not proof that its `main` is the executable root | execute a non-main-named entry, helpers and a competing/absent main; specify root semantics and reject an unsupported candidate rather than guessing |
+| `CS-RUNTIME-FUNCTION-ABI` | the C preset forces C compilation while `generateDoctestHarness` emits C++; C++ references also require compatible linkage and startup | test both languages against their actual public harness/ABI; a returned harness string is not conformance; mark unavailable or apply EMCEPTION-GATE if public composition cannot meet the contract |
+| `CS-RUNTIME-GRAPHICS` | native `compileAndRun` runs through WASI; SDL3/raylib/Allegro preset selection does not establish loading canvas runtime glue/callbacks | prove actual output through the public canvas lifecycle and distinguish diagnostic support from authoritative server grading; no headless-WASI fallback for a graphics requirement |
+| `CS-RUNTIME-COMPILE-FAILURE` | compile/link failure returns a nonzero ToolResult; stdio matching omits exit checking when expectedExit is absent | a deliberately broken program with intentionally empty expected stdout must never earn a passing official receipt; preserve failure classification and consult the owner if the public result cannot identify compile failure |
+
+Owner: coding/grading investigates its public integration during UX03-A/B;
+the Emception owner approves any genuine upstream contract/implementation need.
+Do not remove retained exercises, rewrite snapshots, expose reference solutions,
+substitute compiler bytes or silently change legacy exit semantics. None of
+these findings authorizes a parallel harness, private import or IDE edit.
+
 `tools/emception/packages/browser/src/canvas.ts` expoe build/start/stop por API
 publica. O workbench atual nao a integra; isso pertence a coding-surface, nao
 prova a necessidade de alterar Emception. A 3.6.3 deve provar renderizacao,

@@ -705,6 +705,72 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   contract/schema/test-first publication mapping and required gates next;
   no remaining acceptance or build result is inferred from this approval.
 
+## `CS-ADR-030`. Explicit, frozen publication execution configuration
+
+- Date: 2026-11-21.
+- Status: WB-B contract/wire/backend implementation has passing focused and
+  complete affected suites. Official execution fidelity is still blocked;
+  this decision is not runtime acceptance or CODE-UX-02 closure.
+- Decision: add optional `Execution` to the existing coding JSON with entry
+  point, limits and exact toolchain. Add optional `Environment.Runtime`; new
+  execution configuration requires it and coherent language/tools/library.
+  Explicit configuration is validated, frozen and projected unchanged, never
+  reconstructed from the current runtime or a guessed source file. Retained
+  JSON without these fields keeps its existing behavior and is not rewritten.
+- RAM remains unavailable under CS-ADR-029. Keep retained values recoverable;
+  reject new publication with a configured RAM value. Empty draft RAM is
+  absence, not zero or a fabricated 128 MB enforcement claim. Time/output
+  configuration stays within the existing worker maxima of 30 s / 2 MB.
+- Ownership: coding defines technical contracts; Courses persists existing JSON;
+  CodeAdapter freezes and validates official execution; the web bridge maps
+  DTOs; the authorized grading worker consumes the exact configuration through
+  public Emception APIs. Academic scoring/release and the IDE remain unchanged.
+- Schema disposition: additive JSON fields need no relational migration. Keep
+  historical migrations, revisions, snapshots and files intact. Known legacy
+  defaults are only for genuinely absent legacy configuration, never malformed
+  or unsupported explicit data. No V2 protocol or second persistence system.
+- Proof required: independent TS/backend and worker negatives, both-family
+  roundtrip/revision/privacy tests, current official generated client and the
+  applicable strict gates. CODE-UX-03 still owns actual compiler conformance.
+
+## `CS-ADR-031`. Historical worker identity oracle is not the current adapter
+
+- Date: 2026-11-22.
+- Status: accepted maintenance of the documented historical-worker gate.
+- Evidence: the complete worker selection passes 76/78; only the assertions
+  demanding retired 4.4.0/4.5.1 literals in the current adapter fail. The
+  retained lock hashes and all manifest/tamper/cross-version negatives pass.
+- Decision: verify every historical identity against its retained lock and
+  manifest binding, and verify only the current identity against the current
+  adapter. Historical tests must explicitly reject rebinding to the current
+  release. Preserve all fixtures, exact hashes and tamper negatives.
+- No runtime, adapter registration, compiler identity or compatibility policy
+  change is authorized by this oracle correction. An old executable remains
+  unavailable unless its own verified artifacts exist; never substitute new
+  compiler bytes or invent a historical adapter to satisfy a source-text test.
+
+## `CS-ADR-032`. Keep feature implementations outside the worker artifact closure
+
+- Date: 2026-11-22.
+- Status: implemented and tested; no change to native execution scope.
+- Finding: reusing coding's runtime parser in the trusted grading bundle would
+  make feature-only source edits alter that bundle without activating the
+  existing Emception exact-source classifier. Do not change CI to hide this
+  introduced coupling or turn a feature package into an upstream dependency.
+- Decision: retain a small typed, independently tested transport guard in the
+  existing product-specific worker. Reuse its budget validation and exact
+  frozen-binding constants. Mirror the supported wire rules/path normalization
+  deliberately, record duplication and keep new unknown data fail-closed.
+- Domain/web continue using their declared Zod parser. No new library,
+  package/lockfile edit, speculative adapter version, public runtime/IDE edit
+  or source-release policy relaxation. An import-boundary regression test
+  prevents feature implementation imports from returning to the worker.
+- Evidence: strict worker typecheck passed before behavior. The new AST import
+  oracle failed against the feature import while 45 transport/composition cases
+  passed. After removing the dependency, all 46 composition/import cases and
+  the full 104-case worker selection pass, as does strict worker typecheck.
+  This is mocked transport/composition evidence, not native conformance.
+
 ## Modelo para novas decisoes
 
 ```text

@@ -37,6 +37,15 @@ and check the actual local source and served manifests. No source edit,
 upstream IDE publication or mandatory local compiler build is needed.
 Follow `CS-ADR-024` if artifact availability or changed CI scope differs.
 
+Entry audit: independently reproduce `CS-RUNTIME-NATIVE-ENTRY`,
+`CS-RUNTIME-FUNCTION-ABI`, `CS-RUNTIME-GRAPHICS` and
+`CS-RUNTIME-COMPILE-FAILURE` in
+[`EMCEPTION-CAPABILITY-GAPS.md`](../EMCEPTION-CAPABILITY-GAPS.md).
+These WB-B source findings block runtime capability promotion. Forwarded
+configuration, a selected preset or a generated harness are not execution
+proof. Resolve them through supported public composition; otherwise apply
+EMCEPTION-GATE before changing upstream or reducing supported product scope.
+
 1. Implement a tested capability resolver from family requirements, environment
    support, assignment settings and authorized mode. Distinguish a hidden
    optional panel from an unavailable operation and a missing required capability.
