@@ -16,7 +16,8 @@
  * enum values (`"string"`/`"boolean"`/`"integer"`/`"float"`).
  */
 
-import { parseCodingProblem } from '@game-guild/coding';
+import { parseCodingProblem, type CodingExecutionConfiguration as ExecutionConfiguration } from '@game-guild/coding';
+import { readWireExecutionConfiguration, writeWireExecutionConfiguration } from './execution-configuration';
 
 // ---------------------------------------------------------------------------
 // Wire types
@@ -90,6 +91,7 @@ export interface BundleFileMeta {
 
 export interface CodingEnvironment {
   readonly Language: string;
+  readonly Runtime?: 'wasi' | 'sdl3' | 'raylib' | 'allegro5' | null;
   readonly Tools: string;
   readonly LibBundle?: string | null;
   readonly AllowStudentCreateFiles: boolean;
@@ -106,6 +108,16 @@ export interface TestSuite {
 
 export interface GradingConfig {
   readonly MaxScore: number;
+}
+
+export interface CodingExecutionConfiguration {
+  readonly Limits: {
+    readonly TimeLimitMs: number;
+    readonly OutputLimitBytes: number;
+    readonly MaxFileCount: number;
+  };
+  readonly EntryPoint: { readonly Path: string; readonly Symbol?: string | null };
+  readonly Toolchain: { readonly Key: string; readonly Version: string; readonly RuntimeAbi: string; readonly ArtifactDigest: string };
 }
 
 export interface CodingProblem {
@@ -128,6 +140,7 @@ export interface CodingAssignmentContent {
   readonly Problem?: CodingProblem | null;
   readonly ValidationSolutions?: readonly CodingValidationSolution[] | null;
   readonly Environment: CodingEnvironment;
+  readonly Execution?: CodingExecutionConfiguration | null;
   readonly Data: WorkspaceData;
   readonly Tests: TestSuite;
   readonly Grading: GradingConfig;
@@ -413,6 +426,9 @@ const WIRE_KEY_MAP: Record<string, string> = {
   problem: 'Problem', statement: 'Statement', examples: 'Examples',
   input: 'Input', output: 'Output', explanation: 'Explanation', constraints: 'Constraints',
   validationSolutions: 'ValidationSolutions',
+  execution: 'Execution', runtime: 'Runtime', limits: 'Limits', timeLimitMs: 'TimeLimitMs', memoryLimitBytes: 'MemoryLimitBytes',
+  outputLimitBytes: 'OutputLimitBytes', maxFileCount: 'MaxFileCount', entryPoint: 'EntryPoint', symbol: 'Symbol',
+  toolchain: 'Toolchain', key: 'Key', runtimeAbi: 'RuntimeAbi', artifactDigest: 'ArtifactDigest',
 };
 
 /**
@@ -473,20 +489,39 @@ export function narrowCodingAssignmentContent(
   const problem = source.Problem == null ? undefined : narrowProblem(source.Problem);
   const solutions = source.ValidationSolutions == null ? undefined : narrowSolutions(source.ValidationSolutions);
   if (problem === null || solutions === null) return null;
-  if (problem && (!isRecord(source.Tests) || !Array.isArray(source.Tests.Public) || !Array.isArray(source.Tests.Private)
-    || source.Tests.Public.length !== tests.Public.length || source.Tests.Private.length !== tests.Private.length)) return null;
+  if ((problem || source.Execution != null) && (!isRecord(source.Tests) || !Array.isArray(source.Tests.Public) || !Array.isArray(source.Tests.Private)
+    || source.Tests.Public.length !== tests.Public.length || source.Tests.Private.length !== tests.Private.length
+    || (source.Execution != null && (!source.Tests.Public.every(validExplicitTestFields)
+      || !source.Tests.Private.every(validExplicitTestFields))))) return null;
   if (problem && (Object.values(files).some(file => !file.Id) || [...tests.Public, ...tests.Private].some(test => !test.Id
     || (test.kind === 'functional' && test.Cases.some(testCase => !testCase.Id))))) return null;
+  let configuration: ExecutionConfiguration | undefined;
+  try { configuration = readWireExecutionConfiguration(environment, source.Execution); }
+  catch { return null; }
+  const execution = configuration === undefined ? undefined : writeWireExecutionConfiguration(configuration).Execution;
   return {
     Type: 'coding-assignment', Version: 1, ExerciseType: source.ExerciseType,
     ...(problem === undefined ? {} : { Problem: problem }),
     ...(solutions === undefined ? {} : { ValidationSolutions: solutions }),
+    ...(execution === undefined ? (source.Execution === null ? { Execution: null } : {}) : { Execution: execution }),
     Environment: { Language: environment.Language, Tools: environment.Tools, AllowStudentCreateFiles: environment.AllowStudentCreateFiles,
+      ...(configuration === undefined ? (environment.Runtime === null ? { Runtime: null } : {}) : { Runtime: configuration.environment.runtime }),
       ...(environment.LibBundle === undefined ? {} : { LibBundle: environment.LibBundle }) },
     Data: { Files: files },
     Tests: tests,
     Grading: { MaxScore: grading.MaxScore },
   };
+}
+
+function validExplicitTestFields(value: unknown): boolean {
+  if (!isRecord(value)) return false;
+  if (value.Name != null && typeof value.Name !== 'string') return false;
+  if (value.Weight !== undefined && (typeof value.Weight !== 'number' || !Number.isFinite(value.Weight)
+    || !Number.isSafeInteger(Math.round(value.Weight * 100)) || value.Weight <= 0
+    || Math.round(value.Weight * 100) / 100 !== value.Weight)) return false;
+  return value.kind !== 'standard' || ((value.Stdin == null || typeof value.Stdin === 'string')
+    && (value.Stderr == null || typeof value.Stderr === 'string')
+    && (value.ExitCode == null || (typeof value.ExitCode === 'number' && Number.isSafeInteger(value.ExitCode))));
 }
 
 function narrowProblem(value: unknown): CodingProblem | null {

@@ -20450,6 +20450,7 @@ export interface LearningCoursesAuthoringDraftDto {
 
 /** Metadata for one bundled file in a coding assignment workspace. */
 export interface LearningCoursesBundleFileMeta {
+  id?: string | null;
   /** Raw file content (text or base64-encoded bytes). */
   content: string | null;
   /** "text" or "base64". */
@@ -20476,12 +20477,15 @@ Discriminator root: `Type == "coding-assignment"`, `Version == 1`. */
 export interface LearningCoursesCodingAssignmentContent {
   data: LearningCoursesWorkspaceData;
   environment: LearningCoursesCodingEnvironment;
+  execution?: LearningCoursesCodingExecutionConfiguration;
   /** Product experience rendered for this definition. This axis is
 independent from language, toolchain, test kind, and review policy. */
   exerciseType: string | null;
   grading: LearningCoursesGradingConfig;
+  problem?: LearningCoursesCodingProblem;
   tests: LearningCoursesTestSuite;
   type?: string | null;
+  validationSolutions?: LearningCoursesCodingValidationSolution[] | null;
   version?: number;
 }
 
@@ -20493,8 +20497,69 @@ export interface LearningCoursesCodingEnvironment {
   language: string | null;
   /** Optional pre-bundled library (sdl3, raylib, allegro, ...). */
   libBundle?: string | null;
+  runtime?: string | null;
   /** Toolset id (e.g. "clang"). */
   tools: string | null;
+}
+
+/** Frozen technical configuration, stored in the existing coding JSON. */
+export interface LearningCoursesCodingExecutionConfiguration {
+  entryPoint: LearningCoursesCodingExecutionEntryPoint;
+  limits: LearningCoursesCodingExecutionLimits;
+  toolchain: LearningCoursesCodingExecutionToolchain;
+}
+
+/** Data model for Learning Courses Coding Execution Entry Point. */
+export interface LearningCoursesCodingExecutionEntryPoint {
+  path: string | null;
+  symbol?: string | null;
+}
+
+/** Data model for Learning Courses Coding Execution Limits. */
+export interface LearningCoursesCodingExecutionLimits {
+  maxFileCount: number;
+  /** Retained for explicit rejection, never claimed as supported enforcement. */
+  memoryLimitBytes?: number | null;
+  outputLimitBytes: number;
+  timeLimitMs: number;
+}
+
+/** Data model for Learning Courses Coding Execution Toolchain. */
+export interface LearningCoursesCodingExecutionToolchain {
+  artifactDigest: string | null;
+  key: string | null;
+  runtimeAbi: string | null;
+  version: string | null;
+}
+
+/** The problem frozen with a published coding definition, not live lesson metadata. */
+export interface LearningCoursesCodingProblem {
+  constraints: string[] | null;
+  examples: LearningCoursesCodingProblemExample[] | null;
+  statement: string | null;
+}
+
+/** Data model for Learning Courses Coding Problem Example. */
+export interface LearningCoursesCodingProblemExample {
+  id: string | null;
+  explanation: string | null;
+  input: string | null;
+  output: string | null;
+}
+
+/** Data model for Learning Courses Coding Solution File. */
+export interface LearningCoursesCodingSolutionFile {
+  content: string | null;
+  fileId: string | null;
+  path: string | null;
+}
+
+/** Author-only replacements, separate from files compiled for a learner submission. */
+export interface LearningCoursesCodingValidationSolution {
+  id: string | null;
+  files: LearningCoursesCodingSolutionFile[] | null;
+  name: string | null;
+  role: string | null;
 }
 
 /** Data model for Learning Courses Complete Content Request. */
@@ -21092,6 +21157,7 @@ export type LearningCoursesSurveyResultsVisibility = 'AfterSubmission' | 'AfterC
 /** Polymorphic base record for coding-assignment tests. Discriminator is the lowercase `kind` field
 (values `"standard"`, `"functional"`). */
 export interface LearningCoursesTest {
+  id?: string | null;
   /** Optional human-readable test name. */
   name?: string | null;
   /** Relative weight used to compute total score. Defaults to 1.0; must be >= 0. */
@@ -29678,6 +29744,14 @@ export let LearningCoursesCircularDependencyCheckResultSchema: z.ZodType<Learnin
 export let LearningCoursesCloneProgramDtoSchema: z.ZodType<LearningCoursesCloneProgramDto>;
 export let LearningCoursesCodingAssignmentContentSchema: z.ZodType<LearningCoursesCodingAssignmentContent>;
 export let LearningCoursesCodingEnvironmentSchema: z.ZodType<LearningCoursesCodingEnvironment>;
+export let LearningCoursesCodingExecutionConfigurationSchema: z.ZodType<LearningCoursesCodingExecutionConfiguration>;
+export let LearningCoursesCodingExecutionEntryPointSchema: z.ZodType<LearningCoursesCodingExecutionEntryPoint>;
+export let LearningCoursesCodingExecutionLimitsSchema: z.ZodType<LearningCoursesCodingExecutionLimits>;
+export let LearningCoursesCodingExecutionToolchainSchema: z.ZodType<LearningCoursesCodingExecutionToolchain>;
+export let LearningCoursesCodingProblemSchema: z.ZodType<LearningCoursesCodingProblem>;
+export let LearningCoursesCodingProblemExampleSchema: z.ZodType<LearningCoursesCodingProblemExample>;
+export let LearningCoursesCodingSolutionFileSchema: z.ZodType<LearningCoursesCodingSolutionFile>;
+export let LearningCoursesCodingValidationSolutionSchema: z.ZodType<LearningCoursesCodingValidationSolution>;
 export let LearningCoursesCompleteContentInputSchema: z.ZodType<LearningCoursesCompleteContentInput>;
 export let LearningCoursesCompleteCourseCheckoutInputSchema: z.ZodType<LearningCoursesCompleteCourseCheckoutInput>;
 export let LearningCoursesCompleteCourseCheckoutOutputSchema: z.ZodType<LearningCoursesCompleteCourseCheckoutOutput>;
@@ -49026,6 +49100,7 @@ LearningCoursesAuthoringDraftDtoSchema = z.object({
 
 /** Zod schema for LearningCoursesBundleFileMeta. Metadata for one bundled file in a coding assignment workspace. */
 LearningCoursesBundleFileMetaSchema = z.object({
+  id: z.string().nullable().optional(),
   content: z.string().nullable(),
   encoding: z.string().nullable().optional(),
   modifiable: z.boolean().optional(),
@@ -49048,10 +49123,16 @@ Discriminator root: `Type == "coding-assignment"`, `Version == 1`. */
 LearningCoursesCodingAssignmentContentSchema = z.object({
   data: z.lazy(() => LearningCoursesWorkspaceDataSchema),
   environment: z.lazy(() => LearningCoursesCodingEnvironmentSchema),
+  execution: z.lazy(() => LearningCoursesCodingExecutionConfigurationSchema).optional(),
   exerciseType: z.string().nullable(),
   grading: z.lazy(() => LearningCoursesGradingConfigSchema),
+  problem: z.lazy(() => LearningCoursesCodingProblemSchema).optional(),
   tests: z.lazy(() => LearningCoursesTestSuiteSchema),
   type: z.string().nullable().optional(),
+  validationSolutions: z
+    .array(z.lazy(() => LearningCoursesCodingValidationSolutionSchema))
+    .nullable()
+    .optional(),
   version: z.number().int().optional(),
 });
 
@@ -49060,7 +49141,67 @@ LearningCoursesCodingEnvironmentSchema = z.object({
   allowStudentCreateFiles: z.boolean().optional(),
   language: z.string().nullable(),
   libBundle: z.string().nullable().optional(),
+  runtime: z.string().nullable().optional(),
   tools: z.string().nullable(),
+});
+
+/** Zod schema for LearningCoursesCodingExecutionConfiguration. Frozen technical configuration, stored in the existing coding JSON. */
+LearningCoursesCodingExecutionConfigurationSchema = z.object({
+  entryPoint: z.lazy(() => LearningCoursesCodingExecutionEntryPointSchema),
+  limits: z.lazy(() => LearningCoursesCodingExecutionLimitsSchema),
+  toolchain: z.lazy(() => LearningCoursesCodingExecutionToolchainSchema),
+});
+
+/** Zod schema for LearningCoursesCodingExecutionEntryPoint. Data model for Learning Courses Coding Execution Entry Point. */
+LearningCoursesCodingExecutionEntryPointSchema = z.object({
+  path: z.string().nullable(),
+  symbol: z.string().nullable().optional(),
+});
+
+/** Zod schema for LearningCoursesCodingExecutionLimits. Data model for Learning Courses Coding Execution Limits. */
+LearningCoursesCodingExecutionLimitsSchema = z.object({
+  maxFileCount: z.number().int(),
+  memoryLimitBytes: z.number().int().nullable().optional(),
+  outputLimitBytes: z.number().int(),
+  timeLimitMs: z.number().int(),
+});
+
+/** Zod schema for LearningCoursesCodingExecutionToolchain. Data model for Learning Courses Coding Execution Toolchain. */
+LearningCoursesCodingExecutionToolchainSchema = z.object({
+  artifactDigest: z.string().nullable(),
+  key: z.string().nullable(),
+  runtimeAbi: z.string().nullable(),
+  version: z.string().nullable(),
+});
+
+/** Zod schema for LearningCoursesCodingProblem. The problem frozen with a published coding definition, not live lesson metadata. */
+LearningCoursesCodingProblemSchema = z.object({
+  constraints: z.array(z.string()).nullable(),
+  examples: z.array(z.lazy(() => LearningCoursesCodingProblemExampleSchema)).nullable(),
+  statement: z.string().nullable(),
+});
+
+/** Zod schema for LearningCoursesCodingProblemExample. Data model for Learning Courses Coding Problem Example. */
+LearningCoursesCodingProblemExampleSchema = z.object({
+  id: z.string().nullable(),
+  explanation: z.string().nullable(),
+  input: z.string().nullable(),
+  output: z.string().nullable(),
+});
+
+/** Zod schema for LearningCoursesCodingSolutionFile. Data model for Learning Courses Coding Solution File. */
+LearningCoursesCodingSolutionFileSchema = z.object({
+  content: z.string().nullable(),
+  fileId: z.string().nullable(),
+  path: z.string().nullable(),
+});
+
+/** Zod schema for LearningCoursesCodingValidationSolution. Author-only replacements, separate from files compiled for a learner submission. */
+LearningCoursesCodingValidationSolutionSchema = z.object({
+  id: z.string().nullable(),
+  files: z.array(z.lazy(() => LearningCoursesCodingSolutionFileSchema)).nullable(),
+  name: z.string().nullable(),
+  role: z.string().nullable(),
 });
 
 /** Zod schema for LearningCoursesCompleteContentInput. Data model for Learning Courses Complete Content Request. */
@@ -49722,6 +49863,7 @@ LearningCoursesSurveyResultsVisibilitySchema = z.enum(['AfterSubmission', 'After
 /** Zod schema for LearningCoursesTest. Polymorphic base record for coding-assignment tests. Discriminator is the lowercase `kind` field
 (values `"standard"`, `"functional"`). */
 LearningCoursesTestSchema = z.object({
+  id: z.string().nullable().optional(),
   name: z.string().nullable().optional(),
   weight: z.number().optional(),
 });
