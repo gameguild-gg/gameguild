@@ -93,6 +93,90 @@ public sealed class CodePublicationRevisionTests
         (await context.Set<AssessmentDefinitionRevision>().CountAsync()).Should().Be(2);
     }
 
+    [Theory]
+    [InlineData("function")]
+    [InlineData("standard-io")]
+    public async Task PublishedExecutionConfiguration_RemainsFrozenAfterLimitsEntryRuntimeAndIdentityChange(string family)
+    {
+        await using var context = new PublicationContext(new DbContextOptionsBuilder<PublicationContext>()
+            .UseInMemoryDatabase($"CodingExecutionPublication_{Guid.NewGuid()}").Options);
+        var services = new ServiceCollection();
+        services.AddAssessmentsModule();
+        services.AddCodeGradingAdapter();
+        using var provider = services.BuildServiceProvider();
+        var service = new AssessmentAuthoringService(context,
+            provider.GetRequiredService<IAssessmentTypeAdapterResolver>(),
+            provider.GetRequiredService<IAssessmentExecutionPolicyResolver>(),
+            provider.GetRequiredService<IReviewStageHandlerResolver>(),
+            new AIReviewProviderRegistry([]), provider.GetServices<IReviewStageHandler>(), [],
+            new AcademicOutboxWriter(context, []), NullLogger<AssessmentAuthoringService>.Instance);
+        var content = new ProgramContent
+        {
+            Id = Guid.NewGuid(), ProgramId = Guid.NewGuid(), TenantId = Guid.NewGuid(), Title = "Configured exercise",
+            Slug = "configured-exercise", Type = ProgramContentType.Code,
+        };
+        context.Add(content);
+        await context.SaveChangesAsync();
+        var actor = Guid.NewGuid();
+        var first = await SaveAndPublishAsync(context, service, content.Id, actor,
+            JsonSerializer.SerializeToElement(CodeExecutionConfigurationAdapterTests.Definition(family)));
+        var firstRevision = await context.Set<AssessmentDefinitionRevision>().SingleAsync(value => value.Id == first);
+        var frozenBytes = firstRevision.ExecutionSnapshotCanonicalJson;
+        var frozenHash = firstRevision.ExecutionSnapshotHash;
+        var frozen = JsonSerializer.Deserialize<AssessmentExecutionSnapshotV1>(frozenBytes, GradingJson.Options)
+            ?? throw new InvalidOperationException("The persisted execution snapshot is required.");
+        var adapter = provider.GetRequiredService<CodeAssessmentTypeAdapter>();
+        var response = new AssessmentResponseEnvelopeV1(1, "coding-assignment", "code-files", JsonSerializer.SerializeToElement(new
+        {
+            files = new Dictionary<string, object> { ["/home/user/main.cpp"] = new { content = "// CONFIGURED-LEARNER-ANSWER", encoding = "text" } },
+        }));
+        var normalized = adapter.DecodeResponse(response, [frozen.ItemProjections["code"]]);
+        var submission = AssessmentSubmission.StartIndividual(content.TenantId, firstRevision.AssessmentId, first, Guid.NewGuid(), Guid.NewGuid(), 1);
+        submission.SetPayload(new SubmitAssessmentRequest(CodePayload: normalized.GetRawText()), SubmissionModality.Code);
+        submission.Submit();
+        context.Add(submission);
+        await context.SaveChangesAsync();
+
+        var next = await SaveAndPublishAsync(context, service, content.Id, actor,
+            JsonSerializer.SerializeToElement(CodeExecutionConfigurationAdapterTests.LaterDefinition(family)));
+        next.Should().NotBe(first);
+        context.ChangeTracker.Clear();
+
+        var retained = await context.Set<AssessmentDefinitionRevision>().SingleAsync(value => value.Id == first);
+        retained.ExecutionSnapshotCanonicalJson.Should().Be(frozenBytes);
+        retained.ExecutionSnapshotHash.Should().Be(frozenHash);
+        var retainedSnapshot = JsonSerializer.Deserialize<AssessmentExecutionSnapshotV1>(retained.ExecutionSnapshotCanonicalJson, GradingJson.Options)
+            ?? throw new InvalidOperationException("The retained execution snapshot is required.");
+        var oldProjection = retainedSnapshot.ItemProjections["code"];
+        CodeExecutionConfigurationAdapterTests.AssertOriginalConfiguration(oldProjection.GetProperty("definition"), family);
+        var oldDelivery = adapter.GenerateDelivery(oldProjection).GetProperty("definition");
+        CodeExecutionConfigurationAdapterTests.AssertOriginalConfiguration(oldDelivery, family);
+        oldDelivery.TryGetProperty("ValidationSolutions", out _).Should().BeFalse();
+        oldDelivery.GetRawText().Should().NotContain("SYNTHETIC-").And.NotContain("next.c");
+        var retainedSubmission = await context.Set<AssessmentSubmission>().SingleAsync();
+        retainedSubmission.DefinitionRevisionId.Should().Be(first);
+        retainedSubmission.CodePayload.Should().Be(normalized.GetRawText()).And.Contain("CONFIGURED-LEARNER-ANSWER");
+        adapter.DecodeResponse(response, [oldProjection]).GetRawText().Should().Be(normalized.GetRawText());
+
+        var currentRevision = await context.Set<AssessmentDefinitionRevision>().SingleAsync(value => value.Id == next);
+        var currentSnapshot = JsonSerializer.Deserialize<AssessmentExecutionSnapshotV1>(currentRevision.ExecutionSnapshotCanonicalJson, GradingJson.Options)
+            ?? throw new InvalidOperationException("The later execution snapshot is required.");
+        currentRevision.ExecutionSnapshotHash.Should().NotBe(frozenHash);
+        var currentProjection = currentSnapshot.ItemProjections["code"];
+        var currentDefinition = currentProjection.GetProperty("definition");
+        currentDefinition.GetProperty("Environment").GetProperty("Language").GetString().Should().Be("c");
+        currentDefinition.GetProperty("Environment").GetProperty("Runtime").GetString().Should().Be("wasi");
+        var currentExecution = currentDefinition.GetProperty("Execution");
+        currentExecution.GetProperty("Limits").GetProperty("TimeLimitMs").GetInt32().Should().Be(2761);
+        currentExecution.GetProperty("Limits").GetProperty("OutputLimitBytes").GetInt32().Should().Be(91009);
+        currentExecution.GetProperty("Limits").GetProperty("MaxFileCount").GetInt32().Should().Be(9);
+        currentExecution.GetProperty("EntryPoint").GetProperty("Path").GetString().Should().Be("/home/user/next.c");
+        currentExecution.GetProperty("Toolchain").GetProperty("Key").GetString().Should().Be("c-emception");
+        Action decodeOldFilesAgainstNewRevision = () => adapter.DecodeResponse(response, [currentProjection]);
+        decodeOldFilesAgainstNewRevision.Should().Throw<JsonException>();
+        (await context.Set<AssessmentDefinitionRevision>().CountAsync()).Should().Be(2);
+    }
+
     private static async Task<Guid> SaveAndPublishAsync(PublicationContext context, AssessmentAuthoringService service, Guid contentId, Guid actorId, JsonElement document)
     {
         var content = await context.Set<ProgramContent>().SingleAsync(value => value.Id == contentId);

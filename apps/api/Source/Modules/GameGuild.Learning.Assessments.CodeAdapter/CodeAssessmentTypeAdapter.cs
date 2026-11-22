@@ -65,11 +65,7 @@ public sealed class CodeAssessmentTypeAdapter : IAssessmentTypeAdapter
         }
 
         var definition = ReadDefinition(authoringDocument);
-        var validation = new CodingAssignmentContentValidator().Validate(definition);
-        if (!validation.IsValid)
-        {
-            throw new JsonException(string.Join("; ", validation.Errors.Select(error => error.ErrorMessage)));
-        }
+        ValidateDefinition(definition);
 
         if (definition.Data.Files.Count > CodeAssessmentContracts.MaxFiles)
         {
@@ -139,7 +135,13 @@ public sealed class CodeAssessmentTypeAdapter : IAssessmentTypeAdapter
             throw new JsonException("Code response contract does not match its revision.");
         }
 
-        var payload = envelope.Payload;
+        var definition = ReadDefinition(projectedItems[0].GetProperty("definition"));
+        ValidateDefinition(definition);
+        return ValidateResponse(envelope.Payload, definition);
+    }
+
+    private static JsonElement ValidateResponse(JsonElement payload, CodingAssignmentContent definition)
+    {
         RequireProperties(payload, "files");
         var files = payload.GetProperty("files");
         if (files.ValueKind != JsonValueKind.Object || files.EnumerateObject().Count() > CodeAssessmentContracts.MaxFiles || Encoding.UTF8.GetByteCount(payload.GetRawText()) > CodeAssessmentContracts.MaxResponseBytes)
@@ -147,8 +149,8 @@ public sealed class CodeAssessmentTypeAdapter : IAssessmentTypeAdapter
             throw new JsonException("Code response exceeds its file or byte budget.");
         }
 
-        var definition = ReadDefinition(projectedItems[0].GetProperty("definition"));
         var authoredFiles = definition.Data.Files.ToDictionary(pair => CanonicalFilePath(pair.Key), pair => pair.Value, StringComparer.Ordinal);
+        var mergedFileCount = authoredFiles.Count;
         var paths = new HashSet<string>(StringComparer.Ordinal);
         foreach (var file in files.EnumerateObject())
         {
@@ -171,10 +173,20 @@ public sealed class CodeAssessmentTypeAdapter : IAssessmentTypeAdapter
                     throw new JsonException("Code response cannot replace a private or immutable file.");
                 }
             }
-            else if (!definition.Environment.AllowStudentCreateFiles)
+            else
             {
-                throw new JsonException("This code assessment does not allow student-created files.");
+                if (!definition.Environment.AllowStudentCreateFiles)
+                {
+                    throw new JsonException("This code assessment does not allow student-created files.");
+                }
+
+                mergedFileCount++;
             }
+        }
+
+        if (definition.Execution is { } execution && mergedFileCount > execution.Limits.MaxFileCount)
+        {
+            throw new JsonException("Code response exceeds its merged workspace file budget.");
         }
 
         return payload.Clone();
@@ -189,7 +201,8 @@ public sealed class CodeAssessmentTypeAdapter : IAssessmentTypeAdapter
         }
 
         var definition = ReadDefinition(request.ProjectedItems[0].GetProperty("definition"));
-        var files = request.NormalizedResponse.GetProperty("files");
+        ValidateDefinition(definition);
+        var files = ValidateResponse(request.NormalizedResponse, definition).GetProperty("files");
         var toolchain = JsonSerializer.Deserialize<CodeToolchainIdentity>(request.ProjectedItems[0].GetProperty("toolchain"), GradingJson.Options);
         if (toolchain is null || toolchain != CodeToolchainIdentity.Current)
         {
@@ -227,6 +240,15 @@ public sealed class CodeAssessmentTypeAdapter : IAssessmentTypeAdapter
     }
 
     public static string CanonicalFilePath(string path) => CodingAssignmentPath.Normalize(path);
+
+    private static void ValidateDefinition(CodingAssignmentContent definition)
+    {
+        var validation = new CodingAssignmentContentValidator().Validate(definition);
+        if (!validation.IsValid)
+        {
+            throw new JsonException(string.Join("; ", validation.Errors.Select(error => error.ErrorMessage)));
+        }
+    }
 
     private static void RequireProperties(JsonElement element, params string[] properties)
     {

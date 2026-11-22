@@ -37,6 +37,11 @@ public sealed class CodingAssignmentContentValidator : AbstractValidator<CodingA
     public CodingAssignmentContentValidator()
     {
         RuleFor(x => x)
+            .Must(CodingExecutionConfigurationValidator.IsValid)
+            .WithMessage("Coding execution configuration is incomplete, unsupported or inconsistent.")
+            .WithErrorCode("invalid_coding_execution_configuration");
+
+        RuleFor(x => x)
             .Must(CodingPublicationMetadataValidator.IsValid)
             .WithMessage("Coding publication problem, reference replacements or stable identities are invalid.")
             .WithErrorCode("invalid_coding_publication_metadata");

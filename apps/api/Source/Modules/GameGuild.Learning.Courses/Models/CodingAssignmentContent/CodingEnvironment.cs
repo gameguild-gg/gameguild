@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace GameGuild.Learning.Courses;
 
 /// <summary>
@@ -7,6 +9,9 @@ public sealed record CodingEnvironment
 {
     /// <summary>One of: cpp, c, sdl-cpp, raylib-cpp, allegro-cpp (validator-enforced).</summary>
     public required string Language { get; init; }
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? Runtime { get; init; }
 
     /// <summary>Toolset id (e.g. "clang").</summary>
     public required string Tools { get; init; }

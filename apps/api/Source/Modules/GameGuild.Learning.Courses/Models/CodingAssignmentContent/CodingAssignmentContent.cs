@@ -26,6 +26,9 @@ public sealed record CodingAssignmentContent
 
     public required CodingEnvironment Environment { get; init; }
 
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public CodingExecutionConfiguration? Execution { get; init; }
+
     public required WorkspaceData Data { get; init; }
 
     public required TestSuite Tests { get; init; }
