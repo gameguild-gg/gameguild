@@ -22,6 +22,9 @@ export const codingDraftOperations: CodingDraftOperations = {
 
 function fromDefinition(value: CodingAuthoringDefinition, environment: CodingDraftEnvironment): CodingAuthoringDraft {
   const definition = parseCodingAuthoringDefinition(value);
+  if (definition.environment && !equal(definition.environment, environment)) {
+    throw new TypeError('The published environment differs; use an explicit environment change instead.');
+  }
   if (definition.tests.some(test => (test.kind === 'function') !== (definition.exerciseType === 'function'))) {
     throw new TypeError('A mixed test plan requires an explicit authoring decision before importing.');
   }
@@ -52,7 +55,7 @@ function fromDefinition(value: CodingAuthoringDefinition, environment: CodingDra
     schemaVersion: 1,
     exerciseType: definition.exerciseType,
     problem: definition.problem ?? { statement: '', examples: [], constraints: [] },
-    environment,
+    environment: definition.environment ?? environment,
     toolchain: definition.toolchain,
     files: definition.files,
     entryPoint: { path: definition.entryPoint.path },
@@ -61,7 +64,7 @@ function fromDefinition(value: CodingAuthoringDefinition, environment: CodingDra
     validationSolutions: definition.validationSolutions ?? [],
     limits: {
       timeLimitMs: String(definition.limits.timeLimitMs),
-      memoryLimitBytes: String(definition.limits.memoryLimitBytes),
+      memoryLimitBytes: definition.limits.memoryLimitBytes === undefined ? '' : String(definition.limits.memoryLimitBytes),
       outputLimitBytes: String(definition.limits.outputLimitBytes),
       maxFileCount: String(definition.limits.maxFileCount),
     },

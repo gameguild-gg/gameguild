@@ -13,6 +13,7 @@ export function projectCodingDefinitionForLearner(value: CodingAuthoringDefiniti
     schemaVersion: CODING_DELIVERY_SCHEMA_VERSION,
     type: CODING_CONTENT_TYPE,
     exerciseType: definition.exerciseType,
+    ...(definition.environment === undefined ? {} : { environment: definition.environment }),
     ...(definition.problem === undefined ? {} : { problem: definition.problem }),
     toolchain: definition.toolchain,
     files: definition.files.filter(({ visibility }) => visibility === 'public').map(({ visibility, ...file }) => {

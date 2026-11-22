@@ -11,6 +11,16 @@ export const MAX_CODING_FILE_PATH_LENGTH = 240;
 export const MAX_CODING_FILE_CONTENT_BYTES = 2_000_000;
 export const MAX_CODING_DEFINITION_BYTES = 10_000_000;
 export const MAX_CODING_SUBMISSION_BYTES = 2_000_000;
+export const MAX_CODING_TIME_LIMIT_MS = 30_000;
+export const MAX_CODING_OUTPUT_LIMIT_BYTES = 2_000_000;
+export const CODING_EXECUTION_CAPABILITIES = Object.freeze({
+  memoryLimit: Object.freeze({ available: false, reason: 'unsupported-runtime' }),
+});
+export const CODING_TOOLCHAIN = Object.freeze({
+  version: '4.5.2',
+  runtimeAbi: 'emception-browser-v1',
+  artifactDigest: 'sha256:405e9f1fdd936ba31e11247fa1f901eaee24c4fcf641e343505df75c3d539b37',
+} as const);
 
 export type CodingFileEncoding = 'text' | 'base64';
 export type CodingVisibility = 'public' | 'private';
@@ -48,7 +58,8 @@ export interface CodingAuthoringFile {
 
 export interface CodingLimits {
   timeLimitMs: number;
-  memoryLimitBytes: number;
+  /** Retained historical value; configured RAM is not supported for new publication. */
+  memoryLimitBytes?: number;
   outputLimitBytes: number;
   maxFileCount: number;
 }
@@ -56,6 +67,18 @@ export interface CodingLimits {
 export interface CodingEntryPoint {
   path: string;
   symbol?: string;
+}
+
+export interface CodingExecutionEnvironment {
+  language: 'c' | 'cpp';
+  runtime: 'wasi' | 'sdl3' | 'raylib' | 'allegro5';
+}
+
+export interface CodingExecutionConfiguration {
+  environment: CodingExecutionEnvironment;
+  toolchain: CodingToolchainIdentity;
+  limits: Omit<CodingLimits, 'memoryLimitBytes'>;
+  entryPoint: CodingEntryPoint;
 }
 
 export type CodingScalarValue =
@@ -108,6 +131,7 @@ export interface CodingAuthoringDefinition {
   schemaVersion: typeof CODING_AUTHORING_SCHEMA_VERSION;
   type: typeof CODING_CONTENT_TYPE;
   exerciseType: CodingExerciseType;
+  environment?: CodingExecutionEnvironment;
   /** Absent on retained definitions written before structured problems. */
   problem?: CodingProblem;
   /** Author-only replacements, never included in learner delivery or starter files. */
@@ -134,6 +158,7 @@ export interface CodingLearnerDelivery {
   schemaVersion: typeof CODING_DELIVERY_SCHEMA_VERSION;
   type: typeof CODING_CONTENT_TYPE;
   exerciseType: CodingExerciseType;
+  environment?: CodingExecutionEnvironment;
   problem?: CodingProblem;
   toolchain: CodingToolchainIdentity;
   files: CodingLearnerFile[];

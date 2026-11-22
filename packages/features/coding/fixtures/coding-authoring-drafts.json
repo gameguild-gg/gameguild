@@ -31,7 +31,7 @@
       "cases": [{ "id": "positive", "inputs": [{ "type": "integer", "text": "2" }, { "type": "integer", "text": "3" }], "expected": { "type": "integer", "text": "5" } }]
     }],
     "validationSolutions": [{ "id": "reference", "name": "Reference", "role": "reference", "files": [{ "fileId": "main-file", "path": "main.cpp", "content": "// SYNTHETIC-TEACHER-REFERENCE\nint sum(int a, int b) { return a + b; }" }] }],
-    "limits": { "timeLimitMs": "5000", "memoryLimitBytes": "134217728", "outputLimitBytes": "1048576", "maxFileCount": "100" },
+    "limits": { "timeLimitMs": "5000", "memoryLimitBytes": "", "outputLimitBytes": "1048576", "maxFileCount": "100" },
     "allowLearnerCreatedFiles": false
   },
   "standard-io": {
@@ -54,7 +54,7 @@
       { "id": "incomplete", "name": "Unfinished expectation", "visibility": "private", "weightUnits": "", "kind": "stdio", "stdin": "2 3", "expected": { "stdout": null, "stderr": null, "exitCode": "not yet" } }
     ],
     "validationSolutions": [],
-    "limits": { "timeLimitMs": "", "memoryLimitBytes": "134217728", "outputLimitBytes": "1048576", "maxFileCount": "100" },
+    "limits": { "timeLimitMs": "", "memoryLimitBytes": "", "outputLimitBytes": "1048576", "maxFileCount": "100" },
     "allowLearnerCreatedFiles": false
   }
 }

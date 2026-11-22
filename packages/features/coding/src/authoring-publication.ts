@@ -2,11 +2,12 @@ import type { CodingDraftScalar, CodingDraftTest } from './authoring-draft-contr
 import { parseCodingAuthoringDraft } from './authoring-draft-schema';
 import type { CodingAuthoringDefinition, CodingScalarValue, CodingTest } from './contracts';
 import { CodingValidationError } from './errors';
-import { parseCodingAuthoringDefinition } from './schemas';
+import { parseCodingAuthoringDefinition, parseCodingExecutionConfiguration } from './schemas';
 
 /** Validates an author-only draft explicitly; this never persists or publishes it. */
 export function compileCodingAuthoringDraft(value: unknown): CodingAuthoringDefinition {
   const draft = parseCodingAuthoringDraft(value);
+  if (draft.limits.memoryLimitBytes !== '') fail('limits.memoryLimitBytes', 'Configurable RAM limits are unavailable; the draft value was preserved.');
   const signature = draft.functionSignature;
   if (draft.exerciseType === 'function' && !signature) fail('functionSignature', 'A function requires its complete signature.');
   const tests: CodingTest[] = draft.tests.map((test, index) => {
@@ -29,22 +30,28 @@ export function compileCodingAuthoringDraft(value: unknown): CodingAuthoringDefi
       };
     }) };
   });
+  const execution = parseCodingExecutionConfiguration({
+    environment: draft.environment,
+    toolchain: draft.toolchain,
+    limits: {
+      timeLimitMs: integer(draft.limits.timeLimitMs, 'limits.timeLimitMs'),
+      outputLimitBytes: integer(draft.limits.outputLimitBytes, 'limits.outputLimitBytes'),
+      maxFileCount: integer(draft.limits.maxFileCount, 'limits.maxFileCount'),
+    },
+    entryPoint: { path: draft.entryPoint.path, ...(signature ? { symbol: signature.name } : {}) },
+  });
   return parseCodingAuthoringDefinition({
     schemaVersion: 1,
     type: 'coding-assignment',
     exerciseType: draft.exerciseType,
     problem: draft.problem,
     validationSolutions: draft.validationSolutions,
-    toolchain: draft.toolchain,
+    environment: execution.environment,
+    toolchain: execution.toolchain,
     files: draft.files,
     tests,
-    limits: {
-      timeLimitMs: integer(draft.limits.timeLimitMs, 'limits.timeLimitMs'),
-      memoryLimitBytes: integer(draft.limits.memoryLimitBytes, 'limits.memoryLimitBytes'),
-      outputLimitBytes: integer(draft.limits.outputLimitBytes, 'limits.outputLimitBytes'),
-      maxFileCount: integer(draft.limits.maxFileCount, 'limits.maxFileCount'),
-    },
-    entryPoint: { path: draft.entryPoint.path, ...(signature ? { symbol: signature.name } : {}) },
+    limits: execution.limits,
+    entryPoint: execution.entryPoint,
     allowLearnerCreatedFiles: draft.allowLearnerCreatedFiles,
   });
 }

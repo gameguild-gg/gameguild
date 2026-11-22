@@ -21,6 +21,41 @@ function draft(family: 'function' | 'standard-io' = 'function'): CodingAuthoring
 }
 
 describe('UX02-C: explicit publication and immutable projection', () => {
+  it.each(['function', 'standard-io'] as const)('WB-B: freezes %s configuration and projects it without RAM claims', family => {
+    const source = draft(family);
+    source.limits = { timeLimitMs: '4321', outputLimitBytes: '12345', maxFileCount: '7', memoryLimitBytes: '' };
+    const definition = compileCodingAuthoringDraft(source);
+    expect(definition.environment).toEqual({ language: 'cpp', runtime: 'wasi' });
+    expect(definition.limits).toEqual({ timeLimitMs: 4321, outputLimitBytes: 12345, maxFileCount: 7 });
+    const delivery = projectCodingDefinitionForLearner(definition);
+    expect(delivery.environment).toEqual(definition.environment);
+    expect(delivery.limits).toEqual(definition.limits);
+    expect(codingDraftOperations.fromDefinition(definition, source.environment).limits.memoryLimitBytes).toBe('');
+  });
+
+  it('WB-B: preserves configured historical RAM for recovery but rejects new publication', () => {
+    const source = draft();
+    source.limits.memoryLimitBytes = '134217728';
+    const saved = structuredClone(source);
+    expect(parseCodingAuthoringDraft(source).limits.memoryLimitBytes).toBe('134217728');
+    expect(() => compileCodingAuthoringDraft(source)).toThrow(/RAM/);
+    expect(source).toEqual(saved);
+  });
+
+  it('WB-B: never substitutes a supported identity for an unsupported draft identity', () => {
+    const source = draft();
+    source.toolchain.version = 'future';
+    expect(() => compileCodingAuthoringDraft(source)).toThrow(/toolchain/);
+  });
+
+  it('WB-B: retains configured canonical RAM in the recovered draft and detects environment disagreement', () => {
+    const source = draft();
+    const published = compileCodingAuthoringDraft(source);
+    const historical = { ...published, environment: undefined, limits: { ...published.limits, memoryLimitBytes: 134217728 } };
+    expect(codingDraftOperations.fromDefinition(historical, source.environment).limits.memoryLimitBytes).toBe('134217728');
+    expect(() => codingDraftOperations.fromDefinition(published, { language: 'cpp', runtime: 'sdl3' })).toThrow(/environment/);
+  });
+
   it.each(['function', 'standard-io'] as const)('compiles the %s draft without changing its identities or input buffers', family => {
     const source = draft(family);
     const before = structuredClone(source);

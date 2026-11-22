@@ -2,6 +2,7 @@ import type {
   CodingAuthoringDefinition,
   CodingAuthoringFile,
   CodingExerciseType,
+  CodingExecutionEnvironment,
   CodingFunctionParameter,
   CodingProblem,
   CodingScalarType,
@@ -20,10 +21,7 @@ export interface CodingFunctionSignature {
   returnType: CodingScalarType;
 }
 
-export interface CodingDraftEnvironment {
-  language: 'c' | 'cpp';
-  runtime: 'wasi' | 'sdl3' | 'raylib' | 'allegro5';
-}
+export type CodingDraftEnvironment = CodingExecutionEnvironment;
 
 /** Text buffers preserve invalid/incomplete numeric and boolean edits for recovery. */
 export interface CodingDraftScalar {

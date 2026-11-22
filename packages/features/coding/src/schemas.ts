@@ -5,13 +5,17 @@ import {
   CODING_DELIVERY_SCHEMA_VERSION,
   CODING_EXECUTION_REPORT_SCHEMA_VERSION,
   CODING_SUBMISSION_SCHEMA_VERSION,
+  CODING_TOOLCHAIN,
   MAX_CODING_DEFINITION_BYTES,
   MAX_CODING_FILE_CONTENT_BYTES,
   MAX_CODING_FILES,
   MAX_CODING_SUBMISSION_BYTES,
   MAX_CODING_TESTS,
+  MAX_CODING_TIME_LIMIT_MS,
+  MAX_CODING_OUTPUT_LIMIT_BYTES,
   type CodingAuthoringDefinition,
   type CodingExecutionReport,
+  type CodingExecutionConfiguration,
   type CodingLearnerDelivery,
   type CodingProblem,
   type CodingSubmission,
@@ -84,7 +88,7 @@ const authoringFileSchema = z
 const limitsSchema = z
   .object({
     timeLimitMs: positiveSafeInteger,
-    memoryLimitBytes: positiveSafeInteger,
+    memoryLimitBytes: positiveSafeInteger.optional(),
     outputLimitBytes: positiveSafeInteger,
     maxFileCount: positiveSafeInteger.max(MAX_CODING_FILES),
   })
@@ -96,6 +100,34 @@ const entryPointSchema = z
     symbol: z.string().regex(functionNamePattern).optional(),
   })
   .strict();
+
+const environmentSchema = z.object({
+  language: z.enum(['c', 'cpp']),
+  runtime: z.enum(['wasi', 'sdl3', 'raylib', 'allegro5']),
+}).strict();
+
+const executionConfigurationSchema = z.object({
+  environment: environmentSchema,
+  toolchain: toolchainSchema,
+  limits: limitsSchema.superRefine((limits, context) => {
+    if (limits.memoryLimitBytes !== undefined) context.addIssue({ code: 'custom', path: ['memoryLimitBytes'], message: 'Configurable RAM limits are unavailable.' });
+    if (limits.timeLimitMs > MAX_CODING_TIME_LIMIT_MS) context.addIssue({ code: 'custom', path: ['timeLimitMs'], message: 'Time limit exceeds the supported execution budget.' });
+    if (limits.outputLimitBytes > MAX_CODING_OUTPUT_LIMIT_BYTES) context.addIssue({ code: 'custom', path: ['outputLimitBytes'], message: 'Output limit exceeds the supported execution budget.' });
+  }).transform(({ memoryLimitBytes, ...limits }) => {
+    void memoryLimitBytes;
+    return limits;
+  }),
+  entryPoint: entryPointSchema.refine(entry => /\.(?:c|cc|cpp|cxx)$/.test(entry.path), 'Entry point must be a native source file.'),
+}).strict().superRefine((configuration, context) => {
+  const { environment, toolchain } = configuration;
+  if (environment.language === 'c' && environment.runtime !== 'wasi') {
+    context.addIssue({ code: 'custom', path: ['environment'], message: 'This language/runtime combination is unavailable.' });
+  }
+  if (toolchain.key !== `${environment.language}-emception` || toolchain.version !== CODING_TOOLCHAIN.version
+    || toolchain.runtimeAbi !== CODING_TOOLCHAIN.runtimeAbi || toolchain.artifactDigest !== CODING_TOOLCHAIN.artifactDigest) {
+    context.addIssue({ code: 'custom', path: ['toolchain'], message: 'Execution requires the exact supported toolchain identity.' });
+  }
+});
 
 const problemSchema = z.object({
   statement: boundedText.refine(value => value.trim().length > 0, 'A published problem needs a statement.'),
@@ -216,6 +248,7 @@ const authoringSchema = z
     schemaVersion: z.literal(CODING_AUTHORING_SCHEMA_VERSION),
     type: z.literal(CODING_CONTENT_TYPE),
     exerciseType: exerciseTypeSchema,
+    environment: environmentSchema.optional(),
     problem: problemSchema.optional(),
     validationSolutions: validationSolutionsSchema.optional(),
     toolchain: toolchainSchema,
@@ -257,6 +290,7 @@ const learnerDeliverySchema = z
     schemaVersion: z.literal(CODING_DELIVERY_SCHEMA_VERSION),
     type: z.literal(CODING_CONTENT_TYPE),
     exerciseType: exerciseTypeSchema,
+    environment: environmentSchema.optional(),
     problem: problemSchema.optional(),
     toolchain: toolchainSchema,
     files: z.array(learnerFileSchema).min(1).max(MAX_CODING_FILES),
@@ -356,6 +390,10 @@ export function parseCodingAuthoringDefinition(value: unknown): CodingAuthoringD
   return parse(authoringSchema, value, 'Coding authoring definition');
 }
 
+export function parseCodingExecutionConfiguration(value: unknown): CodingExecutionConfiguration {
+  return parse(executionConfigurationSchema, value, 'Coding execution configuration');
+}
+
 export function parseCodingLearnerDelivery(value: unknown): CodingLearnerDelivery {
   return parse(learnerDeliverySchema, value, 'Coding learner delivery');
 }
@@ -387,6 +425,8 @@ function parse<T>(schema: z.ZodType<T>, value: unknown, label: string): T {
 function validateAuthoringDefinition(
   definition: {
     exerciseType: z.infer<typeof exerciseTypeSchema>;
+    environment?: z.infer<typeof environmentSchema>;
+    toolchain: z.infer<typeof toolchainSchema>;
     files: z.infer<typeof authoringFileSchema>[];
     tests: z.infer<typeof testSchema>[];
     limits: z.infer<typeof limitsSchema>;
@@ -396,6 +436,7 @@ function validateAuthoringDefinition(
   },
   context: z.RefinementCtx,
 ): void {
+  validateExplicitExecution(definition, context);
   addDuplicateIssues(definition.files.map(({ id }) => id), context, ['files'], 'file ID');
   addDuplicateIssues(definition.files.map(({ path }) => path), context, ['files'], 'file path');
   addDuplicateIssues(definition.tests.map(({ id }) => id), context, ['tests'], 'test ID');
@@ -403,7 +444,7 @@ function validateAuthoringDefinition(
   if (solutions.length > 0 && definition.problem === undefined) {
     context.addIssue({ code: 'custom', message: 'Protected solutions require their published problem.', path: ['problem'] });
   }
-  if (definition.problem !== undefined) {
+  if (definition.problem !== undefined || definition.environment !== undefined) {
     const first = definition.tests[0];
     const signature = first?.kind === 'function' ? JSON.stringify(first.function) : undefined;
     if (definition.tests.some(test => definition.exerciseType === 'function'
@@ -441,6 +482,8 @@ function validateAuthoringDefinition(
 
 function validateLearnerDelivery(
   delivery: {
+    environment?: z.infer<typeof environmentSchema>;
+    toolchain: z.infer<typeof toolchainSchema>;
     files: z.infer<typeof learnerFileSchema>[];
     publicTests: z.infer<typeof learnerTestSchema>[];
     limits: z.infer<typeof limitsSchema>;
@@ -448,6 +491,7 @@ function validateLearnerDelivery(
   },
   context: z.RefinementCtx,
 ): void {
+  validateExplicitExecution(delivery, context);
   addDuplicateIssues(delivery.files.map(({ id }) => id), context, ['files'], 'file ID');
   addDuplicateIssues(delivery.files.map(({ path }) => path), context, ['files'], 'file path');
   addDuplicateIssues(delivery.publicTests.map(({ id }) => id), context, ['publicTests'], 'test ID');
@@ -458,6 +502,19 @@ function validateLearnerDelivery(
   if (!entryPoint || entryPoint.encoding !== 'text') {
     context.addIssue({ code: 'custom', message: 'Entry point must reference a learner-visible text file.', path: ['entryPoint', 'path'] });
   }
+}
+
+function validateExplicitExecution(value: {
+  environment?: z.infer<typeof environmentSchema>;
+  toolchain: z.infer<typeof toolchainSchema>;
+  limits: z.infer<typeof limitsSchema>;
+  entryPoint: z.infer<typeof entryPointSchema>;
+}, context: z.RefinementCtx): void {
+  if (value.environment === undefined) return;
+  const result = executionConfigurationSchema.safeParse({
+    environment: value.environment, toolchain: value.toolchain, limits: value.limits, entryPoint: value.entryPoint,
+  });
+  if (!result.success) result.error.issues.forEach(issue => context.addIssue({ code: 'custom', path: issue.path, message: issue.message }));
 }
 
 function addDuplicateIssues(values: readonly string[], context: z.RefinementCtx, path: PropertyKey[], label: string): void {
