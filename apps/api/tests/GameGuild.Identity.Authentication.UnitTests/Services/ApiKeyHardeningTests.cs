@@ -32,7 +32,7 @@ public sealed class ApiKeyHardeningTests
         await repository.AddAsync(apiKey);
 
         // Kestrel reports IPv4 callers on dual-stack sockets as ::ffff:203.0.113.7.
-        var result = await AuthenticateAsync(repository, plaintext, remoteIp: IPAddress.Parse("::ffff:203.0.113.7"));
+        var result = await AuthenticateAsync(repository, plaintext, remoteIp: new IPAddress(new byte[] { 203, 0, 113, 7 }).MapToIPv6());
 
         result.Succeeded.Should().BeTrue();
     }
@@ -43,7 +43,7 @@ public sealed class ApiKeyHardeningTests
         var userId = Guid.NewGuid();
         await using var context = CreateContext();
         var repository = new ApiKeyRepository(context);
-        var (apiKey, plaintext) = ApiKey.Create(userId, Guid.NewGuid(), "integration", ["read"], ipWhitelist: "::ffff:203.0.113.7");
+        var (apiKey, plaintext) = ApiKey.Create(userId, Guid.NewGuid(), "integration", ["read"], ipWhitelist: new IPAddress(new byte[] { 203, 0, 113, 7 }).MapToIPv6().ToString());
         await repository.AddAsync(apiKey);
 
         var result = await AuthenticateAsync(repository, plaintext, remoteIp: IPAddress.Parse("203.0.113.7"));
@@ -157,15 +157,12 @@ public sealed class ApiKeyHardeningTests
         var repository = new Mock<IApiKeyRepository>();
         repository.Setup(r => r.AddAsync(It.IsAny<ApiKey>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((ApiKey key, CancellationToken _) => key);
-        var actor = new Mock<IActorContextAccessor>();
-        actor.Setup(a => a.ActorContext).Returns(new ActorContext
-        {
-            ActorKind = ActorKind.User,
-            SubjectId = Guid.NewGuid().ToString(),
-            Roles = new HashSet<string>(),
-            Permissions = new HashSet<string>(),
-            IsAuthenticated = true
-        });
+        var actor = new ActorContextAccessor();
+        actor.SetActorContext(ActorContextBuilder.ForUser(Guid.NewGuid()).WithTenantId(Guid.NewGuid())
+            .WithAttribute("session_id", Guid.NewGuid().ToString()).Build());
+        var receipts = new Mock<IStepUpReceiptService>();
+        receipts.Setup(r => r.ConsumeAsync(It.IsAny<StepUpOperationBinding>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         var http = new Mock<IHttpContextAccessor>();
         http.Setup(h => h.HttpContext).Returns(new DefaultHttpContext
         {
@@ -177,12 +174,13 @@ public sealed class ApiKeyHardeningTests
 
         var handler = new CreateApiKeyHandler(
             repository.Object,
-            actor.Object,
+            actor,
+            receipts.Object,
             NullLogger<CreateApiKeyHandler>.Instance,
             httpContextAccessor: http.Object);
 
         var result = await handler.Handle(
-            new CreateApiKeyCommand { Name = "minted", Scopes = ["read"] },
+            new CreateApiKeyCommand { Name = "minted", Scopes = ["read"], StepUpReceipt = "test-receipt" },
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -195,15 +193,12 @@ public sealed class ApiKeyHardeningTests
         var repository = new Mock<IApiKeyRepository>();
         repository.Setup(r => r.AddAsync(It.IsAny<ApiKey>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((ApiKey key, CancellationToken _) => key);
-        var actor = new Mock<IActorContextAccessor>();
-        actor.Setup(a => a.ActorContext).Returns(new ActorContext
-        {
-            ActorKind = ActorKind.User,
-            SubjectId = Guid.NewGuid().ToString(),
-            Roles = new HashSet<string>(),
-            Permissions = new HashSet<string>(),
-            IsAuthenticated = true
-        });
+        var actor = new ActorContextAccessor();
+        actor.SetActorContext(ActorContextBuilder.ForUser(Guid.NewGuid()).WithTenantId(Guid.NewGuid())
+            .WithAttribute("session_id", Guid.NewGuid().ToString()).Build());
+        var receipts = new Mock<IStepUpReceiptService>();
+        receipts.Setup(r => r.ConsumeAsync(It.IsAny<StepUpOperationBinding>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         // A Bearer principal carrying an api_key_id claim must NOT create linkage: the claim is
         // only honored on the ApiKey scheme.
         var http = new Mock<IHttpContextAccessor>();
@@ -217,12 +212,13 @@ public sealed class ApiKeyHardeningTests
 
         var handler = new CreateApiKeyHandler(
             repository.Object,
-            actor.Object,
+            actor,
+            receipts.Object,
             NullLogger<CreateApiKeyHandler>.Instance,
             httpContextAccessor: http.Object);
 
         var result = await handler.Handle(
-            new CreateApiKeyCommand { Name = "interactive", Scopes = ["read"] },
+            new CreateApiKeyCommand { Name = "interactive", Scopes = ["read"], StepUpReceipt = "test-receipt" },
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -273,6 +269,9 @@ public sealed class ApiKeyHardeningTests
     {
         public DbSet<ApiKey> ApiKeys => Set<ApiKey>();
 
-        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) => throw new NotSupportedException();
+        public Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default) {
+            _ = cancellationToken;
+            throw new NotSupportedException();
+        }
     }
 }

@@ -146,6 +146,33 @@ describe("request-bound authentication readers", () => {
     expect(state.processSession).not.toHaveBeenCalled();
   });
 
+  describe("authorized callback (proxy route gate)", () => {
+    const authorizedFor = async (pathname: string, auth: unknown) => {
+      const { authConfig } = await import("./auth");
+      const callbacks = authConfig.callbacks as {
+        authorized: (params: { auth: unknown; request: Request }) => boolean;
+      };
+      return callbacks.authorized({ auth, request: new Request(`http://web.example${pathname}`) });
+    };
+
+    it("allows anonymous access to public and auth surfaces", async () => {
+      for (const pathname of ["/", "/pricing", "/sign-in", "/legal/terms", "/learn/courses/x"]) {
+        expect(await authorizedFor(pathname, null)).toBe(true);
+      }
+    });
+
+    it("denies anonymous access to protected roots, locale prefixed or not", async () => {
+      for (const pathname of ["/feed", "/workspace/x", "/pt-BR/console", "/en-US/my/settings", "/testing-lab"]) {
+        expect(await authorizedFor(pathname, null)).toBe(false);
+      }
+    });
+
+    it("allows authenticated sessions on protected roots", async () => {
+      expect(await authorizedFor("/feed", session)).toBe(true);
+      expect(await authorizedFor("/pt-BR/workspace", session)).toBe(true);
+    });
+  });
+
   it("a request without a cookie remains anonymous", async () => {
     state.cookie = undefined;
     const authModule = await import("./auth");

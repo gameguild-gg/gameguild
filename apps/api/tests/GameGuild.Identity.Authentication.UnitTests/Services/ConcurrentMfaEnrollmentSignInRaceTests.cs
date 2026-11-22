@@ -48,6 +48,8 @@ public sealed class ConcurrentMfaEnrollmentSignInRaceTests
 
         public UserMfaConfiguration? Get(Guid userId)
         {
+            _ = userId;
+
             lock (_sync)
             {
                 Reads++;
@@ -116,20 +118,40 @@ public sealed class ConcurrentMfaEnrollmentSignInRaceTests
 
         public Task DeleteByUserIdAsync(Guid userId, CancellationToken cancellationToken = default)
         {
+            _ = userId;
+            _ = cancellationToken;
+
             throw new NotSupportedException("Not part of the enrollment race surface.");
         }
 
-        public Task<bool> IsMfaEnabledAsync(Guid userId, CancellationToken cancellationToken = default) =>
-            Task.FromResult(store.Get(userId)?.IsEnabled ?? false);
+        public Task<bool> IsMfaEnabledAsync(Guid userId, CancellationToken cancellationToken = default) {
+            _ = cancellationToken;
+            return Task.FromResult(store.Get(userId)?.IsEnabled ?? false);
+        }
 
-        public Task<MfaMethod?> GetPreferredMethodAsync(Guid userId, CancellationToken cancellationToken = default) =>
-            Task.FromResult(store.Get(userId)?.PreferredMethod);
+        public Task<MfaMethod?> GetPreferredMethodAsync(Guid userId, CancellationToken cancellationToken = default) {
+            _ = cancellationToken;
+            return Task.FromResult(store.Get(userId)?.PreferredMethod);
+        }
 
-        public Task IncrementFailedAttemptsAsync(Guid userId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task IncrementFailedAttemptsAsync(Guid userId, CancellationToken cancellationToken = default) {
+            _ = userId;
+            _ = cancellationToken;
+            return Task.CompletedTask;
+        }
 
-        public Task ResetFailedAttemptsAsync(Guid userId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task ResetFailedAttemptsAsync(Guid userId, CancellationToken cancellationToken = default) {
+            _ = userId;
+            _ = cancellationToken;
+            return Task.CompletedTask;
+        }
 
-        public Task SetLockoutAsync(Guid userId, DateTime lockoutUntil, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task SetLockoutAsync(Guid userId, DateTime lockoutUntil, CancellationToken cancellationToken = default) {
+            _ = userId;
+            _ = lockoutUntil;
+            _ = cancellationToken;
+            return Task.CompletedTask;
+        }
     }
 
     /// <summary>
@@ -150,6 +172,8 @@ public sealed class ConcurrentMfaEnrollmentSignInRaceTests
             Func<CancellationToken, Task> onAccepted,
             CancellationToken cancellationToken)
         {
+            _ = now;
+
             var configurationLock = _configurationLocks.GetOrAdd((configurationId, secretFingerprint), static _ => new SemaphoreSlim(1, 1));
             await configurationLock.WaitAsync(cancellationToken).ConfigureAwait(false);
             try

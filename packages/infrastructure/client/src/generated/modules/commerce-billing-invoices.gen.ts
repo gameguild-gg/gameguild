@@ -24,12 +24,13 @@ export class CommerceBillingInvoicesModule {
    */
   async postBillingInvoicesAccountCredits(
     invoiceId: string,
-    body: Types.CommerceBillingBillingInvoicesControllerApplyInvoiceCreditsInput,
+    body?: Types.CommerceBillingBillingInvoicesControllerApplyInvoiceCreditsInput,
   ): Promise<Result<Types.CommerceBillingInvoiceAccountCreditSettlementResult, ApiError>> {
     const url = `/api/v1/billing/invoices/${invoiceId}/account-credits`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceBillingBillingInvoicesControllerApplyInvoiceCreditsInputSchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.CommerceBillingBillingInvoicesControllerApplyInvoiceCreditsInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

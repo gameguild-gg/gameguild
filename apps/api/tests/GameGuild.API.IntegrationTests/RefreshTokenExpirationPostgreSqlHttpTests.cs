@@ -104,7 +104,18 @@ public sealed class RefreshTokenExpirationPostgreSqlHttpTests(ApiPostgreSqlFixtu
         Assert.True(token.ExpiresAt <= now.AddHours(-23).AddMinutes(absoluteMinutes));
         if (!sliding)
         {
-            Assert.Equal(originalExpiry, token.ExpiresAt);
+            // The seeded 15-minute credential sits inside the 7-day final-week renewal
+            // window, so non-sliding rotation mints the full configured lifetime
+            // rather than preserving the predecessor's deadline; the session's
+            // absolute timeout caps the reported expiry when it is shorter.
+            if (absoluteMinutes < 7 * 24 * 60)
+            {
+                Assert.InRange(token.ExpiresAt, session.CreatedAt.AddMinutes(absoluteMinutes).AddMilliseconds(-0.001), session.CreatedAt.AddMinutes(absoluteMinutes).AddMilliseconds(0.001));
+            }
+            else
+            {
+                Assert.InRange(token.ExpiresAt, before.AddDays(7).AddMilliseconds(-0.001), after.AddDays(7));
+            }
         }
         else if (absoluteMinutes == 1440)
         {

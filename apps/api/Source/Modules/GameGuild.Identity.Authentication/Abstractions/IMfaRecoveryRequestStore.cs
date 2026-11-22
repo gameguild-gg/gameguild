@@ -30,5 +30,12 @@ public interface IMfaRecoveryRequestStore
     /// </summary>
     Task<MfaRecoveryRequest?> CancelLiveByUserAsync(string userId, CancellationToken cancellationToken);
 
+    /// <summary>Atomically issues a confirmation only while the same request remains live and eligible.</summary>
+    Task<bool> TryIssueConfirmationAsync(Guid requestId, string requestTokenHash, string confirmationTokenHash,
+        DateTimeOffset now, DateTimeOffset expiresAt, CancellationToken cancellationToken);
+
+    /// <summary>Atomically consumes the same unexpired confirmation; cancellation or another consumer wins first.</summary>
+    Task<bool> TryConfirmAsync(Guid requestId, string confirmationTokenHash, DateTimeOffset now, CancellationToken cancellationToken);
+
     /// <summary>Persistently stores all tracked changes.</summary>
     Task SaveChangesAsync(CancellationToken cancellationToken);}

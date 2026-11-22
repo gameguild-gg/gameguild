@@ -198,8 +198,8 @@ public sealed class PostgreSqlHardToSoftConversionGatewayTests
                   AND decision."IssuedAt" <= '{Now:O}'
                   AND decision."ExpiresAt" > '{Now:O}')
             AND NOT EXISTS (
-                SELECT 1 FROM public.economy_risk_decision_consumptions
-                WHERE "RiskDecisionId" = '{riskDecision}')
+                SELECT 1 FROM public.economy_unit_consumptions
+                WHERE "ConsumptionKind" = 2 AND "RiskDecisionId" = '{riskDecision}')
             AND EXISTS (
                 SELECT 1
                 FROM public.economy_risk_counter_reservations reservation

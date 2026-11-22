@@ -38,6 +38,19 @@ export interface MfaPageData {
   backupCodes: IdentityAuthenticationBackupCodesStatusOutput | null;
 }
 
+/**
+ * Aggregate load outcome for the MFA half of the security page, mirroring
+ * `SessionsLoadResult` (issue #1298 J4): failures surface as an explicit error
+ * state instead of the silently blank method/recovery panels the old `safeLoad`
+ * produced. `'ok'` means every read succeeded.
+ */
+export type MfaLoadStatus = 'ok' | 'unauthorized' | 'notFound' | 'serverError' | 'contractError';
+
+/** {@link MfaPageData} plus the aggregate load outcome of its three reads. */
+export interface MfaLoadResult extends MfaPageData {
+  loadStatus: MfaLoadStatus;
+}
+
 export type MfaActionStatus = 'success' | 'notFound' | 'unauthorized' | 'error';
 
 export interface MfaActionResult {
@@ -83,35 +96,69 @@ function errorMessage(error?: { message?: string; detail?: string }): string | u
   return message && message.length > 0 ? message : undefined;
 }
 
-/**
- * Defensive read for page loaders (issue #864): the generated client's
- * safeParse THROWS on zod contract mismatch, and a throw inside a server
- * component render crashes the page with React #441. Any failure — thrown
- * validation/network error or a non-ok result — must degrade to `fallback`
- * so the security page renders with empty data instead of erroring.
- */
-async function safeLoad<T>(call: () => Promise<{ ok: boolean; data?: T }>, fallback: T | null): Promise<T | null> {
-  try {
-    const result = await call();
-    return result.ok ? (result.data ?? fallback) : fallback;
-  } catch {
-    // Contract drift between the deployed API and the generated client (issue #864):
-    // render the page with degraded data rather than crashing the RSC render.
-    return fallback;
+function loadStatusFromError(error: { status?: number } | undefined): MfaLoadStatus {
+  switch (error?.status) {
+    case 401:
+      return 'unauthorized';
+    case 404:
+      return 'notFound';
+    default:
+      return 'serverError';
   }
 }
 
-/** Loads the MFA configuration, method catalog and recovery-code status in one pass. */
-export async function loadMfaData(): Promise<MfaPageData> {
+/**
+ * Load wrapper that surfaces failures instead of degrading to a fallback
+ * (issue #1298 J4): a thrown safeParse/transport error is contract drift or an
+ * unreachable API, a non-ok result carries the HTTP status — both become a load
+ * status the page renders as an explicit error state with retry, never as empty
+ * MFA panels that look like "MFA not configured".
+ */
+async function attemptLoad<T>(call: () => Promise<{ ok: boolean; data?: T; error?: { status?: number } }>): Promise<{
+  data: T | null;
+  status: MfaLoadStatus;
+}> {
+  try {
+    const result = await call();
+    if (!result.ok) {
+      return { data: null, status: loadStatusFromError(result.error) };
+    }
+    return { data: result.data ?? null, status: 'ok' };
+  } catch {
+    // Contract drift between the deployed API and the generated client (issue
+    // #864), or an unreachable API: report it instead of blanking the page.
+    return { data: null, status: 'contractError' };
+  }
+}
+
+/** Most user-actionable status wins, so the retry state explains the failure. */
+function worstStatus(statuses: MfaLoadStatus[]): MfaLoadStatus {
+  const priority: MfaLoadStatus[] = ['unauthorized', 'notFound', 'serverError', 'contractError'];
+  for (const candidate of priority) {
+    if (statuses.includes(candidate)) {
+      return candidate;
+    }
+  }
+  return 'ok';
+}
+
+/** Loads the MFA configuration, method catalog and recovery-code status in one
+ * pass, reporting the aggregate load outcome for the security page's error state. */
+export async function loadMfaData(): Promise<MfaLoadResult> {
   const mfaModule = new GeneratedApi.AuthMultiFactorModule(getApiClient());
 
   const [configuration, methods, backupCodes] = await Promise.all([
-    safeLoad(() => mfaModule.getAuthMfa(), null),
-    safeLoad(() => mfaModule.getAuthMfaMethods(), null),
-    safeLoad(() => mfaModule.getAuthMfaBackupCodes(), null),
+    attemptLoad(() => mfaModule.getAuthMfa()),
+    attemptLoad(() => mfaModule.getAuthMfaMethods()),
+    attemptLoad(() => mfaModule.getAuthMfaBackupCodes()),
   ]);
 
-  return { configuration, methods, backupCodes };
+  return {
+    configuration: configuration.data,
+    methods: methods.data,
+    backupCodes: backupCodes.data,
+    loadStatus: worstStatus([configuration.status, methods.status, backupCodes.status]),
+  };
 }
 
 /** Starts authenticator-app (TOTP) enrollment, returning the secret and QR provisioning URI. */
@@ -141,10 +188,10 @@ export async function completeTotpEnrollmentAction(code: string, secretKey: stri
   return resultFrom(true);
 }
 
-/** Starts SMS enrollment by sending a verification code to the given phone number. */
-export async function startSmsEnrollmentAction(phoneNumber: string): Promise<MfaEnrollmentStartResult> {
+/** Starts SMS enrollment after re-verifying the current account password. */
+export async function startSmsEnrollmentAction(phoneNumber: string, password: string): Promise<MfaEnrollmentStartResult> {
   const mfaModule = new GeneratedApi.AuthMultiFactorModule(getApiClient());
-  const result = await mfaModule.postAuthMfaSmsSetup({ phoneNumber });
+  const result = await mfaModule.postAuthMfaSmsSetup({ phoneNumber, password });
 
   if (!result.ok) {
     return { ...resultFrom(false, result.error, errorMessage(result.error)), smsSetup: undefined };
@@ -156,8 +203,8 @@ export async function startSmsEnrollmentAction(phoneNumber: string): Promise<Mfa
 /** Completes SMS enrollment by verifying the code sent to the pending phone number. */
 export async function completeSmsEnrollmentAction(code: string): Promise<MfaActionResult> {
   const mfaModule = new GeneratedApi.AuthMultiFactorModule(getApiClient());
-  // SMS enrollment has no provisioning secret; the contract field stays empty.
-  const result = await mfaModule.postAuthMfaSmsComplete({ code, secretKey: '' });
+  // The dedicated SMS contract carries only the delivered code.
+  const result = await mfaModule.postAuthMfaSmsComplete({ code });
   revalidatePath(SETTINGS_SECURITY_PATH);
 
   if (!result.ok) {

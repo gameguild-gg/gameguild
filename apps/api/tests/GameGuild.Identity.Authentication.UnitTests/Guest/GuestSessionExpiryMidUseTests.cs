@@ -95,12 +95,69 @@ public sealed class GuestSessionExpiryMidUseTests
         });
     }
 
+    [Fact]
+    public void ExpiredReader_RejectsCredentialWhoseLifetimeHasNotEnded()
+    {
+        var fixture = new Fixture();
+        var token = ExpiredGuestToken(Guid.NewGuid(), SystemClock.UtcNow.AddMinutes(5));
+
+        fixture.TokenService.Validate(token).Should().NotBeNull();
+        fixture.TokenService.TryReadExpired(token, out var sessionId, out var expiry).Should().BeFalse();
+        sessionId.Should().BeEmpty();
+        expiry.Should().Be(DateTime.MinValue);
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void ExpiredReader_RejectsMissingExpiryOrReversedValidityInterval(bool missingExpiry)
+    {
+        var now = SystemClock.UtcNow;
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(TestJwtOptions.SecretKey));
+        var payload = new JwtPayload
+        {
+            { JwtRegisteredClaimNames.Iss, TestJwtOptions.Issuer },
+            { JwtRegisteredClaimNames.Aud, GuestAccessDefaults.Audience },
+            { ClaimNames.GuestId, Guid.NewGuid().ToString() },
+            { ClaimNames.Role, GuestIdentity.RoleName },
+            { JwtRegisteredClaimNames.Nbf, new DateTimeOffset(now.AddMinutes(-1)).ToUnixTimeSeconds() }
+        };
+        if (!missingExpiry)
+        {
+            payload[JwtRegisteredClaimNames.Exp] = new DateTimeOffset(now.AddMinutes(-2)).ToUnixTimeSeconds();
+        }
+        var header = new JwtHeader(new SigningCredentials(key, SecurityAlgorithms.HmacSha256));
+        var token = new JwtSecurityTokenHandler().WriteToken(new JwtSecurityToken(header, payload));
+        var fixture = new Fixture();
+
+        fixture.TokenService.TryReadExpired(token, out var sessionId, out var expiry).Should().BeFalse();
+        sessionId.Should().BeEmpty();
+        expiry.Should().Be(DateTime.MinValue);
+    }
+
+    [Fact]
+    public void ExpiredReader_StillRejectsWrongSignature()
+    {
+        var token = ExpiredGuestToken(Guid.NewGuid(), SystemClock.UtcNow.AddMinutes(-2));
+        var unrelatedOptions = new JwtOptions
+        {
+            Issuer = TestJwtOptions.Issuer,
+            Audience = TestJwtOptions.Audience,
+            SecretKey = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(48))
+        };
+        var service = new GuestTokenService(Options.Create(unrelatedOptions), NullLogger<GuestTokenService>.Instance);
+
+        service.TryReadExpired(token, out var sessionId, out var expiry).Should().BeFalse();
+        sessionId.Should().BeEmpty();
+        expiry.Should().Be(DateTime.MinValue);
+    }
+
     // ── Continuity inside the retention grace ────────────────────────────────────────
 
     [Fact]
     public async Task ExpiredMidUse_WithinRetentionGrace_UpgradeCompletesWithDataPreserved()
     {
-        var fixture = new Fixture(retentionSlackMinutes: 5);
+        var fixture = new Fixture();
         var guestSessionId = Guid.NewGuid();
         var now = SystemClock.UtcNow;
 
@@ -142,7 +199,7 @@ public sealed class GuestSessionExpiryMidUseTests
     [Fact]
     public async Task ExpiredMidUse_PastRetentionGrace_SignInSucceedsWithExpiredSignal()
     {
-        var fixture = new Fixture(retentionSlackMinutes: 5);
+        var fixture = new Fixture();
         var guestSessionId = Guid.NewGuid();
         var now = SystemClock.UtcNow;
 
@@ -172,7 +229,7 @@ public sealed class GuestSessionExpiryMidUseTests
     [Fact]
     public async Task ExpiredMidUse_ThenReIssueAndSignIn_ReissuedSessionIsIndependent_ExpiredDataStillMigrates()
     {
-        var fixture = new Fixture(retentionSlackMinutes: 5);
+        var fixture = new Fixture();
         var now = SystemClock.UtcNow;
 
         // The original journey: a guest session that expired one minute ago, data retained.
@@ -214,7 +271,7 @@ public sealed class GuestSessionExpiryMidUseTests
     [Fact]
     public async Task ValidToken_EvictedSnapshot_ReportsSessionUnavailable()
     {
-        var fixture = new Fixture(retentionSlackMinutes: 5);
+        var fixture = new Fixture();
         var guestSessionId = Guid.NewGuid();
 
         // A structurally valid, NOT-yet-expired token whose snapshot record is gone (evicted

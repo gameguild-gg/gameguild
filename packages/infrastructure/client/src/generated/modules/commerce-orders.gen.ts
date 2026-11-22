@@ -82,11 +82,11 @@ export class CommerceOrdersModule {
   /**
    * Capture payment for an authorized order
    */
-  async postOrdersCapture(orderId: string, body: Types.CommerceOrdersCaptureOrderInput): Promise<Result<Types.CommerceOrdersOrderCaptureDto, ApiError>> {
+  async postOrdersCapture(orderId: string, body?: Types.CommerceOrdersCaptureOrderInput): Promise<Result<Types.CommerceOrdersOrderCaptureDto, ApiError>> {
     const url = `/v1/orders/${orderId}:capture`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceOrdersCaptureOrderInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceOrdersCaptureOrderInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -107,11 +107,11 @@ export class CommerceOrdersModule {
   /**
    * Complete an order (process payment, grant entitlements)
    */
-  async postOrdersComplete(orderId: string, body: Types.CommerceOrdersCompleteOrderInput): Promise<Result<Types.CommerceOrdersOrderDto, ApiError>> {
+  async postOrdersComplete(orderId: string, body?: Types.CommerceOrdersCompleteOrderInput): Promise<Result<Types.CommerceOrdersOrderDto, ApiError>> {
     const url = `/v1/orders/${orderId}:complete`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommerceOrdersCompleteOrderInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommerceOrdersCompleteOrderInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

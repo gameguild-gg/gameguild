@@ -122,12 +122,13 @@ export class CommercePaymentsBillingPaymentMethodsModule {
    */
   async deleteBillingPaymentMethods(
     paymentMethodId: string,
-    body: Types.CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBody,
+    body?: Types.CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBody,
   ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/billing/payment-methods/${paymentMethodId}`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBodySchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.CommercePaymentsPaymentMethodsControllerRemovePaymentMethodRequestBodySchema, body, 'request');
 
     const result = await this.client.request({
       method: 'DELETE',

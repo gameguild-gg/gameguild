@@ -1,77 +1,50 @@
-import "@testing-library/jest-dom/vitest";
-import { cleanup, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  resolveRedirect: vi.fn((value: string | undefined) => value ?? "/"),
+  redirect: vi.fn((args: unknown) => {
+    throw new Error(`redirect:${JSON.stringify(args)}`);
+  }),
+  resolveRedirect: vi.fn((value: string | undefined) => value ?? '/'),
 }));
 
-vi.mock("next-intl/server", () => ({
-  getTranslations: async (namespace: string) => (key: string) =>
-    `${namespace}.${key}`,
-}));
-vi.mock("@/lib/auth/cross-domain-auth", () => ({
+vi.mock('@/i18n/navigation', () => ({ redirect: mocks.redirect }));
+vi.mock('@/lib/auth/cross-domain-auth', () => ({
   resolveAllowedAuthRedirect: mocks.resolveRedirect,
 }));
-vi.mock("@/components/email-code-flow", () => ({
-  EmailCodeFlow: ({
-    redirectTo,
-    apiUrl,
-  }: {
-    redirectTo: string;
-    apiUrl: string;
-  }) => (
-    <div
-      data-testid="email-code-flow"
-      data-redirect={redirectTo}
-      data-api-url={apiUrl}
-    />
-  ),
-}));
 
-import EmailCodePage from "./page";
+import EmailCodeRedirectPage from './page';
 
-async function renderPage(
-  searchParams: Record<string, string | string[] | undefined>,
-) {
-  const page = await EmailCodePage({
-    searchParams: Promise.resolve(searchParams),
-  } as never);
-  return render(page);
-}
-
-describe("email-code page", () => {
-  afterEach(() => {
-    cleanup();
-    vi.clearAllMocks();
-  });
-
-  it("renders the code flow with the default redirect when no query is supplied", async () => {
-    await renderPage({});
-
-    expect(screen.getByTestId("email-code-flow")).toHaveAttribute(
-      "data-redirect",
-      "/",
+describe('legacy /email-code redirect (#1236: code is not a sign-in method)', () => {
+  it('lands on the single passwordless entry when no redirect is supplied', async () => {
+    await expect(
+      EmailCodeRedirectPage({
+        params: Promise.resolve({ locale: 'en-US' }),
+        searchParams: Promise.resolve({}),
+      } as never),
+    ).rejects.toThrow(
+      'redirect:{"href":"/magic-link","locale":"en-US"}',
     );
     expect(mocks.resolveRedirect).toHaveBeenCalledWith(undefined);
   });
 
-  it("passes the validated redirect into the code flow", async () => {
-    await renderPage({ redirectTo: "/workspace" });
-
-    expect(screen.getByTestId("email-code-flow")).toHaveAttribute(
-      "data-redirect",
-      "/workspace",
+  it('preserves a validated redirect destination through to /magic-link', async () => {
+    await expect(
+      EmailCodeRedirectPage({
+        params: Promise.resolve({ locale: 'pt-BR' }),
+        searchParams: Promise.resolve({ redirectTo: '/workspace' }),
+      } as never),
+    ).rejects.toThrow(
+      'redirect:{"href":"/magic-link?redirectTo=%2Fworkspace","locale":"pt-BR"}',
     );
-    expect(mocks.resolveRedirect).toHaveBeenCalledWith("/workspace");
+    expect(mocks.resolveRedirect).toHaveBeenCalledWith('/workspace');
   });
 
-  it("uses the first redirect when repeated query parameters are supplied", async () => {
-    await renderPage({ redirectTo: ["/first", "/second"] });
-
-    expect(screen.getByTestId("email-code-flow")).toHaveAttribute(
-      "data-redirect",
-      "/first",
-    );
+  it('drops the default "/" redirect instead of re-encoding it', async () => {
+    await expect(
+      EmailCodeRedirectPage({
+        params: Promise.resolve({ locale: 'en-US' }),
+        searchParams: Promise.resolve({}),
+      } as never),
+    ).rejects.toThrow('redirect:{"href":"/magic-link","locale":"en-US"}');
   });
 });

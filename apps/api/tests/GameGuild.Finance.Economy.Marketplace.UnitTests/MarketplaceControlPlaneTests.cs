@@ -4,6 +4,7 @@ using FluentAssertions;
 using GameGuild.Commerce.Orders;
 using GameGuild.Commerce.Products;
 using GameGuild.Finance.Economy.Marketplace.Persistence;
+using GameGuild.Finance.Economy.Persistence;
 using GameGuild.Finance.Economy.Risk;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -24,21 +25,21 @@ public sealed class MarketplaceControlPlaneTests
         var verifier = new SignatureVerifier(true);
         var reader = new PostgreSqlDurableMarketplacePolicyReader(context, verifier);
 
-        var effective = await reader.GetEffectiveAsync(row.TenantId, row.ProductId, Now);
-        var exact = await reader.GetVersionAsync(row.TenantId, row.ProductId, row.Version);
+        var effective = await reader.GetEffectiveAsync(row.TenantId, row.SubjectId!.Value, Now);
+        var exact = await reader.GetVersionAsync(row.TenantId, row.SubjectId!.Value, row.Version);
 
         effective.Should().BeEquivalentTo(exact);
         effective.TenantId.Should().Be(row.TenantId);
-        effective.Policy.ProductId.Should().Be(row.ProductId);
-        effective.Policy.SellerId.Should().Be(row.SellerId);
+        effective.Policy.ProductId.Should().Be(row.SubjectId!.Value);
+        effective.Policy.SellerId.Should().Be(row.SellerId!.Value);
         effective.Policy.Version.Should().Be(row.Version);
-        effective.Policy.Mode.Should().Be(row.Mode);
-        effective.Policy.HardPriceUnits.Should().Be(row.HardPriceUnits);
-        effective.Policy.SoftPriceUnits.Should().Be(row.SoftPriceUnits);
-        effective.Policy.PlatformFeePpm.Should().Be(row.PlatformFeePpm);
+        effective.Policy.Mode.Should().Be((ProductCurrencyMode)row.Mode!.Value);
+        effective.Policy.HardPriceUnits.Should().Be(row.HardPriceUnits!.Value);
+        effective.Policy.SoftPriceUnits.Should().Be(row.SoftPriceUnits!.Value);
+        effective.Policy.PlatformFeePpm.Should().Be(row.PlatformFeePpm!.Value);
         effective.Policy.EffectiveAt.Should().Be(row.EffectiveAt);
-        effective.PlatformFeeWalletId.Should().Be(row.PlatformFeeWalletId);
-        effective.RefundHold.Should().Be(TimeSpan.FromTicks(row.RefundHoldTicks));
+        effective.PlatformFeeWalletId.Should().Be(row.PlatformFeeWalletId!.Value);
+        effective.RefundHold.Should().Be(TimeSpan.FromTicks(row.RefundHoldTicks!.Value));
         effective.PayloadHash.Should().Be(row.PayloadHash);
         effective.KeyId.Should().Be(row.KeyId);
         effective.Signature.Should().Be(row.Signature);
@@ -59,11 +60,11 @@ public sealed class MarketplaceControlPlaneTests
 
         Func<Task> action = invalid switch
         {
-            "effective-tenant" => () => reader.GetEffectiveAsync(Guid.Empty, row.ProductId, Now).AsTask(),
+            "effective-tenant" => () => reader.GetEffectiveAsync(Guid.Empty, row.SubjectId!.Value, Now).AsTask(),
             "effective-product" => () => reader.GetEffectiveAsync(row.TenantId, Guid.Empty, Now).AsTask(),
-            "version-tenant" => () => reader.GetVersionAsync(Guid.Empty, row.ProductId, 1).AsTask(),
+            "version-tenant" => () => reader.GetVersionAsync(Guid.Empty, row.SubjectId!.Value, 1).AsTask(),
             "version-product" => () => reader.GetVersionAsync(row.TenantId, Guid.Empty, 1).AsTask(),
-            _ => () => reader.GetVersionAsync(row.TenantId, row.ProductId, 0).AsTask()
+            _ => () => reader.GetVersionAsync(row.TenantId, row.SubjectId!.Value, 0).AsTask()
         };
 
         await action.Should().ThrowAsync<ArgumentException>();
@@ -76,9 +77,9 @@ public sealed class MarketplaceControlPlaneTests
         var row = ValidPolicy();
         var reader = new PostgreSqlDurableMarketplacePolicyReader(context, new SignatureVerifier(true));
 
-        await FluentActions.Awaiting(() => reader.GetEffectiveAsync(row.TenantId, row.ProductId, Now).AsTask())
+        await FluentActions.Awaiting(() => reader.GetEffectiveAsync(row.TenantId, row.SubjectId!.Value, Now).AsTask())
             .Should().ThrowAsync<MarketplaceCurrencyPolicyException>();
-        await FluentActions.Awaiting(() => reader.GetVersionAsync(row.TenantId, row.ProductId, 1).AsTask())
+        await FluentActions.Awaiting(() => reader.GetVersionAsync(row.TenantId, row.SubjectId!.Value, 1).AsTask())
             .Should().ThrowAsync<MarketplaceCurrencyPolicyException>();
     }
 
@@ -111,7 +112,7 @@ public sealed class MarketplaceControlPlaneTests
         var reader = new PostgreSqlDurableMarketplacePolicyReader(
             context, new SignatureVerifier(invalid != "signature"));
 
-        await FluentActions.Awaiting(() => reader.GetVersionAsync(row.TenantId, row.ProductId, row.Version).AsTask())
+        await FluentActions.Awaiting(() => reader.GetVersionAsync(row.TenantId, row.SubjectId!.Value, row.Version).AsTask())
             .Should().ThrowAsync<MarketplaceCurrencyPolicyException>();
     }
 
@@ -296,16 +297,17 @@ public sealed class MarketplaceControlPlaneTests
             .Should().Throw<InvalidOperationException>();
     }
 
-    private static MarketplaceCurrencyPolicyVersionRow ValidPolicy()
+    private static EconomyPolicyVersionRow ValidPolicy()
     {
         const string canonical = "{\"marketplace\":\"policy\"}";
-        return new MarketplaceCurrencyPolicyVersionRow
+        return new EconomyPolicyVersionRow
         {
+            PolicyDomain = EconomyPolicyDomain.MarketplaceCurrency,
             TenantId = Guid.NewGuid(),
-            ProductId = Guid.NewGuid(),
+            SubjectId = Guid.NewGuid(),
             Version = 7,
             SellerId = Guid.NewGuid(),
-            Mode = ProductCurrencyMode.HardOnly,
+            Mode = (int)ProductCurrencyMode.HardOnly,
             HardPriceUnits = 100,
             SoftPriceUnits = 0,
             PlatformFeePpm = 100_000,

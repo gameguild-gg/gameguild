@@ -2,6 +2,182 @@
 
 Last updated: 2026-11-22.
 
+## Develop integration - 2026-11-22
+
+- User committed the audit/deferrals as 094764ffb1 and authorized proceeding
+  with develop integration. Clean entry, feature/coding-grading; fetched
+  origin/develop e0567d4224, 25 local and 197 incoming commits. No push requested.
+- Active task: merge only, preserving both branches' functionality and migration
+  history. Runtime corrections and instructor controls below remain deferred;
+  no phase/capability gate is closed by this merge.
+- Manual scope: combine coding and mandatory API-security CI gates/tests;
+  remove duplicate dependency keys while preserving develop's locked 3.1.0;
+  regenerate client output from current integrated OpenAPI using official tools;
+  maintain this ledger and the user-revised resource policy. Accept incoming
+  platform/Emception changes without
+  opportunistic modifications. No dev launcher, IDE, compiler or data reset.
+- Verification: strict YAML/JSON and lockfile consistency, fail-closed required
+  gate tests, CI/artifact contracts, coding/adapter/surface and affected host/
+  client tests and types. Run the required API security suites and current host
+  build under measured limits; classify external/resource failures explicitly.
+- Resources (user revision, 2026-11-22): 14 GB is not a fixed ceiling. Use
+  sequential heavy checks and CPUs 0-3, preserving at least two CPU cores.
+  Preserve OS headroom and stop owned work on sustained memory pressure or
+  swap thrashing; existing swap occupancy alone is not pressure. No forced
+  heap/RSS ceiling, swap/cache tuning, unrelated process termination or full
+  runtime/stack startup. This supersedes earlier local build budgets, not the
+  separately deferred exercise-memory feature.
+- Status: integration resolved and verified for the authorized merge commit.
+  Host/full-solution builds, current-host API selection and final OpenAPI/client
+  provenance pass. No unmerged paths. The external Authentication failure
+  below remains visible; no claim that every CI suite is green. No push.
+- Early checks: frozen install with scripts disabled passed on pnpm 10.34.6
+  (1160 MiB peak, 12526 MiB minimum available). Combined required-gate tests
+  pass 63/63; nine changed JSON manifests have no duplicate keys, workspace
+  overrides match the parsed lockfile, and all 17 workflow jobs have valid
+  dependencies. Sandbox subprocess failures were rerun with the same tests
+  outside that restriction; they are not product failures or waived tests.
+- Preservation checks: incoming Authentication/Authorization/Ledgers, upstream
+  core/browser/IDE/UI and the migration tree match develop exactly. Our coding
+  packages, owned Courses/CodeAdapter source, grading worker and dev launchers
+  match the pre-merge branch. Five incoming migrations plus their designers
+  and snapshot are retained; no local database was opened or upgraded.
+- First current-host build stopped at its 600-second command budget after
+  rebuilding the incoming references. Guard exit 1, sampled peak 3938 MiB and
+  minimum available 12353 MiB; no OOM or reported C# error. The child's exit 0
+  during termination is not a successful build. This was a historical attempt,
+  not the resource profile authorized by the subsequent user revision.
+- Warm-reference retry failed with managed OutOfMemoryException in Csc after
+  387020 ms, sampled peak 6834 MiB and minimum available 8443 MiB. This invocation
+  forced workstation GC and a 6 GiB managed heap: an already documented
+  insufficient profile, not a new C# defect or kernel OOM. Repeating that profile
+  was an execution mistake. No owned dotnet/csc process remains. Do not repeat
+  the old heap-tuning investigation or treat stale host output as current.
+- The subsequent user reply replaces the proposed fixed 14 GB retry with an
+  OS-friendly policy. The next host build uses SDK-default server GC without
+  inherited artificial heap caps, one MSBuild worker and a temporary owned-
+  process monitor. Preflight checks and sampled available RAM, memory PSI,
+  swap-in/out and OOM counters must remain observable; a resource stop is
+  never a successful gate. Validate the monitor's decision rules before use.
+- OS-friendly monitor: 8/8 synthetic pressure-policy tests and explicit owned-
+  child success/deadline-cleanup controls pass. Documentation/link gate passes.
+  The uncapped four-CPU host attempt was correctly stopped for sustained low
+  headroom after 261018 ms: 14037 MiB peak owned RSS, 4632 MiB minimum available
+  against a 4772 MiB reserve, 547 MiB aggregate paging and no new kernel OOM.
+  Child exit 0 during cancellation is not success; no owned compiler survives.
+  Report: /tmp/coding-merge-develop-host-20261122-resources.json.
+- Next measured profile: two CPUs and process-local GCConserveMemory=9, with
+  SDK server GC, no heap/RSS ceiling, the same strict source/analyzer set and
+  the same pressure monitor/deadline. This is a deliberate concurrency/GC
+  reduction after reviewing the stop, not an automatic identical retry or
+  increased memory grant. It changes no repository build/runtime setting.
+  The SDK documents the memory/collection-frequency tradeoff in
+  [Conserve memory](https://learn.microsoft.com/en-us/dotnet/core/runtime-config/garbage-collector#conserve-memory).
+- Current integrated host PASS with that economical profile: strict Release
+  build, all project references/analyzers/generators retained, 0 warnings and
+  0 errors, 412027 ms. Peak owned RSS 13679 MiB, minimum available 5025 MiB
+  against a 4772 MiB reserve, maximum memory PSI 0/0, 9 MiB aggregate paging,
+  no resource stop or new OOM. No fixed 14 GB ceiling or heap cap was used.
+  Report: /tmp/coding-merge-develop-host-conserve-20261122-resources.json.
+  This proves the integrated host build, not the pending API test selection,
+  OpenAPI capture, full solution, live startup or runtime acceptance.
+- OpenAPI reconciliation PASS: existing exporter built strict Release, 0
+  warnings/errors; its host DLL/XML and Courses DLL hashes match the fresh
+  binaries. Offline v1 capture contains 1803 paths and 2376 schemas, including
+  all four coding execution schemas. All 2181 currently integrated method/path
+  operations match exactly; no additions/removals. No application/database or
+  hosted-service startup. Artifact: /tmp/coding-merge-develop-20261122-v1.json.
+- Official client generation PASS: 38513 ms, 2278 MiB peak, no resource stop.
+  SHA-256 comparison of all 233 generated files against the pre-generation
+  merged tree proves only .metadata.json changed. All generated TypeScript
+  remains byte-identical to the 1794-test/type/build-validated merged source;
+  its incoming request-body/MFA and our coding contracts are preserved.
+  Metadata hash a7d0cf66b79d997701a6606e52c0a4c4408faf6dd446978d5aeffe0886884a83.
+  Metadata was staged; the index has no unmerged paths and passes diff --check.
+- Broader solution attempt reached its 1200000-ms command deadline while
+  compiling Identity.Provisioning.UnitTests near the solution's tail. The csc
+  exit 143 follows our SIGTERM, not a preceding C# diagnostic. Guard exit 1;
+  peak 14050 MiB, minimum available 4696 MiB (only transiently below reserve),
+  maximum memory PSI some/full 3.21/2.64, 1970 MiB aggregate system paging,
+  no new OOM. This attempt is incomplete, not green. The final host and API
+  test assembly compiled before the stop and have matching host DLL hashes.
+  Resume the exact strict solution incrementally under the same OS safeguards;
+  do not exclude projects or inflate a test timeout. No compiler survives.
+- Full solution PASS on the explicit incremental continuation: exact strict
+  Release solution, 0 warnings/errors, no excluded projects/analyzers, 38513 ms,
+  1192 MiB peak, 18812 MiB minimum available, no pressure/stop/OOM. The earlier
+  time stop remains recorded, not retroactively green. All current solution
+  output is built; API tests use --no-build only after this successful build
+  and explicit equality of the host DLL in the test output and final API bin.
+- Current-host API architecture/security/OpenAPI/coding-migration selection
+  PASS: 526/526, zero skips, 172514 ms, 3946 MiB peak, no stop/OOM. Covers the
+  incoming required-body and step-up protocol tests as well as endpoint guards,
+  dependency boundaries and historical coding migration assertions. Evidence:
+  artifacts/test-results/merge-develop-20261122/api/api-architecture-security-openapi.trx.
+- The solution rebuild changed the host binary hash. The first offline
+  capture remains a valid earlier build record, but renew exporter/capture
+  against the final solution output before closing metadata provenance.
+- Final provenance PASS: exporter refreshed against already-built solution
+  references, strict warnings, without another host compilation. Its API DLL/
+  XML and Courses DLL match the final originals; API test output also matches
+  final host b9e235bea1e85e9ec121c646e2f4fe9c79ccbc533c51076dffd6912f61f2a75e.
+  /tmp/coding-merge-develop-final-20261122-v1.json passes the same complete
+  endpoint/schema preflight and is byte-identical to the official generator's
+  earlier input (raw SHA-256 ae450ceda56d37c22e28c0970564f939a547c66aabfd92047696a60350f5cf4c).
+  No second generation or manual metadata edit is necessary for identical
+  input bytes. Normalized generator hash remains a7d0cf66b79d997701a6606e52c0a4c4408faf6dd446978d5aeffe0886884a83.
+- Package regression: coding 96/96, code adapter 16/16 and surface 46/46;
+  all three strict typechecks pass. No skips; sampled test peak 768 MiB.
+- Environment repair: the first wider Node selection found five browser-hook
+  failures because the pinned headless shell was absent, stale unreferenced
+  Next 16.4.2 cache content, and a mismatched installed picomatch patch. Frozen
+  forced install repaired both patch hashes without changing the lockfile.
+  All seven Next consumers resolve 16.4.5, and 16.4.2 is absent from the lock;
+  its two orphan directories were archived under /tmp, not source-deleted.
+  Installed only the already-declared Playwright headless shell. No assertions,
+  security versions or test selection were relaxed. The identical selection
+  now passes 284/284, zero skips (557 MiB peak); the count excludes the obsolete
+  Next instance after its removal from the derived workspace cache.
+- Authentication current-source Release suite: 4752/4753, zero skips; only the
+  known GenerateEmailCodeAsync_ThrottlesResendsWithinSixtySeconds failure remains.
+  The module is unchanged from develop and is not patched here. Guard exit 1,
+  1250 MiB peak. Its default TestResults TRX preserves the full result; a shell
+  quoting mistake affected the requested report destination after the test
+  finished, not the independently reported failing assertion/count. Later test
+  logger arguments are quoted explicitly. No green Authentication claim.
+- Authorization current-source Release suite: 2815/2815, zero skips; strict
+  build/test exit 0, 867 MiB peak. Evidence is in the ignored
+  artifacts/test-results/merge-develop-20261122/authorization/authorization.trx.
+- Client: current merged output passes all 1794 tests in 116 files, strict
+  source types, full ESM/CJS/DTS build and public API declaration contracts.
+  Peaks: 1352/5046/3308/690 MiB respectively. Existing DTS notices about private
+  NetworkError/Transport exports remain visible. Final official generation
+  changed only metadata, with byte-identical TypeScript and final-capture
+  provenance verified above; no gate was waived. Post-reconciliation MFA and
+  mandatory-mutation-body HTTP contracts also pass 6/6, zero skips.
+- Final solution-output domain regression: Courses 1227/1227, CodeAdapter
+  179/179 and Assessments 453/453, zero skips. All three use the freshly built
+  Release binaries; peaks 489/430/505 MiB. TRX evidence is in the corresponding
+  courses/code-adapter/assessments subdirectories of the ignored merge report.
+- Web: all 17 requested filters exist; 325/325 tests in 22 files pass, covering
+  coding consumers and incoming sign-in/MFA/session changes. Full configured
+  web tsc passes (6249 MiB peak, 9927 MiB minimum available). No web build,
+  application startup, real-user login or academic runtime acceptance is claimed.
+- Final terminal/self-review checks: strict selected root lint exits 0 with no ESLint
+  diagnostics; existing root React-detection/pages-path notices remain visible.
+  Worker strict types and 104/104 Node contracts pass, zero skips. Documentation
+  audit remains 48 documents, 173 local links and 25 complete atomic rows. No
+  CI, type or test rules were weakened; runtime bugs below remain open.
+- Handoff: conclude the authorized non-interactive merge commit after the
+  final staged diff/link/marker audit. No push is authorized. Keep the external
+  Authentication failure separate and preserve its failed evidence; do not
+  opportunistically patch the platform. Further work starts from the deferred
+  follow-ups below, not a new claim of native execution or academic acceptance.
+  Apply PRODUCT-MODEL.md's OS-friendly policy to future checks, not historical
+  fixed 10/14 GB ceilings or the failed 6 GiB workstation profile. No runtime
+  correction, instructor-control implementation or developer service change
+  was part of this merge. No owned compiler/browser is left running.
+
 ## Deferred corrections and instructor controls - 2026-11-22
 
 The user requested recording these follow-ups for later implementation. This
@@ -1152,7 +1328,7 @@ um gate como concluido sem registrar a evidencia executada.
 | Gate da refundacao | Estado | Evidencia necessaria |
 | --- | --- | --- |
 | `CODE-UX-01` | complete | corrected contract/document/design/preparation audit passed on 2026-11-21; no runtime/build claim |
-| `CODE-UX-02` | in progress / gate open | contract/wire/backend/current-client/selected-architecture checks pass; runtime fidelity, the full-solution time stop and external Authentication failure remain open |
+| `CODE-UX-02` | in progress / gate open | contract/wire/backend/current-client/selected-architecture and final full-solution checks pass; runtime fidelity and external Authentication failure remain open |
 | `CODE-UX-03` | nao iniciado | refresh compatible published assets and pass local preflight before real runtime, canvas/terminal, cancellation and resource checks |
 | `CODE-UX-04` | nao iniciado | autoria completa dos dois tipos e validacao pelo professor |
 | `CODE-UX-05` | nao iniciado | resolucao, envio, recuperacao e revisao por persona |
@@ -1568,11 +1744,14 @@ Continue [`3.6.2`](./06-refoundation/02-domain-drafts-and-data-boundaries.md):
 2. Retain the tested UX02-A/B ports and UX02-C/WB-B configuration and immutable
    revision evidence. The local read-only inventory is not a remote-data claim.
    RAM deferral is implemented; the historical worker assertions are reconciled.
-   Current strict host/selected architecture/client evidence is complete. Keep
-   the demonstrated monitored 14 GB profile for required host checks only;
-   ordinary checks remain <=10 GB. Do not repeat obsolete OOM diagnosis, disable
-   analyzers or hand-edit a generated client. Preserve the full-solution time
-   stop and external Authentication failure as incomplete broader gates.
+   The pre-merge strict host/selected architecture/client evidence is complete;
+   current merge verification is tracked at the top of this ledger. The user
+   replaced fixed 10/14 GB build ceilings with OS-headroom/pressure monitoring
+   on 2026-11-22; apply PRODUCT-MODEL.md rather than old execution budgets.
+   Do not repeat obsolete OOM diagnosis, disable
+   analyzers or hand-edit a generated client. The final full-solution build now
+   passes; retain earlier time stops as history and the external Authentication
+   failure as a separate incomplete broader gate.
    Official execution fidelity is still blocked by the four CS-RUNTIME oracles
    and the pending scope answer. Do not turn partial completion into gate
    approval, install a second autosave or deploy the standalone IDE.

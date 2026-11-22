@@ -46,8 +46,10 @@ public sealed class DurableAdRewardCompletionServiceTests
         issuance.Requests[0].Network.Should().Be("network-a");
         (await fixture.Context.Set<AdRewardTimelineRow>().CountAsync(row => row.TimelineKind == AdRewardTimelineKind.PlaybackMilestone)).Should().Be(5);
         (await fixture.Context.Set<EconomyInboxRow>().CountAsync(row => row.InboxKind == EconomyInboxKind.AdRewardProviderProof)).Should().Be(1);
-        (await fixture.Context.Set<AdRewardCapConsumptionRow>().CountAsync()).Should().Be(6);
-        (await fixture.Context.Set<AdRewardBudgetConsumptionRow>().CountAsync()).Should().Be(1);
+        (await fixture.Context.Set<EconomyUnitConsumptionRow>()
+            .CountAsync(row => row.ConsumptionKind == EconomyUnitConsumptionKind.AdRewardCap)).Should().Be(6);
+        (await fixture.Context.Set<EconomyUnitConsumptionRow>()
+            .CountAsync(row => row.ConsumptionKind == EconomyUnitConsumptionKind.AdRewardBudget)).Should().Be(1);
         (await fixture.Context.Set<AdRewardAttributionRow>().CountAsync()).Should().Be(1);
         (await fixture.Context.Set<AdRewardAccumulatorRow>().SingleAsync()).Version.Should().Be(1);
         var session = await fixture.Context.Set<AdRewardSessionRow>().SingleAsync();
@@ -79,7 +81,8 @@ public sealed class DurableAdRewardCompletionServiceTests
         result.PostingId.Should().BeNull();
         orchestrator.Intents.Should().BeEmpty();
         issuance.Requests.Should().BeEmpty();
-        (await fixture.Context.Set<AdRewardCapConsumptionRow>().CountAsync()).Should().Be(0);
+        (await fixture.Context.Set<EconomyUnitConsumptionRow>()
+            .CountAsync(row => row.ConsumptionKind == EconomyUnitConsumptionKind.AdRewardCap)).Should().Be(0);
         (await fixture.Context.Set<AdRewardAccumulatorRow>().SingleAsync()).RemainderNumerator
             .Should().NotBe("0");
         (await fixture.Context.Set<AdRewardAttributionRow>().SingleAsync()).RewardSoftUnits.Should().Be(0);
@@ -393,10 +396,11 @@ public sealed class DurableAdRewardCompletionServiceTests
         IssuedAt = Now.AddMinutes(-2), ExpiresAt = Now.AddMinutes(3), UpdatedAt = Now, Version = 1
     };
 
-    private static AdRewardCapConsumptionRow Consumption(
+    private static EconomyUnitConsumptionRow Consumption(
         Guid tenantId, Guid sessionId, AdRewardCapScope scope, string subject, long units) => new()
     {
-        Id = Guid.NewGuid(), TenantId = tenantId, SessionId = sessionId, Scope = scope,
+        Id = Guid.NewGuid(), ConsumptionKind = EconomyUnitConsumptionKind.AdRewardCap,
+        TenantId = tenantId, SessionId = sessionId, Scope = (int)scope,
         SubjectHash = subject, WindowStartedAt = Now.AddHours(-1), WindowEndsAt = Now.AddHours(1),
         SoftUnits = units, LossBudgetUsdNanos = 0, ConsumedAt = Now.AddMinutes(-1)
     };

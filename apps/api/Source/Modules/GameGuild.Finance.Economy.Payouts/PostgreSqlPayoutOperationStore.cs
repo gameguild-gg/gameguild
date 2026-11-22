@@ -230,8 +230,8 @@ public sealed class PostgreSqlPayoutOperationStore : IPayoutOperationStore
             recordedAt);
     }
 
-    private IQueryable<PayoutOperationRow> ReadOperations(FormattableString sql) =>
-        _db.Set<PayoutOperationRow>().FromSqlInterpolated(sql).AsNoTracking();
+    private IQueryable<EconomyOperationRow> ReadOperations(FormattableString sql) =>
+        _db.Set<EconomyOperationRow>().FromSqlInterpolated(sql).AsNoTracking();
 
     private void Execute(FormattableString sql)
     {
@@ -255,28 +255,28 @@ public sealed class PostgreSqlPayoutOperationStore : IPayoutOperationStore
             : new PayoutStaleCommandException(message);
     }
 
-    private static PayoutOperation ToContract(PayoutOperationRow row) => new(
+    private static PayoutOperation ToContract(EconomyOperationRow row) => new(
         row.Id,
         new IdempotencyKey(row.IdempotencyKey),
         row.RequestHash,
         row.ActorId,
-        row.PayeeId,
-        new WalletId(row.WalletId),
+        row.PayeeId!.Value,
+        new WalletId(row.WalletId!.Value),
         new CoinAmount(CurrencyCode.HardCoin, row.AmountUnits),
-        row.ProviderAccountId,
+        row.ProviderAccountId!,
         row.DestinationHash,
-        row.ProviderBindingHash,
-        row.EligibilityHash,
+        row.ProviderBindingHash!,
+        row.EligibilityHash!,
         row.DispatchSnapshotHash,
         row.ProviderPayoutId,
-        row.State,
+        (PayoutOperationState)row.State,
         row.Version,
         row.FencingToken,
-        row.KillSwitchEpoch,
+        row.KillSwitchEpoch!.Value,
         new ReserveVersion(row.ReserveVersion),
         row.ReserveAuthorizationEpoch,
         new PolicyVersion(row.PolicyVersion),
-        row.RiskDecisionId,
+        row.RiskDecisionId!.Value,
         row.CreatedAt,
         row.UpdatedAt,
         row.TenantId);

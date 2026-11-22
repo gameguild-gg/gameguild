@@ -109,6 +109,14 @@ export class MfaRequiredError extends AuthError {
   readonly availableMethods?: string[];
   /** One-time TOTP provisioning offer; present only when the subject must enroll at sign-in. */
   readonly mfaEnrollment?: MfaEnrollmentOffer;
+  /**
+   * Post-password-proof subject identifier carried by the pending sign-in response
+   * (design J2 GAP-2). Consumers need it to drive method-specific challenges such as
+   * `postAuthMfaEmailChallenge({ userId })`; absent on payloads that omit it.
+   */
+  readonly userId?: string;
+  /** Post-password-proof account address carried by the pending sign-in response (design J2 GAP-2). */
+  readonly email?: string;
 
   constructor(
     message = 'Multi-factor authentication required',
@@ -117,6 +125,8 @@ export class MfaRequiredError extends AuthError {
       mfaToken?: string;
       availableMethods?: string[];
       mfaEnrollment?: MfaEnrollmentOffer;
+      userId?: string;
+      email?: string;
     },
   ) {
     super(message, { type: 'MfaRequired', status: 403 });
@@ -125,14 +135,25 @@ export class MfaRequiredError extends AuthError {
     this.mfaToken = options?.mfaToken;
     this.availableMethods = options?.availableMethods;
     this.mfaEnrollment = options?.mfaEnrollment;
+    this.userId = options?.userId;
+    this.email = options?.email;
   }
 
   override toJSON(): ReturnType<AuthError['toJSON']> & {
     mfaToken?: string;
     availableMethods?: string[];
     mfaEnrollment?: MfaEnrollmentOffer;
+    userId?: string;
+    email?: string;
   } {
-    return { ...super.toJSON(), mfaToken: this.mfaToken, availableMethods: this.availableMethods, mfaEnrollment: this.mfaEnrollment };
+    return {
+      ...super.toJSON(),
+      mfaToken: this.mfaToken,
+      availableMethods: this.availableMethods,
+      mfaEnrollment: this.mfaEnrollment,
+      userId: this.userId,
+      email: this.email,
+    };
   }
 }
 

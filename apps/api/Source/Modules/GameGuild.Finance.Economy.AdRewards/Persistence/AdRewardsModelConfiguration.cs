@@ -3,42 +3,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Finance.Economy.AdRewards.Persistence;
 
-internal sealed class AdNetworkPolicyVersionRow
-{
-    public Guid TenantId { get; set; }
-    public string Network { get; set; } = string.Empty;
-    public long Version { get; set; }
-    public DateTimeOffset EffectiveAt { get; set; }
-    public DateTimeOffset ExpiresAt { get; set; }
-    public AdRewardIssuanceMode IssuanceMode { get; set; }
-    public AdNetworkYieldState YieldState { get; set; }
-    public long EstimatedNetEcpmUsdNanos { get; set; }
-    public int ContractedRevenueSharePpm { get; set; }
-    public int SafetyBufferPpm { get; set; }
-    public int MinimumVisiblePpm { get; set; }
-    public long MaximumFocusLossTicks { get; set; }
-    public long MaximumRewardSoftUnits { get; set; }
-    public DateTimeOffset ReportsCurrentThrough { get; set; }
-    public long ReportStaleAfterTicks { get; set; }
-    public int Ranking { get; set; }
-    public long MaximumUserSoftUnits { get; set; }
-    public long MaximumDeviceSoftUnits { get; set; }
-    public long MaximumIpSoftUnits { get; set; }
-    public long MaximumAsnSoftUnits { get; set; }
-    public long MaximumNetworkSoftUnits { get; set; }
-    public long MaximumGlobalSoftUnits { get; set; }
-    public long FundedLossBudgetUsdNanos { get; set; }
-    public long BudgetWindowTicks { get; set; }
-    public string ProviderHash { get; set; } = string.Empty;
-    public bool ProviderCertified { get; set; }
-    public string CanonicalPayload { get; set; } = string.Empty;
-    public string PayloadHash { get; set; } = string.Empty;
-    public string KeyId { get; set; } = string.Empty;
-    public string Signature { get; set; } = string.Empty;
-    public Guid ProposedBy { get; set; }
-    public Guid ApprovedBy { get; set; }
-    public DateTimeOffset PublishedAt { get; set; }
-}
+// #1092 Tier 2.3: AdNetworkPolicyVersionRow merged into the shared
+// EconomyPolicyVersionRow (PolicyDomain = AdNetwork, subject key = network
+// name). The registration lives with the unified row in the Economy module;
+// this configuration re-asserts it below.
+// #1092 Tier 2.2: AdRewardCapConsumptionRow and AdRewardBudgetConsumptionRow
+// merged into the shared EconomyUnitConsumptionRow (ConsumptionKind = 3 and
+// 4). The registration lives with the unified row in the Economy module; this
+// configuration re-asserts it below with the session foreign key.
 
 internal sealed class AdRewardSessionRow
 {
@@ -109,20 +81,6 @@ internal sealed class AdRewardPendingClaimRow
     public string? ConfirmationRequestHash { get; set; }
 }
 
-internal sealed class AdRewardCapConsumptionRow
-{
-    public Guid Id { get; set; }
-    public Guid TenantId { get; set; }
-    public Guid SessionId { get; set; }
-    public AdRewardCapScope Scope { get; set; }
-    public string SubjectHash { get; set; } = string.Empty;
-    public DateTimeOffset WindowStartedAt { get; set; }
-    public DateTimeOffset WindowEndsAt { get; set; }
-    public long SoftUnits { get; set; }
-    public long LossBudgetUsdNanos { get; set; }
-    public DateTimeOffset ConsumedAt { get; set; }
-}
-
 internal sealed class AdRewardCompletionRow
 {
     public Guid SessionId { get; set; }
@@ -161,18 +119,6 @@ internal sealed class AdRewardAccumulatorRow
     public string CanonicalDenominator { get; set; } = "1";
     public long Version { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
-}
-
-internal sealed class AdRewardBudgetConsumptionRow
-{
-    public Guid SessionId { get; set; }
-    public Guid TenantId { get; set; }
-    public Guid UserId { get; set; }
-    public string DeviceRiskHash { get; set; } = string.Empty;
-    public string Network { get; set; } = string.Empty;
-    public long SoftUnits { get; set; }
-    public long LossBudgetUsdNanos { get; set; }
-    public DateTimeOffset ConsumedAt { get; set; }
 }
 
 internal sealed class AdRewardAttributionRow
@@ -243,24 +189,25 @@ public sealed class AdRewardsModelConfiguration : IModelConfiguration
     {
         ArgumentNullException.ThrowIfNull(modelBuilder);
 
-        modelBuilder.Entity<AdNetworkPolicyVersionRow>(builder =>
+        // #1092 Tier 2.3: economy_ad_network_policy_versions merged into the
+        // shared economy_policy_versions table (PolicyDomain = 2 = AdNetwork).
+        // The module re-asserts the unified table so contexts composing only
+        // this configuration address the merged table; the ad-network domain
+        // keeps its (TenantId, network, Version) uniqueness and its
+        // effective-window index through the partial indexes declared with
+        // the unified registration in the Economy module.
+        modelBuilder.Entity<EconomyPolicyVersionRow>(builder =>
         {
-            builder.ToTable("economy_ad_network_policy_versions", table =>
-            {
-                table.HasCheckConstraint("ck_economy_ad_network_policy_versions_window", "\"ExpiresAt\" > \"EffectiveAt\"");
-                table.HasCheckConstraint("ck_economy_ad_network_policy_versions_ppm", "\"ContractedRevenueSharePpm\" BETWEEN 0 AND 1000000 AND \"SafetyBufferPpm\" BETWEEN 0 AND 999999 AND \"MinimumVisiblePpm\" BETWEEN 0 AND 1000000");
-                table.HasCheckConstraint("ck_economy_ad_network_policy_versions_values", "\"Version\" > 0 AND \"EstimatedNetEcpmUsdNanos\" > 0 AND \"MaximumRewardSoftUnits\" > 0 AND \"MaximumFocusLossTicks\" >= 0 AND \"ReportStaleAfterTicks\" > 0 AND \"Ranking\" >= 0 AND \"BudgetWindowTicks\" > 0");
-                table.HasCheckConstraint("ck_economy_ad_network_policy_versions_caps", "\"MaximumUserSoftUnits\" > 0 AND \"MaximumDeviceSoftUnits\" > 0 AND \"MaximumIpSoftUnits\" > 0 AND \"MaximumAsnSoftUnits\" > 0 AND \"MaximumNetworkSoftUnits\" > 0 AND \"MaximumGlobalSoftUnits\" > 0 AND \"FundedLossBudgetUsdNanos\" > 0");
-                table.HasCheckConstraint("ck_economy_ad_network_policy_versions_dual_control", "\"ProposedBy\" <> \"ApprovedBy\"");
-            });
-            builder.HasKey(row => new { row.TenantId, row.Network, row.Version });
-            builder.Property(row => row.Network).HasMaxLength(100);
-            builder.Property(row => row.ProviderHash).HasMaxLength(128);
-            builder.Property(row => row.PayloadHash).HasMaxLength(128);
-            builder.Property(row => row.KeyId).HasMaxLength(256);
-            builder.Property(row => row.CanonicalPayload).HasColumnType("text");
-            builder.Property(row => row.Signature).HasColumnType("text");
-            builder.HasIndex(row => new { row.TenantId, row.Network, row.EffectiveAt, row.ExpiresAt });
+            builder.ToTable("economy_policy_versions");
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.SubjectKey).HasMaxLength(100);
+            builder.HasIndex(row => new { row.TenantId, row.SubjectKey, row.Version })
+                .IsUnique()
+                .HasFilter("\"PolicyDomain\" = 2")
+                .HasDatabaseName("ux_economy_policy_versions_adnetwork_version");
+            builder.HasIndex(row => new { row.TenantId, row.SubjectKey, row.EffectiveAt, row.ExpiresAt })
+                .HasFilter("\"PolicyDomain\" = 2")
+                .HasDatabaseName("ix_economy_policy_versions_adnetwork_window");
         });
 
         modelBuilder.Entity<AdRewardSessionRow>(builder =>
@@ -356,19 +303,41 @@ public sealed class AdRewardsModelConfiguration : IModelConfiguration
             builder.HasOne<AdProviderReportRow>().WithMany().HasForeignKey(row => row.ProviderReportId).OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<AdRewardCapConsumptionRow>(builder =>
+        // #1092 Tier 2.2: economy_ad_reward_cap_consumptions and
+        // economy_ad_reward_budget_consumptions merged into the shared
+        // economy_unit_consumptions table (ConsumptionKind = 3 = AdRewardCap
+        // and 4 = AdRewardBudget). The module re-asserts the unified table
+        // and contributes the session foreign key; each kind keeps its
+        // dedupe and reader indexes as partials (declared with the unified
+        // registration in the Economy module and re-asserted here).
+        modelBuilder.Entity<EconomyUnitConsumptionRow>(builder =>
         {
-            builder.ToTable("economy_ad_reward_cap_consumptions", table =>
-            {
-                table.HasCheckConstraint("ck_economy_ad_reward_cap_consumptions_window", "\"WindowEndsAt\" > \"WindowStartedAt\" AND \"ConsumedAt\" >= \"WindowStartedAt\" AND \"ConsumedAt\" < \"WindowEndsAt\"");
-                table.HasCheckConstraint("ck_economy_ad_reward_cap_consumptions_positive", "\"SoftUnits\" > 0 AND \"LossBudgetUsdNanos\" >= 0");
-                table.HasCheckConstraint("ck_economy_ad_reward_cap_consumptions_scope", "\"Scope\" BETWEEN 1 AND 6");
-            });
+            builder.ToTable("economy_unit_consumptions");
             builder.HasKey(row => row.Id);
-            builder.Property(row => row.SubjectHash).HasMaxLength(128);
-            builder.HasIndex(row => new { row.TenantId, row.Scope, row.SubjectHash, row.ConsumedAt });
-            builder.HasIndex(row => new { row.SessionId, row.Scope }).IsUnique();
-            builder.HasOne<AdRewardSessionRow>().WithMany().HasForeignKey(row => row.SessionId).OnDelete(DeleteBehavior.Restrict);
+            builder.HasIndex(row => new { row.SessionId, row.Scope })
+                .IsUnique()
+                .HasFilter("\"ConsumptionKind\" = 3")
+                .HasDatabaseName("ux_economy_unit_consumptions_session_scope");
+            builder.HasIndex(row => row.SessionId)
+                .IsUnique()
+                .HasFilter("\"ConsumptionKind\" = 4")
+                .HasDatabaseName("ux_economy_unit_consumptions_budget_session");
+            builder.HasIndex(row => new { row.TenantId, row.Scope, row.SubjectHash, row.ConsumedAt })
+                .HasFilter("\"ConsumptionKind\" = 3")
+                .HasDatabaseName("ix_economy_unit_consumptions_tenant_scope_subject");
+            builder.HasIndex(row => new { row.UserId, row.ConsumedAt })
+                .HasFilter("\"ConsumptionKind\" = 4")
+                .HasDatabaseName("ix_economy_unit_consumptions_budget_user");
+            builder.HasIndex(row => new { row.DeviceRiskHash, row.ConsumedAt })
+                .HasFilter("\"ConsumptionKind\" = 4")
+                .HasDatabaseName("ix_economy_unit_consumptions_budget_device");
+            builder.HasIndex(row => new { row.Network, row.ConsumedAt })
+                .HasFilter("\"ConsumptionKind\" = 4")
+                .HasDatabaseName("ix_economy_unit_consumptions_budget_network");
+            builder.HasOne<AdRewardSessionRow>()
+                .WithMany()
+                .HasForeignKey(row => row.SessionId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<AdRewardCompletionRow>(builder =>
@@ -408,17 +377,9 @@ public sealed class AdRewardsModelConfiguration : IModelConfiguration
             builder.Property(row => row.CanonicalDenominator).HasColumnType("text");
         });
 
-        modelBuilder.Entity<AdRewardBudgetConsumptionRow>(builder =>
-        {
-            builder.ToTable("economy_ad_reward_budget_consumptions", table =>
-                table.HasCheckConstraint("ck_economy_ad_reward_budget_consumptions_positive", "\"SoftUnits\" > 0 AND \"LossBudgetUsdNanos\" > 0"));
-            builder.HasKey(row => row.SessionId);
-            builder.Property(row => row.DeviceRiskHash).HasMaxLength(128);
-            builder.Property(row => row.Network).HasMaxLength(100);
-            builder.HasIndex(row => new { row.UserId, row.ConsumedAt });
-            builder.HasIndex(row => new { row.DeviceRiskHash, row.ConsumedAt });
-            builder.HasIndex(row => new { row.Network, row.ConsumedAt });
-        });
+        // economy_ad_reward_budget_consumptions merged into
+        // economy_unit_consumptions (#1092 Tier 2.2, ConsumptionKind = 4) —
+        // see the unified EconomyUnitConsumptionRow registration above.
 
         modelBuilder.Entity<AdRewardAttributionRow>(builder =>
         {

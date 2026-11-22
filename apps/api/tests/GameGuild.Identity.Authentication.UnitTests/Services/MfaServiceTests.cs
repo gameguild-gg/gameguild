@@ -71,6 +71,78 @@ public class MfaServiceTests
 
     #endregion
 
+    #region VerifyEmailSignInCodeAsync Tests
+
+    [Fact]
+    public async Task VerifyEmailSignInCodeAsync_WithValidCode_ShouldDelegateAndReportSuccess()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var emailMfaServiceMock = new Mock<IEmailMfaService>();
+        emailMfaServiceMock
+            .Setup(x => x.VerifySignInCodeAsync(userId, "123456", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var service = CreateService(emailMfaServiceMock.Object);
+
+        // Act
+        var result = await service.VerifyEmailSignInCodeAsync(userId, "123456");
+
+        // Assert
+        result.Success.Should().BeTrue();
+        result.Message.Should().Be("MFA verification successful");
+        emailMfaServiceMock.Verify(
+            x => x.VerifySignInCodeAsync(userId, "123456", It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task VerifyEmailSignInCodeAsync_WithInvalidCode_ShouldDelegateAndReportFailure()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var emailMfaServiceMock = new Mock<IEmailMfaService>();
+        emailMfaServiceMock
+            .Setup(x => x.VerifySignInCodeAsync(userId, It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(false);
+        var service = CreateService(emailMfaServiceMock.Object);
+
+        // Act
+        var result = await service.VerifyEmailSignInCodeAsync(userId, "000000");
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().Be("Invalid MFA code");
+        emailMfaServiceMock.Verify(
+            x => x.VerifySignInCodeAsync(userId, "000000", It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task VerifyEmailSignInCodeAsync_WithoutEmailService_ShouldFailClosed()
+    {
+        // Arrange — the email factor sub-service is optional in the orchestrator; a missing
+        // registration must deny rather than throw.
+
+        // Act
+        var result = await _service.VerifyEmailSignInCodeAsync(Guid.NewGuid(), "123456");
+
+        // Assert
+        result.Success.Should().BeFalse();
+        result.Message.Should().Be("Invalid MFA code");
+    }
+
+    private MfaService CreateService(IEmailMfaService emailMfaService) =>
+        new(_loggerMock.Object,
+            _totpMfaServiceMock.Object,
+            _backupCodeMfaServiceMock.Object,
+            _attemptTrackingServiceMock.Object,
+            _userRepositoryMock.Object,
+            _passwordHasherMock.Object,
+            emailMfaService: emailMfaService,
+            eventPublisher: _publisherMock.Object);
+
+    #endregion
+
     #region InitiateMfaSetupAsync Tests
 
     [Fact]
@@ -154,6 +226,75 @@ public class MfaServiceTests
         // Act & Assert
         var act = () => _service.InitiateMfaSetupAsync(userId, "user@example.com");
         await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("Setup failed");
+    }
+
+    [Fact]
+    public async Task InitiateMfaSetupAsync_WhenEnrollmentDenied_ReturnsFailureWithoutBackupMutation()
+    {
+        var userId = Guid.NewGuid();
+        using var cancellation = new CancellationTokenSource();
+        var denied = new MfaConfigurationDeniedException("MFA is already enabled for this user");
+        _totpMfaServiceMock.Setup(service => service.SetupTotpAsync(userId, "owner@example.test", cancellation.Token))
+            .ThrowsAsync(denied);
+
+        var result = await _service.InitiateMfaSetupAsync(userId, "owner@example.test", cancellation.Token);
+
+        Assert.False(result.Success);
+        Assert.Equal(denied.Message, result.Message);
+        Assert.Null(result.BackupCodes);
+        Assert.Null(result.SecretKey);
+        _backupCodeMfaServiceMock.VerifyNoOtherCalls();
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task InitiateMfaSetupAsync_UnexpectedFailuresPropagateWithoutBackupMutation(bool permissionDenied)
+    {
+        var userId = Guid.NewGuid();
+        Exception expected = permissionDenied
+            ? new UnauthorizedAccessException("Synthetic permission denial")
+            : new InvalidOperationException("Synthetic infrastructure failure");
+        _totpMfaServiceMock.Setup(service => service.SetupTotpAsync(userId, "owner@example.test", It.IsAny<CancellationToken>()))
+            .ThrowsAsync(expected);
+
+        var actual = await Record.ExceptionAsync(() => _service.InitiateMfaSetupAsync(userId, "owner@example.test"));
+
+        Assert.Same(expected, actual);
+        _backupCodeMfaServiceMock.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task InitiateMfaSetupAsync_CancellationPropagatesWithoutBackupMutation()
+    {
+        var userId = Guid.NewGuid();
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        var expected = new OperationCanceledException(cancellation.Token);
+        _totpMfaServiceMock.Setup(service => service.SetupTotpAsync(userId, "owner@example.test", cancellation.Token))
+            .ThrowsAsync(expected);
+
+        var actual = await Record.ExceptionAsync(() => _service.InitiateMfaSetupAsync(userId, "owner@example.test", cancellation.Token));
+
+        Assert.Same(expected, actual);
+        _backupCodeMfaServiceMock.VerifyNoOtherCalls();
+    }
+
+    [Fact]
+    public async Task InitiateMfaSetupAsync_BackupStorageFailureIsNotMappedToEnrollmentDenial()
+    {
+        var userId = Guid.NewGuid();
+        var expected = new MfaConfigurationDeniedException("Synthetic backup storage failure");
+        _totpMfaServiceMock.Setup(service => service.SetupTotpAsync(userId, "owner@example.test", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(("otpauth://totp/owner", "synthetic", DateTimeOffset.UtcNow.AddMinutes(5)));
+        _backupCodeMfaServiceMock.Setup(service => service.GenerateBackupCode()).Returns("synthetic");
+        _backupCodeMfaServiceMock.Setup(service => service.StoreBackupCodesForSetupAsync(
+                userId, It.IsAny<IReadOnlyList<string>>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(expected);
+
+        var actual = await Record.ExceptionAsync(() => _service.InitiateMfaSetupAsync(userId, "owner@example.test"));
+
+        Assert.Same(expected, actual);
     }
 
     #endregion

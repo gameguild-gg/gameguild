@@ -726,6 +726,110 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        // #1092 Tier 2.3 — the two signed dual-control policy-version tables
+        // merged behind PolicyDomain. Each domain keeps its (TenantId,
+        // subject, Version) uniqueness through partial unique indexes, and
+        // the effective-window indexes stay per domain so the effective and
+        // historical readers (settlement uses effective, refund uses
+        // historical) keep their index paths.
+        modelBuilder.Entity<EconomyPolicyVersionRow>(builder =>
+        {
+            builder.ToTable("economy_policy_versions", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_policy_versions_version", "\"Version\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_policy_versions_window", "\"ExpiresAt\" > \"EffectiveAt\"");
+                table.HasCheckConstraint(
+                    "ck_economy_policy_versions_dual_control", "\"ProposedBy\" <> \"ApprovedBy\"");
+                table.HasCheckConstraint(
+                    "ck_economy_policy_versions_marketplace_shape",
+                    "(\"PolicyDomain\" = 2) OR (\"SubjectId\" IS NOT NULL AND \"SellerId\" IS NOT NULL AND \"Mode\" IS NOT NULL AND \"PlatformFeeWalletId\" IS NOT NULL AND \"RefundHoldTicks\" IS NOT NULL AND \"PlatformFeePpm\" BETWEEN 0 AND 999999 AND \"RefundHoldTicks\" > 0 AND ((\"Mode\" = 1 AND \"HardPriceUnits\" > 0 AND \"SoftPriceUnits\" = 0) OR (\"Mode\" = 2 AND \"HardPriceUnits\" = 0 AND \"SoftPriceUnits\" > 0) OR (\"Mode\" IN (3, 4) AND \"HardPriceUnits\" > 0 AND \"SoftPriceUnits\" > 0)))");
+                table.HasCheckConstraint(
+                    "ck_economy_policy_versions_adnetwork_shape",
+                    "(\"PolicyDomain\" = 1) OR (\"SubjectKey\" IS NOT NULL AND \"IssuanceMode\" IS NOT NULL AND \"YieldState\" IS NOT NULL AND \"ReportsCurrentThrough\" IS NOT NULL AND \"ProviderHash\" IS NOT NULL AND \"ProviderCertified\" IS NOT NULL AND \"ContractedRevenueSharePpm\" BETWEEN 0 AND 1000000 AND \"SafetyBufferPpm\" BETWEEN 0 AND 999999 AND \"MinimumVisiblePpm\" BETWEEN 0 AND 1000000 AND \"EstimatedNetEcpmUsdNanos\" > 0 AND \"MaximumRewardSoftUnits\" > 0 AND \"MaximumFocusLossTicks\" >= 0 AND \"ReportStaleAfterTicks\" > 0 AND \"Ranking\" >= 0 AND \"BudgetWindowTicks\" > 0 AND \"MaximumUserSoftUnits\" > 0 AND \"MaximumDeviceSoftUnits\" > 0 AND \"MaximumIpSoftUnits\" > 0 AND \"MaximumAsnSoftUnits\" > 0 AND \"MaximumNetworkSoftUnits\" > 0 AND \"MaximumGlobalSoftUnits\" > 0 AND \"FundedLossBudgetUsdNanos\" > 0)");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.Id).HasDefaultValueSql("gen_random_uuid()");
+            builder.Property(row => row.SubjectKey).HasMaxLength(100);
+            builder.Property(row => row.CanonicalPayload).HasColumnType("text");
+            builder.Property(row => row.PayloadHash).HasMaxLength(128);
+            builder.Property(row => row.KeyId).HasMaxLength(256);
+            builder.Property(row => row.Signature).HasColumnType("text");
+            builder.HasIndex(row => new { row.TenantId, row.SubjectId, row.Version })
+                .IsUnique()
+                .HasFilter("\"PolicyDomain\" = 1")
+                .HasDatabaseName("ux_economy_policy_versions_marketplace_version");
+            builder.HasIndex(row => new { row.TenantId, row.SubjectKey, row.Version })
+                .IsUnique()
+                .HasFilter("\"PolicyDomain\" = 2")
+                .HasDatabaseName("ux_economy_policy_versions_adnetwork_version");
+            builder.HasIndex(row => new { row.TenantId, row.SubjectId, row.EffectiveAt, row.ExpiresAt })
+                .HasFilter("\"PolicyDomain\" = 1")
+                .HasDatabaseName("ix_economy_policy_versions_marketplace_window");
+            builder.HasIndex(row => new { row.TenantId, row.SubjectKey, row.EffectiveAt, row.ExpiresAt })
+                .HasFilter("\"PolicyDomain\" = 2")
+                .HasDatabaseName("ix_economy_policy_versions_adnetwork_window");
+        });
+
+        // #1092 Tier 2.4 — payout operations and admin-withdrawal runs merged
+        // behind OperationKind. The fencing discipline is preserved: each kind
+        // keeps its own monotonic token allocator sequence, dispatch verifies
+        // exact version + token + epoch, and Treasury's ExecutionEpoch (no
+        // payout twin) stays as a kind-2-only column. Cross-module foreign
+        // keys (outbox/provider-events OperationId and RunId, payout
+        // authorization evidence, admin-withdrawal audit events) are
+        // contributed by the Payouts and Treasury module configurations.
+        modelBuilder.Entity<EconomyOperationRow>(builder =>
+        {
+            builder.ToTable("economy_operations", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_operations_state",
+                    "(\"OperationKind\" = 1 AND \"State\" BETWEEN 1 AND 6) OR (\"OperationKind\" = 2 AND \"State\" BETWEEN 1 AND 7)");
+                table.HasCheckConstraint(
+                    "ck_economy_operations_positive_values",
+                    "\"AmountUnits\" > 0 AND \"Version\" > 0 AND \"FencingToken\" > 0 AND \"ReserveVersion\" > 0 AND \"ReserveAuthorizationEpoch\" > 0 AND \"PolicyVersion\" > 0 AND ((\"OperationKind\" = 1 AND \"KillSwitchEpoch\" >= 0) OR (\"OperationKind\" = 2 AND \"KillSwitchEpoch\" IS NULL AND \"ExecutionEpoch\" > 0))");
+                table.HasCheckConstraint(
+                    "ck_economy_operations_timestamps", "\"UpdatedAt\" >= \"CreatedAt\"");
+                table.HasCheckConstraint(
+                    "ck_economy_operations_dispatch",
+                    "(\"OperationKind\" = 1 AND ((\"State\" = 1 AND \"DispatchSnapshotHash\" IS NULL) OR (\"State\" BETWEEN 2 AND 6 AND \"DispatchSnapshotHash\" IS NOT NULL))) OR " +
+                    "(\"OperationKind\" = 2 AND ((\"State\" IN (1, 2) AND \"DispatchSnapshotHash\" IS NULL) OR (\"State\" BETWEEN 3 AND 7 AND \"DispatchSnapshotHash\" IS NOT NULL)))");
+                table.HasCheckConstraint(
+                    "ck_economy_operations_approval",
+                    "(\"OperationKind\" = 1 AND \"ApprovedBy\" IS NULL) OR (\"OperationKind\" = 2 AND ((\"State\" = 1 AND \"ApprovedBy\" IS NULL) OR (\"State\" BETWEEN 2 AND 7 AND \"ApprovedBy\" IS NOT NULL)))");
+                table.HasCheckConstraint(
+                    "ck_economy_operations_subject_shape",
+                    "(\"OperationKind\" = 1 AND \"PayeeId\" IS NOT NULL AND \"WalletId\" IS NOT NULL AND \"ProviderAccountId\" IS NOT NULL AND \"ProviderBindingHash\" IS NOT NULL AND \"EligibilityHash\" IS NOT NULL AND \"RiskDecisionId\" IS NOT NULL AND \"PeriodStart\" IS NULL AND \"PlatformFeeWalletId\" IS NULL AND \"SourceAssetKey\" IS NULL AND \"ExecutionEpoch\" IS NULL) OR " +
+                    "(\"OperationKind\" = 2 AND \"PayeeId\" IS NULL AND \"WalletId\" IS NULL AND \"ProviderAccountId\" IS NULL AND \"ProviderBindingHash\" IS NULL AND \"EligibilityHash\" IS NULL AND \"RiskDecisionId\" IS NULL AND \"KillSwitchEpoch\" IS NULL AND \"PeriodStart\" IS NOT NULL AND \"PlatformFeeWalletId\" IS NOT NULL AND \"SourceAssetKey\" IS NOT NULL AND \"ExecutionEpoch\" IS NOT NULL)");
+            });
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.Id).ValueGeneratedNever();
+            builder.Property(row => row.IdempotencyKey).HasMaxLength(256);
+            builder.Property(row => row.RequestHash).HasMaxLength(128);
+            builder.Property(row => row.ProviderAccountId).HasMaxLength(256);
+            builder.Property(row => row.DestinationHash).HasMaxLength(128);
+            builder.Property(row => row.ProviderBindingHash).HasMaxLength(128);
+            builder.Property(row => row.EligibilityHash).HasMaxLength(128);
+            builder.Property(row => row.DispatchSnapshotHash).HasMaxLength(128);
+            builder.Property(row => row.ProviderPayoutId).HasMaxLength(256);
+            builder.Property(row => row.SourceAssetKey).HasMaxLength(256);
+            builder.Property(row => row.ProviderTransferId).HasMaxLength(256);
+            builder.Property(row => row.Version).IsConcurrencyToken();
+            builder.HasIndex(row => new { row.OperationKind, row.TenantId, row.IdempotencyKey })
+                .IsUnique()
+                .HasDatabaseName("ux_economy_operations_kind_tenant_idempotency");
+            builder.HasIndex(row => new { row.TenantId, row.PeriodStart })
+                .IsUnique()
+                .HasFilter("\"OperationKind\" = 2 AND \"State\" NOT IN (6, 7)")
+                .HasDatabaseName("ux_economy_operations_active_period");
+            builder.HasIndex(row => new { row.OperationKind, row.State, row.UpdatedAt })
+                .HasDatabaseName("ix_economy_operations_kind_state_updated");
+            builder.HasIndex(row => new { row.TenantId, row.OperationKind, row.State, row.UpdatedAt })
+                .HasDatabaseName("ix_economy_operations_tenant_kind_state_updated");
+        });
+
         modelBuilder.Entity<EconomyIdempotencyRecordRow>(builder =>
         {
             builder.ToTable("economy_idempotency_records");
@@ -872,17 +976,66 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<EconomyRiskDecisionConsumptionRow>(builder =>
+        // #1092 Tier 2.2 — the four consumption tables (capability receipts,
+        // risk decisions, ad-reward caps, ad-reward budgets) merged behind
+        // ConsumptionKind. The risk-decision kind keeps its decision and
+        // posting-group partial uniques and its insert-validation trigger;
+        // the capability-receipt kind keeps the receipt partial unique the
+        // SECURITY DEFINER posting writers join against. The session foreign
+        // key is contributed by the AdRewards module configuration.
+        modelBuilder.Entity<EconomyUnitConsumptionRow>(builder =>
         {
-            builder.ToTable("economy_risk_decision_consumptions");
+            builder.ToTable("economy_unit_consumptions", table =>
+            {
+                table.HasCheckConstraint(
+                    "ck_economy_unit_consumptions_kind_shape",
+                    "(\"ConsumptionKind\" = 1 AND \"ReceiptId\" IS NOT NULL AND \"TenantId\" IS NOT NULL AND \"ActorId\" IS NOT NULL AND \"OperationFingerprint\" IS NOT NULL AND \"KillSwitchEpoch\" IS NOT NULL AND \"RiskDecisionId\" IS NULL AND \"PostingGroupId\" IS NULL AND \"SessionId\" IS NULL AND \"Scope\" IS NULL AND \"SubjectHash\" IS NULL) OR " +
+                    "(\"ConsumptionKind\" = 2 AND \"RiskDecisionId\" IS NOT NULL AND \"PostingGroupId\" IS NOT NULL AND \"OperationFingerprint\" IS NOT NULL AND \"ReceiptId\" IS NULL AND \"ActorId\" IS NULL AND \"KillSwitchEpoch\" IS NULL AND \"SessionId\" IS NULL AND \"Scope\" IS NULL AND \"SubjectHash\" IS NULL) OR " +
+                    "(\"ConsumptionKind\" = 3 AND \"SessionId\" IS NOT NULL AND \"TenantId\" IS NOT NULL AND \"Scope\" IS NOT NULL AND \"SubjectHash\" IS NOT NULL AND \"WindowStartedAt\" IS NOT NULL AND \"WindowEndsAt\" IS NOT NULL AND \"SoftUnits\" IS NOT NULL AND \"LossBudgetUsdNanos\" IS NOT NULL AND \"ReceiptId\" IS NULL AND \"RiskDecisionId\" IS NULL AND \"PostingGroupId\" IS NULL AND \"WindowEndsAt\" > \"WindowStartedAt\" AND \"ConsumedAt\" >= \"WindowStartedAt\" AND \"ConsumedAt\" < \"WindowEndsAt\" AND \"SoftUnits\" > 0 AND \"LossBudgetUsdNanos\" >= 0 AND \"Scope\" BETWEEN 1 AND 6) OR " +
+                    "(\"ConsumptionKind\" = 4 AND \"SessionId\" IS NOT NULL AND \"TenantId\" IS NOT NULL AND \"UserId\" IS NOT NULL AND \"Network\" IS NOT NULL AND \"DeviceRiskHash\" IS NOT NULL AND \"SoftUnits\" IS NOT NULL AND \"LossBudgetUsdNanos\" IS NOT NULL AND \"ReceiptId\" IS NULL AND \"RiskDecisionId\" IS NULL AND \"PostingGroupId\" IS NULL AND \"SoftUnits\" > 0 AND \"LossBudgetUsdNanos\" > 0)");
+            });
             builder.HasKey(row => row.Id);
+            builder.Property(row => row.Id).ValueGeneratedNever();
             builder.Property(row => row.OperationFingerprint).HasMaxLength(128);
+            builder.Property(row => row.SubjectHash).HasMaxLength(128);
+            builder.Property(row => row.Network).HasMaxLength(100);
+            builder.Property(row => row.DeviceRiskHash).HasMaxLength(128);
+            builder.HasIndex(row => row.ReceiptId)
+                .IsUnique()
+                .HasFilter("\"ConsumptionKind\" = 1")
+                .HasDatabaseName("ux_economy_unit_consumptions_receipt");
             builder.HasIndex(row => row.RiskDecisionId)
                 .IsUnique()
-                .HasDatabaseName("ux_economy_risk_decision_consumptions_decision");
+                .HasFilter("\"ConsumptionKind\" = 2")
+                .HasDatabaseName("ux_economy_unit_consumptions_risk_decision");
             builder.HasIndex(row => row.PostingGroupId)
                 .IsUnique()
-                .HasDatabaseName("ux_economy_risk_decision_consumptions_posting");
+                .HasFilter("\"ConsumptionKind\" = 2")
+                .HasDatabaseName("ux_economy_unit_consumptions_posting");
+            builder.HasIndex(row => new { row.SessionId, row.Scope })
+                .IsUnique()
+                .HasFilter("\"ConsumptionKind\" = 3")
+                .HasDatabaseName("ux_economy_unit_consumptions_session_scope");
+            builder.HasIndex(row => row.SessionId)
+                .IsUnique()
+                .HasFilter("\"ConsumptionKind\" = 4")
+                .HasDatabaseName("ux_economy_unit_consumptions_budget_session");
+            builder.HasIndex(row => new { row.TenantId, row.Scope, row.SubjectHash, row.ConsumedAt })
+                .HasFilter("\"ConsumptionKind\" = 3")
+                .HasDatabaseName("ix_economy_unit_consumptions_tenant_scope_subject");
+            builder.HasIndex(row => new { row.UserId, row.ConsumedAt })
+                .HasFilter("\"ConsumptionKind\" = 4")
+                .HasDatabaseName("ix_economy_unit_consumptions_budget_user");
+            builder.HasIndex(row => new { row.DeviceRiskHash, row.ConsumedAt })
+                .HasFilter("\"ConsumptionKind\" = 4")
+                .HasDatabaseName("ix_economy_unit_consumptions_budget_device");
+            builder.HasIndex(row => new { row.Network, row.ConsumedAt })
+                .HasFilter("\"ConsumptionKind\" = 4")
+                .HasDatabaseName("ix_economy_unit_consumptions_budget_network");
+            builder.HasOne<EconomyCapabilityReceiptRow>()
+                .WithMany()
+                .HasForeignKey(row => row.ReceiptId)
+                .OnDelete(DeleteBehavior.Restrict);
             builder.HasOne<EconomyRiskDecisionRow>()
                 .WithMany()
                 .HasForeignKey(row => row.RiskDecisionId)
@@ -1346,19 +1499,9 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<EconomyCapabilityReceiptConsumptionRow>(builder =>
-        {
-            builder.ToTable("economy_capability_receipt_consumptions");
-            builder.HasKey(row => row.Id);
-            builder.Property(row => row.OperationFingerprint).HasMaxLength(128);
-            builder.HasIndex(row => row.ReceiptId)
-                .IsUnique()
-                .HasDatabaseName("ux_economy_capability_receipt_consumptions_receipt");
-            builder.HasOne<EconomyCapabilityReceiptRow>()
-                .WithMany()
-                .HasForeignKey(row => row.ReceiptId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
+        // #1092 Tier 2.2: economy_capability_receipt_consumptions merged into
+        // economy_unit_consumptions (ConsumptionKind = 1 = CapabilityReceipt).
+        // The registration lives with the unified row above.
 
         modelBuilder.Entity<EconomyKillSwitchRow>(builder =>
         {

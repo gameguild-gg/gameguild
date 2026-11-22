@@ -40,7 +40,7 @@ public sealed class EconomyPayoutPostgreSqlMigrationTests
         var directInsert = await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsRoleAsync(
             connection,
             "gameguild_economy_writer",
-            $"INSERT INTO public.economy_payout_operations (\"Id\") VALUES ('{OperationId}');"));
+            $"INSERT INTO public.economy_operations (\"Id\") VALUES ('{OperationId}');"));
         directInsert.SqlState.Should().Be(PostgresErrorCodes.InsufficientPrivilege);
 
         await ExecuteAsRoleAsync(connection, "gameguild_economy_writer", $"""
@@ -90,8 +90,8 @@ public sealed class EconomyPayoutPostgreSqlMigrationTests
         await using var connection = new NpgsqlConnection(container.ConnectionString);
         await connection.OpenAsync();
         (await ScalarAsync<string?>(connection,
-            "SELECT to_regclass('public.economy_payout_operations')::text;"))
-            .Should().Be("economy_payout_operations");
+            "SELECT to_regclass('public.economy_operations')::text;"))
+            .Should().Be("economy_operations");
 
         await migrator.MigrateAsync("20260809160000_AddEconomyAdminWithdrawalPersistence");
 

@@ -163,12 +163,12 @@ export class AccessControlAccessReviewsModule {
    */
   async postAccessReviewsItemsApprove(
     id: string,
-    body: Types.IdentityAuthorizationControllersApproveItemInput,
+    body?: Types.IdentityAuthorizationControllersApproveItemInput,
   ): Promise<Result<Types.IdentityAuthorizationAccessReviewItem, ApiError>> {
     const url = `/v1/access-reviews/items/${id}:approve`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthorizationControllersApproveItemInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthorizationControllersApproveItemInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

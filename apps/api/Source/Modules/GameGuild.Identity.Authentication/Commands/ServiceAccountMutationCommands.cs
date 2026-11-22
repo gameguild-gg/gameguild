@@ -16,7 +16,7 @@ public sealed record PatchServiceAccountCommand(
     string? Description,
     string? Scopes,
     DateTime? ExpiresAt) : ICommand<bool>;
-public sealed record RotateServiceAccountSecretCommand(Guid ServiceAccountId) : ICommand<string>;
+public sealed record RotateServiceAccountSecretCommand(Guid ServiceAccountId, [property: AuditSensitive] string? StepUpReceipt = null) : ICommand<Result<string>>;
 public sealed record UnlockServiceAccountCommand(Guid ServiceAccountId) : ICommand;
 public sealed record LockServiceAccountCommand(Guid ServiceAccountId, string Reason) : ICommand;
 public sealed record DeactivateServiceAccountCommand(Guid ServiceAccountId) : ICommand;
@@ -46,7 +46,6 @@ public sealed class ServiceAccountMutationCommandHandler(
     IJwtTokenService jwtTokenService) :
     ICommandHandler<CreateServiceAccountCommand, (ServiceAccount Account, string ClientSecret)>,
     ICommandHandler<PatchServiceAccountCommand, bool>,
-    ICommandHandler<RotateServiceAccountSecretCommand, string>,
     ICommandHandler<UnlockServiceAccountCommand>,
     ICommandHandler<LockServiceAccountCommand>,
     ICommandHandler<DeactivateServiceAccountCommand>,
@@ -104,9 +103,6 @@ public sealed class ServiceAccountMutationCommandHandler(
 
         return true;
     }
-
-    public Task<string> Handle(RotateServiceAccountSecretCommand command, CancellationToken cancellationToken) =>
-        serviceAccountService.RotateSecretAsync(command.ServiceAccountId, cancellationToken);
 
     public async Task<Unit> Handle(UnlockServiceAccountCommand command, CancellationToken cancellationToken)
     {

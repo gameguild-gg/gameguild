@@ -59,7 +59,8 @@ public sealed class PostgreSqlRegisteredPostingGatewayTests
             .Should().Be(1);
         (await ScalarAsync<long>(connection, "SELECT count(*) FROM public.economy_journal_lines;"))
             .Should().Be(2);
-        (await ScalarAsync<long>(connection, "SELECT count(*) FROM public.economy_risk_decision_consumptions;"))
+        (await ScalarAsync<long>(connection,
+            "SELECT count(*) FROM public.economy_unit_consumptions WHERE \"ConsumptionKind\" = 2;"))
             .Should().Be(1);
         (await ScalarAsync<long>(connection, "SELECT count(*) FROM public.economy_outbox WHERE \"OutboxKind\" = 1;"))
             .Should().Be(1);

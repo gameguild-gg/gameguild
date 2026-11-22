@@ -16,7 +16,7 @@ function evaluate(overrides = {}) {
     env: {
       ...process.env,
       CLASSIFY: 'success', SECRET_SCAN: 'success', REPOSITORY_POLICY: 'success', WEB: 'success',
-      API_SELECTED: 'true', API: 'success', ECONOMY_SELECTED: 'false',
+      API_SELECTED: 'true', API: 'success', API_SECURITY: 'success', ECONOMY_SELECTED: 'false',
       CODING_SELECTED: 'false', CODING: 'skipped',
       ECONOMY: 'skipped', ECONOMY_API: 'skipped', ECONOMY_CLIENT: 'skipped',
       ECONOMY_COVERAGE: 'skipped', ECONOMY_REGRESSION: 'skipped',
@@ -95,3 +95,34 @@ test('selected Economy gates still require success', () => {
   assert.equal(outcome.status, 1);
   assert.match(outcome.stderr, /economy=skipped/);
 });
+
+
+test('mandatory API security is a required selected gate', () => {
+  assert.match(requiredGate, /API_SECURITY: \$\{\{ needs\.api-security\.result \}\}/);
+  assert.match(requiredGate, / {8}api-security,/);
+});
+
+for (const selected of ['true', 'false', '', 'unknown']) {
+  test(`mandatory API security success is accepted when selection=${selected || 'missing'}`, () => {
+    assert.equal(evaluate({ API_SELECTED: selected, API_SECURITY: 'success' }).status, 0);
+  });
+  for (const result of ['failure', 'cancelled', '', 'queued', 'neutral', 'timed_out', 'unknown', undefined]) {
+    test(`mandatory API security ${result || 'missing result'} blocks when selection=${selected || 'missing'}`, () => {
+      const outcome = evaluate({ API_SELECTED: selected, API_SECURITY: result });
+      assert.equal(outcome.status, 1);
+      assert.match(outcome.stderr, /api-security=/);
+    });
+  }
+}
+
+test('a legitimately unselected mandatory API security job can be skipped', () => {
+  assert.equal(evaluate({ API_SELECTED: 'false', API_SECURITY: 'skipped' }).status, 0);
+});
+
+for (const selected of ['true', '', 'unknown']) {
+  test(`mandatory API security skip blocks when selection=${selected || 'missing'}`, () => {
+    const outcome = evaluate({ API_SELECTED: selected, API_SECURITY: 'skipped' });
+    assert.equal(outcome.status, 1);
+    assert.match(outcome.stderr, /api-security=skipped/);
+  });
+}

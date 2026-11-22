@@ -40,11 +40,11 @@ export class CommercePaymentsCurrenciesModule {
    *
    * Disables an ISO 4217 currency for the tenant. The base currency is always rejected; currencies held by active subscriptions need explicit confirmation.
    */
-  async postCurrenciesDisable(currencyCode: string, body: Types.CommercePaymentsDisableCurrencyInput): Promise<Result<void, ApiError>> {
+  async postCurrenciesDisable(currencyCode: string, body?: Types.CommercePaymentsDisableCurrencyInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/currencies/${currencyCode}/disable`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsDisableCurrencyInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsDisableCurrencyInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -61,11 +61,11 @@ export class CommercePaymentsCurrenciesModule {
    *
    * Enables an ISO 4217 currency for the tenant. Idempotent. Audit-logged.
    */
-  async postCurrenciesEnable(currencyCode: string, body: Types.CommercePaymentsCurrencyDisplayPreferencesInput): Promise<Result<void, ApiError>> {
+  async postCurrenciesEnable(currencyCode: string, body?: Types.CommercePaymentsCurrencyDisplayPreferencesInput): Promise<Result<void, ApiError>> {
     const url = `/api/v1/currencies/${currencyCode}/enable`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsCurrencyDisplayPreferencesInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.CommercePaymentsCurrencyDisplayPreferencesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

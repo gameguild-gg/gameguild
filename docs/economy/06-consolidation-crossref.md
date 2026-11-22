@@ -15,13 +15,35 @@
 
 ## Tier 2 — shared spines (98 → 81)
 
-| #1092 merge | Exercised by | Invariants |
-|---|---|---|
-| **T2.1 unified `economy_events`** (10 streams→1, +bounty expiry = 11) | [`04-event-inventory.md`](04-event-inventory.md) §3 (all ten rows + the bounty stream); audit reads in flows §6 (treasury chain), §11 (holds), risk-review audit | unique `(Parent, Sequence)` per stream already exists; **`economy_admin_withdrawal_audit_events` is a hash chain** (`PreviousHash/Hash`) — either keep chain columns on the unified table or keep the table separate (#1092's own exception). Append-only writes happen inside writer functions — the merge must not widen those transactions. |
-| **T2.2 unified `economy_unit_consumptions`** (4→1) | flows §9 (ad budget + cap consumptions — `AdRewardsModelConfiguration.cs:346-359,398-408`); capability receipt consumptions verified inside writer fns (`post_ad_reward_issuance_v1` joins `economy_capability_receipt_consumptions` — `Migration:`); risk decision consumptions (`Core:/Risk/PostgreSqlRiskControlPlane.cs`) | the writer functions **SQL-join** the capability-consumption table to authorize postings; any rename/merge must update the SECURITY DEFINER bodies in lockstep with the EF model. |
-| **T2.3 unified `economy_policy_versions`** (2→1) | flows §7 — the marketplace dual-control signed currency policy (`DurableMarketplacePolicyReader`, `GetEffectiveAsync`/`GetVersionAsync` — settlement uses effective, refund uses **historical** version `DurableMarketplaceRefundService.cs:155-162`); ad network policy versions (`AdRewardsModelConfiguration.cs:250-268`) | historical-version reads are correctness-critical (a refund must price with the policy that priced the settlement); a `PolicyDomain` discriminator must not break the `(TenantId, …)` effective-window indexes. |
-| **T2.4 unified `economy_operations`** (payouts + treasury runs + dispatch snapshots + authorization evidence) | state machines §4–5 (15 shared spine columns incl. `FencingToken`, `ReserveVersion`, `ReserveAuthorizationEpoch`); flows §5–6; fencing verification in §4 audit items 1-3 | **the fencing-token discipline is the crown jewel**: exact-version + token + epoch match at dispatch (`DurablePayoutSettlementWorkflow.cs:316-323`), monotonic SQL token allocator (`PostgreSqlPayoutFencingTokenAllocator.cs:24-27`), evidence rows keyed `(OperationId, Phase)` (`Payouts:/PayoutAuthorizationEvidence.cs:5`). A discriminator-based merge must keep the two independent fencing allocators monotonic **per kind** (or unify the sequence — but then re-verify no cross-kind token reuse assumptions). Treasury's `ExecutionEpoch` has no payout twin — the merged table keeps both columns. |
-| **T2.5 bounty expiration events → T2.1** | flows §8; worker `Bounties:/DurableBountyExpirationWorkflow.cs:72-79` | version-stamped rows (`BountyVersion`) — keep the version link in the payload. |
+| #1092 merge | Exercised by | Invariants | Status |
+|---|---|---|---|
+| **T2.1 unified `economy_events`** (10 streams→1, +bounty expiry = 11) | [`04-event-inventory.md`](04-event-inventory.md) §3 (all ten rows + the bounty stream); audit reads in flows §6 (treasury chain), §11 (holds), risk-review audit | unique `(Parent, Sequence)` per stream already exists; **`economy_admin_withdrawal_audit_events` is a hash chain** (`PreviousHash/Hash`) — either keep chain columns on the unified table or keep the table separate (#1092's own exception). Append-only writes happen inside writer functions — the merge must not widen those transactions. | **Deferred** — see the Tier 2 delivery note below. |
+| **T2.2 unified `economy_unit_consumptions`** (4→1) | flows §9 (ad budget + cap consumptions — `AdRewardsModelConfiguration.cs:346-359,398-408`); capability receipt consumptions verified inside writer fns (`post_ad_reward_issuance_v1` joins `economy_capability_receipt_consumptions` — `Migration:`); risk decision consumptions (`Core:/Risk/PostgreSqlRiskControlPlane.cs`) | the writer functions **SQL-join** the capability-consumption table to authorize postings; any rename/merge must update the SECURITY DEFINER bodies in lockstep with the EF model. | **Delivered** (migration `20261118113006_ConsolidateEconomyTier2`): the posting writers' capability-receipt joins and risk-decision burn INSERTs were retargeted in the same migration; the insert-validation and immutability triggers moved over kind-scoped (`ConsumptionKind = 2`). |
+| **T2.3 unified `economy_policy_versions`** (2→1) | flows §7 — the marketplace dual-control signed currency policy (`DurableMarketplacePolicyReader`, `GetEffectiveAsync`/`GetVersionAsync` — settlement uses effective, refund uses **historical** version `DurableMarketplaceRefundService.cs:155-162`); ad network policy versions (`AdRewardsModelConfiguration.cs:250-268`) | historical-version reads are correctness-critical (a refund must price with the policy that priced the settlement); a `PolicyDomain` discriminator must not break the `(TenantId, …)` effective-window indexes. | **Delivered** (same migration): per-domain partial uniques preserve `(TenantId, subject, Version)`; the settlement/refund writers' policy verification gained the `PolicyDomain` predicate plus the `ProductId`→`SubjectId` rename. |
+| **T2.4 unified `economy_operations`** (payouts + treasury runs + dispatch snapshots + authorization evidence) | state machines §4–5 (15 shared spine columns incl. `FencingToken`, `ReserveVersion`, `ReserveAuthorizationEpoch`); flows §5–6; fencing verification in §4 audit items 1-3 | **the fencing-token discipline is the crown jewel**: exact-version + token + epoch match at dispatch (`DurablePayoutSettlementWorkflow.cs:316-323`), monotonic SQL token allocator (`PostgreSqlPayoutFencingTokenAllocator.cs:24-27`), evidence rows keyed `(OperationId, Phase)` (`Payouts:/PayoutAuthorizationEvidence.cs:5`). A discriminator-based merge must keep the two independent fencing allocators monotonic **per kind** (or unify the sequence — but then re-verify no cross-kind token reuse assumptions). Treasury's `ExecutionEpoch` has no payout twin — the merged table keeps both columns. | **Delivered, narrowed** (same migration): payout operations and admin-withdrawal runs merged behind `OperationKind` with both fencing allocators kept independent per kind; `economy_dispatch_snapshots` (keyed by posting group) and `economy_payout_authorization_evidence` (keyed `(OperationId, Phase)`) remain separate 1:N child stores re-bound to `economy_operations` — folding them into the operations row would break their key semantics, so "#1092's dispatch snapshots + authorization evidence" is delivered as retargeted bindings rather than table drops. |
+| **T2.5 bounty expiration events → T2.1** | flows §8; worker `Bounties:/DurableBountyExpirationWorkflow.cs:72-79` | version-stamped rows (`BountyVersion`) — keep the version link in the payload. | **Deferred with T2.1** — see the Tier 2 delivery note below. |
+
+### Tier 2 delivery note (2026-11-18)
+
+`20261118113006_ConsolidateEconomyTier2` delivers T2.2 + T2.3 + T2.4: eight
+legacy tables retire into three unified spines (`economy_unit_consumptions`,
+`economy_policy_versions`, `economy_operations`), every SECURITY DEFINER body
+that addressed a retired table was rewritten in lockstep (including the ten
+table-typed reader functions, which now return the unified row with a kind
+predicate), and the risk-consumption triggers moved over kind-scoped.
+
+T2.1/T2.5 (the unified `economy_events` ledger) is deferred rather than
+forced: #1092 itself flags `economy_admin_withdrawal_audit_events` as the
+possible exception (its `PreviousHash`/`Hash` chain is verified row-by-row by
+`DurableAdminWithdrawalApplicationService`), the streams are heterogeneous
+(`economy_provider_dispute_events` is keyed by a provider event-id string,
+not a `(Parent, Sequence)` pair), and each stream's append happens inside a
+posting writer function that must not widen its transaction — a safe merge
+needs the writers' insert sites enumerated with the same ground-truth
+discipline used for T2.2–T2.4, which is a follow-up of the same size as this
+one. Tier 3 builds on T2.1 (the legacy-cutover stream and
+`economy_risk_audit_evidence` both fold into it), so the sequencing note in
+#1092 is preserved by deferring rather than half-merging.
 
 ## Tier 3 — structural merges (81 → 67)
 

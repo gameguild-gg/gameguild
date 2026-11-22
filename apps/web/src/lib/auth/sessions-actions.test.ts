@@ -30,14 +30,14 @@ const SESSIONS = [{ id: 's1', isCurrent: true }] as never;
 const ANALYSIS = { activeSessionCount: 1 } as never;
 const TRUSTED_DEVICES = [{ id: 'd1' }] as never;
 
-describe('loadSessionsData (issue #864 contract-drift defense)', () => {
+describe('loadSessionsData (issue #1298 J4: failures surface, never silently blank)', () => {
   beforeEach(() => {
     mocks.getAuthSessions.mockReset();
     mocks.getAuthSessionsAnalyzeSecurity.mockReset();
     mocks.getAuthTrustedDevices.mockReset();
   });
 
-  it('returns data when all calls succeed', async () => {
+  it('returns data and loadStatus ok when all calls succeed', async () => {
     mocks.getAuthSessions.mockResolvedValue({ ok: true, data: SESSIONS });
     mocks.getAuthSessionsAnalyzeSecurity.mockResolvedValue({ ok: true, data: ANALYSIS });
     mocks.getAuthTrustedDevices.mockResolvedValue({ ok: true, data: TRUSTED_DEVICES });
@@ -46,10 +46,11 @@ describe('loadSessionsData (issue #864 contract-drift defense)', () => {
       sessions: SESSIONS,
       analysis: ANALYSIS,
       trustedDevices: TRUSTED_DEVICES,
+      loadStatus: 'ok',
     });
   });
 
-  it('degrades to empty lists and null analysis when safeParse throws on contract mismatch instead of crashing the RSC render', async () => {
+  it('reports contract drift instead of rendering empty lists when safeParse throws', async () => {
     const contractDrift = new Error('[GET /v1/auth/sessions] Response validation failed');
     mocks.getAuthSessions.mockRejectedValue(contractDrift);
     mocks.getAuthSessionsAnalyzeSecurity.mockRejectedValue(contractDrift);
@@ -59,10 +60,11 @@ describe('loadSessionsData (issue #864 contract-drift defense)', () => {
       sessions: [],
       analysis: null,
       trustedDevices: [],
+      loadStatus: 'contractError',
     });
   });
 
-  it('degrades individual failures while keeping successful sections', async () => {
+  it('keeps successful sections and reports the most actionable aggregate status', async () => {
     mocks.getAuthSessions.mockRejectedValue(new Error('drift'));
     mocks.getAuthSessionsAnalyzeSecurity.mockResolvedValue({ ok: true, data: ANALYSIS });
     mocks.getAuthTrustedDevices.mockResolvedValue({ ok: false, error: { status: 500 } });
@@ -71,10 +73,11 @@ describe('loadSessionsData (issue #864 contract-drift defense)', () => {
       sessions: [],
       analysis: ANALYSIS,
       trustedDevices: [],
+      loadStatus: 'serverError',
     });
   });
 
-  it('degrades non-ok results to empty shapes', async () => {
+  it('classifies non-ok results by their HTTP status', async () => {
     mocks.getAuthSessions.mockResolvedValue({ ok: false, error: { status: 401 } });
     mocks.getAuthSessionsAnalyzeSecurity.mockResolvedValue({ ok: false, error: { status: 500 } });
     mocks.getAuthTrustedDevices.mockResolvedValue({ ok: false, error: { status: 404 } });
@@ -83,6 +86,7 @@ describe('loadSessionsData (issue #864 contract-drift defense)', () => {
       sessions: [],
       analysis: null,
       trustedDevices: [],
+      loadStatus: 'unauthorized',
     });
   });
 });

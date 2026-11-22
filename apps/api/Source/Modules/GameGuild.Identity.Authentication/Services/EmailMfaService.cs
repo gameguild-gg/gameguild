@@ -21,7 +21,8 @@ public sealed class EmailMfaService(
     IMemoryCache memoryCache,
     IUserMfaConfigurationRepository mfaConfigRepository,
     IUserRepository userRepository,
-    IPublisher publisher) : IEmailMfaService
+    IPublisher publisher,
+    IMfaAttemptTrackingService attemptTrackingService) : IEmailMfaService
 {
     /// <summary>How long an issued code can be verified.</summary>
     public static readonly TimeSpan CodeLifetime = TimeSpan.FromMinutes(10);
@@ -127,6 +128,29 @@ public sealed class EmailMfaService(
         }
 
         return ConsumeCode(userId, code) is not null;
+    }
+
+    /// <inheritdoc />
+    public async Task<bool> VerifySignInCodeAsync(Guid userId, string code, CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var configuration = await mfaConfigRepository.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false);
+        if (configuration is not { IsEnabled: true } || string.IsNullOrWhiteSpace(configuration.EmailMfaAddress) ||
+            configuration.LockedOutUntil > SystemClock.UtcNow || attemptTrackingService.IsLockedOut(configuration)) { return false; }
+        if (ConsumeCode(userId, code) is null)
+        {
+            // Sign-in completions feed the shared account-level lockout budget exactly like the SMS lane.
+            await attemptTrackingService.RecordFailedMfaAttemptAsync(configuration, MfaMethod.Email,
+                "Invalid or expired email proof", null, cancellationToken).ConfigureAwait(false);
+            return false;
+        }
+        configuration.FailedAttempts = 0;
+        configuration.LockedOutUntil = null;
+        configuration.LastUsedAt = SystemClock.UtcNow;
+        configuration.UpdatedAt = SystemClock.UtcNow;
+        await mfaConfigRepository.UpdateAsync(configuration, cancellationToken).ConfigureAwait(false);
+        await attemptTrackingService.RecordMfaAttemptAsync(userId, MfaMethod.Email, true, null, null, cancellationToken).ConfigureAwait(false);
+        return true;
     }
 
     private async Task<string?> IssueCodeAsync(Guid userId, string email, bool isEnrollment, CancellationToken cancellationToken)

@@ -81,12 +81,13 @@ export class CommercePaymentsBillingRevenueAuditingModule {
    * Evaluates daily net revenue for the trailing days against the configured baseline window and persists anomaly alerts (spikes/drops at or above the z-score threshold). Baselines and z-scores are computed per currency; detection is idempotent per kind, day and currency.
    */
   async postBillingRevenueAuditingAnomaliesDetect(
-    body: Types.CommercePaymentsRevenueAuditingControllerDetectRevenueAnomaliesInput,
+    body?: Types.CommercePaymentsRevenueAuditingControllerDetectRevenueAnomaliesInput,
   ): Promise<Result<Types.CommercePaymentsRevenueAuditingControllerAnomalyDetectionResult, ApiError>> {
     const url = '/api/v1/billing/revenue/auditing/anomalies/detect';
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsRevenueAuditingControllerDetectRevenueAnomaliesInputSchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.CommercePaymentsRevenueAuditingControllerDetectRevenueAnomaliesInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',
@@ -141,12 +142,13 @@ export class CommercePaymentsBillingRevenueAuditingModule {
    */
   async postBillingRevenueAuditingAnomalyAlertsAcknowledge(
     alertId: string,
-    body: Types.CommercePaymentsRevenueAuditingControllerAcknowledgeRevenueAnomalyAlertInput,
+    body?: Types.CommercePaymentsRevenueAuditingControllerAcknowledgeRevenueAnomalyAlertInput,
   ): Promise<Result<void, ApiError>> {
     const url = `/api/v1/billing/revenue/auditing/anomaly-alerts/${alertId}/acknowledge`;
 
     // Validate request body
-    const validatedBody = safeParse(Types.CommercePaymentsRevenueAuditingControllerAcknowledgeRevenueAnomalyAlertInputSchema, body, 'request');
+    const validatedBody =
+      body === undefined ? undefined : safeParse(Types.CommercePaymentsRevenueAuditingControllerAcknowledgeRevenueAnomalyAlertInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

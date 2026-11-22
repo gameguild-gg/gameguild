@@ -665,7 +665,8 @@ public sealed class ApiKeyLifecycleAuditTests
     {
         var userId = Guid.NewGuid();
         var actorAccessor = new Mock<IActorContextAccessor>();
-        actorAccessor.Setup(a => a.ActorContext).Returns(AuthenticatedActor(userId));
+        actorAccessor.Setup(a => a.ActorContext).Returns(ActorContextBuilder.ForUser(userId).WithTenantId(Guid.NewGuid())
+            .WithAttribute("session_id", Guid.NewGuid().ToString()).Build());
         var repository = new Mock<IApiKeyRepository>();
         ApiKey? added = null;
         repository
@@ -674,11 +675,11 @@ public sealed class ApiKeyLifecycleAuditTests
             .ReturnsAsync((ApiKey key, CancellationToken _) => key);
         var auditSink = new Mock<IApiKeyAuditEventSink>();
 
-        var handler = new CreateApiKeyHandler(repository.Object, actorAccessor.Object,
+        var handler = new CreateApiKeyHandler(repository.Object, actorAccessor.Object, Mock.Of<IStepUpReceiptService>(),
             NullLogger<CreateApiKeyHandler>.Instance, auditSink.Object);
 
         var result = await handler.Handle(
-            new CreateApiKeyCommand { Name = "reporting", Scopes = ["reports:read"] }, CancellationToken.None);
+            new CreateApiKeyCommand { Name = "reporting", Scopes = ["reports:read"], StepUpReceipt = "verified-test-receipt" }, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
         auditSink.Verify(sink => sink.RecordAsync(

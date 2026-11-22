@@ -117,6 +117,28 @@ describe('Auth Error Types', () => {
       expect(error.mfaEnrollment).toEqual(offer);
       expect(error.toJSON()).toMatchObject({ mfaEnrollment: offer });
     });
+
+    it('should carry the post-password-proof subject identifiers and serialize them', () => {
+      // Design J2 GAP-2: the pending sign-in response's userId/email must survive the error
+      // boundary so consumers can drive method-specific challenges (email:challenge).
+      const error = new MfaRequiredError('MFA needed', {
+        mfaToken: 'x'.repeat(43),
+        userId: '11111111-1111-4111-8111-111111111111',
+        email: 'member@example.com',
+      });
+      expect(error.userId).toBe('11111111-1111-4111-8111-111111111111');
+      expect(error.email).toBe('member@example.com');
+      expect(error.toJSON()).toMatchObject({
+        userId: '11111111-1111-4111-8111-111111111111',
+        email: 'member@example.com',
+      });
+    });
+
+    it('should leave the subject identifiers undefined when absent', () => {
+      const error = new MfaRequiredError();
+      expect(error.userId).toBeUndefined();
+      expect(error.email).toBeUndefined();
+    });
   });
 
   describe('parseMfaEnrollmentOffer', () => {

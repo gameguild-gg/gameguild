@@ -143,9 +143,9 @@ public sealed class PostgreSqlAdRewardIssuanceGatewayTests
                 '{request.Authority.RiskOperationFingerprint}', 1, 1, '{request.Authority.RiskDecisionId}', 0,
                 'provider', 'destination', '[]', '["evidence"]', '{Now.AddMinutes(-1):O}', '{Now.AddMinutes(5):O}',
                 'receipt-hash', 'key', 'signature');
-            INSERT INTO public.economy_capability_receipt_consumptions
-                ("Id", "ReceiptId", "TenantId", "ActorId", "OperationFingerprint", "KillSwitchEpoch", "ConsumedAt")
-            VALUES ('{Guid.NewGuid()}', '{receipt}', '{request.Authority.TenantId}', '{request.Authority.ActorId}',
+            INSERT INTO public.economy_unit_consumptions
+                ("Id", "ConsumptionKind", "ReceiptId", "TenantId", "ActorId", "OperationFingerprint", "KillSwitchEpoch", "ConsumedAt")
+            VALUES ('{Guid.NewGuid()}', 1, '{receipt}', '{request.Authority.TenantId}', '{request.Authority.ActorId}',
                 '{request.Authority.RiskOperationFingerprint}', 0, '{Now:O}');
             """, connection);
         await command.ExecuteNonQueryAsync();

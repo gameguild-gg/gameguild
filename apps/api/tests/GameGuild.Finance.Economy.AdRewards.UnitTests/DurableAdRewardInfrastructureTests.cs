@@ -4,6 +4,7 @@ using System.Text.Json;
 using FluentAssertions;
 using GameGuild.Finance.Economy.AdRewards.Persistence;
 using GameGuild.Finance.Economy.Contracts;
+using GameGuild.Finance.Economy.Persistence;
 using GameGuild.Finance.Economy.Risk;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -134,7 +135,7 @@ public sealed class DurableAdRewardInfrastructureTests
     {
         await using var context = Context();
         var tenant = Guid.NewGuid();
-        context.Set<AdNetworkPolicyVersionRow>().Add(PolicyRow(tenant, "network-a", 1));
+        context.Set<EconomyPolicyVersionRow>().Add(PolicyRow(tenant, "network-a", 1));
         await context.SaveChangesAsync();
         var verifier = new RecordingVerifier();
         var reader = new PostgreSqlDurableAdRewardPolicyReader(context, verifier);
@@ -253,14 +254,16 @@ public sealed class DurableAdRewardInfrastructureTests
         return new SignedAdRewardSession(string.Join('.', parts));
     }
 
-    private static AdNetworkPolicyVersionRow PolicyRow(Guid tenant, string network, long version)
+    private static EconomyPolicyVersionRow PolicyRow(Guid tenant, string network, long version)
     {
         var payload = "canonical-policy";
-        return new AdNetworkPolicyVersionRow
+        return new EconomyPolicyVersionRow
         {
-            TenantId = tenant, Network = network, Version = version,
+            PolicyDomain = EconomyPolicyDomain.AdNetwork,
+            TenantId = tenant, SubjectKey = network, Version = version,
             EffectiveAt = Now.AddHours(-1), ExpiresAt = Now.AddHours(1),
-            IssuanceMode = AdRewardIssuanceMode.ImmediateProviderProof, YieldState = AdNetworkYieldState.Trailing,
+            IssuanceMode = (int)AdRewardIssuanceMode.ImmediateProviderProof,
+            YieldState = (int)AdNetworkYieldState.Trailing,
             EstimatedNetEcpmUsdNanos = 1_000_000_000, ContractedRevenueSharePpm = 500_000,
             SafetyBufferPpm = 100_000, MinimumVisiblePpm = 800_000,
             MaximumFocusLossTicks = TimeSpan.FromSeconds(2).Ticks, MaximumRewardSoftUnits = 1_000,

@@ -39,8 +39,7 @@ export default async function Page({
       <GoogleOneTap authenticated={Boolean(session)} redirectTo={redirectTo} />
       <AuthErrorNotice errorCode={errorCode} />
       <SignInForm
-        magicLinkLabel={t('magicLink')}
-        emailCodeLabel={t('emailCode')}
+        passwordlessLabel={t('passwordless')}
         guestEntry={
           // Capability-gated (issue #213): the affordance is rendered only when
           // guest access is enabled for this deployment, mirroring the backend's

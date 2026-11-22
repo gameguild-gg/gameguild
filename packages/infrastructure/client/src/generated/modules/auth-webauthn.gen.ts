@@ -40,12 +40,12 @@ export class AuthWebauthnModule {
    * Begin WebAuthn authentication (passwordless login).
    */
   async postAuthWebauthnAuthenticationBegin(
-    body: Types.IdentityAuthenticationBeginWebAuthnAuthenticationInput,
+    body?: Types.IdentityAuthenticationBeginWebAuthnAuthenticationInput,
   ): Promise<Result<Types.IdentityAuthenticationWebAuthnAuthenticationOptionsResult, ApiError>> {
     const url = '/v1/auth/webauthn/authentication:begin';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationBeginWebAuthnAuthenticationInputSchema, body, 'request');
+    const validatedBody = body === undefined ? undefined : safeParse(Types.IdentityAuthenticationBeginWebAuthnAuthenticationInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

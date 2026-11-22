@@ -1,4 +1,5 @@
 using FluentAssertions;
+using GameGuild.Configuration.ApplicationLayer;
 using GameGuild.CQRS;
 using GameGuild.Identity.Users;
 using Microsoft.Extensions.Caching.Memory;
@@ -18,10 +19,12 @@ public sealed class EmailMfaServiceTests : IDisposable
     private readonly Mock<IUserMfaConfigurationRepository> mfaConfigRepository = new();
     private readonly Mock<IUserRepository> userRepository = new();
     private readonly Mock<IPublisher> publisher = new();
+    private readonly Mock<IMfaAttemptTrackingService> attemptTrackingService = new();
     private readonly MemoryCache memoryCache = new(new MemoryCacheOptions { SizeLimit = null });
 
     private EmailMfaService CreateService() =>
-        new(NullLogger<EmailMfaService>.Instance, memoryCache, mfaConfigRepository.Object, userRepository.Object, publisher.Object);
+        new(NullLogger<EmailMfaService>.Instance, memoryCache, mfaConfigRepository.Object, userRepository.Object, publisher.Object,
+            attemptTrackingService.Object);
 
     public void Dispose() => memoryCache.Dispose();
 
@@ -189,6 +192,86 @@ public sealed class EmailMfaServiceTests : IDisposable
         var service = CreateService();
 
         (await service.VerifyCodeAsync(Guid.NewGuid(), "123456")).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task VerifySignInCode_FailedProofFeedsTheSharedAccountLockoutBudget()
+    {
+        var userId = Guid.NewGuid();
+        mfaConfigRepository
+            .Setup(r => r.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UserMfaConfiguration { UserId = userId, IsEnabled = true, EmailMfaAddress = "member@example.com" });
+        string? capturedCode = null;
+        publisher
+            .Setup(p => p.Publish(It.IsAny<EmailMfaCodeRequestedNotification>(), It.IsAny<CancellationToken>()))
+            .Callback<EmailMfaCodeRequestedNotification, CancellationToken>((n, _) => capturedCode = n.Code);
+        var service = CreateService();
+        await service.SendChallengeAsync(userId);
+        var wrongCode = capturedCode == "000000" ? "111111" : "000000";
+
+        (await service.VerifySignInCodeAsync(userId, wrongCode)).Should().BeFalse();
+
+        attemptTrackingService.Verify(t => t.RecordFailedMfaAttemptAsync(
+            It.Is<UserMfaConfiguration>(c => c.UserId == userId), MfaMethod.Email,
+            It.IsAny<string>(), null, It.IsAny<CancellationToken>()), Times.Once);
+        attemptTrackingService.Verify(t => t.RecordMfaAttemptAsync(userId, MfaMethod.Email, true, null, null,
+            It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    [Fact]
+    public async Task VerifySignInCode_SuccessResetsTheBudgetAndRecordsTheAttempt()
+    {
+        var userId = Guid.NewGuid();
+        var configuration = new UserMfaConfiguration { UserId = userId, IsEnabled = true,
+            EmailMfaAddress = "member@example.com", FailedAttempts = 2, LockedOutUntil = null };
+        mfaConfigRepository
+            .Setup(r => r.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(configuration);
+        mfaConfigRepository
+            .Setup(r => r.UpdateAsync(It.IsAny<UserMfaConfiguration>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserMfaConfiguration value, CancellationToken _) => value);
+        string? capturedCode = null;
+        publisher
+            .Setup(p => p.Publish(It.IsAny<EmailMfaCodeRequestedNotification>(), It.IsAny<CancellationToken>()))
+            .Callback<EmailMfaCodeRequestedNotification, CancellationToken>((n, _) => capturedCode = n.Code);
+        var service = CreateService();
+        await service.SendChallengeAsync(userId);
+
+        (await service.VerifySignInCodeAsync(userId, capturedCode!)).Should().BeTrue();
+
+        configuration.FailedAttempts.Should().Be(0);
+        configuration.LastUsedAt.Should().NotBeNull();
+        attemptTrackingService.Verify(t => t.RecordMfaAttemptAsync(userId, MfaMethod.Email, true, null, null,
+            It.IsAny<CancellationToken>()), Times.Once);
+        // Single use: the consumed proof cannot verify again.
+        (await service.VerifySignInCodeAsync(userId, capturedCode!)).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task VerifySignInCode_RefusesLockedConfigurationsWithoutRecordingOrConsuming()
+    {
+        var userId = Guid.NewGuid();
+        var configuration = new UserMfaConfiguration { UserId = userId, IsEnabled = true,
+            EmailMfaAddress = "member@example.com", FailedAttempts = 5,
+            LockedOutUntil = SystemClock.UtcNow.AddMinutes(10) };
+        mfaConfigRepository
+            .Setup(r => r.GetByUserIdAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(configuration);
+        string? capturedCode = null;
+        publisher
+            .Setup(p => p.Publish(It.IsAny<EmailMfaCodeRequestedNotification>(), It.IsAny<CancellationToken>()))
+            .Callback<EmailMfaCodeRequestedNotification, CancellationToken>((n, _) => capturedCode = n.Code);
+        var service = CreateService();
+        await service.SendChallengeAsync(userId);
+
+        (await service.VerifySignInCodeAsync(userId, capturedCode!)).Should().BeFalse();
+
+        attemptTrackingService.Verify(t => t.RecordFailedMfaAttemptAsync(
+            It.IsAny<UserMfaConfiguration>(), It.IsAny<MfaMethod>(), It.IsAny<string>(), null,
+            It.IsAny<CancellationToken>()), Times.Never);
+        attemptTrackingService.Verify(t => t.RecordMfaAttemptAsync(userId, MfaMethod.Email, true, null, null,
+            It.IsAny<CancellationToken>()), Times.Never);
+        mfaConfigRepository.Verify(r => r.UpdateAsync(It.IsAny<UserMfaConfiguration>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]

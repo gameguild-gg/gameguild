@@ -1,3 +1,5 @@
+using GameGuild.Configuration.ApplicationLayer;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -11,6 +13,9 @@ namespace GameGuild.Identity.Authentication;
 /// </summary>
 public interface IStepUpRequiredResponder
 {
+
+    Task<StepUpAuthenticationRequiredResponse> BuildAsync(Guid userId, string operationType, string targetReference, string reason)
+        => BuildAsync(userId, operationType, targetReference, reason, default);
     /// <summary>
     ///     Builds the step-up-required response for an account and operation binding.
     /// </summary>
@@ -24,7 +29,10 @@ public interface IStepUpRequiredResponder
         string operationType,
         string targetReference,
         string reason,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
+
+    Task<StepUpAuthenticationRequiredResponse> BuildAsync(Guid userId, StepUpRequiredException requirement)
+        => BuildAsync(userId, requirement, default);
 
     /// <summary>
     ///     Builds the step-up-required response from a thrown
@@ -34,11 +42,13 @@ public interface IStepUpRequiredResponder
     Task<StepUpAuthenticationRequiredResponse> BuildAsync(
         Guid userId,
         StepUpRequiredException requirement,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken);
 }
 
 public sealed class StepUpRequiredResponder(
-    IMfaService mfaService,
+    IUserMfaConfigurationRepository mfaConfigurations,
+    IWebAuthnCredentialRepository webAuthnCredentials,
+    MfaOptions mfaOptions,
     ILogger<StepUpRequiredResponder> logger) : IStepUpRequiredResponder
 {
     /// <summary>
@@ -48,38 +58,60 @@ public sealed class StepUpRequiredResponder(
     /// </summary>
     private static readonly TimeSpan ChallengeWindow = TimeSpan.FromMinutes(5);
 
+    public Task<StepUpAuthenticationRequiredResponse> BuildAsync(Guid userId, StepUpRequiredException requirement)
+        => BuildAsync(userId, requirement, default);
+
     public Task<StepUpAuthenticationRequiredResponse> BuildAsync(
         Guid userId,
         StepUpRequiredException requirement,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(requirement);
         return BuildAsync(userId, requirement.OperationType, requirement.TargetReference, requirement.Message, cancellationToken);
     }
+
+    public Task<StepUpAuthenticationRequiredResponse> BuildAsync(Guid userId, string operationType, string targetReference, string reason)
+        => BuildAsync(userId, operationType, targetReference, reason, default);
 
     public async Task<StepUpAuthenticationRequiredResponse> BuildAsync(
         Guid userId,
         string operationType,
         string targetReference,
         string reason,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(operationType);
         ArgumentException.ThrowIfNullOrWhiteSpace(targetReference);
 
         // Enrolled methods only: the verify path accepts factors the account actually has.
         // Best-effort — an MFA-configuration read failure must not turn a 423 into a 500.
-        var availableMethods = Array.Empty<string>();
+        string[] availableMethods;
         try
         {
-            var configuration = await mfaService.GetMfaConfigurationAsync(userId, cancellationToken).ConfigureAwait(false);
-            if (configuration is { IsEnabled: true } && configuration.EnabledMethods is { Length: > 0 })
+            var configuration = mfaOptions.Enabled
+                ? await mfaConfigurations.GetByUserIdAsync(userId, cancellationToken).ConfigureAwait(false)
+                : null;
+            var methods = new List<string>();
+            if (configuration is { IsEnabled: true, IsSetupComplete: true })
             {
-                availableMethods = configuration.EnabledMethods;
+                if (!string.IsNullOrEmpty(configuration.TotpSecretKey))
+                {
+                    methods.Add(nameof(MfaMethod.Totp));
+                }
+                if (BackupCodeSet.Read(configuration.BackupCodes).Hashes.Count > 0)
+                {
+                    methods.Add(nameof(MfaMethod.BackupCode));
+                }
             }
+            if (await webAuthnCredentials.HasActiveCredentialsAsync(userId, cancellationToken).ConfigureAwait(false))
+            {
+                methods.Add(nameof(MfaMethod.WebAuthn));
+            }
+            availableMethods = methods.ToArray();
         }
         catch (Exception exception)
         {
+            availableMethods = Array.Empty<string>();
             logger.LogWarning(exception,
                 "Could not read the MFA configuration while building a step-up-required response: {ErrorType}",
                 exception.GetType().FullName);
@@ -87,6 +119,7 @@ public sealed class StepUpRequiredResponder(
 
         return new StepUpAuthenticationRequiredResponse
         {
+            Status = StatusCodes.Status423Locked,
             StepUpRequired = true,
             RiskLevel = RiskLevel.High,
             Reason = reason,

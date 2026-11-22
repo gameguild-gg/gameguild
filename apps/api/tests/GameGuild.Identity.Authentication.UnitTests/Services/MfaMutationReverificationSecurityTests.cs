@@ -81,4 +81,51 @@ public sealed class MfaMutationReverificationSecurityTests
         var verifier = new MfaReverificationService(users.Object, hasher.Object, NullLogger<MfaReverificationService>.Instance);
         Assert.Equal(scenario == "valid", await verifier.VerifyPasswordAsync(user, password, "test"));
     }
+    [Fact]
+    public async Task BackupRegeneration_ExpectedConfigurationDenialReturnsEmptyAfterReverification()
+    {
+        var user = Guid.NewGuid();
+        var password = Guid.NewGuid().ToString();
+        var proof = new Mock<IMfaReverificationService>(MockBehavior.Strict);
+        proof.Setup(service => service.VerifyPasswordAsync(user, password, "backup-codes-regenerate", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+        var mfa = new Mock<IMfaService>(MockBehavior.Strict);
+        mfa.Setup(service => service.GenerateBackupCodesAsync(user, It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new MfaConfigurationDeniedException("MFA must be enabled to generate backup codes"));
+
+        var result = await new MfaMutationCommandHandler(mfa.Object, proof.Object).Handle(
+            new RegenerateMfaBackupCodesCommand(user, password), CancellationToken.None);
+
+        Assert.Empty(result);
+        proof.Verify(service => service.VerifyPasswordAsync(user, password, "backup-codes-regenerate", It.IsAny<CancellationToken>()), Times.Once());
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(2)]
+    public async Task BackupRegeneration_UnexpectedFailuresStillPropagate(int scenario)
+    {
+        var user = Guid.NewGuid();
+        var password = Guid.NewGuid().ToString();
+        using var cancellation = new CancellationTokenSource();
+        Exception expected = scenario switch
+        {
+            0 => new InvalidOperationException("Synthetic backup storage failure"),
+            1 => new UnauthorizedAccessException("Synthetic backup permission denial"),
+            _ => new OperationCanceledException(cancellation.Token)
+        };
+        var proof = new Mock<IMfaReverificationService>(MockBehavior.Strict);
+        proof.Setup(service => service.VerifyPasswordAsync(user, password, "backup-codes-regenerate", cancellation.Token))
+            .ReturnsAsync(true);
+        var mfa = new Mock<IMfaService>(MockBehavior.Strict);
+        mfa.Setup(service => service.GenerateBackupCodesAsync(user, cancellation.Token)).ThrowsAsync(expected);
+
+        var actual = await Record.ExceptionAsync(() => new MfaMutationCommandHandler(mfa.Object, proof.Object).Handle(
+            new RegenerateMfaBackupCodesCommand(user, password), cancellation.Token));
+
+        Assert.Same(expected, actual);
+        proof.Verify(service => service.VerifyPasswordAsync(user, password, "backup-codes-regenerate", cancellation.Token), Times.Once());
+    }
+
 }

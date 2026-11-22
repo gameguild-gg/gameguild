@@ -1,0 +1,21 @@
+diff --git a/lib/parse.js b/lib/parse.js
+index caa2b86aa5a567df33cef4bda3c7a97794f439f8..b9c395e7c5ef7457ee8143bca75e48bb0f2a88a4 100644
+--- a/lib/parse.js
++++ b/lib/parse.js
+@@ -302,6 +302,16 @@ const analyzeRepeatedExtglob = (body, options) => {
+     }
+   }
+ 
++  // A lone branch that itself contains an unbounded `*` (e.g. `*`, `*a`, `a*b`)
++  // nests an unbounded quantifier inside the outer `+(...)`/`*(...)` — the
++  // catastrophic-backtracking shape from GHSA-fc5q-39xc-vjpf that the branch
++  // loop below otherwise leaves unclassified. Collapse it; when the branch
++  // reduces to a star-extglob sequence we can still emit its flat output
++  // instead of the escaped-literal fallback.
++  if (branches.length === 1 && branches[0].includes('*')) {
++    return { risky: true, safeOutput: getStarExtglobSequenceOutput(branches[0]) };
++  }
++
+   for (const branch of branches) {
+     const safeOutput = getStarExtglobSequenceOutput(branch);
+     if (safeOutput) {

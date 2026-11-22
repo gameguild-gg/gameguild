@@ -258,6 +258,26 @@ describe('CredentialsProvider', () => {
     expect(error.toJSON()).not.toHaveProperty('user');
   });
 
+  it('carries the pending response userId and email through the MFA challenge (design J2 GAP-2)', async () => {
+    const mfaToken = 'x'.repeat(43);
+    globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(
+      Response.json({
+        requiresMfa: true,
+        mfaToken,
+        availableMethods: ['Email'],
+        userId: '11111111-1111-4111-8111-111111111111',
+        email: 'member@example.com',
+      }),
+    );
+    const provider = CredentialsProvider({ apiUrl: 'http://localhost:8080' });
+    const error: unknown = await provider.authorize({ email: 'member@example.com', password: 'pass' }).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(MfaRequiredError);
+    if (!(error instanceof MfaRequiredError)) throw new Error('Expected the limited MFA challenge');
+    expect(error.userId).toBe('11111111-1111-4111-8111-111111111111');
+    expect(error.email).toBe('member@example.com');
+    expect(error.toJSON()).toMatchObject({ mfaToken, userId: '11111111-1111-4111-8111-111111111111', email: 'member@example.com' });
+  });
+
   it('carries the enrollment offer from a required-MFA unenrolled first factor', async () => {
     globalThis.fetch = vi.fn<typeof fetch>().mockResolvedValue(
       Response.json({

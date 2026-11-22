@@ -202,20 +202,34 @@ swap already used and 12 logical CPUs. Other applications were left alone.
 The layout-only browser inspection lasted 2.27 seconds and observed at most
 376 MiB of known Chromium process RSS; that is not a WASM/runtime measurement.
 
-Use the following initial validation limits, then measure them with real
-artifacts before accepting `CS-REF-12`. They are thresholds, not claimed
-results:
+The user revised the local resource policy on 2026-11-22: 14 GB is not a
+fixed build ceiling. Be friendly to the OS instead of forcing it to surrender
+all RAM and swap. Earlier 6/10/14 GB execution records remain historical
+measurements, not current authorization limits. These local validation rules
+are distinct from per-exercise execution limits. Measure them with real
+artifacts before accepting `CS-REF-12`; they are not claimed results:
 
 | Measurement | Initial limit and response |
 | --- | --- |
 | heavy stack entry | at least 10 GiB MemAvailable before starting an additional isolated API/web/database/runtime stack; otherwise reuse a healthy authorized stack or defer the heavy check |
-| heavy stack total | target at most 6 GiB combined owned process RSS; preserve at least 2 GiB system MemAvailable; stop owned work if this floor is crossed |
+| available RAM | preserve at least max(4 GiB, 15% of system RAM) MemAvailable; stop owned work on sustained loss of that headroom, and immediately below 2 GiB available |
+| build memory | no fixed 14 GB RSS ceiling or inherited artificial managed-heap cap; measure owned RSS, use the normal SDK GC and let the OS retain the reserved headroom |
 | concurrency | one Playwright worker, one runtime/execution per surface, sequential builds; use at most 10 of the 12 logical CPUs, and one MSBuild worker initially |
 | output | retain at most 100,000 characters of visible logs; enforce definition/server execution budgets independently |
 | lazy boot | statement/test form navigation creates zero workers and fetches no compiler bundles; one explicit execution may create the owned runtime |
 | startup | observe cold and cached starts separately; record failure after 60 seconds rather than hanging; no claim that current artifacts meet this threshold |
 | cleanup | after stop/unmount, zero owned active sessions/workers within 5 seconds; after five identical open/run/close cycles, post-cleanup RSS growth at most 128 MiB |
-| memory pressure | stop the owned run on sustained swap growth above 256 MiB over one minute or after a kernel OOM; no automatic heap increase or rerun |
+| memory pressure | monitor memory PSI and swap-in/out rates; stop owned work on sustained stalls or thrashing, dwindling swap during active paging, or a new kernel OOM; swap already occupied is not by itself thrashing |
+
+Preflight must leave additional room above the headroom floor before starting
+a compiler. The local monitor samples every 500 ms, with a 3-second low-RAM
+grace, 3 seconds at memory full avg10 >=3%, or 5 seconds at some avg10 >=10%.
+Combined swap-in/out >=8 MiB/s for 5 seconds is a stop when accompanied by
+memory stalls or near-floor available RAM. Record these sampled observations
+and any resource stop; they are safeguards, not a guarantee against abrupt
+host-wide allocation spikes. Never tune swap/sysctl, drop caches or stop
+unrelated applications to make a gate pass. Stop only the owned process tree;
+timeouts, interruptions and resource stops remain nonzero/incomplete gates.
 
 The historical isolated coding-cycle build currently requests a 12 GiB Node
 heap. That command was not run on the pressured host. Integrating a bounded

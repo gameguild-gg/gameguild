@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using System.Text;
 using GameGuild.Finance.Economy.Marketplace.Persistence;
+using GameGuild.Finance.Economy.Persistence;
 using GameGuild.Finance.Economy.Risk;
 using Microsoft.EntityFrameworkCore;
 
@@ -55,9 +56,10 @@ public sealed class PostgreSqlDurableMarketplacePolicyReader : IDurableMarketpla
     {
         if (tenantId == Guid.Empty || productId == Guid.Empty)
             throw new ArgumentException("Tenant and product IDs are required.");
-        var row = await _db.Set<MarketplaceCurrencyPolicyVersionRow>()
+        var row = await _db.Set<EconomyPolicyVersionRow>()
             .AsNoTracking()
-            .Where(policy => policy.TenantId == tenantId && policy.ProductId == productId &&
+            .Where(policy => policy.PolicyDomain == EconomyPolicyDomain.MarketplaceCurrency &&
+                             policy.TenantId == tenantId && policy.SubjectId == productId &&
                              policy.EffectiveAt <= at && at < policy.ExpiresAt)
             .OrderByDescending(policy => policy.Version)
             .FirstOrDefaultAsync(cancellationToken)
@@ -74,10 +76,11 @@ public sealed class PostgreSqlDurableMarketplacePolicyReader : IDurableMarketpla
     {
         if (tenantId == Guid.Empty || productId == Guid.Empty || version <= 0)
             throw new ArgumentException("Tenant, product and positive version are required.");
-        var row = await _db.Set<MarketplaceCurrencyPolicyVersionRow>()
+        var row = await _db.Set<EconomyPolicyVersionRow>()
             .AsNoTracking()
-            .SingleOrDefaultAsync(policy => policy.TenantId == tenantId &&
-                                            policy.ProductId == productId &&
+            .SingleOrDefaultAsync(policy => policy.PolicyDomain == EconomyPolicyDomain.MarketplaceCurrency &&
+                                            policy.TenantId == tenantId &&
+                                            policy.SubjectId == productId &&
                                             policy.Version == version,
                 cancellationToken)
             ?? throw new MarketplaceCurrencyPolicyException(
@@ -86,7 +89,7 @@ public sealed class PostgreSqlDurableMarketplacePolicyReader : IDurableMarketpla
     }
 
     private async ValueTask<DurableMarketplacePolicySnapshot> ValidateAndMapAsync(
-        MarketplaceCurrencyPolicyVersionRow row,
+        EconomyPolicyVersionRow row,
         CancellationToken cancellationToken)
     {
         var payloadHash = Convert.ToHexStringLower(
@@ -98,16 +101,17 @@ public sealed class PostgreSqlDurableMarketplacePolicyReader : IDurableMarketpla
             throw new MarketplaceCurrencyPolicyException(
                 "The Marketplace policy is unsigned, unapproved, or incomplete.");
         var policy = ProductCurrencyPolicyVersion.Create(
-            row.ProductId,
-            row.SellerId,
+            row.SubjectId!.Value,
+            row.SellerId!.Value,
             row.Version,
-            row.Mode,
-            row.HardPriceUnits,
-            row.SoftPriceUnits,
-            row.PlatformFeePpm,
+            (ProductCurrencyMode)row.Mode!.Value,
+            row.HardPriceUnits!.Value,
+            row.SoftPriceUnits!.Value,
+            row.PlatformFeePpm!.Value,
             row.EffectiveAt);
         return new DurableMarketplacePolicySnapshot(
-            row.TenantId, policy, row.PlatformFeeWalletId, TimeSpan.FromTicks(row.RefundHoldTicks),
+            row.TenantId, policy, row.PlatformFeeWalletId!.Value,
+            TimeSpan.FromTicks(row.RefundHoldTicks!.Value),
             row.PayloadHash, row.KeyId, row.Signature);
     }
 }
