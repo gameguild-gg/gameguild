@@ -4,7 +4,8 @@ Status: public compound-value limitation confirmed in `CODE-UX-01`; initial
 scalar-only scope explicitly accepted by the user on 2026-11-20. Compound
 support remains deferred. The upstream runtime and UI remain unchanged;
 CS-ADR-028 records the separately approved grading-worker safety exception.
-Per-exercise memory control is newly confirmed as an unresolved public boundary.
+Per-exercise memory control remains unsupported; the user explicitly approved
+deferring that capability in this delivery (CS-ADR-029).
 
 Este arquivo registra somente necessidades que nao podem ser atendidas pelos
 entrypoints publicos do Emception instalado. Preferencia de API, conveniencia ou
@@ -24,7 +25,7 @@ exports instalados antes de afirmar suporte a uma combinacao.
 | --- | --- | --- | --- | --- | --- | --- |
 | N/A | nenhuma confirmada | editor, VFS e test runner | coding-surface | `@gameguild/emception-browser` fornece `createEmception()` headless; `emception/testing` fornece planos e resultados; Monaco e a camada de edicao do host | N/A | rejeitado |
 | `EMC-GAP-001` | argumentos/retornos funcionais compostos | exercicios com arrays e matrizes | coding e coding-surface; executor oficial | installed public harness rejects compound values; official validator is scalar-only | initial simple-type scope explicitly accepted; typed compound support remains a follow-up, without string encoding | fallback aceito |
-| `EMC-GAP-002` | configurable per-exercise memory limit | publish execution requirements faithfully without claiming unenforced restrictions | coding draft and official worker | public CreateEmceptionOptions, RunOptions and NativeBuildConfig expose no per-program memory cap | decision requested; no silent ignore or runtime change | confirmado |
+| `EMC-GAP-002` | configurable per-exercise memory limit | publish execution requirements faithfully without claiming unenforced restrictions | coding draft and official worker | public CreateEmceptionOptions, RunOptions and NativeBuildConfig expose no per-program memory cap | explicit capability deferral approved; preserve data, no silent ignore or runtime change | escopo reduzido |
 
 ### `EMC-GAP-002`. Per-exercise memory control
 
@@ -41,10 +42,11 @@ exports instalados antes de afirmar suporte a uma combinacao.
   browser facade currently ignores `timeoutMs`, so setting TestPlan alone
   was not cancellation proof. Guard/fake-API tests now pass; actual runtime
   evidence remains a separate CODE-UX-03 gate.
-- Decision requested: make memory unavailable explicitly while delivering real
-  time/output limits, or plan a public extension with the Emception owner.
-  No answer has been recorded yet. Do not drop, silently ignore or label the
-  memory setting as enforced, or extend upstream scope without approval.
+- Decision accepted on 2026-11-21: explicitly defer configurable exercise RAM
+  while delivering real time/output limits; keep the upstream runtime intact.
+  CS-ADR-029 separates that scope choice from the independently authorized
+  10 GB build/test budget. Do not erase historical values, silently ignore a
+  configured unsupported memory setting or claim it is enforced.
 - Follow-up: record the disposition, then TS/backend wire and revision parity
   before consumer integration. No external issue or remote workflow was created.
 

@@ -6,9 +6,11 @@ design and initial scalar-only function scope on 2026-11-20. The baseline
 documentation/contract audit passed. UX02-A contracts and UX02-B persistence
 preparation are implemented/tested in scope; their broader G-API gate remains
 open. UX02-C metadata/immutable revision and targeted worker safety preparation
-are tested in scope; full configuration/wire parity, memory disposition,
+are tested in scope; configurable exercise RAM is explicitly deferred by user
+approval (CS-ADR-029), not enforced. Full configuration/wire parity,
 official client generation, the historical-worker gate and production
 integration are not complete. The single ledger records current evidence.
+API compilation resource failures do not establish a `dev:fast` regression.
 Compatible 4.5.2 assets
 are published; local synchronization and execution checks belong to `CODE-UX-03`,
 not to a mandatory Emception build or IDE publication.

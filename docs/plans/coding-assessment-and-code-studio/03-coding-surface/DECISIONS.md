@@ -658,7 +658,7 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
 
 - Date: 2026-11-21.
 - Status: targeted worker exception explicitly approved by the user. The
-  published memory-limit disposition is a separate unanswered structural gate.
+  separate memory-limit decision is now resolved by CS-ADR-029.
   Nine guard and four composition cases pass; the complete worker gate still
   has two pre-existing historical-identity assertions. No real runtime claim.
 - Boundary: only `tools/emception/grading/browser.ts`, its execution-budget
@@ -680,6 +680,30 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
 - Consequence: worker source may activate existing source-release provenance
   requirements. Check the official classifier; do not waive it or publish the
   standalone IDE as part of this domain phase. Real execution remains UX03.
+
+## `CS-ADR-029`. Defer exercise memory control, independently budget validation
+
+- Date: 2026-11-21.
+- Status: explicitly accepted by the user. This is a scope/resource decision,
+  not completed WB-B implementation or runtime proof.
+- Product scope: configurable RAM limits for student programs are deferred in
+  this delivery. The authoring capability must be explicitly unavailable;
+  no field/control may claim enforcement through an unsupported runtime API.
+  Time/output requirements may proceed through the supported grading boundary.
+- Preservation: keep persisted drafts, immutable snapshots and historical
+  values intact. WB-B must explicitly model an unavailable capability and
+  handle any existing configured value without silently dropping/ignoring it.
+  Do not fabricate a memory setting, academic penalty or successful validation.
+- Boundary: no public Emception implementation, IDE, UI or compiler change.
+  The previously authorized grading-worker exception remains narrowly scoped.
+  Future per-program memory support needs separate planning with its owner.
+- Independent validation budget: the user also permits up to 10 GB RAM for
+  local builds/tests, not student execution. The ledger applies a conservative
+  10,000,000,000-byte owned-RSS ceiling, preserves system headroom and reserves
+  two CPUs. No global dev setting or upstream runtime limit changes.
+- Consequence: the memory decision no longer blocks WB-B. Implement the
+  contract/schema/test-first publication mapping and required gates next;
+  no remaining acceptance or build result is inferred from this approval.
 
 ## Modelo para novas decisoes
 

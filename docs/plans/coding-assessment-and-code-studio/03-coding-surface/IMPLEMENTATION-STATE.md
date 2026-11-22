@@ -2,6 +2,346 @@
 
 Ultima atualizacao: 2026-11-21.
 
+## Execution record: user-approved 14 GB full-build measurement - 2026-11-21
+
+- User explicitly approved the proposed single 14 GB measurement. This
+  supersedes the pending request below for this measurement only; configurable
+  exercise RAM remains deferred. No product/build configuration change.
+- Contract: build the actual API host and its project references in Release,
+  keeping every source, migration, analyzer and source generator, with warnings
+  as errors. No frozen generator output or diagnostic suppression. Use the
+  existing restored dependencies, one MSBuild worker, no shared compiler/node
+  reuse, four CPUs (affinity 0-3), SDK default server GC, 12 GiB managed heap
+  and process-local memory conservation 5. No API/web/database boot.
+- Budget: <=14,000,000,000 bytes total owned RSS. The temporary supervisor
+  stops at 13,800,000,000 sampled bytes to allow monitoring/termination margin,
+  >=4 GiB system available RAM, and a 600-second deadline. No concurrent build;
+  stop only the owned process tree. Preflight available RAM: 19,732,804 KiB;
+  no .NET/compiler process is active. Reserve eight of twelve logical CPUs.
+- Gate: record the real strict build exit, warning/error counts, peak RSS and
+  available-memory minimum. Resource stops never count as success even if the
+  CLI exits 0 after termination. A Release host success is not a full-solution,
+  default Debug, architecture-test, runtime or dev:fast validation.
+- Allowed tracked edit: this ledger; preserve the other four plan edits.
+  The guard change is temporary under `/tmp`. No migration, source, package,
+  SDK, launcher, environment file or analyzer configuration change is allowed
+  by this diagnostic slice. No automatic higher-budget retry follows failure.
+- PASS: actual Release host/project-reference build exited 0 with 0 warnings
+  and 0 errors. CLI elapsed 00:04:46.78; supervisor elapsed 287011 ms, sampled
+  peak 12873 MiB (about 13.5 GB), minimum system available 7418 MiB; no guard
+  stop, managed OOM or kernel OOM. The same complete build can finish inside
+  the approved budget; this is not proof of a universal minimum RAM need.
+- Independently inspected the running native Csc response: 36 analyzer inputs,
+  GGARCH, Sonar, migration snapshot, optimization and warnings-as-errors are
+  present; skip-analyzers is absent. No diagnostic-only response/frozen output
+  was used. Native Csc's process name is `csc`, so cleanup checks include it,
+  not just `dotnet` and `VBCSCompiler`.
+- Fresh Release assembly/PDB inspection: revision
+  `ec1ff97b50262e633931511229c574e3e1289536`, compiler/runtime unchanged,
+  710 PDB documents, all 706 physically present source hashes match, no
+  differing source. Four generator outputs are represented in the PDB but
+  normally not persisted on disk. The API executable was not started.
+- Disposition: the strict Release host build obstruction is cleared for this
+  measured profile without a product-code change. Default Debug, the complete
+  solution, API architecture/security tests, runtime startup, dev:fast and
+  OpenAPI/client generation were NOT run in this slice. Their remaining gates
+  are not silently passed; no coding-surface phase is declared complete.
+
+## Execution record: bounded compiler root-cause investigation - 2026-11-21
+
+- Request: determine how to complete the API build without the repeated OOM,
+  comparing the earlier successful build rather than repeating heap tuning.
+- Contract-first diagnosis: inspect the retained 2026-11-19 assembly/PDB without
+  executing it; compare compiler identity, source checksums and repository
+  history. Standard-library-only inspection helpers and compiler transcripts
+  stay under `/tmp`; no tool/package installation or source checkout/reset.
+- A separate compiler/analyzer isolation experiment may suppress diagnostic
+  execution ONLY in temporary non-release outputs to identify its cost. This
+  is not a passing product build or permission to disable GGARCH/Sonar rules
+  in the project, CI or dev commands. Preserve the complete compiler input
+  set, generators and migration history. Restore/run the unmodified strict
+  build and applicable architecture tests before claiming a correction.
+- Allowed tracked edit now: this ledger. A production change requires an
+  identified cause, focused regression tests and an explicit ownership/scope
+  decision if it touches protected or another developer's architecture.
+  Preserve all five existing plan edits. No database, API boot, frontend,
+  Emception runtime/IDE, generated client, dependency or SDK change.
+- Budget: sequential owned commands, <=10 GB total monitored RSS, >=4 GiB
+  system headroom, reserve at least two CPUs, no inherited GC workaround
+  unless an individual experiment declares it. Stop only owned processes.
+- Gates: positive diagnostic evidence and measured exit/resource results;
+  then full-input, analyzer-enabled warning-clean API build plus applicable
+  architecture suites. A temporary isolation pass never closes G-API.
+- Retained binary evidence: InformationalVersion is
+  `4.4.0+2e35c3fc49e756fbc1b362452e97ba1f55f026a5`; compiler and runtime are the
+  exact currently installed 5.9.0-1.26529.119 / 10.0.15 identities. Of 710 PDB
+  documents, 705 present source hashes match, one generated AssemblyInfo differs
+  (revision), and four generator outputs are not persisted. Source bytes are
+  202,196,903. No historical assembly is used as current contract/test evidence.
+- Capture the SDK's actual CscCommandLineArgs with SkipCompilerExecution=true
+  and BuildProjectReferences=false against already-built references. This may
+  update SDK intermediate metadata, but executes no compiler and does not
+  replace the retained API binary. Derive isolated response files mechanically
+  from those structured arguments; redirect ALL compiler outputs to `/tmp`.
+  The first diagnostic uses `/skipanalyzers+`, preserving compiler/source
+  generators, source inputs and compiler warnings. It is explicitly not a
+  qualifying build. Compare to analyzer-enabled cases before choosing a fix.
+  Initial compiler-only budget: four CPUs, default server GC, 6 GiB managed
+  heap and memory conservation 5, 9.5 GB external sampled RSS stop, >=4 GiB
+  system headroom, 600 seconds. No other build runs concurrently.
+- The SDK argument capture first failed inside the sandbox without usable
+  diagnostics, then succeeded with process visibility, with no compilation.
+  All 702 tracked host sources and four SDK-generated sources are present;
+  no additional ignored source or missing tracked source was found.
+- Compiler-only result: SIGABRT/exit 1 after 170350 ms, sampled peak 6495 MiB,
+  minimum system available 11723 MiB, no external guard stop. The managed OOM
+  occurred in MethodCompiler's semantic-model creation callback. Diagnostic
+  suppression at this 6 GiB heap does not make compilation fit; it does not
+  prove analyzer cost is zero or identify one as the culprit. No product output
+  was replaced. One harness-only CS2023 warning came from an SDK `/noconfig`
+  argument repeated inside the response; derived future responses remove that
+  duplicate and keep the real CLI `/noconfig` outside the response.
+- Next discriminating case: full analyzer-enabled Csc invocation using the
+  shared compiler (the ordinary launcher default), a unique diagnostic pipe
+  and one-second server keepalive. Use four CPUs, default server GC, 8 GiB
+  managed heap, conservation 5, <=9.5 GB monitored total RSS, >=4 GiB system
+  headroom and 600 seconds. Derived outputs and generated sources stay in
+  `/tmp`. Verify the owned server's group/lifecycle and stop only that group
+  if necessary; do not shut down any existing compiler/IDE server.
+- Shared-mode observation: the unique VBCSCompiler was owned by the monitored
+  process group and started the full analyzer-enabled compilation. Its four
+  generated files total 153,257 bytes; no large generator-output expansion was
+  found. The server then exited without a completed result and Csc fell back
+  to another local compile. Stop that owned fallback rather than automatically
+  repeating it: SIGTERM at 305576 ms, peak 8616 MiB, system available >=9307
+  MiB, supervisor exit 1. The server's exact exit cause was not captured, so do
+  not label it a proved analyzer/SDK regression or a successful shared build.
+  No .NET/compiler process remained after cleanup.
+- CI configuration evidence: `.github/workflows/pr-verify.yml` builds the host
+  with `-c Release -p:TreatWarningsAsErrors=true`; previous attempts used Debug.
+  Next qualifying comparison uses that complete Release host build, all
+  configured analyzers/generators and all sources, no shared compiler, one
+  MSBuild worker, four CPUs, server-GC default, 8 GiB managed heap, conservation
+  5, 10 GB total monitored RSS, >=4 GiB system headroom and 600 seconds. No API
+  boot. Release success would establish the CI build, not silently close a
+  distinct Debug/default-solution gate or claim hot-reload behavior.
+- The SDK parser independently confirms the diagnostic flags: 706 input
+  source files, SkipAnalyzers=true in the compiler-only case; full serial case
+  has SkipAnalyzers=false and ConcurrentBuild=false. Both retain nullable
+  analysis and the same parser/interceptor features. An offline throwaway
+  console confirms `Configuration=Release dotnet run` resolves Release without
+  editing a launcher; this is not an API/runtime validation.
+- Release result: dependencies compiled, but host compilation again threw
+  managed OOM in MemberSemanticModel.NodeMapBuilder / MethodCompiler. The
+  600-second monitor subsequently stopped cleanup, supervisor exit 1, peak
+  9107 MiB, system available >=9449 MiB. No selected test ran. Release alone
+  does not resolve this measured failure; do not recommend it as a proved fix.
+- Next isolation changes a pipeline boundary, not the heap: use all 706 Debug
+  inputs plus the four generator outputs captured from the same current
+  invocation, and remove analyzer/generator assemblies from this TEMPORARY
+  compiler process. This is not a product build or gate waiver. Preserve
+  all source bodies, migration files, generated implementations, references,
+  compiler warnings/nullable checks and language features. Outputs remain
+  under `/tmp/frozen-outputs`. Same budget as compiler-only: four CPUs,
+  6 GiB managed heap, conservation 5, 9.5 GB RSS ceiling and 600 seconds.
+  Its comparison distinguishes plain compilation from the attached generation
+  and diagnostic pipeline; a pass does not identify an individual plugin.
+- Frozen-output diagnostic result: exit 0, no compiler warning/error, 162467
+  ms, peak 6425 MiB, system available >=12695 MiB. This confirms that complete
+  source compilation and generated implementations fit the bounded process
+  in this diagnostic; it is NOT an analyzer-enabled product build or G-API.
+- Next differential diagnostic retains all pure diagnostic assemblies
+  (including GGARCH and Sonar) and the same four frozen outputs, removing only
+  assemblies containing generators. Inspect plugin metadata without executing
+  plugins; mixed generator/analyzer assemblies are excluded together and this
+  limitation prevents treating the experiment as a complete gate. Keep four
+  CPUs, 8 GiB managed heap, conservation 5, <=9.5 GB total sampled RSS, >=4 GiB
+  system headroom, 600 seconds and temporary outputs only. No analyzer is
+  disabled in repository files or normal build/dev commands.
+- Frozen-output/static-analysis result: SIGABRT/exit 1 after 285438 ms, peak
+  8564 MiB, system available >=10269 MiB, no external resource stop. The 8 GiB
+  managed heap exhausted in MemberSemanticModel.NodeMapBuilder / MethodCompiler,
+  even with generator assemblies absent. Therefore generation alone is not
+  sufficient to explain the failure; neither Sonar nor GGARCH is individually
+  identified as its cause. The plain-source pass cannot waive these checks.
+- Disposition: the compiler's analysis/semantic-model pipeline is a measured
+  contributor, not a proved new source/SDK regression. Historical source volume
+  explains a large workload, but the retained PDB contains no past peak-memory
+  measurement and does not establish that the old build fit today's cap.
+  No valid complete host build has yet succeeded within these measured profiles.
+  Do not disable checks, delete/exclude migrations, replace current outputs with
+  the temporary DLL, or claim dev:fast/architecture-test success from isolation.
+- Asked for an optional single <=14 GB monitored full-build measurement, with
+  >=4 GiB system headroom and at least two CPUs reserved. The subsequent user
+  approval and bounded execution contract are recorded above. A positive full
+  build is still required before API architecture tests, current OpenAPI/client
+  capture, or closure of G-API.
+
+## Execution record: API build versus dev:fast diagnosis - 2026-11-21
+
+- User request: investigate why the API compilation failed, including whether
+  our validation invocation differs from the working `dev:fast` workflow.
+- Read-only comparison: `scripts/dev-fast.mjs` launches `dotnet watch run`
+  against the same API project, with the root `.env` and polling enabled.
+  Turbopack is the web bundler, not the API compiler. No build-time analyzer
+  bypass or GC override is present in that launcher or the local `.env`.
+  Both invocations resolve the only installed SDK, 10.0.404. The SDK compiler
+  runtime configuration enables server GC; our prior commands instead forced
+  workstation GC and 2/6/8 GiB managed heaps. Those managed OOMs are not proof
+  that the normal development build is broken or needs more than 10 GB.
+- Diagnostic contract: one host-only build using the SDK's default GC policy,
+  no inherited GC hard-limit overrides or temporary compiler response file.
+  Retain all sources/analyzers, warnings as errors, one MSBuild worker, no
+  shared compiler/node reuse, CPU affinity 0-9, sampled total owned RSS <=
+  10,000,000,000 bytes, >=4 GiB system available RAM and a 600-second deadline.
+  Do not launch the application, databases, frontend or full validation stack.
+  Record whether this reaches compilation success, a compiler diagnostic or
+  an external resource stop before choosing the next action.
+- Allowed edits: this execution ledger and temporary monitoring artifacts.
+  No source/project/dev-command/dependency/migration change is authorized by
+  this diagnostic slice. Existing five plan edits are preserved.
+- Quality gate: actual host build exit and resource measurements, followed by
+  the API architecture selection only if a current host assembly is produced.
+  A resource stop or development-only success cannot waive strict test gates.
+- First diagnostic result: the default-GC host build was stopped by the owned
+  RSS monitor after 111406 ms, sampled peak 9710 MiB, minimum system available
+  9056 MiB. The CLI returned 0 after SIGTERM, but the supervisor correctly
+  returned 1; no current host or test success is claimed. No compiler diagnostic
+  or kernel OOM occurred. Compiler CPU reached approximately eight cores before
+  this stop. All migration sources and 36 analyzer/source-generator inputs
+  were present, with `/warnaserror+` and no skip-analyzers switch.
+- Historical comparison: API project, migration tree, architecture analyzer,
+  Directory.Build.props, SDK selection and dev-fast launcher are unchanged
+  between `72d8865ca7` (2026-11-18) and entry HEAD. This does not identify a
+  new coding-source compiler regression; changed module dependencies can still
+  invalidate an incremental host assembly. The last on-disk host is dated
+  2026-11-19 and cannot stand in for the current DTOs.
+- One discriminating scheduling check follows: retain default server GC and
+  no managed-heap override, but expose two processors and use the installed
+  compiler's `-parallel-` response switch. This tests compiler/GC concurrency
+  inside the same 10 GB authorization, not another heap increase or analyzer
+  bypass. CPU affinity 0-1 leaves ten machine CPUs available. Keep the same
+  strict source/analyzer set, total-RSS/system-headroom/deadline guard, and no
+  application launch. Record a resource stop as incomplete, never success.
+- Scheduling comparison result: supervisor exit 1 at 235285 ms, sampled peak
+  9565 MiB, minimum system available 9126 MiB. The external RSS guard stopped
+  the owned build; no compiler error or test execution occurred. Concurrency
+  reduction alone was insufficient in this measured default-GC invocation.
+  No owned compiler remained and no project input was modified.
+- Final budget-aware check: preserve the SDK's server GC rather than forcing
+  workstation GC, expose two processors, bound the managed heap at 8 GiB and
+  set process-local `DOTNET_GCConserveMemory=7`. This is a documented runtime
+  memory/throughput tradeoff, including automatic large-object-heap compaction
+  when fragmented, not a source/analyzer bypass or higher resource allowance.
+  Keep the existing 10,000,000,000-byte total-RSS monitor and all other gates.
+  No environment file, launcher or machine-level GC configuration changes.
+  Source: https://learn.microsoft.com/en-us/dotnet/core/runtime-config/garbage-collector#conserve-memory.
+  Stop after this check if it cannot finish within the accepted resources;
+  further profiling or a project-boundary change needs a separate disposition.
+- Final result: actual build exit 1, 0 warnings, 1 `Out of memory` error from
+  Roslyn's Csc task for GameGuild.API.csproj; elapsed 387734 ms, sampled combined
+  peak 8956 MiB, minimum system available 8952 MiB. The total-RSS monitor did
+  not stop this attempt. The compiler reached its configured managed-memory
+  limit despite server GC and memory conservation. It subsequently exited
+  normally with build failure; a cleanup check found no remaining .NET/compiler
+  process. No tests or current OpenAPI capture ran.
+- Audit/disposition: all three commands are bounded strict validation builds,
+  NOT a bit-for-bit execution of `dev:fast`: warnings as errors, disabled shared
+  compilation, worker/CPU restrictions and a total-RSS monitor differ from the
+  ordinary watcher. Earlier workstation/heap overrides also differed. The
+  ordinary launcher has neither these GC caps nor the monitor's 10 GB ceiling.
+  Therefore these results cannot prove a new `dev:fast`/Turbopack regression,
+  nor that every possible safe build configuration needs more than 10 GB.
+  They establish why these verification attempts failed: managed heap OOM or
+  deliberate external resource stops, not a C# source diagnostic or a grading
+  test assertion. The historical migration volume is cost evidence, not an
+  allocation profile identifying a particular analyzer as the root cause.
+- No automatic retry, higher budget, analyzer exclusion, source rewrite or
+  migration removal follows. A separate bounded compiler/analyzer profiling
+  task or a user-approved resource disposition is needed to finish the common
+  host gate. WB-B remains independently implementable; the API test/client
+  gates remain open, not passed and not reclassified as a product defect.
+- Tracked edits in this diagnosis are plan/state clarification only. Existing
+  implementation, `.env`, both dev launchers, project files, SDK selection and
+  all historical migrations are unchanged. Documentation audit/whitespace
+  checks are repeated after this record; no functional validation is inferred.
+
+## Execution record: user-approved API validation budget - 2026-11-21
+
+- Entry: `ec1ff97b50262e633931511229c574e3e1289536`, tree
+  `e9729dbb0ca3882deee3845540b54bacd6168b62`, clean
+  `feature/coding-grading`. The metadata and targeted worker changes are now
+  committed. No fetch, merge, automatic commit or source rewrite is requested.
+- Explicit resource authorization: the user permits up to 10 GB RAM for the
+  local builds/tests that were previously stopped. This supersedes their
+  former 6 GiB RSS / 2 GiB managed-heap disposition only for this validation
+  attempt. It is NOT approval for per-exercise memory settings or upstream
+  Emception changes. The user subsequently accepted deferring configurable
+  exercise RAM; CS-ADR-029 records that separate decision.
+- Entry resources: 18,267 MiB MemAvailable on a 31,806 MiB machine, 12 CPUs.
+  Reserve CPUs 10-11, use affinity 0-9, one MSBuild worker, no node reuse/shared
+  compiler and sequential commands. The temporary monitor limits the combined
+  owned-process sampled RSS to 10,000,000,000 bytes (decimal, not 10 GiB),
+  preserves >=4 GiB system MemAvailable and retains the 600-second command
+  deadline. A 6 GiB per-process managed heap leaves headroom inside the total
+  RSS ceiling. No unrelated process/service may be stopped to make space.
+- Scope: verify existing committed implementation, not introduce behavior.
+  Allowed tracked edits are this ledger, the ADR log, capability-gap log,
+  active 3.6.2 subplan and its 3.6 coordinator, to record the user's scope
+  decision. Temporary resource-helper edits stay under `/tmp`.
+  No implementation/schema/dependency/generated-client change,
+  no new tool, migration, data reset, runtime boot or IDE build/publication.
+- Arbiter: build/run API authorization/dependency architecture selection,
+  then the complete API unit project if the selection passes; run the full
+  solution warning-clean build independently when safely budgeted. Record
+  real exit codes/counts and any baseline failures, never a killed CLI's 0.
+  Keep existing Authentication and historical-worker failures visible.
+- Structural disposition: the user explicitly approved deferring configurable
+  exercise RAM and delivering enforceable time/output configuration without
+  changing the upstream runtime. No additional user decision is pending for
+  that scope. WB-B remains implementation/gate work, not a decision blocker.
+- First retry result: exit 1 before any selected test ran, after 505129 ms.
+  Roslyn failed in `MemberSemanticModel.NodeMapBuilder` with managed OOM at
+  the 6 GiB heap cap. Combined sampled owned RSS peaked at 6855 MiB and system
+  available memory stayed >=11204 MiB; the 10 GB RSS guard never tripped.
+  Do not describe this as proof that 10 GB is insufficient. No kernel OOM or
+  owned compiler survived. The complete API suite/full solution did not run.
+- One adjusted retry is still inside the same user authorization: allow an
+  8 GiB managed compiler heap while retaining the exact 10,000,000,000-byte
+  combined RSS ceiling, system headroom, CPU reservation and 600-second
+  command deadline. Disable only compiler parallel scheduling via the SDK's
+  documented `-parallel-` option in a temporary response file, supplied through
+  its existing CompilerResponseFile property. No analyzer/rule, migration,
+  input source or required test is excluded. Installed SDK compiler help and
+  Microsoft.CSharp.Core.targets confirmed that option/property pair.
+  Stop after a second managed/resource failure rather than repeatedly raising
+  heap limits or disguising an incomplete build as test success.
+- Adjusted retry result: exit 1 before any selected test ran, after 292693 ms.
+  Roslyn again threw managed `OutOfMemoryException`, now while building
+  operation/semantic models in its analyzer driver. The temporary `-parallel-`
+  response file and 8 GiB managed heap did not produce a current host assembly.
+  Sampled combined owned RSS peaked at 8916 MiB (9.349 GB decimal); system
+  available memory stayed >=9759 MiB. The 10 GB RSS guard did not trip; neither
+  attempt was a kernel OOM or a test assertion failure. No owned compiler or
+  testhost remained afterwards. No further memory retry was started.
+- Read-only size inventory: the API host has 702 C# source files totaling
+  202,185,187 bytes, including 456 migration-related files totaling 200,570,794
+  bytes. This is relevant build-cost evidence, not a proved allocation profile
+  or permission to remove/rewrite/exclude migrations or turn off analyzers.
+  No source, project, dependency or migration file was changed by validation.
+- Outcome: API architecture selection, full API unit suite, full solution
+  build and official OpenAPI/client generation remain open because the common
+  host compilation did not finish. No stale assembly, zero executed cases or
+  killed process is reported as a pass. The next technical action is diagnosis
+  of this host compilation within the accepted budget, not another automatic
+  heap increase. Independent WB-B implementation remains possible under the
+  accepted memory-capability deferral; it cannot close the broader API gate.
+- Documentation gate: structured Markdown audit passed for 47 documents,
+  165 local links and all 25 atomic rows across seven tables; whitespace clean.
+  Only the five explicitly allowed plan/state documents changed. Resource
+  scheduling helpers/response file are temporary `/tmp` files, not dev-command
+  changes. No additional product/scope decision is waiting on the user.
+
 ## Execution record: UX02-C publication preparation - 2026-11-21
 
 - Entry: `68a9d5e702950d4b0b77f6705e2d59ca76c1123e`, tree
@@ -93,8 +433,9 @@ Ultima atualizacao: 2026-11-21.
   never a fabricated zero grade. Gates: strict worker tsc, strict changed-file
   lint and the worker's bounded Node suites. Real compiler execution is later
   UX03 evidence, not inferred from a fake API.
-- WB-B remains structurally paused pending the requested memory-capability
-  decision. Do not remove its field, silently ignore it, invent a memory
+- WB-B was structurally paused pending the memory-capability decision, now
+  resolved by the explicit deferral in CS-ADR-029. Do not erase historical
+  fields, silently ignore a configured value, invent a memory
   monitor or modify the protected runtime. Official source-release provenance
   classification must be recorded after a grading-worker source change;
   this exception does not authorize IDE deployment or CI-policy relaxation.
@@ -438,20 +779,21 @@ um gate como concluido sem registrar a evidencia executada.
 
 - Subplan: [3.6.2 domain and drafts](./06-refoundation/02-domain-drafts-and-data-boundaries.md).
 - Current gate: `CODE-UX-02`, UX02-C metadata/WB-A in-scope evidence recorded.
-  Full configuration/wire mapping, the memory decision, official generated
+  Full configuration/wire mapping under the accepted memory deferral, official generated
   client, API architecture/security and historical-worker contract remain open.
   No runtime/production/human acceptance is inferred from this preparation.
 - Design and initial scalar-only scope remain approved. ADRs 014-024 retain
   ownership/governance/artifact decisions; ADR025 records the new author-only
   draft; ADR026 records revision-bound host persistence and memory-only recovery;
-  ADR027 publication metadata; ADR028 the user-approved grading-worker exception.
+  ADR027 publication metadata; ADR028 the user-approved grading-worker exception;
+  ADR029 the approved exercise-memory deferral and independent build budget.
   Actual local artifact preflight remains a CODE-UX-03 obligation.
 - Responsavel: Codex.
 
 ### Current compact checkpoint
 
-- Baseline: `68a9d5e702950d4b0b77f6705e2d59ca76c1123e`, tree
-  `1d0a75bb6f143fb62cc76e65d33441a41c66e194`, clean entry on
+- Baseline: `ec1ff97b50262e633931511229c574e3e1289536`, tree
+  `e9729dbb0ca3882deee3845540b54bacd6168b62`, clean entry on
   `feature/coding-grading`. No fetch, merge, commit or stage.
 - Active row/stage: UX02-C metadata and WB-A guard preparation / audit recorded.
   Canonical/DTO metadata and both learner projections now preserve problems/IDs
@@ -472,8 +814,15 @@ um gate como concluido sem registrar a evidencia executada.
   Assessments 453, Authorization 2815, preserved UI 27 and CI 54 pass.
   Authentication repeats its one known failure (4572/4573); full worker tests
   are 60/62, with two baseline historical-identity assertions unresolved.
-  New guard/composition tests are 13/13. Host build hit its 2 GiB managed cap;
-  no API architecture pass, full solution build or official client regeneration.
+  New guard/composition tests are 13/13. After the user authorized up to 10 GB
+  total RSS, the host compiler still failed at 6 GiB and then 8 GiB managed
+  heap, with sampled totals 6855/8916 MiB. No API architecture test ran; full
+  API tests, full solution build and official client generation remain open.
+  No source/test/analyzer was weakened. The later command comparison is recorded
+  at the top of this ledger: default-GC builds hit the external RSS stop, while
+  the budget-aware server-GC build returned managed OOM (8956 MiB total peak).
+  These are validation-resource failures, not a confirmed development regression
+  or proof that every safe configuration needs >10 GB. No test ran.
 - Runtime: no asset download/refresh, compiler/IDE build, runtime boot or dev
   stack. Fixed worker safety budgets are now real cancellation guards but
   configurable draft limits are not yet published/applied. Memory enforcement
@@ -481,8 +830,11 @@ um gate como concluido sem registrar a evidencia executada.
   source changes trigger exact-source CI provenance under the existing policy.
 - Human: prototype and initial scalar scope approved on 2026-11-20, not
   production usability or runtime approval. No new acceptance is inferred.
-- Next exact action: obtain the requested memory-capability disposition, then
-  finish WB-B/full draft-to-wire publication mapping, including persisted
+- Next exact action: separately profile the unresolved host compilation within
+  an explicit resource disposition; do not repeat the exhausted configurations,
+  increase the 10 GB allowance or bypass checks automatically. There is no
+  pending product decision. Independent WB-B/full draft-to-wire mapping
+  may proceed under CS-ADR-029, including persisted
   limits, explicit entry point and environment/toolchain fidelity. Trace and
   test these contracts before wiring production consumers. Reconcile the two
   baseline historical-worker assertions without discarding history; obtain a
@@ -495,7 +847,7 @@ um gate como concluido sem registrar a evidencia executada.
 | Gate da refundacao | Estado | Evidencia necessaria |
 | --- | --- | --- |
 | `CODE-UX-01` | complete | corrected contract/document/design/preparation audit passed on 2026-11-21; no runtime/build claim |
-| `CODE-UX-02` | in progress / gate open | UX02-A/B and UX02-C metadata/WB-A preparation tested; full wire/configuration, memory decision, generated client, API and historical-worker gates remain open |
+| `CODE-UX-02` | in progress / gate open | UX02-A/B and UX02-C metadata/WB-A preparation tested; memory deferral accepted; full wire/configuration, generated client, API and historical-worker gates remain open |
 | `CODE-UX-03` | nao iniciado | refresh compatible published assets and pass local preflight before real runtime, canvas/terminal, cancellation and resource checks |
 | `CODE-UX-04` | nao iniciado | autoria completa dos dois tipos e validacao pelo professor |
 | `CODE-UX-05` | nao iniciado | resolucao, envio, recuperacao e revisao por persona |
@@ -910,8 +1262,12 @@ Continue [`3.6.2`](./06-refoundation/02-domain-drafts-and-data-boundaries.md):
    accepted in CS-ADR-015; compound support remains tracked in EMC-GAP-001.
 2. Retain the tested UX02-A/B ports and UX02-C metadata/immutable-revision
    evidence. The local read-only inventory is complete, not a remote-data claim.
-   Resolve the memory-capability decision before full wire/configuration
-   mapping. Current DTO generation remains blocked by the recorded host build;
+   Apply the accepted memory deferral in CS-ADR-029 during full configuration
+   mapping; this is no longer waiting for a user decision. Resume bounded API
+   validation under the separately authorized 10 GB total-RSS ceiling. The
+   6/8 GiB managed-heap attempts both failed before tests, below that RSS ceiling;
+   diagnose the host compiler before another retry. Current DTO generation
+   still requires an actual successful current host build;
    no hand-edited generated artifact. Authentication and the two pre-existing
    historical-worker assertions remain open. Follow the atomic cycle and
    recorded owner/resource dispositions; do not call a partial gate green,

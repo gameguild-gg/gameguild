@@ -2,14 +2,15 @@
 
 Status: in progress; UX02-A contracts, transformations and backend draft
 roundtrip/conflict evidence are implemented. Its broader G-API gate remains
-open because of the pre-existing Authentication throttle failure and the
-API-wide compilation resource stop. The full solution build was not run.
+open because of the pre-existing Authentication throttle failure and incomplete
+API host validation under local resource limits. These compiler/monitor failures
+are not a confirmed `dev:fast` regression. The full solution build was not run.
 UX02-B persistence/session ports and the host bridge are implemented and tested
 in scope; unaffected checks proceeded under the governance's external-failure
 rule, not a waiver of the broader gate. No production editor/writer cutover.
 UX02-C problem/reference/identity metadata, immutable revision tests and the
 authorized WB-A worker safety guard are implemented/tested in scope. Full
-published configuration/wire mapping, the memory-capability decision, current
+published configuration/wire mapping under the accepted memory deferral, current
 official client generation and broader gates remain open. The full worker
 selection also has two pre-existing historical-identity assertions that must
 be reconciled without deleting history. See the ledger for actual evidence.
@@ -116,17 +117,24 @@ now exercises both families and unchanged historical serialization. It does
 not yet prove a complete draft-to-wire publication path. Finish these steps
 before closing the atomic row:
 
-1. Resolve `EMC-GAP-002`: do not silently persist/ignore an unsupported memory
-   limit. The user approved a targeted grading-worker change (`CS-ADR-028`),
-   not upstream runtime or IDE changes. WB-A applies the existing fixed time /
-   output safety defaults; WB-B owns explicit published configuration mapping.
+1. Apply the accepted `EMC-GAP-002` deferral (`CS-ADR-029`): configurable RAM
+   remains explicitly unavailable in this delivery. Preserve historical data;
+   do not silently persist/ignore a configured unsupported value. No upstream
+   runtime or IDE change is authorized. WB-A applies the existing fixed time /
+   output defaults; WB-B owns explicit published configuration mapping.
 2. Trace and roundtrip limits, explicit entry point, environment and frozen
    toolchain through draft compilation, wire DTO, validation, revision,
    learner/reviewer projection and official execution. Reject unsupported
    combinations/identities instead of substituting a current/default value.
 3. Obtain a current host OpenAPI capture and run the official client generator.
-   The bounded host build failed inside its managed memory cap; do not use
-   stale binaries, hand-edit generated output or automatically raise the cap.
+   The bounded verification builds either reached their managed heap cap or
+   were stopped by the 10 GB total-RSS monitor; the command/default-GC and
+   reduced-concurrency comparisons are recorded in the ledger. They did not
+   execute the ordinary `dev:fast` flow or demonstrate a development regression.
+   Finish a separately bounded compiler diagnosis before retrying exhausted
+   configurations. Do not exceed the authorized budget, omit analyzers or
+   migrations, use stale binaries, hand-edit generated output or treat resource
+   permission as a successful build result.
 4. Reconcile the two pre-existing historical-worker identity assertions and
    the existing Authentication test failure with their recorded dispositions.
    Worker edits activate exact-source CI provenance; no gate waiver or IDE
