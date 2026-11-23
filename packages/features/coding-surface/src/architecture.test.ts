@@ -41,6 +41,8 @@ describe('coding surface architecture', () => {
     expect(exported).toContain('./runtime-capability-types');
     expect(exported).toContain('./graphics-session');
     expect(exported).toContain('./graphics-session-types');
+    expect(exported).toContain('./program-session');
+    expect(exported).toContain('./program-session-types');
   });
 
   it('keeps runtime acquisition lazy and outside academic/host commands', () => {
@@ -83,6 +85,20 @@ describe('coding surface architecture', () => {
       }
       expect(source).not.toMatch(/\b(?:fetch|import|submit|release|runTests|compileAndRun)\s*\(/);
       expect(source).not.toMatch(/\b(?:localStorage|sessionStorage|indexedDB|new\s+Worker)\b/);
+    }
+  });
+
+  it('adapts text input without implementing another compiler or academic runner', () => {
+    for (const name of ['program-session.ts', 'program-session-types.ts']) {
+      const source = readFileSync(join(import.meta.dirname, name), 'utf8');
+      const file = ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true);
+      for (const statement of file.statements) {
+        if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) continue;
+        expect(['@game-guild/coding', '@gameguild/emception-browser', 'emception', './program-session-types', './runtime-capabilities', './runtime-session', './runtime-types']).toContain(statement.moduleSpecifier.text);
+      }
+      expect(source).not.toMatch(/\b(?:submit|release|runTests|new\s+Worker)\s*\(/);
+      expect(source).not.toMatch(/\b(?:localStorage|sessionStorage|indexedDB)\b/);
+      expect(source).not.toMatch(/(?:wasm-ld|clang|cc1|--allow-undefined|--entry=main)/);
     }
   });
 });

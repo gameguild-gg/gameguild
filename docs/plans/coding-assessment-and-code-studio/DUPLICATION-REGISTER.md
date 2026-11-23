@@ -251,6 +251,18 @@ Cada copia implementada deve adicionar uma linha com:
 | owner | responsavel pela nova copia |
 | decisao | link para revisao posterior, quando existir |
 
+## Local runtime proof scaffolding
+
+`DUP-PL-018`: `apps/web/scripts/coding-surface-program-e2e.mjs` reuses the
+loopback-only Vite/asset-server/browser proof structure from
+`coding-surface-graphics-e2e.mjs` at `9a44da314b`. The origin is owned test
+orchestration, not Emception/compiler/IDE source. The new proof has independent
+input/EOF/cancellation assertions and sequential cold contexts to preserve OS
+headroom; it does not inherit or satisfy the graphics/repeated-mount plateau.
+Both consume the declared public SDK and frozen manifest. Duplication is
+bounded test scaffolding, not a second execution pipeline. Consolidation is
+optional after parts 03/04; preserve the independent oracles if consolidated.
+
 ## Gate de revisao futura
 
 A revisao com o responsavel pelo Emception deve decidir item por item:
