@@ -37,6 +37,7 @@ describe('coding runtime port contract', () => {
       manifestUrl: '/emception/manifest.json',
     };
     expect(Object.keys(options)).toEqual(['toolchain', 'manifestUrl']);
-    expectTypeOf<keyof CodingRuntimeSession>().toEqualTypeOf<'getState' | 'acquire' | 'dispose'>();
+    expectTypeOf<keyof CodingRuntimeSession>().toEqualTypeOf<'getState' | 'acquire' | 'dispose' | 'whenDisposed'>();
+    expectTypeOf<CodingRuntimeSession['whenDisposed']>().returns.toEqualTypeOf<Promise<void>>();
   });
 });

@@ -26,6 +26,8 @@ export interface CodingRuntimeSession {
   getState(): CodingRuntimeSessionState;
   acquire(): Promise<BrowserEmceptionAPI>;
   dispose(): void;
+  /** After dispose, waits for pending boot ownership and actual teardown. */
+  whenDisposed(): Promise<void>;
 }
 
 export interface CodingRuntimeSessionFactory {

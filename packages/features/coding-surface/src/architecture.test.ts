@@ -39,6 +39,8 @@ describe('coding surface architecture', () => {
     expect(exported).toContain('./runtime-types');
     expect(exported).toContain('./runtime-capabilities');
     expect(exported).toContain('./runtime-capability-types');
+    expect(exported).toContain('./graphics-session');
+    expect(exported).toContain('./graphics-session-types');
   });
 
   it('keeps runtime acquisition lazy and outside academic/host commands', () => {
@@ -67,6 +69,19 @@ describe('coding surface architecture', () => {
         if (specifier !== '@game-guild/coding') expect(statement.importClause?.isTypeOnly).toBe(true);
       }
       expect(source).not.toMatch(/\b(?:fetch|import|submit|release|grantPermission|fetchAssessment)\s*\(/);
+      expect(source).not.toMatch(/\b(?:localStorage|sessionStorage|indexedDB|new\s+Worker)\b/);
+    }
+  });
+
+  it('keeps graphical execution within public runtime and owned local ports', () => {
+    for (const name of ['graphics-session.ts', 'graphics-session-types.ts']) {
+      const source = readFileSync(join(import.meta.dirname, name), 'utf8');
+      const file = ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true);
+      for (const statement of file.statements) {
+        if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) continue;
+        expect(['@game-guild/coding', '@gameguild/emception-browser', 'emception', './graphics-session-types', './runtime-capabilities', './runtime-session', './runtime-types']).toContain(statement.moduleSpecifier.text);
+      }
+      expect(source).not.toMatch(/\b(?:fetch|import|submit|release|runTests|compileAndRun)\s*\(/);
       expect(source).not.toMatch(/\b(?:localStorage|sessionStorage|indexedDB|new\s+Worker)\b/);
     }
   });

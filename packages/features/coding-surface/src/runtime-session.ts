@@ -13,13 +13,29 @@ export const createCodingRuntimeSession: CodingRuntimeSessionFactory = (options)
   let pending: Promise<BrowserEmceptionAPI> | null = null;
   let controller: AbortController | null = null;
   let disposed = false;
+  let initialization: Promise<BrowserEmceptionAPI> | null = null;
+  let cleanupFailure: { cause: unknown } | null = null;
 
   function assertActive() {
     if (disposed) throw new Error('The coding runtime session is disposed.');
   }
 
+  function disposeOwnedRuntime(owned: BrowserEmceptionAPI) {
+    try { closeRuntime(owned); }
+    catch (cause: unknown) { cleanupFailure = { cause }; throw cause; }
+  }
+
+  function confirmReleased() {
+    if (cleanupFailure) throw cleanupFailure.cause;
+  }
+
   return {
     getState: () => ({ ...state }),
+    whenDisposed() {
+      if (!disposed) return Promise.reject(new Error('The coding runtime session is not disposed.'));
+      // Acquisition cancellation is immediate; ownership can finish later.
+      return (initialization ?? Promise.resolve()).then(confirmReleased, confirmReleased);
+    },
     acquire() {
       if (disposed) return Promise.reject(new Error('The coding runtime session is disposed.'));
       if (runtime) return Promise.resolve(runtime);
@@ -46,7 +62,7 @@ export const createCodingRuntimeSession: CodingRuntimeSessionFactory = (options)
         reason = 'runtime-unavailable';
         const created = await module.createEmception({ manifestUrl, tty: 'none' });
         if (disposed) {
-          closeRuntime(created);
+          disposeOwnedRuntime(created);
           assertActive();
         }
         runtime = created;
@@ -56,7 +72,8 @@ export const createCodingRuntimeSession: CodingRuntimeSessionFactory = (options)
 
       // Disposal settles immediately even if import/boot cannot be aborted.
       // initialize still owns and closes any instance that arrives afterwards.
-      pending = Promise.race([initialize(), cancelled])
+      initialization = initialize();
+      pending = Promise.race([initialization, cancelled])
         .catch((cause: unknown) => {
           if (disposed) throw new Error('The coding runtime session is disposed.', { cause });
           state = { status: 'error', reason };
@@ -76,7 +93,7 @@ export const createCodingRuntimeSession: CodingRuntimeSessionFactory = (options)
       controller?.abort();
       const owned = runtime;
       runtime = null;
-      if (owned) closeRuntime(owned);
+      if (owned) disposeOwnedRuntime(owned);
     },
   };
 };

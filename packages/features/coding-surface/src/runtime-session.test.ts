@@ -258,6 +258,45 @@ describe('lazy coding runtime session', () => {
     expect(fixture.createEmception).toHaveBeenCalledExactlyOnceWith({ manifestUrl: '/emception/manifest.json', tty: 'none' });
     session.dispose();
   });
+
+  it('acknowledges late boot teardown instead of equating cancellation with release', async () => {
+    const fixture = setup();
+    const boot = deferred<BrowserEmceptionAPI>();
+    fixture.createEmception.mockReturnValue(boot.promise);
+    const session = createCodingRuntimeSession(fixture.options);
+    const acquired = session.acquire();
+    const rejected = expect(acquired).rejects.toMatchObject({ message: 'The coding runtime session is disposed.' });
+    await drainMicrotasks();
+    session.dispose();
+    await rejected;
+    const released = vi.fn();
+    const finished = session.whenDisposed().then(released);
+    await drainMicrotasks();
+    expect(released).not.toHaveBeenCalled();
+    boot.resolve(fixture.api);
+    await finished;
+    expect(fixture.api.dispose).toHaveBeenCalledTimes(1);
+    expect(released).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not acknowledge disposal before it was requested', async () => {
+    const fixture = setup();
+    const session = createCodingRuntimeSession(fixture.options);
+    await expect(session.whenDisposed()).rejects.toMatchObject({ message: expect.stringContaining('not disposed') });
+    session.dispose();
+    await expect(session.whenDisposed()).resolves.toBeUndefined();
+  });
+
+  it('reports actual teardown failures through its completion port', async () => {
+    const fixture = setup();
+    const failure = new Error('synthetic teardown failed');
+    fixture.api.canvas.stop.mockImplementation(() => { throw failure; });
+    const session = createCodingRuntimeSession(fixture.options);
+    await session.acquire();
+    expect(() => session.dispose()).toThrow(failure);
+    await expect(session.whenDisposed()).rejects.toBe(failure);
+    expect(fixture.api.dispose).toHaveBeenCalledTimes(1);
+  });
 });
 
 function manifest(): ReleaseFSManifest {

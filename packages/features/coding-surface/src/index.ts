@@ -2,6 +2,8 @@ export * from './authoring-persistence';
 export * from './authoring-persistence-types';
 export * from './coding-surface';
 export * from './execution-plan';
+export * from './graphics-session';
+export * from './graphics-session-types';
 export * from './profile-registry';
 export * from './runtime-capabilities';
 export * from './runtime-capability-types';
