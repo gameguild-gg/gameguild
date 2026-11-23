@@ -9,14 +9,24 @@ broader function/graphics, production workbench or human acceptance.
 Independent capability resolution is also implemented and tested under
 CS-ADR-035; it is eligibility preparation, not an executor, private-data gate
 or wired production UI. CS-ADR-036 replaces the upstream-harness proposal with
-approved owned native support composition; its real parity gate remains open.
+approved owned native support composition; its scoped scalar parity proof
+passes. The broader runtime/production acceptance gate remains open.
+
+UX03-B continuation on 2026-11-23 adds a typed, independently tested local
+graphics session using the lazy runtime and public canvas APIs. Five real
+SDL3/C++ cycles prove rendering, motion, input and responsive framing; the
+authorized narrow channel/native-cleanup correction is in CS-ADR-038.
+Cleanup is not complete: three anonymous listeners per cycle remain inside
+the published SDL glue (EMC-GAP-003). The real harness exits nonzero. Do not
+wire/present this as a fully accepted capability or close CODE-UX-03.
 
 ## Invariants and boundaries
 
 Apply [GOVERNANCE.md](./GOVERNANCE.md). Allowed changes are the owned surface,
 its public-runtime integration, tests and necessary host composition. Emception
-source/UI remain preserved except the narrow public phase extension authorized
-in CS-ADR-034; only declared editor/terminal libraries and public
+source/UI remain preserved except the narrow public phase extensions authorized
+in CS-ADR-034/037 and canvas channel/native-cleanup correction in CS-ADR-038;
+only declared editor/terminal libraries and public
 runtime APIs are available. The product-specific grading wrapper additionally
 consumes the exact shared pure function composer under CS-ADR-036, not the
 surface or a feature barrel. No local diagnostic becomes an official grade.
@@ -114,8 +124,8 @@ lifecycle and the overall CODE-UX-03 acceptance remain independent.
    API (`build`, `start`, `buildAndStart`, `stop` as applicable). Verify the
    installed API and artifact, runtime target, source/asset mapping, resize and
    input handling. Leave `@game-guild/emception-ui` and all Emception graphics/
-   compiler/harness code unchanged; CS-ADR-028/034 authorize only their recorded
-   worker/phase scope. Graphics is not blocked merely because the selected family is
+   compiler/harness code unchanged; CS-ADR-028/034/037/038 authorize only their
+   recorded worker/phase/canvas forwarding/cleanup scope. Graphics is not blocked merely because the selected family is
    `function` or `standard-io`, but every offered combination needs proof.
 6. Mount a real graphics target for environments that require one, even if its
    panel is temporarily minimized. Keep logs and diagnostics accessible when

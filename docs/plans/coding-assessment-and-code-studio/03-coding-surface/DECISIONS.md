@@ -965,6 +965,46 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   unchanged. The rationale and ledger retain hashes/resources, the earlier
   failed producer evidence and seven pre-existing upstream lint warnings.
 
+## `CS-ADR-038`. Owned graphics session and bounded canvas corrections
+
+- Date: 2026-11-23. Status: owned port accepted by the existing UX03-B scope;
+  two narrow upstream corrections explicitly authorized by the user after
+  independent real-artifact failures. Implementation/gates remain in progress.
+- The surface consumes public canvas build/start/stop and the existing lazy,
+  frozen-identity runtime port. Exact public editor files and candidate key
+  are captured; reference/private cases are not inputs. Public compiler presets
+  remain the only build pipeline. No test verdict or academic score is emitted.
+- The current SDL proof uses one C++ translation unit plus headers/assets;
+  the public canvas builder exposes one sourcePath, not a multi-source build.
+  Reject an unsupported source shape, wrong identity, missing environment or
+  ambiguous/detached default #canvas target before boot. Do not drop sources,
+  change the initial-file rule, rewrite student code or promote other profiles.
+- Stop/dispose acknowledge actual ownership completion. The owned lazy session
+  exposes whenDisposed() separately from immediate acquisition cancellation;
+  retries cannot overlap an initializing/closing runtime. Technical failures,
+  output overflow and preparation/student timeouts remain distinct states.
+- Real runtime RED: animation, keyboard-driven color and mobile framing pass
+  after supplying the artifact's default connected #canvas target. Native puts
+  is delivered on stderr because canvas-wasi has one fd_write sink and the
+  caller binds it to onStderr. Five reopens accumulate 29 listeners per cycle;
+  a post-cleanup RSS sample exceeds the 128 MiB plateau gate. Preserve these
+  original failed reports. Timely worker termination is not complete cleanup.
+- User separately authorizes correcting channel forwarding and investigating/
+  correcting canvas-owned event cleanup in canvas-wasi.ts/canvas-runtime.ts
+  and focused tests only. No IDE, retained UI, preset, compiler, harness, new
+  dependency or API/platform/schema change follows. Do not monkey-patch global
+  EventTarget or erase unrelated application listeners to satisfy cleanup.
+- Scoped result: 157 surface, 62 browser, 26 IDE, seven webcomponent and 27
+  preserved-UI tests pass, plus existing preflight/CI/artifact-policy gates.
+  Real stdout forwarding is corrected; native cleanup removes 26/29 listener
+  additions. Three anonymous handlers remain in the pinned SDL glue, so the
+  five-cycle gate fails (EMC-GAP-003). No artifact rewrite or automatic scope
+  expansion follows; a separate owner/product decision is pending.
+- Contract-first focused RED, strict browser build/tests, upstream compatibility
+  controls and the real input/resize/five-cycle proof are required. Preserve the
+  normal source-classifier/provenance rules. This is not an SDK/IDE publication
+  task, production UI cutover or automatic canonical capability promotion.
+
 ## Modelo para novas decisoes
 
 ```text

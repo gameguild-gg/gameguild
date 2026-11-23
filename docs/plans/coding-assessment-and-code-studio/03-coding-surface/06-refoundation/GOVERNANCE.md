@@ -41,6 +41,11 @@ Adopted: 2026-11-19, by explicit product instruction (Meta-Harness).
    facade, with focused compatibility/type tests. The owned grading wrapper
    uses it for separate bounded preparation/student timers. Preserve presets,
    harness, IDE/UI and all other upstream behavior; no new compiler pipeline.
+   Additional explicit exception approved on 2026-11-23 (CS-ADR-038): only
+   canvas-wasi.ts/canvas-runtime.ts and focused browser-runtime tests may
+   change for correct stdout/stderr forwarding and cleanup of canvas-owned
+   event registrations. Preserve all IDE/UI, presets, compiler/harness and
+   artifact/CI policy. A real five-cycle proof, not mocks alone, is required.
 5. Preserve published revisions, submitted files and historical migrations.
    Inventory actual stored data before changing interpretation. A necessary
    storage change follows `SCHEMA-GATE`, with a real migration and upgrade proof.
@@ -74,7 +79,7 @@ Adopted: 2026-11-19, by explicit product instruction (Meta-Harness).
 | `apps/api/Source/Modules/GameGuild.Learning.Assessments.CodeAdapter/` | server-side code adapter |
 | `apps/api/Source/GameGuild.API/` | host registration and product-specific bridges |
 | `apps/api/tests/` | affected contract, domain, integration and architecture tests |
-| `tools/emception/`, `packages/infrastructure/ui-emception/` | preserved upstream product and UI; read-only except the authorized grading-worker scope in CS-ADR-028/036/037 and narrow public-phase scope in CS-ADR-034/037; IDE/UI remain unchanged |
+| `tools/emception/`, `packages/infrastructure/ui-emception/` | preserved upstream product and UI; read-only except the authorized grading-worker scope in CS-ADR-028/036/037, narrow public-phase scope in CS-ADR-034/037 and canvas channel/native-cleanup scope in CS-ADR-038; IDE/UI remain unchanged |
 | platform modules listed in root `AGENTS.md` | no coding-specific edits or dependencies |
 
 ## Dependency graph

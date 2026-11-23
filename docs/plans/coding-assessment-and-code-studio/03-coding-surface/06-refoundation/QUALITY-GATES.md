@@ -224,6 +224,31 @@ assertions. Do not run its historical 12 GiB build on a pressured host; use the
 existing supported stack path under the recorded budget or keep this gate
 blocked. Never weaken compilation, provenance or isolation to force a run.
 
+### Focused public graphics-port proof
+
+UX03-B also has an isolated companion using the installed public SDK exports,
+the strictly typed surface calibration fixture and the actual local assets:
+
+```bash
+GAMEGUILD_CODE_WORKER_BROWSER_CHANNEL=chrome node apps/web/scripts/coding-surface-graphics-e2e.mjs
+```
+
+Omit the channel variable when using the already installed bundled Chromium.
+Run sequentially with the recorded OS-headroom guard and CPU affinity, never
+alongside a full application build. It builds only a small browser consumer,
+owns a loopback-only ephemeral server and one sandboxed browser, and writes
+fresh ignored evidence under `coding-surface-refoundation/runtime/graphics-*`.
+There are no accounts, course writes, fixture preparation CLI or Next startup.
+
+This proves the local graphics port, not production authoring, persona flows,
+the interactive text terminal or official graphics grading. It keeps independent
+pixel/animation/input/resize, output-channel, worker-disposal, listener and
+post-cleanup browser-RSS oracles. RSS samples explicitly use browser GC and
+retain the original measurements; missing metrics cannot count as zero usage.
+The current five-cycle report fails listener cleanup (EMC-GAP-003); preserve
+that nonzero result until the root cause is resolved. No required skip, relaxed
+128 MiB plateau, hidden orphan listener or canonical promotion is allowed.
+
 ## G-REGRESSION and G-FINAL
 
 ```bash

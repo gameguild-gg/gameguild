@@ -1,8 +1,10 @@
 # Parte 3. Coding surface e integracao web
 
 Status: implementacao funcional e consolidacao canonica concluidas localmente;
-refundacao de produto 3.6 iniciada (`CODE-UX-01` parcial), com seis etapas
-proprias antes da parte 4. O estado corrente esta no handoff da parte 3.
+refundacao 3.6 em andamento (`CODE-UX-01` concluido; `CODE-UX-02/03` parciais),
+com seis etapas proprias antes da parte 4. A prova grafica local detecta a
+pendencia de cleanup `EMC-GAP-003`; nao ha aceite da nova UI de producao.
+O estado corrente e suas evidencias estao no handoff da parte 3.
 
 ## Objetivo
 

@@ -27,6 +27,39 @@ exports instalados antes de afirmar suporte a uma combinacao.
 | N/A | nenhuma confirmada | editor, VFS e test runner | coding-surface | `@gameguild/emception-browser` fornece `createEmception()` headless; `emception/testing` fornece planos e resultados; Monaco e a camada de edicao do host | N/A | rejeitado |
 | `EMC-GAP-001` | argumentos/retornos funcionais compostos | exercicios com arrays e matrizes | coding e coding-surface; executor oficial | installed public harness rejects compound values; official validator is scalar-only | initial simple-type scope explicitly accepted; typed compound support remains a follow-up, without string encoding | fallback aceito |
 | `EMC-GAP-002` | configurable per-exercise memory limit | publish execution requirements faithfully without claiming unenforced restrictions | coding draft and official worker | public CreateEmceptionOptions, RunOptions and NativeBuildConfig expose no per-program memory cap | explicit capability deferral approved; preserve data, no silent ignore or runtime change | escopo reduzido |
+| `EMC-GAP-003` | complete graphical-session listener teardown | safely reopen, switch candidate and unmount without retaining the former runtime | coding-surface local graphics port; independent canvas consumers | public stop can call native SDL_AppQuit, but three anonymous document mouse handlers remain in the published SDL glue without removal handles | no accepted fallback; structural product/owner choice pending; no global event interception | confirmado |
+
+### `EMC-GAP-003`. Anonymous SDL document listener lifetime
+
+- Date: 2026-11-23. Active boundary: UX03-B / CS-REF-10/12.
+- Public composition: the owned lazy graphics port uses only canvas.build,
+  start and stop with verified 4.5.2 assets. One source plus headers/assets,
+  rendering, motion, keyboard input and mobile/desktop framing have real proof.
+  This does not establish production UI, other graphics profiles or grading.
+- Original five-cycle cleanup has 44/73/102/131/160 event listeners after
+  browser GC. Worker termination alone does not close the lifecycle gate.
+  User explicitly authorized the narrow public runtime cleanup investigation
+  and channel correction (CS-ADR-038), not an IDE or compiler refactor.
+- The public callback driver previously omitted native SDL_AppQuit. Invoking
+  it once on stop removes 26 registrations per cycle. Corrected counts are
+  18/21/24/27/30. The remaining anonymous mousemove/mousedown/mouseup callbacks
+  are registered on document inside the published sdl3-runtime.mjs glue, with
+  no stored function handles/removal hook exposed to the consumer. The source
+  diagnosis used the actual pinned bundle through standard Brotli/tar tools;
+  no artifact or manifest was edited.
+- Corrected rendering/input, stdout, worker-release and RSS-plateau oracles
+  pass. The independent event-listener oracle fails and the harness exits 1.
+  The original and corrected reports, hashes, counters and resources remain
+  under ignored runtime/graphics-gn3BMF and graphics-QKjfCF. No canonical status
+  or full CODE-UX-03 acceptance is promoted.
+- Not permitted: patching global EventTarget/document event methods, removing
+  another application's listeners, rewriting generated glue to hide the leak,
+  relaxing the oracle or claiming that deleting a canvas releases document
+  closures. Native cleanup remains useful but is not complete disposal.
+- Next decision requested: coordinate an artifact-level disposal hook/fix with
+  the Emception owner, or authorize a separate feasibility analysis of a
+  disposable browsing context. No extra implementation or artifact build is
+  authorized merely by this record. No external issue has been published.
 
 ### `EMC-GAP-002`. Per-exercise memory control
 

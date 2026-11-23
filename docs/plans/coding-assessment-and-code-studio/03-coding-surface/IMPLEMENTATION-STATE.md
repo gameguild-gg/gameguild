@@ -2,6 +2,93 @@
 
 Last updated: 2026-11-23.
 
+## Active continuation: UX03-B graphical execution port - 2026-11-23
+
+- Entry: `b07338ce46`, clean worktree; user requests continuation of part 3.
+  Stage: runtime audit. Preserve all earlier runtime evidence and decisions.
+- Implemented the owned local canvas execution port using the existing lazy
+  runtime and public `canvas.build/start/stop` APIs. Bind it to an immutable,
+  strictly parsed learner projection and explicit candidate key. No private
+  tests/reference solutions, official commands or numeric grading results.
+- First supported proof is C++/SDL3 with one native translation unit plus
+  headers/assets. Reject unsupported source shapes before boot, rather than
+  omitting source files or changing the meaning of the initial editor file.
+  This bounded proof does not promote the whole environment/capability matrix.
+- Contract first: typed states, separate bounded stdout/stderr, explicit stop,
+  timeout/failure and teardown acknowledgement. Extended the owned lazy port
+  with observable disposal completion so a late boot cannot overlap a restart.
+  Types/contracts passed before behavioral RED/implementation. Real rendering,
+  input/resize/cleanup remain separate oracles.
+- Allowed paths: `coding-surface/src/graphics-session*`, existing owned
+  runtime-session/types/tests, package exports/architecture tests, focused
+  public-API browser evidence harness and these plan/state/ADR records.
+  CS-ADR-038 additionally records the user's two explicit canvas-wasi/runtime
+  forwarding/cleanup authorizations and focused tests. No retained UI,
+  IDE/preset/compiler/harness, API/platform, dependencies, launcher or data edit.
+- Gates: G-SURFACE; focused G-PREFLIGHT/G-RUNTIME with real published assets,
+  one browser/compiler and OS-headroom guard; preserved UI regression and
+  G-DOC. No full API/web build for this independent package/runtime slice.
+  Production authoring/learner cutover and whole-phase acceptance remain open.
+- Contract stage passed strict types and seven selected contract checks before
+  behavior. The first RED retained 24 failures among 52 tests; two new fixture
+  assumptions were invalid (initial file must remain a native source, and an
+  incompatible explicit identity is rejected at parsing). Those are test
+  corrections, not product defects. Corrected message checks avoid the existing
+  cross-realm Error matcher issue. Three additional independent Auditor RED
+  cover factory failure, late teardown failure and delayed timer dispatch.
+  All 55 focused lifecycle/graphics tests then passed before real execution.
+- Real proof ran through the isolated companion
+  `apps/web/scripts/coding-surface-graphics-e2e.mjs`, with its strict typed
+  `src/testing/graphics-browser.ts` calibration. It reuses installed public SDK
+  exports and verified local 4.5.2 assets; no SDK source alias or toolchain build.
+  The initial two blank-target failures are preserved. The SDL artifact requires
+  its connected unique `#canvas` selector; the owned port now rejects a missing,
+  detached or ambiguous target before boot instead of mutating another target.
+- Authorized SDK correction: fd 1/2 use their correct callbacks; the optional
+  second sink preserves the existing single-sink call. Invalid descriptors
+  fail closed. Stopping the SDL callback lifecycle now calls SDL_AppQuit once;
+  pause/owned-URL teardown still run if native/module cleanup throws. Four
+  independent RED among 14 selected tests precede the minimal change.
+- Current real evidence: ignored runtime/graphics-QKjfCF/report.json, desktop.png
+  and mobile.png. Five cycles render the expected pixels, animate, respond to
+  keyboard input and resize without overflow. Captures were inspected. Worker
+  teardown completes within 301 ms including observation; the RSS plateau and
+  stdout oracle pass. This is an isolated graphics port, not the production UI,
+  an interactive text terminal, official graphics grading or human acceptance.
+- Remaining failure: event listeners after cleanup are 18/21/24/27/30. The
+  native cleanup removes 26 of the original 29 additions per cycle, but three
+  anonymous document mouse listeners remain in the published SDL glue. No
+  public removal hook exists for those anonymous callbacks. G-RUNTIME exits 1
+  for eventListenerPlateau; CS-REF-12 and full CODE-UX-03 stay open. A structural
+  choice is pending: coordinate an artifact fix with the Emception owner, or
+  authorize investigation of a disposable frame. Do not patch global event
+  methods, delete unrelated listeners or pretend disposal is complete.
+- Original failed observations remain in graphics-yNyt28/iVVFLu (blank target),
+  graphics-EZx93H (stdout on stderr), graphics-gn3BMF (original five cycles),
+  and sibling 20261123-canvas-*-red.json / graphics-upstream-red.tap. The first
+  suite-wide attempt also caught a lexical architecture guard: a local helper
+  named release was renamed disposeOwnedRuntime; the guard was not weakened.
+- Static/regression gates: surface strict types, 157/157 tests, complete strict
+  lint; browser local build/types and 62 tests (one existing opt-in Node smoke
+  skip), IDE 26, webcomponent seven, preserved UI 27, preflight/CI 121 and
+  artifact-policy 36 tests pass. Total 436 passing non-duplicated tests; real
+  graphics lifecycle still fails as above. Root lint prints existing React/
+  pages notices; npm prints existing pnpm-environment notices. No suppression.
+- Both actual local manifest preflights pass. G-DOC checks 49 documents,
+  187 local links, seven atomic tables and 25 complete rows without failures;
+  git diff --check passes. Only the two authorized upstream runtime source
+  files changed, with their focused tests; protected IDE/UI/compiler/presets,
+  API/platform, dependencies and launchers have no diff from the entry commit.
+- Resources: one browser/compiler, CPUs 0-7, 4772 MiB available-RAM reserve.
+  Corrected five-cycle peak 7376 MiB, minimum available 5546 MiB, zero PSI/OOM
+  or resource stops; report 20261123-graphics-fixed-resources.json. No fixed
+  RSS/heap ceiling, forced OS/swap allocation or unrelated process kill.
+  All owned browser/server/process groups are closed. No full API/web build,
+  persona flow, SDK/IDE publication, commit, push or canonical promotion.
+- Next: resolve EMC-GAP-003 before declaring cleanup/capability acceptance;
+  continue other UX03 obligations only within their independent atomic scope.
+  Production cutover remains UX04/05/06 work, not implied by this local port.
+
 ## Native function support through owned composition - 2026-11-23
 
 - Entry: `c733a556c3`; preserve all earlier uncommitted UX03-A capability work.
