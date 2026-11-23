@@ -35,6 +35,13 @@ output. Cold sequential controls prove cancellation/worker disposal, not a
 repeated-mount memory plateau or the production xterm/editor integration.
 Those workbench and UX03-C obligations remain next; CODE-UX-03 is still partial.
 
+CS-ADR-042 now composes the production package's offline editor, local program
+port, bounded public test engine, cancellation and stale-result controls.
+Native scalar function tests use the already-proven shared WASI mapper;
+graphics and unknown bindings are not silently routed through it. See the
+single ledger for exact UI/browser/host evidence and still-open gates. This
+does not close UX04 teacher task views, official persona E2E or CODE-UX-03.
+
 ## Invariants and boundaries
 
 Apply [GOVERNANCE.md](./GOVERNANCE.md). Allowed changes are the owned surface,
@@ -119,10 +126,11 @@ lifecycle and the overall CODE-UX-03 acceptance remain independent.
    family, frozen environment/identity, host-authorized mode, existing read-only
    restriction and learner-file policy. It exposes local eligibility/reasons;
    it does not boot, authorize a request or claim successful execution. Current
-   function ABI, graphics test execution and unverified environment/input
-   combinations remain unavailable. The required graphics target survives
-   panel minimization. Wire this port only during the planned workbench cutover;
-   current profile booleans are not proof of runtime conformance.
+   graphics test execution and unverified environment/input combinations remain
+   unavailable. CS-ADR-042 wires the verified native scalar WASI mapper and
+   textual controls. The resolver's required graphics target survives panel
+   minimization; that eligibility does not certify the deferred graphical UI.
+   Profile booleans alone are not proof of runtime conformance.
 2. Compose editor, file access, diagnostics, test results, console, interactive
    terminal and graphics as explicit regions. Use existing Monaco, xterm and
    resizable-panel integrations when appropriate; do not add libraries to

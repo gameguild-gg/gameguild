@@ -1083,6 +1083,39 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   platform/schema change, migration or PR operation is authorized by this
   sequence. Human/canonical acceptance is never inferred from the plan.
 
+## `CS-ADR-042`. Offline editor and one lazy local execution owner
+
+- Date: 2026-11-23. Status: implemented; focused runtime/host gates recorded in
+  the single ledger. Whole CODE-UX-03 and official grading acceptance stay open.
+- Replace the owned workbench's eager SDK-shaped controller with the smaller
+  `CodingEditorController` file port. Mounting, editing, saving and capturing
+  a submission must not fetch compiler assets or start a compiler worker.
+  Existing host extension slots remain temporarily until UX04 replaces them.
+- Program and tests share a workbench owner. Snapshot exact mutable editor
+  bytes, freeze the definition, and use fresh owned runtimes only on explicit
+  execution. Cancellation, context teardown and stale-result invalidation
+  cannot overlap a new runtime. Retain cleanup failure as a rejected barrier.
+- Program execution consumes CS-ADR-040. Tests consume the existing public
+  `emception/testing` engine, exact native mapper and optional public phase
+  callback. Separate bounded preparation/student budgets and output caps;
+  adapter failures or absent phase evidence cannot become numeric estimates.
+  Compile errors and wrong answers remain genuine distinct test diagnostics.
+- Enable the native scalar function test path on verified C/C++ WASI bindings
+  using the prior ten public-preview/official-worker parity controls and the
+  shared mapper. This does not enable function tests in graphics environments,
+  compound signatures, unknown identities or RAM configuration.
+- Use installed Monaco and xterm, separate stdout/stderr and batch versus
+  interactive input, and remove raw captured ANSI/fake-shell presentation.
+  Persist only schema-validated mutable learner deltas under host-scoped keys;
+  never persist author-private buffers/reference solutions. A bad local draft
+  is reported and is not overwritten. No legacy draft decoder is introduced.
+- Host compositions provide attempt/content/inspection context keys and clear
+  stale diagnostic summaries. Official submit/review/release stay in the host.
+  No SDK/UI/compiler/preset, backend/schema, dependency or launcher change.
+- The isolated UI proof serves installed Monaco locally and uses a single
+  compiler/context at a time. It is actual package UI, not a Next-host/persona
+  proof, graphics acceptance or a compiler-memory plateau certification.
+
 ## Modelo para novas decisoes
 
 ```text

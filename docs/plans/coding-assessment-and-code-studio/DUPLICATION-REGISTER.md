@@ -263,6 +263,22 @@ Both consume the declared public SDK and frozen manifest. Duplication is
 bounded test scaffolding, not a second execution pipeline. Consolidation is
 optional after parts 03/04; preserve the independent oracles if consolidated.
 
+`DUP-PL-019`: `apps/web/scripts/coding-surface-workbench-e2e.mjs` follows the
+owned program proof scaffolding at `04374fe181`. The server/build/provenance/
+browser teardown structure is intentionally duplicated for now; independent
+oracles exercise the actual owned Monaco/xterm UI, offline editing, context
+replacement, public tests and cancellation. Installed Monaco assets are served
+locally only for this isolated proof. There is no copied IDE, compiler, judge
+or SDK code. Keep the runtime/graphics oracles independent if this scaffolding
+is consolidated after parts 03/04. Owner: coding/grading; CS-ADR-042.
+
+The production refoundation also replaces the eager part-3 composition in
+`DUP-NEW-007` with an editor-only file port and owned lazy execution owner.
+`preview-runner.ts` calls the public test engine and existing native mapper;
+it does not duplicate their comparison or compiler implementation. The
+retained low-level `session.ts` shares its pure submission capture helper.
+No automatic synchronization with the preserved upstream UI is introduced.
+
 ## Gate de revisao futura
 
 A revisao com o responsavel pelo Emception deve decidir item por item:

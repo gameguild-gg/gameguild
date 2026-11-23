@@ -29,6 +29,13 @@ No whole-toolchain build, standalone IDE publication or `dev:fast` change is
 introduced. Local consumer/worker builds remain required for changed source.
 Production refoundation and product acceptance are not complete.
 
+CS-ADR-042 now wires the production package's offline editor and lazy local
+program/test controls. Eight real native UI controls, five offline editor
+cycles, package/host regressions and the full web typecheck pass. The shared
+ledger preserves the exact provenance, resource observations and failed prior
+attempts. This is not whole CODE-UX-03, Next-host/persona/official grading or
+graphics acceptance. The next independent row is UX04-A teacher task views.
+
 Updated: 2026-11-23.
 
 Gate IDs: `CODE-UX-01` through `CODE-UX-06`.

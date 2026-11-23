@@ -2,6 +2,131 @@
 
 Last updated: 2026-11-23.
 
+## Active continuation: production text workbench - 2026-11-23
+
+- Entry: `2bfbdd63a5`, clean tree. The requested documentation commit is done.
+  Scoped UX03-B/C owned editor/execution composition is implemented and its
+  focused gates pass. This is not UX04 authoring redesign or whole-phase
+  acceptance. CS-ADR-042 records ownership and the current consumer boundary.
+- Contract first: an editor-only file port is ready without a runtime; each
+  local operation captures immutable file/definition bytes. Program and tests
+  share one owner, cancellation/drain barrier and stale-result invalidation.
+  Submission capture stays offline and has no academic side effects. Only the
+  host invokes official commands. Program input and test input stay distinct.
+- Allowed paths: owned surface contracts, editor state, workbench/session/UI,
+  focused unit/type/browser fixtures and harness, and the four existing web
+  compositions if context keys or editor-only callback types require them.
+  Update exports/architecture tests and current state/ADR/evidence records.
+  No SDK, retained IDE/UI, compiler/preset, API/schema, launcher or dependency
+  change. No private/reference material in learner buffers or local storage.
+- Terminal gates: strict contracts before behavior; independent behavioral RED;
+  G-SURFACE types/tests/strict lint, focused host regressions, real production
+  workbench exercise under G-RUNTIME with OS headroom, and G-DOC/diff checks.
+  Unsupported operations remain explicitly unavailable. Five-cycle and real
+  terminal evidence must be reported separately; no promotion by mocked UI.
+
+- Additional allowed host configuration: exclude generated `apps/web/test-results`
+  from the web tsconfig's broad input glob. The full web check reproduced
+  unresolved imports in ignored standalone repro entries, not application
+  sources. Retain those artifacts/evidence; do not weaken source checking or
+  omit the versioned package browser fixtures. Verify the parsed input graph
+  and rerun the complete web check after this scope correction.
+
+### Scoped workbench result and evidence
+
+- Implementation commits: `2953dfcef9` (owned execution contracts/coordinator),
+  `fcac79341a` (offline editor, terminal/UI/host integration and real proof),
+  `ac940065c0` (generated report input scope). The documentation is committed
+  separately; no push, PR or release was requested/performed.
+- Contract types compiled before behavior. Independent first RED: 12 tests
+  failed at the deliberately unimplemented owned coordinator; retained
+  `runtime/20261123-workbench-red.json`. Later independent Auditor negatives
+  caught early cancellation-state capture, loss of a pending barrier through
+  an editor-only intermediate context, late submission capture and missing
+  run-start budget acknowledgement. Root causes were corrected in owned code.
+- `CodingEditorController` is ready offline, without an SDK `api` property.
+  `CodingWorkbenchSession` snapshots exact editor bytes, owns one program/test
+  operation, drains actual teardown, propagates cleanup failure, blocks stale
+  callbacks and invalidates results after edits. Host submission remains a
+  separate official intent. No replacement compiler, judge or grading policy.
+- Tests use the existing public engine/native mapper with strict identity,
+  phase and output/time checks. Infrastructure exceptions/missing phase cannot
+  become numeric wrong-answer estimates. The proven scalar WASI function path
+  is wired; the independently preserved graphics/RAM limitations stay visible.
+- The actual package UI uses Monaco file tabs and xterm with independent
+  stdout/stderr, finite batch input versus interactive input/EOF, separate run
+  program/test/stop commands, real cancellation acknowledgement and stale
+  result indication. Four host consumers now carry content/attempt/inspection
+  identity or preview generation. Learner diagnostic summaries invalidate on
+  edits. Private author buffers are not persisted or exposed to other modes;
+  scoped local recovery uses strict canonical submission deltas, not a legacy
+  decoder. Failed local recovery/save is visibly reported.
+- Final G-SURFACE: strict package types, full strict lint and 227 tests, zero
+  failures/skips. G-WEB: six explicit suites/133 tests pass (coding activity,
+  route, definition editor, grader, bridge and lesson workspace). The complete
+  web typecheck passes. No source checking, library rule or test was disabled.
+- Web typecheck investigation: the first Node run exhausted its default 4 GiB
+  heap; the second completed and exposed ignored standalone reproduction TS
+  files incorrectly included by the broad application glob. Excluded only
+  generated `test-results`, retaining the evidence and all versioned fixtures.
+  Parsed input verification removes exactly six generated repro roots, zero
+  application roots, retaining 1495 web inputs and all four host consumers.
+  Final full check with a 6 GiB *maximum* Node heap (not reserved RAM), CPUs 0-3
+  and OS guard: exit 0, peak owned RSS 6009 MiB, minimum available 4963 MiB
+  versus 4772 MiB reserve, zero PSI/swap/OOM, about 66 seconds. Report:
+  `runtime/20261123-workbench-web-types-resources-3.json`.
+- Lint was run separately with package and existing web configurations; mixing
+  their parser projects in one invocation was rejected, not counted as a pass.
+  The web audit used an explicit empty bulk-suppression map to expose all
+  applicable diagnostics, without adding/changing any repository suppression.
+  Final map: `coding-surface-refoundation/empty-eslint-suppressions.json` in
+  ignored web test evidence. No unpruned-suppression bypass was used.
+  Removed one existing inline mount-effect waiver by using explicit guarded
+  seed dependencies. Final host/harness lint is strict and suppression-free.
+- Final actual-component proof: `runtime/workbench-90ZCGr/report.json`, eight
+  required controls pass: interactive native I/O, stop awaiting input, executing
+  context replacement followed by a correct function run, correct/wrong stdio,
+  correct/wrong scalar function and compilation failure. Each observes at most
+  one compiler worker and zero retained compiler workers. No uncaught page
+  exceptions. Tests and program execution remain observably different, with
+  no official-grade calls. Exact current owned/composer/SDK/harness/manifest
+  hashes were independently verified after the final run.
+- Five offline edit/capture/unmount cycles fetch no compiler assets and start
+  no compiler workers. After warmup, DOM nodes/listeners remain at 47/182;
+  observed heap increase is about 1.5 MiB, within the focused 8 MiB allowance.
+  Inspected actual Monaco desktop/mobile and xterm/results captures; no page
+  horizontal overflow. This is not a five-execution compiler-memory plateau.
+- Runtime resource report `runtime/20261123-workbench-final-resources.json`:
+  exit 0, 6860 MiB peak owned RSS, 5018 MiB minimum available versus 4772 MiB
+  reserve, zero PSI/OOM and 1 MiB swap, about 132 seconds on CPUs 0-7. Exactly
+  one compiler at a time, including the same-context replacement control.
+- Preserve nonpassing attempts: `workbench-g1thNN` exposed the CSR fixture's
+  missing React NODE_ENV definition; `workbench-E4wzxG` used Playwright's 5 s
+  default while native compilation was still active; `workbench-I34EfZ` exposed
+  the real cancellation acknowledgement race. `workbench-BtrGmz` then passed
+  seven controls; the final run includes adversarial context replacement and
+  the final budget/source changes. No failed report was overwritten/relaxed.
+- G-REGRESSION: preserved Emception UI 27 tests, CI classifier/required gate 95
+  tests and preflight helpers 26 tests pass, no required skips. Initial pnpm/
+  subprocess/loopback restrictions were retried with appropriate execution
+  access; bootstrap failures are not product RED. No API, platform, schema,
+  client generation, SDK/IDE/UI, presets/compiler, launchers or dependencies
+  changed in this slice. No full API/optimized-web build or canonical promotion.
+- Still open: UX04 teacher task views, the final learner/review refoundation,
+  actual Next-host/persona/publication/official-grade/release E2E, the separate
+  repeated-execution plateau and full graphics acceptance. The isolated proof
+  uses installed local Monaco assets; it does not certify a host's loader or
+  private preview/official workflow. Existing post-04/pre-05 findings remain.
+- Final G-DOC: 49 documents, 197 local links, seven atomic tables/25 complete
+  rows, zero failures; whitespace audit passes. Every task-required command
+  session is complete and all owned browser/fixture servers are closed.
+
+Next exact action: UX04-A in `06-refoundation/04-instructor-authoring-and-validation.md`.
+Compose the agreed teacher task views over existing draft contracts, keep
+editing offline and remove long authoring forms from execution/output regions.
+Do not call this completion of part 03/04. Preserve separate runtime stress,
+official grading and human acceptance gates while advancing independent rows.
+
 ## Current priority and post-plan findings - 2026-11-23
 
 - User requested commits before continuing, and explicitly prioritizes finishing
@@ -18,7 +143,7 @@ Last updated: 2026-11-23.
 - Committed the preceding work separately: `2ebdabd6ae` (authorized SDK fixes),
   `9a44da314b` (owned graphical port and proof), `92df896f3a` (evidence/decisions).
   Pre-commit surface regression: 157 tests pass. No push or remote publication.
-- Active row: independent UX03-B text execution/input, scoped gate passed.
+- Prior row: independent UX03-B text execution/input, scoped gate passed.
   Allowed paths: owned program-session contracts/implementation/tests, package
   exports/architecture, an isolated public-API browser fixture/harness, and
   current plan/decision/state records. Preserve SDK/IDE/UI/compiler/presets.
@@ -94,20 +219,18 @@ Last updated: 2026-11-23.
   seven atomic tables/25 complete rows; git diff --check passes. All command
   sessions needed by this slice are complete; no owned browser/server remains.
 
-Next exact action: compose the lazy editor/program/input/results foundation
-into the owned workbench, keeping form edits offline and contexts isolated,
-then execute the independent UX04-A task views over existing draft contracts.
-Required UX03-C repeated-mount ownership and production terminal/UI evidence
-stay open. Continue the core user journeys, not optional SDL artifact repair,
-new assistance settings or unrelated platform corrections.
+The text-port composition is now covered by the current workbench result above.
+Continue at its exact UX04-A handoff. Required repeated-execution/graphics and
+Next-host/persona evidence stays open. Continue the core user journeys, not
+optional SDL artifact repair, new assistance settings or unrelated platform work.
 Part 04 must produce its separate official-grading core report before any
 claim that basic coding grading works. The post-04 repair checkpoint is then
 mandatory before part 05; do not start language expansion to avoid known debt.
 
-CS-ADR-041 scheduling update is documentation-only: G-DOC checks 49 documents,
-197 local links and seven atomic tables/25 complete rows; diff whitespace is
-clean. No product/runtime test, gate completion, commit or push is claimed by
-this clarification. Production work resumes at the exact action above.
+The CS-ADR-041 scheduling clarification was committed as `2bfbdd63a5`, after its
+documentation-only audit (49 documents, 197 local links, seven atomic tables/
+25 rows). The subsequent product/runtime evidence is recorded separately above;
+the clarification alone did not close any execution gate. No push was requested.
 
 ## Active continuation: UX03-B graphical execution port - 2026-11-23
 

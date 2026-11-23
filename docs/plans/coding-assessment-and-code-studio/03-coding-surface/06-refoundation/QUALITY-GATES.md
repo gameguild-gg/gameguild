@@ -125,6 +125,14 @@ less strict substitute. Record explicit paths, not an unexpanded placeholder.
 If the generated client changes, use its official generator, then run its
 existing typecheck/build. Do not hand-edit it or suppress integration errors.
 
+If the workspace's bulk-suppression ledger obstructs a scoped audit with stale
+entries, do not add waivers or ignore unpruned status. Use the same existing
+configuration with `--suppressions-location` pointing to an explicitly empty
+JSON map in ignored evidence, and record that path. This exposes all active
+rule diagnostics rather than applying historical per-finding exemptions.
+Keep generated report/reproduction directories out of the application input
+glob, but never exclude versioned source or the package's strict fixtures.
+
 ## G-API: owned backend and architecture
 
 Apply when API/domain/contracts change; select focused contract tests first,
@@ -269,6 +277,34 @@ harness and manifest hashes. A bridge's prefetch request alone is not a prompt
 or proof that the program received input. This is a local public-port proof,
 not a shell, production xterm/Monaco UI, academic verdict, persona E2E or the
 separate five-cycle same-context plateau. Keep those acceptance layers open.
+
+### Focused production workbench proof
+
+```bash
+GAMEGUILD_CODE_WORKER_BROWSER_CHANNEL=chrome node apps/web/scripts/coding-surface-workbench-e2e.mjs
+```
+
+Apply the same verified-artifact, OS-headroom and reserved-CPU policy. The
+fixture mounts the actual owned `CodingSurface`, installed Monaco and xterm,
+with a local Monaco loader. It does not mock a compiler or create an API stack,
+accounts or courses. Expectation timing admits the executor's bounded cold
+preparation; the actual student-program timer is not extended.
+
+Require five offline edit/capture/unmount cycles without compiler assets or
+workers, desktop/mobile framing, native interactive I/O and separate channels,
+stop acknowledgement, replacement of an executing context, correct/wrong
+standard-I/O and native function tests, visible compilation diagnostics,
+stale-result marking and zero retained compiler workers. Keep exact current
+source/composer/SDK/manifest/harness hashes and fresh `workbench-*` evidence.
+For the five offline editor cycles, collect GC/DOM metrics and bound warmed
+heap growth to 8 MiB and DOM growth to 100 nodes. Preserve the raw listener
+counts too; these presentation bounds do not replace native execution stress.
+
+This is package UI evidence, not Next-host/publication/persona/release E2E.
+The offline editor's measured plateau is not a five-run compiler-memory
+plateau. Graphics, all supported runtime combinations, official grading and
+human acceptance keep their independent required oracles; no canonical status
+is automatically promoted by this focused report.
 
 ## G-REGRESSION and G-FINAL
 
