@@ -771,6 +771,81 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   the full 104-case worker selection pass, as does strict worker typecheck.
   This is mocked transport/composition evidence, not native conformance.
 
+## `CS-ADR-033`. Lazy owned runtime acquisition, not a new executor
+
+- Date: 2026-11-22. Boundary: independent UX03-A preparation after the develop
+  merge; CODE-UX-02/03 remain open.
+- Decision: expose a context-owned typed runtime session. Construction and
+  inspection do no dynamic import, manifest fetch or worker boot. Explicit
+  acquisition checks the current frozen identity through the public manifest
+  parser and owned metadata comparison before calling public createEmception.
+  Share pending acquisition only within this session; retry only on an explicit
+  caller request. Disposal aborts pending metadata, rejects acquisition promptly
+  and closes any late-created canvas/runtime, never a new context's instance.
+- Boundaries: no app, academic command, compiler, harness, browser storage,
+  protected Emception implementation or emception-ui dependency. The port is
+  not wired into the old production workbench. The local release/served assets
+  were refreshed using the existing sync helper after verified backups; archive
+  SRI and all 29 bundle hashes pass. No local compiler build or IDE deployment.
+- Proof limits: metadata preflight is not a cryptographic provenance claim for
+  a later mutable deployment. The host/CI must serve the exact immutable release
+  assets and retain normal source-producer checks. Isolated real-browser proof
+  covers lazy boot, single acquisition, rejection and disposal only, not program
+  compilation, functional cases, graphics, five-cycle resource plateau or human
+  acceptance. The later CS-ADR-034 answers the two scope questions; remaining
+  runtime findings and broader acceptance stay open.
+- Evidence: strict contract before behavior; meaningful RED against the typed
+  unimplemented acquisition, unit/architecture gates and a boot-only Chromium
+  diagnostic with current public sources and actual published assets. See the
+  dated ledger for exact counts, resource measurements and ignored reports.
+- Duplication: the small current-identity metadata check intentionally mirrors
+  the worker guard without importing that separately fingerprinted artifact;
+  register it in DUPLICATION-REGISTER.md. Future convergence requires its owners.
+
+## `CS-ADR-034`. Explicit execution phase and initial source file
+
+- Date: 2026-11-22. Status: both choices explicitly authorized by the user;
+  scoped implementation and real-worker proof recorded. Broader gates remain
+  open; terminal evidence is not inferred human acceptance.
+- Public exception: add optional compile/link/run phase metadata to ToolResult,
+  populate it in the browser facade, validate it and let the existing public
+  test engine distinguish build failure from program assertions. Guard phase
+  presence at the official grading boundary. No IDE/UI, compiler/harness,
+  library/version, new executor or academic-policy change is authorized.
+- Compatibility: old raw-tool/other-provider results without phase remain
+  assignable with their existing generic test semantics. Browser results now
+  expose the actual terminal phase; official grading must not guess it from
+  exit status or diagnostics. Existing fields, expected nonzero program exits,
+  saved definitions and historical receipts are not rewritten.
+- Entry decision: entryPoint.path identifies the initial editor source, not
+  the translation unit required to contain main. Preserve serialized names,
+  public text-source validation, all source units and current link ordering.
+  Label it Initial file in the owned surface. A future teacher main-location
+  constraint would need its own explicit pedagogical contract.
+- Scope: current core types/result validator/testing engine and focused tests,
+  browser facade/tests, grading entry guard/tests, owned labels and documents.
+  CS-ADR-028/032 budget/import boundaries still apply. No unrestricted upstream
+  modification or change to existing exact-source CI policy is implied.
+- Required proof: contract compilation and old-shape assignability before
+  behavior; independent RED; compiler/linker failure cannot pass empty-output
+  or matching-exit assertions; completed nonzero runs retain semantics; missing
+  phase is unavailable; real multi-file controls pass. Function ABI/graphics
+  findings remain independent and cannot be promoted by this correction.
+- Evidence: contract/types before independent behavioral RED; complete core,
+  browser, worker and owned surface regressions; 12/12 current-source official
+  worker controls with real pinned WASM assets, including main in another file
+  and build failures matching otherwise successful assertions. The ledger
+  retains exact hashes/resources, the first failed probes and proof limits.
+  A permitted undefined-import fixture is not a linker failure and remains a
+  separately recorded risk. Seven unchanged upstream lint warnings are not
+  waived; no whole-phase, release, canonical or human acceptance is claimed.
+- Follow-up validation: paired real-IDE controls preserve editing/tabs, shell,
+  native stdin/error recovery and SDL3 pixels/focus/Stop. Public engine behavior
+  changes only as intended in its invalid-build control. A separate shell-to-
+  program input defect fails in both versions and remains explicit. Full
+  rationale, compatibility qualifications and evidence are in
+  [EMCEPTION-PHASE-EXTENSION-RATIONALE.md](./EMCEPTION-PHASE-EXTENSION-RATIONALE.md).
+
 ## Modelo para novas decisoes
 
 ```text

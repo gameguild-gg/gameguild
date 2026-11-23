@@ -2,8 +2,9 @@
 
 Status: public compound-value limitation confirmed in `CODE-UX-01`; initial
 scalar-only scope explicitly accepted by the user on 2026-11-20. Compound
-support remains deferred. The upstream runtime and UI remain unchanged;
-CS-ADR-028 records the separately approved grading-worker safety exception.
+support remains deferred. Compiler flags/harness and IDE/UI remain preserved;
+CS-ADR-028 records the grading-worker safety exception and CS-ADR-034 the
+explicitly authorized minimum public execution-phase metadata extension.
 Per-exercise memory control remains unsupported; the user explicitly approved
 deferring that capability in this delivery (CS-ADR-029).
 
@@ -101,15 +102,21 @@ the entry behavior is reproduced but its intended policy needs clarification.
 Public canvas renders verified pixels while the native path omits SDL
 callbacks. The whole-worker graphics failure alone remains non-diagnostic;
 the report distinguishes it from the successful public-API comparison and
-discards the first, mismatched SDL fixture. These are unresolved findings,
-not capability promotion, permission to alter upstream or a completed gate.
+discards the first, mismatched SDL fixture. That historical report is preserved.
+The user subsequently authorized both phase metadata and initial-file semantics
+(CS-ADR-034). Twelve current-source official-worker controls with real published
+WASM assets now pass for those two scoped corrections; exact evidence/hashes
+and failed exploratory attempts are in the ledger. Function ABI/graphics remain
+unresolved, and a permitted undefined-import observation is tracked separately.
+No canonical promotion or completed phase/release/human gate is implied.
 
 | Oracle | Observation / source boundary | Required UX03 disposition |
 | --- | --- | --- |
-| `CS-RUNTIME-NATIVE-ENTRY` | `resolveBuild`/native `compileAndRun` compiles and links all supplied sources; placing the chosen entry first is not proof that its `main` is the executable root | execute a non-main-named entry, helpers and a competing/absent main; specify root semantics and reject an unsupported candidate rather than guessing |
+| `CS-RUNTIME-NATIVE-ENTRY` | user explicitly approved initial editor source, allowing main elsewhere; all source units/order preserved | scoped real worker and owned label/selection tests pass; duplicate/absent main fails linking; no new main-location requirement or serialized rename |
 | `CS-RUNTIME-FUNCTION-ABI` | the C preset forces C compilation while `generateDoctestHarness` emits C++; C++ references also require compatible linkage and startup | test both languages against their actual public harness/ABI; a returned harness string is not conformance; mark unavailable or apply EMCEPTION-GATE if public composition cannot meet the contract |
 | `CS-RUNTIME-GRAPHICS` | native `compileAndRun` runs through WASI; SDL3/raylib/Allegro preset selection does not establish loading canvas runtime glue/callbacks | prove actual output through the public canvas lifecycle and distinguish diagnostic support from authoritative server grading; no headless-WASI fallback for a graphics requirement |
-| `CS-RUNTIME-COMPILE-FAILURE` | compile/link failure returns a nonzero ToolResult; stdio matching omits exit checking when expectedExit is absent | a deliberately broken program with intentionally empty expected stdout must never earn a passing official receipt; preserve failure classification and consult the owner if the public result cannot identify compile failure |
+| `CS-RUNTIME-COMPILE-FAILURE` | corrected using authorized optional public phase; official worker rejects missing/unknown phase | real compile/link controls cannot pass empty stdout or matching-exit assertions; valid empty/expected-nonzero runs preserved; no diagnostic guessing or parallel comparator |
+| `CS-RUNTIME-UNRESOLVED-IMPORT` | a synthetic undefined-function program returns run/exit 0; existing preset permits undefined imports | investigate with the Emception owner; do not mistake this fixture for a linker failure, change compiler flags or claim stage metadata proves import implementation |
 
 Owner: coding/grading investigates its public integration during UX03-A/B;
 the Emception owner approves any genuine upstream contract/implementation need.
@@ -130,9 +137,14 @@ binding requires schema 2, the frozen version/ABI/lock hash, receipt and
 fingerprint. This is an artifact precondition, not a missing public API.
 
 On 2026-11-20, published 4.5.2 Toolchain/Core CDN manifests passed that binding
-check. The local copies still fail and need an explicit backed-up refresh
-before CODE-UX-03 execution; no full artifact download or local runtime pass
-has been recorded. `CS-ADR-024` withdraws the mandatory source-build/build-only
+check. On 2026-11-22, both generated local copies were backed up and refreshed
+through the existing sync helper from the SRI-verified published archive.
+Both actual preflight checks and all 29 bundle hashes pass. CS-ADR-033's real
+browser diagnostic proves lazy boot/disposal only; the four runtime findings
+were not closed by that boot check. Subsequent CS-ADR-034 controls cover only
+phase/initial-file behavior; remaining findings stay open. The ledger records
+the backup/report locations.
+`CS-ADR-024` withdraws the mandatory source-build/build-only
 CI proposal. The existing source classifier still requires exact-source
 provenance when applicable; unchanged-runtime consumers can reuse published
 assets. Refreshing those assets alone does not require an upstream IDE

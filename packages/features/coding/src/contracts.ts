@@ -65,7 +65,9 @@ export interface CodingLimits {
 }
 
 export interface CodingEntryPoint {
+  /** Initial editor source; main may live in another translation unit. */
   path: string;
+  /** Required function symbol when the exercise has a function contract. */
   symbol?: string;
 }
 

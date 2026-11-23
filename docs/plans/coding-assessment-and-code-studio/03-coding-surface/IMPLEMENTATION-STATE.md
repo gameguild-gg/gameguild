@@ -2,6 +2,325 @@
 
 Last updated: 2026-11-22.
 
+## Commit and continuation checkpoint - 2026-11-22
+
+- User approved committing the validated changes and continuing part 3.6.
+  Preserve the runtime findings and upstream ownership boundaries; no push
+  or independent IDE refactor was requested.
+- Commits: `33b62e2b4f` records the minimum execution-phase correction and its
+  rationale; `18103947ff` records the independently tested lazy runtime port.
+  The next commit groups initial-file semantics with the reconciled plan,
+  decisions, evidence and handoff. Generated assets/evidence remain ignored.
+- Closing documentation audit: 49 parsed documents, 187 local links, seven
+  atomic tables and 25 complete rows; no failures. `git diff --check` passes.
+  The source/evidence hashes match the audited worktree. Existing upstream
+  lint warnings and the paired pre-existing IDE input defect remain visible.
+- Next active slice: UX02-C/UX03 runtime-fidelity investigation, specification
+  stage. Read only the public functional-test contracts, existing owned
+  assessment mapper/worker integration and the recorded synthetic evidence to
+  determine whether supported composition can fix function ABI/startup. Then
+  distinguish diagnostic canvas support from official graphics execution.
+  No broader upstream change, private import, parallel harness, schema change
+  or capability promotion is authorized. If composition cannot meet the
+  declared contract, record the exact gap and apply EMCEPTION-GATE before
+  dependent implementation. CODE-UX-02/03 remain open.
+
+## IDE compatibility and change rationale audit - 2026-11-22
+
+- User request: justify the authorized Emception changes, verify that the
+  extension does not regress the IDE, then write the supporting document only
+  after the evidence supports that conclusion. Baseline remains 4a212cd7ff;
+  preserve all existing uncommitted changes. No commit or push requested.
+- Scope: read the exact public types/facade/engine/worker diff and IDE/UI
+  consumers; run their existing builds/types/tests. Use temporary diagnostic
+  harnesses and ignored synthetic evidence for paired browser observations.
+  No protected production source, compiler flags, dependencies, manifests,
+  migrations, dev launchers, real accounts or services may change in this audit.
+- Contract first: optional phase preserves old ToolResult assignability;
+  api.run and CanvasSession/build discriminants are distinct and unchanged.
+  The IDE's terminal path uses runTool/api.run, its graphics path uses
+  api.canvas, and assessment extensions may consume runTests. Correctly
+  rejecting a tagged build failure in runTests is intentional, not an IDE
+  execution-policy change. Current-source SDK types must compile before
+  interpreting any browser result.
+- Oracles: existing SDK/IDE/retained UI tests; inspect unchanged IDE source;
+  paired baseline/current SDK with the same actual IDE component, pinned local
+  WASM assets and browser. Check real editing/tabs, terminal stdin/output,
+  compilation-error recovery, SDL canvas pixels/cleanup and editor focus.
+  Report each observation at its actual evidence layer; mock/type/DOM evidence
+  cannot stand in for real compilation or pixels.
+- Resources: one heavy job/browser at a time, CPUs 0-3 and the established
+  OS-headroom/PSI guard, not a forced all-RAM heap or full runtime rebuild.
+  Preserve failed probes and classify baseline/harness/product failures.
+- Quality gates: relevant official SDK and IDE tests/builds/types, retained
+  emception-ui regression, browser controls and source/hash preservation;
+  existing strict upstream lint debt remains visible. A supporting document
+  may state scoped non-regression only after those observations, not universal
+  compatibility or completed CODE-UX-02/03/release/human acceptance.
+- Result: all 13 package commands exit 0: core 273, browser 47 with its one
+  existing opt-in skip, webcomponent 7, IDE 26, retained UI 27, public tsd and
+  browser/xterm/React/webcomponent/IDE types/builds. Current public interface
+  signatures and old ToolResult fields are AST-identical; phase alone is added
+  optionally. Raw run is unchanged. IDE/UI, compiler/presets, canvas/runtime,
+  worker protocol, functional harness, API and dev launchers have no new diff.
+- Paired real-IDE result: eight normal controls pass across baseline/current
+  (editing/tabs, independent shell, stdin/error recovery and actual SDL3
+  pixels/animation/editor focus/Stop). Two public-engine controls reproduce the
+  baseline's invalid-source false approval and verify the candidate rejection.
+  No accepted control has page/unexpected console errors; all contexts close
+  with zero remaining workers. Worker bundles have equal normalized JS AST
+  hashes, not equal raw bytes or waived producer provenance.
+- Important retained failure: shell input followed by a program in the same
+  IDE session feeds the old shell line to fgets. Both baseline and candidate
+  fail the same assertion and exit 1. These are two pre-existing product
+  failures, not green/skipped acceptance or an authorized unrelated IDE fix.
+  Source API/run/terminal/worker preservation and paired reproduction support
+  non-regression classification, not a claim that all IDE flows work.
+- Resources for all 12 browser observations: peak 5708 MiB, minimum available
+  11045 MiB against the 4772 MiB reserve; no new OOM or resource stop. SDK gates
+  peak 775 MiB. One heavy task/browser, CPUs 0-3, no full toolchain/Next/API
+  build, service/data reset, publication or commit. Both local asset trees'
+  29 bundle hashes pass; strict upstream lint still has seven unchanged warnings.
+- Evidence: ignored apps/web/test-results/coding-surface-refoundation/ide/
+  20261122-phase-compatibility/{report.json,source-audit.json,gates.json}, individual
+  reports/logs/screenshots/resources and repro.tgz. Archive SHA-256:
+  `339520b52e99b058ed01f2f73f4d08ab352b3dc81db173b0dde85295d71460fb`.
+  Preparation failures (CJS/ESM fixture resolution, missing generated snapshot
+  module and Monaco autoindentation) remain distinct from product observations;
+  no product rule or compiler option was weakened to close the comparisons.
+- Supporting explanation written only after compatibility evidence:
+  [Emception phase extension rationale](./EMCEPTION-PHASE-EXTENSION-RATIONALE.md).
+  It details necessity, alternatives, every production responsibility, IDE
+  impact, intentional engine behavior change, the pre-existing input defect,
+  compatibility limits and normal release requirements. No canonical status
+  or broader phase gate is promoted by this audit.
+
+## Authorized execution phase and initial-file semantics - 2026-11-22
+
+- Entry: `4a212cd7ff`; preserve the uncommitted UX03-A lazy-port/assets/docs
+  preparation recorded below. The user explicitly authorized (1) the minimum
+  public execution-phase extension and (2) initial-file semantics, allowing
+  main in another translation unit. These answers resolve the two pending
+  questions; they do not authorize a general Emception refactor.
+- Active row/stage: CS-RUNTIME-COMPILE-FAILURE correction and
+  CS-RUNTIME-NATIVE-ENTRY disposition / audited implementation. CODE-UX-02/03 remain open
+  for function ABI, graphics and the broader acceptance requirements.
+- Allowed source: core ToolResult types/runtime validation/type tests; browser
+  createEmception facade and focused tests; the existing public test engine's
+  consumption of that metadata and its tests; the grading worker's phase guard
+  and composition tests; coding entry-path documentation and owned surface
+  Initial file labels/tests. Update the shared governance/ADRs/gap/consumer and
+  duplication records. No platform/API/schema, IDE/UI, compiler flags, harness,
+  dependency/version/lock change, dev launcher or new executor.
+- Contract: additive optional phase = compile | link | run. Existing raw-tool
+  results without metadata remain assignable; every browser compileAndRun
+  outcome supplies its actual terminal phase. Optional omission is not proof
+  of execution: official grading rejects missing/unknown phase as unavailable.
+  Compile/link failures cannot satisfy stdio/stdio-file/doctest assertions;
+  completed runs retain their existing output/exit semantics, including an
+  explicitly expected nonzero program exit. No diagnostic-text guessing.
+- Initial-file contract: entryPoint.path keeps its serialized name and public
+  source-file validation; it selects the first editor file, not main ownership.
+  Compile/link all source translation units, preserve valid multi-file work
+  and existing source ordering. No mandatory boilerplate, symbol regex check,
+  database rewrite or new teacher restriction. Function symbols keep their
+  separate signature contract; the function ABI finding is not fixed here.
+- Atomic cycle: compile the additive types and legacy assignability first;
+  add independent failing phase/comparator/worker tests; implement only this
+  behavior; build the current TS SDK and run its complete suites/type tests;
+  then exercise the real worker with the verified published 4.5.2 WASM assets.
+- Oracles: compile/link failure with empty expected output (even matching exit)
+  yields false, valid empty output passes, expected exit 1 remains valid,
+  missing phase is infrastructure failure, main in another source passes,
+  renamed main/helpers pass, duplicate/no main fails linking. Retain historical
+  audit evidence; replace only the previously provisional entry oracle with
+  the explicitly approved behavior.
+- Gates: core build:ts/test/test:types, browser build/typecheck/test, complete
+  worker Node selection plus strict tsc, G-SURFACE and affected host tests/types,
+  real-artifact worker controls, G-DOC and unchanged CI artifact-policy tests.
+  Exact-source producer requirements remain required; local diagnostics are
+  not a release/provenance waiver. One heavy task/browser at a time, CPUs 0-3,
+  OS-headroom/PSI guard; no fixed 14 GB ceiling or unrelated process cleanup.
+- Contract gate passed before behavioral changes: official core build:ts/tsd
+  validates the optional field, old result-shape assignability and invalid
+  phase rejection at type level. Behavioral RED selected 27 cases: 20 failures
+  (missing facade metadata, false build approval and missing runtime validation)
+  and seven existing positive controls. No bootstrap error counted as RED.
+  Core implementation now passes its complete 273-case suite; browser SDK
+  build and 47 tests pass with its pre-existing opt-in smoke left skipped.
+  Actual browser/worker evidence remains required, not inferred from that skip.
+- Additional RED: four official-worker unknown/missing-phase cases failed to
+  reject before the guard (two valid-stage controls passed). The owned surface
+  Initial file case failed on the old Entry point label while its selected
+  helper/other-main workspace rendered normally. Minimal guard/label changes
+  pass the closing regressions and real-artifact controls below.
+- Closing gates: core 273/273 plus build:ts/tsd; browser build/typecheck and
+  47 passes, with its one pre-existing opt-in smoke still skipped; worker
+  selection 110/110 plus strict tsc; surface 80/80 plus strict types/lint.
+  Coding 96/96 and adapter 16/16 plus both strict typechecks; retained
+  emception-ui 27/27; affected authoring/learner/review web selection 135/135.
+  Full web tsc exits 0 under the OS guard, peak 1874 MiB and minimum available
+  14351 MiB; no new OOM, resource stop, Next/API build or full-stack startup.
+  Preflight contracts 26/26, both actual manifest checks and unchanged artifact
+  acquisition-policy tests 36/36 pass. Expected duplicate-ZIP fixture warnings
+  remain visible; no exact-source producer acceptance is inferred.
+- Real proof: current-source SDK/worker bundle, published 4.5.2 WASM assets,
+  official worker.mjs and sandboxed local Chrome, one request at a time.
+  All 12 receipts match their request/manifest hashes and declared booleans:
+  valid C/C++ empty output, expected/unexpected nonzero exit, compile/link
+  failures with empty stdout or matching exit, main in either translation
+  unit, duplicate main and absent main. Peak owned RSS 3698 MiB; minimum
+  available 13047 MiB against the 4772 MiB reserve; no new OOM or resource stop.
+  Candidate evidence: ignored apps/web/test-results/coding-surface-refoundation/
+  runtime/20261122-phase-and-initial-file-audited/{report.json,verification.json}.
+  Repro archive SHA-256:
+  `24af4437d585b08bb17963b2d3aaecbe40fbe66f79ed6770a2870441a67d7fca`.
+  report.json/verification.json record exact changed-source and bundle hashes.
+- Preserve the first attempt in sibling 20261122-phase-and-initial-file:
+  an undefined-function fixture was incorrectly assumed to fail linking; a
+  header/printf multi-file control exceeded the unchanged 30-second budget.
+  Neither is counted as a pass. A separate public-API probe proves that this
+  preset permits undefined imports and reports run/exit 0 for that fixture,
+  while duplicate/absent main reports link/exit 1. Final controls use those
+  confirmed linker failures and header-free helpers with explicit exit 7;
+  no compiler flag, budget or assertion was weakened. The import behavior
+  remains CS-RUNTIME-UNRESOLVED-IMPORT for owner review, not fixed or promoted.
+- Auditor: same-agent adversarial review, not independent/human acceptance.
+  Strict upstream whole-file ESLint remains NONZERO: six existing unused-variable
+  warnings in createEmception.ts and one in core/test-d/index.test-d.ts.
+  Running the identical unsuppressed linter on HEAD/current stdin proves the
+  same seven diagnostics, zero introduced. Baseline report is preserved beside
+  the candidate evidence; no cleanup outside the authorized scope or lint waiver.
+  SDK methods/wire names, source ordering, time/output limits, compiler flags,
+  harness, IDE/UI, platform/API, migrations, dependencies and dev launchers
+  remain unchanged. G-SURFACE lint passes; this is not an all-green upstream gate.
+- G-DOC passes: 48 parsed documents, 174 local links, seven atomic tables,
+  25 complete rows and no failures; git diff --check passes. The preserved
+  upstream lint comparison is a debt classification, not a replacement gate.
+- Next: continue the explicit function-ABI/graphics investigation and capability
+  disposition before the production workbench cutover. The two user questions
+  are answered (CS-ADR-034); do not ask them again or redo OOM diagnosis.
+  CODE-UX-02/03, broader runtime/resource/human acceptance and upstream lint
+  debt remain open. No canonical capability status, commit or push was changed.
+
+## Refoundation resume: UX03-A preparation - 2026-11-22
+
+- Baseline: `4a212cd7ff`, clean and synchronized feature/coding-grading.
+  The user requested continuation of part 3.6 after the develop merge. This
+  entry supersedes the historical merge-only task scope below, not its evidence.
+- Active row/stage: UX03-A independent preparation / specification. UX02-C's
+  official-runtime acceptance remains open. Do not cut over the production UI
+  or claim CODE-UX-02/03 closed while the reviewed runtime findings remain.
+- Allowed files: new `runtime-types.ts`, `runtime-session.ts` and focused
+  contract/behavior tests in `packages/features/coding-surface/src/`, its
+  `index.ts`/architecture tests, this ledger and the affected coordinator,
+  UX02/UX03 status/ADR entries. Existing generated local release/CDN assets may
+  be refreshed only after a verified backup, using the existing sync helper.
+  Isolated synthetic acquisition/build/browser probes may live under /tmp;
+  sanitized outputs/backups belong in the ignored refoundation test directory.
+  Closing documentation also updates CONSUMER-MAP.md, PRODUCT-MODEL.md,
+  EMCEPTION-CAPABILITY-GAPS.md and the root DUPLICATION-REGISTER.md to reconcile
+  the observed asset/preparation state, not change product requirements.
+  No dependency, API, database, dev launcher or protected upstream source edit.
+- Specification: creating/inspecting a runtime session loads no browser module,
+  fetches no manifest and creates no worker. Only explicit acquire may boot.
+  Reject an unsupported/mismatched frozen identity before runtime creation;
+  share one pending acquisition; reuse only this session's runtime; dispose
+  idempotently, abort metadata loading and dispose a late-created instance.
+  Failures are explicit and cannot become ready. This port has no academic
+  command, compiler implementation or case/answer payload.
+- Contract: typed session state, injected public-module/manifest ports and
+  factory, compiled before behavior. Public Emception parser validates manifest
+  structure; owned checks compare its release/ABI/lock/receipt to the requested
+  coding identity. Metadata compatibility is not binary provenance or a run.
+- Oracles: CS-REF-12/21 preparation; lazy/no-worker, identity mismatch, schema-1
+  rejection, shared acquisition, explicit retry, boot failure, disposal during
+  fetch/boot and no late ready state. Behavioral RED must precede implementation.
+- Gates: G-SURFACE typecheck, full tests with one worker and strict ESLint;
+  G-PREFLIGHT-UNIT plus both actual local manifest checks and byte hashes after
+  backed-up synchronization; G-DOC. No API/Next build or full-stack startup.
+  Use the OS-headroom/PSI policy, sequential work and CPUs 0-3, not a fixed
+  14 GB ceiling. Existing services/data remain untouched.
+- Historical structural questions sent to the user: whether to extend the public result
+  minimally with execution phase, and whether native entry means initial editor
+  file or mandatory main owner. Dependent runtime fixes remain stopped; do not
+  infer approval or replace the public compiler/test engine. Both answers were
+  subsequently authorized and implemented under CS-ADR-034 above.
+- Contract evidence: coding-surface strict typecheck and the three new port
+  contract cases pass. The first pnpm invocation lacked Node on PATH and is
+  classified as bootstrap failure; the unchanged command with the installed
+  Node 24.16.0/pnpm 10.34.6 passed. Next: behavioral RED, then implementation.
+- Behavioral RED: the capture/identity acquisition case failed because the
+  typed stub rejected acquisition as unimplemented; no import/bootstrap failure
+  was counted as RED. Minimal implementation now passes 22 lifecycle cases.
+  The real public parser runs in Node for these non-DOM tests. Vitest's regex
+  rejection matcher reported an empty message; exact rejected-object message
+  assertions pass and retain the stronger disposed-error oracle. No assertion,
+  dependency or production rule was relaxed.
+- Asset precondition RED: both actual local manifests fail the existing
+  frozen-toolchain check (schema 1). Backup/refresh remains necessary; no file
+  has been overwritten by this check.
+- Builder result: the public `createCodingRuntimeSession()` port is available
+  but deliberately not wired into the old production workbench. It performs a
+  public-parser metadata preflight, lazy boot, single pending acquisition,
+  explicit retry and cancellation/disposal of only its own runtime. No program
+  compiler, test engine, new worker implementation or academic command exists
+  in this port. CS-ADR-033 records the boundary and proof limits.
+- Asset result: the previously verified published emception@4.5.2 archive was
+  rechecked against SHA-512 SRI; all 29 bundle hashes passed before copying.
+  The existing sync helper refreshed canonical and served generated assets;
+  both current manifests and all copied bundle hashes pass. Old schema-1
+  copies remain byte-preserved under ignored
+  `apps/web/test-results/coding-surface-refoundation/assets/20261122-4a212cd7ff/`,
+  with metadata. No manifest hand-edit, download fallback or source build.
+- Real-browser diagnostic: isolated current-source consumer bundle with the
+  same public entry aliases as the official build, existing Chrome and exact
+  published assets. Zero workers or asset fetches before acquire; concurrent
+  acquire returns the same promise/API; one real worker boots; disposal leaves
+  zero workers; wrong release is refused without a second worker. No page
+  errors, program compilation, case verdict, API/Next/database or persona.
+  Final report: ignored
+  `coding-surface-refoundation/runtime/20261122-ux03a-audited/report.json`
+  below apps/web/test-results. This is boot-only evidence, not G-RUNTIME closure.
+  Current source SHA-256 is
+  `ae350c7919844b168ad19539dc59d1480f69874e1757924317a162702b52fc01`.
+  Its sibling repro.tgz preserves the scratch scripts/OS guard; SHA-256
+  `1e782349e99edc96c1bd1735615e4841738dd633cdd85b92cfe3b5ae572f4009`.
+  Fresh scratch/output paths are required when replaying; do not overwrite
+  previous evidence. No real account, answer or token is included.
+- Resources: asset refresh/build/browser peaked at 101/219/1178 MiB owned RSS;
+  minimum available RAM 18042/18234/18047 MiB, above the 4772 MiB reserve.
+  No new OOM, resource stop or sustained memory pressure. Four CPUs, one task
+  at a time, no fixed 14 GB ceiling. Existing swap occupancy was not treated
+  as failure. All owned browser/server processes closed.
+- Final audited-source rerun: diagnostic build/browser peak 252/1003 MiB,
+  minimum available 17587/17507 MiB, no stop/new OOM. Metadata identity,
+  lazy/single worker and real disposal controls all pass again. Vite's two
+  existing upstream static/dynamic-import warnings remain visible; no
+  warning-clean production build is claimed from this diagnostic bundle.
+- Auditor (same-agent self-review, not independent/human acceptance): fixed
+  loss of the original boot error by preserving Error.cause without exposing
+  raw detail in UI state. The independent cause assertion failed before this
+  correction; final full suite passes 79/79, zero skips. Public imports, no
+  worker at construction, protected paths, late disposal and no academic
+  commands were reviewed. No types, assertions or rules were weakened.
+- Closing commands: `pnpm --filter @game-guild/coding-surface typecheck`,
+  `pnpm --filter @game-guild/coding-surface test --maxWorkers=1` and
+  `pnpm exec eslint --no-inline-config --max-warnings=0 packages/features/coding-surface/src`
+  all exit 0. The unchanged G-PREFLIGHT-UNIT selection passes 26/26 outside
+  sandbox subprocess restrictions; both actual local manifest checks pass.
+  `pnpm --filter @game-guild/emception-ui test` passes 27/27 in seven suites.
+  G-ARTIFACT-POLICY passes 36/36; its intentional duplicate-ZIP warnings were
+  not suppressed. These are tests, not exact-source producer acceptance.
+- G-DOC: 48 parsed documents, 173 local links, seven specification tables and
+  25 complete atomic rows; no failures. git diff --check passes. Protected
+  upstream, UI, platform/API, dev launchers and dependency manifests have no
+  task diff. No backend/full-web build is needed for this package-only port.
+- Handoff superseded by CS-ADR-034 above: both scope questions are answered;
+  only the explicitly approved phase/initial-file correction was implemented.
+  CODE-UX-02/03 remain open; no instructor/learner UI cutover or human runtime
+  acceptance is claimed by this independent preparation.
+
 ## Develop integration - 2026-11-22
 
 - User committed the audit/deferrals as 094764ffb1 and authorized proceeding
@@ -180,29 +499,33 @@ Last updated: 2026-11-22.
 
 ## Deferred corrections and instructor controls - 2026-11-22
 
-The user requested recording these follow-ups for later implementation. This
-is a documentation-only handoff, not authorization to implement them now or
-acceptance of a particular entry/scaffolding policy. The existing runtime
+The user originally requested recording these follow-ups for later implementation.
+CS-ADR-034 subsequently authorizes the minimum phase extension and initial-file
+policy; their implementation/proof is at the top of this ledger. Remaining
+items and instructor controls are still deferred, not newly authorized by this
+handoff. The existing runtime
 [audit](./RUNTIME-RISK-VALIDATION-2026-11-22.md) retains the reproductions and
 qualifications. No new capability status or completed gate is inferred.
 
 ### Runtime corrections
 
 Resume within [UX03-A/B](./06-refoundation/03-workbench-runtime-and-capabilities.md)
-after its prerequisites. Address false approval first; resolve the entry policy
-before dependent function/scaffolding changes. Independent work may proceed,
+after its prerequisites. The phase correction and initial-file policy now have
+scoped real-worker proof. Resolve function ABI and graphics before advertising
+their combinations. Independent work may proceed,
 but an affected capability cannot be advertised as ready while its oracle fails.
 
 | Finding | Deferred action | Acceptance requirement |
 | --- | --- | --- |
-| `CS-RUNTIME-COMPILE-FAILURE` | distinguish compilation/linking failure from a completed program before comparing output | invalid source with empty expected stdout cannot pass; valid empty-output programs and intentionally expected nonzero program exits remain valid controls |
-| `CS-RUNTIME-NATIVE-ENTRY` | decide whether the selected path means initial editor file or executable root; make learner responsibilities explicit | renamed main plus helpers works; competing/absent/duplicate main cases follow the reviewed contract, without breaking legitimate multi-file programs |
+| `CS-RUNTIME-COMPILE-FAILURE` | corrected under CS-ADR-034; retain public phase and official missing-phase guard | current-source real-worker controls reject compile/link failures, including matching exit; valid empty/nonzero-exit controls pass; no broader gate promotion |
+| `CS-RUNTIME-NATIVE-ENTRY` | initial editor file explicitly approved; no mandatory main location or serialized rename | real-worker controls pass main in either source and reject duplicate/absent main; owned Initial file label and selection test pass |
 | `CS-RUNTIME-FUNCTION-ABI` | compose language, harness linkage and startup through supported public APIs | an ordinary C/C++ function-only solution works without incidental main/extern-C boilerplate; helper files work when allowed; intentionally wrong solutions fail |
 | `CS-RUNTIME-GRAPHICS` | use the public canvas lifecycle for graphical diagnostics and define official execution support separately | real supported-artifact rendering/input/resize/cleanup; unsupported official execution is unavailable, not a passing WASI fallback, zero grade or invented visual judge |
+| `CS-RUNTIME-UNRESOLVED-IMPORT` | investigate the observed undefined-import policy with the Emception owner before changing linking/runtime behavior | an undefined-function fixture returned run/exit 0; phase metadata must not be misrepresented as proof that external symbols are implemented |
 
-These corrections do not authorize new upstream edits. Preserve Emception
-core/browser/IDE/UI and use EMCEPTION-GATE if public composition is genuinely
-insufficient; the earlier targeted worker exception remains limited. Preserve
+These corrections do not authorize upstream edits beyond CS-ADR-028/034.
+Preserve the compiler, harness, IDE/UI and remaining core/browser source; use
+EMCEPTION-GATE for an additional genuine public gap. Preserve
 published attempts/revisions and the distinction between compiler failure,
 learner error and unavailable infrastructure.
 
@@ -1222,15 +1545,13 @@ Neither failure was fixed by changing other developers' source or the gate.
 
 Current status: functional baseline and canonical consolidation 3.5 completed
 locally. `CODE-UX-01` closed on 2026-11-21 after its corrected audit.
-`CODE-UX-02` is in progress: UX02-A draft contracts and pure transformations
-are implemented, but its broader security gate has an external failure.
-UX02-B persistence/session ports and host-action integration are implemented
-and tested in scope; formal closure and the production cutover remain open.
-UX02-C publication metadata and WB-A safety preparation are implemented/tested
-in scope; full wire/configuration parity and broader gates remain open. The
-production UI has not been cut over to the refounded model. Published assets
-still require local refresh and
-real execution checks in CODE-UX-03, not an upstream IDE build/publication.
+`CODE-UX-02` remains open for official-runtime fidelity and the external
+Authentication failure. Contract/wire/backend/client, the strict full-solution
+build and selected API architecture checks pass after the develop merge.
+UX03-A independent preparation now supplies a tested lazy runtime port and
+verified/backed-up published local assets. Its real-browser boot/disposal
+diagnostic passes; case execution, capability resolution and production UI
+cutover are not complete. No upstream IDE build/publication is required.
 
 Este e o handoff mutavel da parte 3. Atualize-o com fatos observados. Nao marque
 um gate como concluido sem registrar a evidencia executada.
@@ -1261,14 +1582,15 @@ um gate como concluido sem registrar a evidencia executada.
 | Parte 3.1 | concluida | buscas de consumidores, contratos e exports publicos registradas em 2026-11-18 |
 | Parte 3.2 | concluida | package isolado, 14 testes e typecheck verdes |
 | Parte 3.3 | concluida | dois perfis, quatro modos, privacy e contrato canonico cobertos |
-| Parte 3.4 | em validacao final | consumidores e CI migrados; runner fixture now emits canonical `ExerciseType`; local asset refresh and real browser E2E remain pending |
+| Parte 3.4 | em validacao final | consumidores e CI migrados; runner fixture emits canonical `ExerciseType`; local assets pass preflight; full coding-cycle E2E remains pending |
 | Parte 3.5 | concluida localmente | `CANON-01` a `CANON-06` concluidos; validacao local verde, com fixture do runner e browser CI ainda pendentes no fechamento de `CANON-07` |
 | Parte 3.6 | in progress | `CODE-UX-01` closed; UX02-C/WB-B contracts, wire, backend and current client checks pass; official execution fidelity and broader G-API disposition remain open |
 
 ## Etapa ativa
 
 - Subplan: [3.6.2 domain and drafts](./06-refoundation/02-domain-drafts-and-data-boundaries.md).
-- Current gate: `CODE-UX-02`, UX02-C/WB-B implementation and audit in progress.
+- Current gate: `CODE-UX-02` remains open; independent UX03-A preparation is
+  implemented and under closing audit.
   Explicit configuration roundtrip/backend validation are tested; official
   execution fidelity and the broader G-API disposition remain open. Current
   host/client and selected architecture evidence are complete and recorded.
@@ -1279,57 +1601,55 @@ um gate como concluido sem registrar a evidencia executada.
   ADR027 publication metadata; ADR028 the user-approved grading-worker exception;
   ADR029 the approved exercise-memory deferral and independent build budget;
   ADR030 the frozen execution contract; ADR031 the historical identity oracle;
-  ADR032 the worker's deliberately local transport guard/import boundary.
-  Actual local artifact preflight remains a CODE-UX-03 obligation.
+  ADR032 the worker's deliberately local transport guard/import boundary;
+  ADR033 the owned lazy runtime port and boot-only evidence; ADR034 the authorized
+  terminal-phase metadata and initial-source semantics. Actual local
+  artifact preflight passes; native conformance remains open.
 - Responsavel: Codex.
 
 ### Current compact checkpoint
 
-- Baseline: `6d90892224`, clean implementation entry on feature/coding-grading.
-  The user-requested commit sequence is recorded above; no merge or push is
-  authorized by that checkpoint. Allowed scope and validation evidence remain
-  in the WB-B execution record.
-- Active row/stage: UX02-C / WB-B audit and independent closing gates.
-  Execution/environment JSON, domain compilation, inverse wire bridge,
-  revision freezing, redaction and strict backend validation are implemented.
-  Time/output/file-limit forwarding has composition tests, not real native
-  conformance. Production UI/save coordinator and preserved IDE are unchanged.
-- Contract: legacy absence stays absent; no V2, rewrite, table or migration.
-  Unsupported configured RAM remains recoverable but rejects publication.
-  New explicit configuration cannot fall back to current/default identity,
-  drop malformed tests or coerce mismatched scalar values.
-- Terminal: coding/adapter/surface types pass; package tests 96/16/46. Complete
-  Courses 1227, CodeAdapter 179 and Assessments 453 pass. Final web selection
-  passes 181/181; worker 104/104 plus strict tsc. Authorization 2815 and selected
-  API architecture/security/OpenAPI 382 pass. Authentication retains its
-  external 4572/4573 result. Official current-source client generation, types,
-  complete ESM/CJS/DTS build, public-API types and 1772 tests pass; its two
-  existing private-export DTS warnings remain visible. No endpoint churn.
-- Resources: the current actual Release host build passed, zero warnings/errors,
-  under the approved monitored 14 GB profile; peak 13046 MiB, 598285 ms, minimum
-  available 5461 MiB, no stop/OOM or source/analyzer bypass. The full-solution
-  Release attempt stopped at its ten-minute budget without OOM and did not pass.
-  Ordinary checks remain <=10 GB; no concurrent heavy checks or IDE build.
-- Runtime/human: isolated real-WASM worker and public-canvas diagnostics now
-  confirm three candidate bugs and one entry-policy decision; see the dated
-  report above. This is not full-stack, human UX or academic acceptance.
-  Existing schema-1 development assets remain unchanged; scratch schema-2
-  assets pass preflight. Normal exact-source CI provenance is still required.
-- Open decision: user asked whether to expand only the grading worker's
-  public-API composition or defer execution acceptance. No implicit support
-  reduction, upstream change or runtime-fidelity pass while waiting.
-- Next exact action: review the dated runtime findings, decide entry semantics
-  and obtain correction scope before dependent implementation. Prior contract,
-  lint/types, host/client and selected API checks remain valid for their stated
-  source; no repeated OOM investigation is needed. WB-B remains partial and
-  CODE-UX-02 open until fidelity acceptance is satisfied. Keep the sole lesson
-  coordinator and existing data.
+- Baseline: `4a212cd7ff`, clean resumed entry after the verified develop merge.
+  Allowed files, contract/RED evidence and commands are in the dated resume
+  record at the top. No automatic commit or push is authorized.
+- Active row/stage: authorized runtime phase/initial-file correction / audit;
+  UX02-C/WB-B official execution fidelity remains open. The port is not yet
+  connected to the production author/learner workbench or save coordinator.
+- Contract: no V2, table, migration or platform edit. CS-ADR-034 permits only
+  additive public phase metadata and its existing facade/engine/worker usage.
+  Legacy snapshots remain intact; configured exercise RAM remains unavailable.
+  Metadata preflight compares the requested frozen identity, not a guessed
+  preset. The port contains no compiler, test engine or academic command.
+- Terminal: core 273, browser 47 plus one existing opt-in skip, worker 110,
+  surface 80, coding 96, adapter 16, retained UI 27 and affected web 135 pass;
+  strict SDK/surface/host types pass. Unsuppressed upstream ESLint remains
+  nonzero on seven identical HEAD/current warnings; no new diagnostic.
+  Asset/preflight/policy checks pass. Prior merge checks include strict complete solution build, API 526,
+  Courses 1227, CodeAdapter 179, Assessments 453, Authorization 2815, client
+  1794 and web selection 325. Authentication remains 4752/4753, the external
+  resend-throttle failure; it is not silently waived or fixed here.
+- Resources: OS-friendly headroom/pressure policy supersedes fixed 10/14 GB
+  ceilings. Final official-worker controls peak at 3698 MiB, minimum available
+  13047 MiB; host tsc peaks at 1874 MiB. No new OOM/resource stop; one heavy
+  task/browser, CPUs 0-3, no full stack.
+- Runtime/human: both local asset trees pass exact metadata/bundle checks,
+  backed up before refresh. The real browser proves lazy acquisition and worker
+  disposal; 12 subsequent official-worker controls now prove the scoped
+  compile/link correction and approved initial-file behavior, not function ABI,
+  graphics, interactive input, five-cycle resources or human UX.
+  Exact-source CI requirements remain intact.
+- Decisions: both questions explicitly authorized and implemented (CS-ADR-034).
+  Remaining function/graphics/import findings do not inherit upstream permission.
+- Next exact action: investigate function ABI and graphics through public APIs
+  before capability promotion/cutover; apply EMCEPTION-GATE for additional
+  protected edits. Preserve the validated lazy port and assets. Do not redo OOM diagnosis, deploy the
+  independent IDE, install another compiler/harness or claim a phase gate pass.
 
 | Gate da refundacao | Estado | Evidencia necessaria |
 | --- | --- | --- |
 | `CODE-UX-01` | complete | corrected contract/document/design/preparation audit passed on 2026-11-21; no runtime/build claim |
 | `CODE-UX-02` | in progress / gate open | contract/wire/backend/current-client/selected-architecture and final full-solution checks pass; runtime fidelity and external Authentication failure remain open |
-| `CODE-UX-03` | nao iniciado | refresh compatible published assets and pass local preflight before real runtime, canvas/terminal, cancellation and resource checks |
+| `CODE-UX-03` | preparation in progress / gate open | local assets, lazy runtime and scoped 12-case stdio/initial-file controls pass; broader resolver, function/graphics/terminal and five-cycle resource acceptance remain open |
 | `CODE-UX-04` | nao iniciado | autoria completa dos dois tipos e validacao pelo professor |
 | `CODE-UX-05` | nao iniciado | resolucao, envio, recuperacao e revisao por persona |
 | `CODE-UX-06` | nao iniciado | integracao, matriz de aceite e revisao humana |
@@ -1734,7 +2054,9 @@ state documents changed; no unrelated source or generated bytecode remains.
 
 ## Proxima acao exata
 
-Continue [`3.6.2`](./06-refoundation/02-domain-drafts-and-data-boundaries.md):
+Continue the runtime disposition in
+[`3.6.3`](./06-refoundation/03-workbench-runtime-and-capabilities.md), retaining
+the open broader gates in [`3.6.2`](./06-refoundation/02-domain-drafts-and-data-boundaries.md):
 
 1. Retain the explicit user design approval recorded for
    [3.6.1a](./06-refoundation/01a-prototype-workflows-and-critical-review.md).
@@ -1752,13 +2074,16 @@ Continue [`3.6.2`](./06-refoundation/02-domain-drafts-and-data-boundaries.md):
    analyzers or hand-edit a generated client. The final full-solution build now
    passes; retain earlier time stops as history and the external Authentication
    failure as a separate incomplete broader gate.
-   Official execution fidelity is still blocked by the four CS-RUNTIME oracles
-   and the pending scope answer. Do not turn partial completion into gate
+   CS-ADR-034 resolves both user questions; the phase correction and initial-file
+   behavior pass 12 real-worker controls. Function ABI, graphics, permitted
+   undefined imports and broader runtime/CI/lint acceptance remain open. Do not turn partial completion into gate
    approval, install a second autosave or deploy the standalone IDE.
-3. Before CODE-UX-03 real execution, preserve old generated CDN/release copies,
-   explicitly refresh the compatible pinned published assets and pass both
-   local manifest checks in G-PREFLIGHT. The current helper can retain schema 1;
-   rerunning sync/dev without a backed-up refresh is not readiness evidence.
+3. Retain UX03-A's verified local asset preparation and lazy acquisition port.
+   Old canonical/served assets are backed up; both refreshed 4.5.2 manifests
+   and all bundle hashes pass. In another environment, repeat the backed-up
+   G-PREFLIGHT preparation rather than assuming dev/sync replaced schema 1.
+   Boot/disposal evidence alone does not establish program/case conformance;
+   the subsequent scoped stdio controls do not prove function/graphics support.
    Inspect actual changed-path classification for conditional CI provenance.
 4. Recheck memory against the recorded budget before any full stack run.
    Preserve the existing developer environment; do not reset data or stop

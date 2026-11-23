@@ -2,12 +2,12 @@
 
 Status: in progress; UX02-A contracts, transformations and backend draft
 roundtrip/conflict evidence are implemented. Its broader G-API gate remains
-open because of the pre-existing Authentication throttle failure and the
-full-solution command's time-budget stop. The current strict Release API host
-build passed under the user-approved monitored 14 GB profile, with zero
-warnings/errors, without disabling checks or changing dev:fast. The selected
-API architecture/security/OpenAPI suite also passed (382 tests). These results
-do not turn the incomplete full-solution build into a pass.
+open because of the pre-existing Authentication throttle failure. After the
+develop merge, strict Release host/full-solution builds and the 526-test
+selected API architecture/security/OpenAPI suite pass. Earlier time-budget
+stops remain historical failures, not disguised passes. The current resource
+policy preserves OS headroom/pressure, not a fixed 14 GB ceiling; checks and
+dev:fast were not weakened or changed.
 UX02-B persistence/session ports and the host bridge are implemented and tested
 in scope; unaffected checks proceeded under the governance's external-failure
 rule, not a waiver of the broader gate. No production editor/writer cutover.
@@ -17,9 +17,14 @@ explicit published configuration, inverse wire mapping, backend validation and
 revision preservation under the accepted RAM deferral. Historical worker
 assertions were reconciled without deleting history (CS-ADR-031). WB-B remains
 partial: actual official execution fidelity is not established by forwarding
-mocks. Four runtime risks, the pending scope decision and the broader G-API
-disposition remain recorded in the ledger. Current-source OpenAPI and official
-client generation, types, complete build and 1772 client tests passed.
+mocks. CS-ADR-034 subsequently records both user authorizations and 12 passing
+real-worker controls for compile/link phase and initial-file semantics. Function
+ABI/graphics, the separately observed undefined-import behavior, existing lint
+debt and the broader G-API disposition remain recorded in the ledger.
+Current-source OpenAPI and official
+client generation, types, complete build and 1794 client tests passed after
+the merge. Independent UX03-A preparation also passes actual local artifact
+preflight and browser boot/disposal; it does not close official execution.
 Gate: `CODE-UX-02`. Depends on `CODE-UX-01` (closed on 2026-11-21).
 
 The new author-only `coding-authoring-draft` contract lives in
@@ -133,17 +138,17 @@ before closing the atomic row:
    toolchain through draft compilation, wire DTO, validation, revision,
    learner/reviewer projection and official execution. Reject unsupported
    combinations/identities instead of substituting a current/default value.
-3. Preserve the completed current-source OpenAPI v1 capture and official client
-   generation: all 2180 committed method/path operations match; only owned
-   coding schemas/types and generator metadata changed. Client types, full
-   ESM/CJS/DTS build, public-API types and 1772 tests pass. Existing DTS warnings
-   stay visible. The actual host build and 382 selected architecture tests pass;
-   the full-solution time stop remains a separate incomplete gate. Do not exceed
-   the budget, omit analyzers or migrations, use stale binaries or hand-edit
+3. Preserve the post-merge current-source OpenAPI v1 capture and official client
+   generation: all 2181 method/path operations match. Client types, full
+   ESM/CJS/DTS build, public-API types and 1794 tests pass. Existing DTS warnings
+   stay visible. Strict host/full-solution builds and 526 selected API tests
+   pass; prior command timeouts remain in the historical record. Preserve OS
+   headroom, analyzers, migrations and current binaries; do not hand-edit
    generated output. No dev:fast change or IDE deployment is required.
 4. Retain CS-ADR-031's reconciled historical-worker assertions and the external
-   Authentication failure with its recorded disposition. Resolve the four
-   CS-RUNTIME execution oracles and pending scope answer before claiming WB-B
+   Authentication failure with its recorded disposition. CS-ADR-034 resolves
+   both user decisions and supplies scoped phase/initial-file proof; resolve
+   remaining function/graphics/import findings before claiming WB-B
    official execution fidelity; forwarding mocks cannot close this acceptance.
    Worker edits activate exact-source CI provenance; no gate waiver or IDE
    deployment is implied. Existing metadata/unit passes are not full closure.

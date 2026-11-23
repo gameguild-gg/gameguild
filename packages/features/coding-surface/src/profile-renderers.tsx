@@ -57,7 +57,7 @@ export function StdioAuthorProfile({ definition }: CodingFullProfileRendererProp
     <ProfileBand
       label="author standard-io profile"
       title="Input and output contract"
-      primary={`Entry point: ${definition.entryPoint.path}`}
+      primary={`Initial file: ${definition.entryPoint.path}`}
       secondary={fullTestSummary(definition, 'stdio')}
     />
   );
@@ -68,7 +68,7 @@ export function StdioAuthorTestProfile({ definition }: CodingFullProfileRenderer
     <ProfileBand
       label="author-test standard-io profile"
       title="Input and output preview"
-      primary={`Entry point: ${definition.entryPoint.path}`}
+      primary={`Initial file: ${definition.entryPoint.path}`}
       secondary={fullTestSummary(definition, 'stdio')}
     />
   );
@@ -79,7 +79,7 @@ export function StdioLearnerProfile({ definition }: CodingLearnerProfileRenderer
     <ProfileBand
       label="learner standard-io profile"
       title="Input and output task"
-      primary={`Entry point: ${definition.entryPoint.path}`}
+      primary={`Initial file: ${definition.entryPoint.path}`}
       secondary={`${countTests(definition.publicTests, 'stdio')} public input/output test(s)`}
     />
   );
@@ -90,7 +90,7 @@ export function StdioGraderProfile({ definition }: CodingFullProfileRendererProp
     <ProfileBand
       label="grader standard-io profile"
       title="Input and output evidence"
-      primary={`Entry point: ${definition.entryPoint.path}`}
+      primary={`Initial file: ${definition.entryPoint.path}`}
       secondary={fullTestSummary(definition, 'stdio')}
     />
   );

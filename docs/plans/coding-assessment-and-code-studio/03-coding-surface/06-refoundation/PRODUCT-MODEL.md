@@ -181,12 +181,12 @@ No production support claim follows from an export alone.
 
 | Family / environment | Operation and channel | Public entry point | Official path evidence | Current observation / next proof |
 | --- | --- | --- | --- | --- |
-| standard I/O / C++ or C, clang/WASI | compile/run with batch stdin and stdout/stderr | `createEmception`, `workspace.setBuild`, `runTests`, `compileAndRun` | Code grading worker builds native sources and runs the full plan | source/export available; real browser/server proof blocked by artifact |
-| function / C++, scalar values | generate typed C++ harness, run doctest report | `emception/testing.generateDoctestHarness`, overlay, `runTests` | trusted worker uses the retained assessment plan builder with the same public harness | actual public import generated integer harness; no compiler execution in this gate |
-| function / C | signature/harness linkage | same public harness with C source toolchain | native presets exist; generated harness uses C++ linkage/types | do not advertise every scalar/language combination before conformance, especially string parameters |
+| standard I/O / C++ or C, clang/WASI | compile/run with batch stdin and stdout/stderr | `createEmception`, `workspace.setBuild`, `runTests`, `compileAndRun` | Code grading worker builds native sources and runs the full plan | CS-ADR-034 real-worker controls reject compile/link failures and preserve valid empty/expected-nonzero exits; initial file may differ from main; broader stdin/resource/production acceptance remains open |
+| function / C++, scalar values | generate typed C++ harness, run doctest report | `emception/testing.generateDoctestHarness`, overlay, `runTests` | trusted worker uses the retained assessment plan builder with the same public harness | real audit reproduces startup/linkage failure for ordinary function-only code; correct it before capability promotion |
+| function / C | signature/harness linkage | same public harness with C source toolchain | native presets exist; generated harness uses C++ linkage/types | real audit reproduces the ABI mismatch; do not advertise conformance, especially string parameters |
 | function / arrays or matrices | typed compound input/return | `mapCppType`, `generateDoctestHarness` | Courses validator and canonical coding schemas currently allow four scalar kinds only | public import rejects compound values; initial scalar-only scope explicitly accepted; compound support deferred under `EMC-GAP-001` / CS-ADR-015 |
 | supported native program / interactive stdin | terminal bytes or stream, stdout/stderr | `createEmception` with xterm, `BrowserStdin` callback, `run` | official cases use fixed stdin; interactivity is local experimentation | requires cross-origin-isolation/stream/cancellation proof; log text is insufficient |
-| native graphics / SDL3, raylib or Allegro | canvas build/start/input/stop | `api.canvas.build`, `start`, `buildAndStart`, `stop`, `CanvasSession` | current worker is a finite test runner, not a visual judge | exports and runtime profiles exist; family/environment compatibility and actual artifact execution remain unproven |
+| native graphics / SDL3, raylib or Allegro | canvas build/start/input/stop | `api.canvas.build`, `start`, `buildAndStart`, `stop`, `CanvasSession` | current worker is a finite test runner, not a visual judge | dated audit proves SDL3 public canvas pixels, not authoritative graphics grading, other runtimes, input/resize or five-cycle acceptance |
 | project / SQL / new languages | future contracts/runtimes | no claim in this cut | not offered by this plan | out of scope; do not expose inert options |
 
 The generic public `custom`/`doctest` cases accept code supplied by a host; they
@@ -194,6 +194,15 @@ do not provide a typed array transport/signature contract for existing coding
 definitions. Writing our own parallel harness to exploit that escape hatch
 would bypass the agreed Emception boundary. No array-as-string fallback was
 introduced. See `CS-ADR-015` and `EMC-GAP-001`.
+
+CS-ADR-034 defines `entryPoint.path` as the initial editor source, not the
+required owner of main. Keep its wire name and all source units; a separate
+function symbol contract is unaffected. The additive public ToolResult.phase
+distinguishes compile/link failure from program assertions without changing
+compiler flags. Undefined symbols may still be allowed imports under the
+existing preset: the recorded fixture returned run/exit 0, so stage metadata
+does not prove external symbol implementation. That behavior requires owner
+review, not a diagnostic-text workaround or a changed grading rule here.
 
 ## Resource budget and validation operations
 
@@ -259,8 +268,15 @@ passed. All 122 local links across 43 roadmap documents resolve, and
 
 ## Artifact and data inventory
 
-Local `apps/web/public/emception/manifest.json` and
-`tools/emception/artifacts/toolchain/release/cdn/manifest.json` contain
+Current local status, 2026-11-22: both generated asset trees were backed up
+and refreshed from the verified published 4.5.2 archive. The actual local
+preflight and all 29 bundle hashes pass. The owned lazy session also passes
+an isolated real-browser boot/disposal diagnostic, not program execution or
+academic acceptance. Exact paths, integrity and resource evidence are in the
+single implementation ledger / CS-ADR-033. The entry inventory below is historical.
+
+At entry, local `apps/web/public/emception/manifest.json` and
+`tools/emception/artifacts/toolchain/release/cdn/manifest.json` contained
 `version: 1`. The release directory has no `provenance.json`. Running the real
 `verifyCodingCycleToolchain()` against that release fails with:
 
@@ -320,7 +336,8 @@ The model, ownership decisions, prototype, resource budget and fixture repair
 passed the `CODE-UX-01` documentation/contract closure audit on 2026-11-21,
 without a compiler build. Prototype design and initial scalar-only scope are
 explicitly accepted; compound function support remains a tracked follow-up,
-not a claim of runtime capability. Local asset synchronization and actual
-preflight remain pending under `CODE-UX-03`.
+not a claim of runtime capability. Local synchronization/preflight were pending
+at that closure; they now pass as independent UX03-A preparation, not a completed
+CODE-UX-03 runtime gate.
 No downstream gate is marked complete. Human usability acceptance remains in
 `CODE-UX-06`, distinct from these automated layout checks.

@@ -1,12 +1,18 @@
 # 3.6.3. Workbench, runtime and capabilities
 
-Status: planned. Gate: `CODE-UX-03`. Depends on `CODE-UX-02`.
+Status: independent UX03-A preparation implemented; broader gate open.
+Gate: `CODE-UX-03`. Depends on `CODE-UX-02`, whose execution acceptance remains
+open. The lazy runtime port, local assets and isolated real-browser boot/
+disposal checks are recorded in the shared ledger. The explicitly authorized
+phase/initial-file correction now has 12 passing real-worker controls, not
+broader function/graphics, production workbench or human acceptance.
 
 ## Invariants and boundaries
 
 Apply [GOVERNANCE.md](./GOVERNANCE.md). Allowed changes are the owned surface,
 its public-runtime integration, tests and necessary host composition. Emception
-source/UI remain preserved; only declared editor/terminal libraries and public
+source/UI remain preserved except the narrow public phase extension authorized
+in CS-ADR-034; only declared editor/terminal libraries and public
 runtime APIs are available. No local diagnostic becomes an official grade.
 
 ## Outcome
@@ -31,7 +37,8 @@ implementation -> Quality gate; see [QUALITY-GATES.md](./QUALITY-GATES.md).
 
 Before real execution in UX03-A, perform the asset preparation in
 [G-PREFLIGHT](./QUALITY-GATES.md). Published 4.5.2 manifests were checked as
-compatible; the local schema-1 copies still need refreshing. Preserve old
+compatible. The schema-1 local copies were backed up and refreshed on
+2026-11-22; both current local manifests and all 29 bundle hashes pass. Preserve old
 generated assets before replacement, synchronize the pinned published package
 and check the actual local source and served manifests. No source edit,
 upstream IDE publication or mandatory local compiler build is needed.
@@ -41,14 +48,18 @@ Entry audit: independently reproduce `CS-RUNTIME-NATIVE-ENTRY`,
 `CS-RUNTIME-FUNCTION-ABI`, `CS-RUNTIME-GRAPHICS` and
 `CS-RUNTIME-COMPILE-FAILURE` in
 [`EMCEPTION-CAPABILITY-GAPS.md`](../EMCEPTION-CAPABILITY-GAPS.md).
-These WB-B source findings block runtime capability promotion. Forwarded
+These reproduced WB-B findings block runtime capability promotion. Forwarded
 configuration, a selected preset or a generated harness are not execution
 proof. Resolve them through supported public composition; otherwise apply
 EMCEPTION-GATE before changing upstream or reducing supported product scope.
 
 The [deferred follow-ups](../IMPLEMENTATION-STATE.md#deferred-corrections-and-instructor-controls---2026-11-22)
-record the real audit outcomes, correction order and pending entry/scaffolding
-decision. They are intentionally not implemented yet. Their deferral does not
+record the real audit outcomes and correction order. Both user questions are
+answered: CS-ADR-034 implements terminal phase and initial-file semantics with
+12 real-worker controls. Function ABI, graphics and the newly observed permitted
+undefined imports remain separate findings; the compiler/IDE/harness has not
+been changed. Independent asset/lazy-boot preparation alone does not resolve
+those findings. Partial corrections do not
 close this gate or turn an unsupported combination into an available one.
 
 1. Implement a tested capability resolver from family requirements, environment
@@ -70,8 +81,9 @@ close this gate or turn an unsupported combination into an available one.
 5. Integrate graphics through `@gameguild/emception-browser`'s public canvas
    API (`build`, `start`, `buildAndStart`, `stop` as applicable). Verify the
    installed API and artifact, runtime target, source/asset mapping, resize and
-   input handling. Leave `@game-guild/emception-ui` and `tools/emception/**`
-   unchanged. Graphics is not blocked merely because the selected family is
+   input handling. Leave `@game-guild/emception-ui` and all Emception graphics/
+   compiler/harness code unchanged; CS-ADR-028/034 authorize only their recorded
+   worker/phase scope. Graphics is not blocked merely because the selected family is
    `function` or `standard-io`, but every offered combination needs proof.
 6. Mount a real graphics target for environments that require one, even if its
    panel is temporarily minimized. Keep logs and diagnostics accessible when

@@ -5,18 +5,21 @@ and its automated audit are implemented. The user approved the prototype
 design and initial scalar-only function scope on 2026-11-20. The baseline
 documentation/contract audit passed. UX02-A contracts and UX02-B persistence
 preparation are implemented/tested in scope; their broader G-API gate remains
-open. UX02-C metadata/immutable revision and targeted worker safety preparation
-are tested in scope; configurable exercise RAM is explicitly deferred by user
-approval (CS-ADR-029), not enforced. Full configuration/wire parity,
-official client generation, the historical-worker gate and production
-integration are not complete. The single ledger records current evidence.
-API compilation resource failures do not establish a `dev:fast` regression.
-Compatible 4.5.2 assets
-are published; local synchronization and execution checks belong to `CODE-UX-03`,
-not to a mandatory Emception build or IDE publication.
+open for its external Authentication failure and official-runtime fidelity.
+UX02-C/WB-B configuration/wire/backend/client, historical-worker checks and
+the strict full-solution build pass after the develop merge. Configurable
+exercise RAM is explicitly deferred by user approval (CS-ADR-029), not enforced.
+Independent UX03-A preparation now has backed-up, verified local 4.5.2 assets
+and a typed lazy runtime port. Its isolated browser boot/disposal check passes,
+not production UI integration. The user subsequently authorized a minimum
+public terminal-phase extension and initial-file semantics (CS-ADR-034).
+Their 12 real-worker controls pass; function ABI, graphics, interactive/resource
+acceptance and existing upstream lint debt remain open. The single ledger
+records exact evidence and limitations. No mandatory
+Emception build, IDE publication or `dev:fast` change is introduced.
 Production refoundation and product acceptance are not complete.
 
-Updated: 2026-11-21.
+Updated: 2026-11-22.
 
 Gate IDs: `CODE-UX-01` through `CODE-UX-06`.
 

@@ -132,4 +132,21 @@ describe('CodingSurface', () => {
     });
     expect(workspace.id).toBe('gameguild-coding-c');
   });
+
+  it('presents the selected source as Initial file without requiring main in it', async () => {
+    const definition = structuredClone(authoringByType['standard-io']);
+    const initial = definition.files.find((file) => file.visibility === 'public' && file.encoding === 'text');
+    if (!initial) throw new Error('Fixture requires a public text source.');
+    initial.path = '/home/user/helpers.cpp';
+    initial.content = 'int helper(){return 7;}';
+    definition.entryPoint.path = initial.path;
+    definition.files.push({ id: 'program-main', path: '/home/user/program.cpp', encoding: 'text', visibility: 'public',
+      mutable: true, content: 'int helper(); int main(){return helper() == 7 ? 0 : 1;}' });
+    render(<CodingSurface mode="author" definition={definition} />);
+    expect(screen.getByText('Initial file: /home/user/helpers.cpp')).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'helpers.cpp' }).getAttribute('aria-selected')).toBe('true');
+    expect(screen.getByRole('tab', { name: 'program.cpp' })).toBeTruthy();
+    expect(screen.getByTestId('monaco-editor').getAttribute('readonly')).toBeNull();
+    expect(await screen.findByDisplayValue('int helper(){return 7;}')).toBeTruthy();
+  });
 });
