@@ -1,10 +1,10 @@
-# Subplano 5.5. Suporte a C# no Emception
+# Subplano 6.5. Suporte a C# no Emception
 
 Status: planejado.
 
-Orquestrador: [`Parte 5`](../05-emception-capability-and-language-review.md).
+Orquestrador: [`Parte 6`](../06-emception-capability-and-language-review.md).
 
-Pre-requisito: [`5.0`](./00-shared-capability-baseline.md) concluido.
+Pre-requisito: [`6.0`](./00-shared-capability-baseline.md) concluido.
 
 ## Objetivo
 
@@ -71,7 +71,7 @@ Gate:
 
 Implementacao:
 
-- registrar C# pelo modelo aprovado no subplano 5.0;
+- registrar C# pelo modelo aprovado no subplano 6.0;
 - adicionar preset, sample e project config minimos;
 - expor compile, run e diagnostics por entrypoints publicos;
 - executar compiler/runtime em worker ou boundary equivalente aprovada;

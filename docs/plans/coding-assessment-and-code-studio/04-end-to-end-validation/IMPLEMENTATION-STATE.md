@@ -5,8 +5,9 @@ Atualizado: 2026-11-23.
 ## Post-plan debt handoff
 
 CS-ADR-039 in part 3 records the user's priority: complete core parts 03/04
-before deferrable artifact/enhancement work. Reuse the single
-[post-plan findings register](../03-coding-surface/IMPLEMENTATION-STATE.md#current-priority-and-post-plan-findings---2026-11-23),
+before deferrable artifact/enhancement work. CS-ADR-043 formalizes that work as
+part 05. Reuse the single
+[post-04 findings register](../05-emception-stabilization/FINDINGS.md),
 not a second mutable status list. Preserve failed graphics-cleanup evidence;
 do not skip a core E2E failure or report graphics as leak-free. At acceptance,
 list accepted limitations, exact failing oracles, owners and repair actions
@@ -18,8 +19,8 @@ User clarification in CS-ADR-041: part 04 must prove simple scalar-function
 and standard-I/O exercises through official grading and released learner
 results, with independent correct/wrong/error and access controls. Core
 failures admit no blocker waiver. Then complete the
-[post-04 stabilization checkpoint](./06-acceptance-and-develop-integration.md#post-04-stabilization-before-part-05)
-with the responsible owners before part 05. This does not claim new runtime/
+[part 05 stabilization](../05-emception-stabilization-and-polish.md)
+with the responsible owners before part 06. This does not claim new runtime/
 E2E success or discard existing required UX work.
 
 ## Baseline observada

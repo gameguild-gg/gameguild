@@ -22,11 +22,15 @@ Studio.
    `coding-surface` e que os consumidores preservados continuam funcionando.
 6. Mapear toda assertiva restante do runner anterior para case ID ou divida de
    harness explicita.
-7. Registrar blockers de linguagem na parte 5 e questoes de Code Studio no
+7. Registrar blockers de linguagem na parte 6 e questoes de Code Studio no
    plano correspondente, sem inclui-los neste aceite.
 8. Revisar o diff para excluir trabalho alheio ao programa.
 9. Abrir um unico PR para `develop` cobrindo as partes 01 a 04, com comandos,
    resultados, case IDs, riscos e blockers aceitos.
+10. Reconcile all Emception-related findings into the
+    [part 05 register](../05-emception-stabilization/FINDINGS.md), preserving
+    IDs, source evidence, owners, failures and repair oracles. Critical core
+    defects still block part 04 and cannot be accepted as post-plan debt.
 
 `workflow_dispatch` e draft PR podem ser usados antes para obter artifact e
 evidencia de CI. Eles nao substituem o PR final integrado.
@@ -40,7 +44,7 @@ evidencia de CI. Eles nao substituem o PR final integrado.
 - nao alterar schema, migration ou modulo de plataforma para fechar o harness;
 - nao criar compatibilidade artificial com contratos intermediarios deste
   roadmap;
-- nao incluir linguagens da parte 5 nem refundacao do Code Studio.
+- nao incluir linguagens da parte 6 nem refundacao do Code Studio.
 
 ## Mandatory official basic-core proof
 
@@ -84,12 +88,15 @@ evidencia de cobertura equivalente. Um bug encontrado pelo programa deve ser
 corrigido no modulo owner e revalidado; nao reduzir o catalogo para obter
 verde.
 
-## Post-04 stabilization before part 05
+## Handoff to part 05 stabilization
 
-Order explicitly accepted by the user: complete required basic grading proof
-in part 04, then correct and polish recorded noncritical defects before part
-05. Keep the [single findings register](../03-coding-surface/IMPLEMENTATION-STATE.md#current-priority-and-post-plan-findings---2026-11-23)
-as the status source, not a second competing backlog.
+Order explicitly accepted by the user (CS-ADR-041/043): complete required basic
+grading proof in part 04, then correct and polish recorded noncritical defects
+in [part 05](../05-emception-stabilization-and-polish.md), before language
+expansion in part 06. Keep the
+[single post-04 findings register](../05-emception-stabilization/FINDINGS.md)
+as the disposition source. Part 03 retains its historical evidence and current
+implementation progress, not a competing mutable post-plan backlog.
 
 For each confirmed defect, preserve the original failure and user-facing
 limitation, select its owner and repair scope, validate the contract, reproduce
@@ -99,7 +106,7 @@ owner's scoped review before an upstream change. This checkpoint authorizes
 no runtime/IDE refactoring, artifact rewriting or platform/schema change.
 Optional future enhancements are not covert repairs.
 
-Checkpoint exit requires:
+Part 05 exit, not part 04's evidence of completion, requires:
 
 - the part 04 basic-core E2E proof still passes after corrections;
 - confirmed defects in retained/offered functionality are fixed with their
@@ -112,6 +119,8 @@ Checkpoint exit requires:
   pending human feedback is not automatically accepted;
 - the ledger records exact commands/results and final owner/human review.
 
-Do not infer completion from this document or start part 05 to bypass known
-core debt. This checkpoint does not change the existing integrated-PR strategy
-or promote canonical capability status without human review.
+Do not infer completion from this document or defer a core failure to part 05.
+The [part 05 subplans and state](../05-emception-stabilization/state.md) own
+repair execution after entry. They preserve the integrated parts 01-04 PR
+strategy; later repairs use scoped PRs and do not promote canonical capability
+status without human review. Part 06 cannot bypass an open part 05 exit gate.

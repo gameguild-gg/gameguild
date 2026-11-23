@@ -1,4 +1,4 @@
-# Parte 5. Orquestracao da expansao de linguagens do Emception
+# Parte 6. Orquestracao da expansao de linguagens do Emception
 
 Status: planejado; execucao incremental por subplano.
 
@@ -12,9 +12,9 @@ Este arquivo define ordem, gates comuns e estado. Cada linguagem possui um
 subplano proprio e pode ser aprovada, adiada ou rejeitada sem bloquear as
 demais. Nenhum subplano autoriza mudanca destrutiva no Emception.
 
-Required entry (CS-ADR-041): parts 1 to 4 have proved basic coding through
+Required entry (CS-ADR-041/043): parts 1 to 4 have proved basic coding through
 official grading, followed by the owner-reviewed
-[post-04 stabilization checkpoint](./04-end-to-end-validation/06-acceptance-and-develop-integration.md#post-04-stabilization-before-part-05).
+[part 05 stabilization and polishing](./05-emception-stabilization-and-polish.md).
 Do not start language expansion to bypass defects in the retained core.
 
 ## Baseline observada
@@ -55,12 +55,12 @@ substituir os contratos existentes.
 
 | ID | Subplano | Dependencia | Entrega |
 | --- | --- | --- | --- |
-| 0 | [`00-shared-capability-baseline`](./05-emception-language-expansion/00-shared-capability-baseline.md) | official core proof in parts 01-04 and post-04 stabilization | baseline e modelo aditivo de extensao aprovados |
-| 1 | [`01-javascript`](./05-emception-language-expansion/01-javascript.md) | subplano 00 | runtime JavaScript isolado |
-| 2 | [`02-typescript`](./05-emception-language-expansion/02-typescript.md) | subplanos 00 e 01 | toolchain TypeScript sobre runtime aprovado |
-| 3 | [`03-ruby`](./05-emception-language-expansion/03-ruby.md) | subplano 00 | runtime Ruby isolado |
-| 4 | [`04-sql`](./05-emception-language-expansion/04-sql.md) | subplano 00 | workspace SQL deterministico |
-| 5 | [`05-csharp`](./05-emception-language-expansion/05-csharp.md) | subplano 00 | toolchain C# isolada |
+| 0 | [`00-shared-capability-baseline`](./06-emception-language-expansion/00-shared-capability-baseline.md) | official core proof in parts 01-04 and accepted part 05 | baseline e modelo aditivo de extensao aprovados |
+| 1 | [`01-javascript`](./06-emception-language-expansion/01-javascript.md) | subplano 00 | runtime JavaScript isolado |
+| 2 | [`02-typescript`](./06-emception-language-expansion/02-typescript.md) | subplanos 00 e 01 | toolchain TypeScript sobre runtime aprovado |
+| 3 | [`03-ruby`](./06-emception-language-expansion/03-ruby.md) | subplano 00 | runtime Ruby isolado |
+| 4 | [`04-sql`](./06-emception-language-expansion/04-sql.md) | subplano 00 | workspace SQL deterministico |
+| 5 | [`05-csharp`](./06-emception-language-expansion/05-csharp.md) | subplano 00 | toolchain C# isolada |
 
 O subplano 00 e obrigatorio. JavaScript deve anteceder TypeScript. Ruby, SQL e
 C# podem ser investigados em paralelo depois da baseline, mas cada mudanca
@@ -153,7 +153,7 @@ Mudanca no nome de um script nao permite retirar cobertura equivalente.
 | `EMC-SQL` | bloqueado por baseline | decisao do subplano 04 |
 | `EMC-CSHARP` | bloqueado por baseline | decisao do subplano 05 |
 
-## Criterios de conclusao da parte 5
+## Criterios de conclusao da parte 6
 
 - baseline comum foi registrada e aprovada pelo owner;
 - cada linguagem possui estado, evidencia e blocker proprios;

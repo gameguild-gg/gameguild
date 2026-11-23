@@ -41,7 +41,7 @@ Updated: 2026-11-23.
 Gate IDs: `CODE-UX-01` through `CODE-UX-06`.
 
 This file retains its existing path for incoming references. It replaces the
-earlier teacher-inspector plan, not the separate roadmap part 06 about Code
+earlier teacher-inspector plan, not the separate roadmap part 07 about Code
 Studio. The six previously planned gates are redefined below; none had been
 completed when this plan was rewritten. Historical test results do not certify
 this new scope. Current evidence is in

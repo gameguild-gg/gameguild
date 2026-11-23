@@ -1,10 +1,10 @@
-# Subplano 5.1. Suporte a JavaScript no Emception
+# Subplano 6.1. Suporte a JavaScript no Emception
 
 Status: planejado.
 
-Orquestrador: [`Parte 5`](../05-emception-capability-and-language-review.md).
+Orquestrador: [`Parte 6`](../06-emception-capability-and-language-review.md).
 
-Pre-requisito: [`5.0`](./00-shared-capability-baseline.md) concluido.
+Pre-requisito: [`6.0`](./00-shared-capability-baseline.md) concluido.
 
 ## Objetivo
 
@@ -74,7 +74,7 @@ Gate:
 
 Implementacao:
 
-- adicionar package/runtime, descriptor ou built-in conforme o subplano 5.0;
+- adicionar package/runtime, descriptor ou built-in conforme o subplano 6.0;
 - adicionar preset JavaScript sem alterar o preset default;
 - expor workspace, run e diagnostics por entrypoints publicos;
 - manter runtime browser em boundary browser-only;

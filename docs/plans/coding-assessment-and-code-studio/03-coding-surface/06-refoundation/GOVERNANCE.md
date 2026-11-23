@@ -167,11 +167,17 @@ or relabeled green; unaffected checks may proceed within their own boundary.
 Do not broaden this workstream into unrelated authentication/economy fixes.
 
 CS-ADR-039 records the user's explicit core-plan priority: defer noncritical
-findings in the single ledger until after parts 03/04, retain failed evidence
+findings until after parts 03/04, retain failed evidence
 and continue independent core work. It is not a blanket gate waiver. Private
 projection, official verdict/submission/release correctness and actual worker
 ownership remain mandatory; an affected optional capability is not silently
 promoted while its recorded oracle fails.
+
+CS-ADR-043 formalizes the repair checkpoint as
+[part 05](../../05-emception-stabilization-and-polish.md). Keep post-04 finding
+dispositions in its [register](../../05-emception-stabilization/FINDINGS.md),
+and part 03 implementation/evidence in its existing ledger. This does not expand
+the protected-path exceptions above or move a blocking core defect into debt.
 
 ## Negative constraints
 

@@ -116,7 +116,9 @@ Last updated: 2026-11-23.
   actual Next-host/persona/publication/official-grade/release E2E, the separate
   repeated-execution plateau and full graphics acceptance. The isolated proof
   uses installed local Monaco assets; it does not certify a host's loader or
-  private preview/official workflow. Existing post-04/pre-05 findings remain.
+  private preview/official workflow. Recorded debt remains assigned to the
+  formal [part 05](../05-emception-stabilization-and-polish.md); its
+  [finding register](../05-emception-stabilization/FINDINGS.md) owns dispositions.
 - Final G-DOC: 49 documents, 197 local links, seven atomic tables/25 complete
   rows, zero failures; whitespace audit passes. Every task-required command
   session is complete and all owned browser/fixture servers are closed.
@@ -129,6 +131,15 @@ official grading and human acceptance gates while advancing independent rows.
 
 ## Current priority and post-plan findings - 2026-11-23
 
+Current scheduling clarification (CS-ADR-043): the previously unnumbered
+post-04 repair checkpoint is now [part 05](../05-emception-stabilization-and-polish.md).
+Language expansion is part 06 and Code Studio is part 07. All Emception-related
+findings, including later discoveries, link to the single
+[post-04 register](../05-emception-stabilization/FINDINGS.md). That register
+owns future dispositions; this ledger retains part 03 execution and original
+evidence. The table below is the preserved scheduling snapshot, not a second
+mutable backlog. No repair or phase gate is completed by this documentation.
+
 - User requested commits before continuing, and explicitly prioritizes finishing
   parts 03 and 04 over correcting deferrable runtime/enhancement findings.
   CS-ADR-039 records this execution-order decision. The prior pending SDL
@@ -137,7 +148,8 @@ official grading and human acceptance gates while advancing independent rows.
   function and standard-I/O exercises must prove the entire official grading
   journey, including wrong-answer/error negatives and released learner results.
   Local ports or the preserved working IDE are not substitutes. Then perform
-  owner-reviewed stabilization of recorded defects before entering part 05.
+  owner-reviewed stabilization of recorded defects in part 05 before languages
+  in part 06 (numbering formalized by CS-ADR-043).
   This does not waive required core/UX, privacy, execution-ownership or
   academic-integrity acceptance.
 - Committed the preceding work separately: `2ebdabd6ae` (authorized SDK fixes),
@@ -159,7 +171,7 @@ official grading and human acceptance gates while advancing independent rows.
   workflow silently. Security, private projection, immutable attempts, official
   scores/release, cancellation and worker ownership remain mandatory.
 
-| Finding / owner | Disposition after parts 03 and 04, before part 05 | Reopening oracle / current limitation |
+| Finding / owner | Original post-04 disposition, now assigned to part 05 | Reopening oracle / current limitation |
 | --- | --- | --- |
 | `EMC-GAP-003` / Emception SDL artifact owner | defer artifact disposal fix; no global event interception or iframe redesign now | rerun the unchanged five-cycle graphics proof; document-listener plateau must pass; local graphics is not promoted as leak-free production support |
 | `CS-RUNTIME-UNRESOLVED-IMPORT` / Emception toolchain owner | defer general undefined-import policy investigation | reproduce undefined target and require a genuine failure without changing legitimate programs; core grading fixtures retain negative controls; any discovered false academic pass blocks that flow |
@@ -224,8 +236,8 @@ Continue at its exact UX04-A handoff. Required repeated-execution/graphics and
 Next-host/persona evidence stays open. Continue the core user journeys, not
 optional SDL artifact repair, new assistance settings or unrelated platform work.
 Part 04 must produce its separate official-grading core report before any
-claim that basic coding grading works. The post-04 repair checkpoint is then
-mandatory before part 05; do not start language expansion to avoid known debt.
+claim that basic coding grading works. The formal part 05 repair checkpoint is
+then mandatory before part 06; do not start language expansion to avoid known debt.
 
 The CS-ADR-041 scheduling clarification was committed as `2bfbdd63a5`, after its
 documentation-only audit (49 documents, 197 local links, seven atomic tables/
@@ -1071,6 +1083,12 @@ the clarification alone did not close any execution gate. No push was requested.
   was part of this merge. No owned compiler/browser is left running.
 
 ## Deferred corrections and instructor controls - 2026-11-22
+
+Historical proposals and evidence follow. Their post-04 disposition now lives
+in [part 05 FINDINGS.md](../05-emception-stabilization/FINDINGS.md), including
+`CS-INSTRUCTOR-OPTIONAL-CONTROLS`. Reconcile new findings there, preserving the
+source evidence here. Later native phase/ABI/budget and channel corrections
+are regression obligations, not all still-open bugs (CS-ADR-043).
 
 The user originally requested recording these follow-ups for later implementation.
 CS-ADR-034 subsequently authorizes the minimum phase extension and initial-file

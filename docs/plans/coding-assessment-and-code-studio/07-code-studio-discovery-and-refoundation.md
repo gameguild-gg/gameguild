@@ -1,4 +1,4 @@
-# Parte 6. Descoberta e eventual refundacao do Code Studio
+# Parte 7. Descoberta e eventual refundacao do Code Studio
 
 Status: planejado; implementacao condicional.
 
@@ -36,7 +36,7 @@ private tests, submission, review ou gradebook.
 - nenhuma collection, asset, runner, layout ou schema antigo e requisito;
 - nao recriar editor, filesystem, terminal, canvas ou toolchain ja fornecidos
   pelo Emception;
-- nao alterar `tools/emception/**` sem concluir o baseline 5.0 e o subplano da
+- nao alterar `tools/emception/**` sem concluir o baseline 6.0 e o subplano da
   linguagem correspondente;
 - mesmo depois dessas aprovacoes, solicitar somente capabilities aditivas; o Code
   Studio deve se adaptar ao Emception e nao mudar defaults ou retirar recursos
@@ -51,7 +51,8 @@ private tests, submission, review ou gradebook.
 
 - partes 1 a 4 concluidas ou estaveis o suficiente para nao confundir assessment
   com studio;
-- baseline comum e decisao dos subplanos de linguagem pertinentes da parte 5;
+- parte 05 de estabilizacao aceita; baseline comum e decisao dos subplanos de
+  linguagem pertinentes da parte 6;
 - inventario atual de consumidores do Code Studio antigo;
 - disponibilidade do responsavel de produto para responder ao discovery.
 

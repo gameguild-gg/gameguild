@@ -11,7 +11,7 @@ refazer o Code Studio e sem misturar essa correcao com AIReview.
 Este e um desbloqueio pequeno e independente. Ele existe porque a dependencia
 legada impede o uso confiavel do app com `dev:fast`, necessario para validar o
 fluxo humano de AIReview. A refundacao ou remocao completa do Code Studio
-continua pertencendo ao plano 06.
+continua pertencendo ao plano 07.
 
 ## Evidencia atual
 

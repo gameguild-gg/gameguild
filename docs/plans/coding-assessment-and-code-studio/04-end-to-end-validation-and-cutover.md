@@ -35,8 +35,10 @@ results and worker ownership remain required. Preserve other accepted UX
 requirements; this baseline is not permission to delete them from the catalog.
 The local runtime proofs and preserved IDE do not close this acceptance.
 
-After the core is accepted, correct/polish recorded noncritical defects before
-part 05 through the [post-04 stabilization checkpoint](./04-end-to-end-validation/06-acceptance-and-develop-integration.md#post-04-stabilization-before-part-05).
+After the core is accepted, correct/polish recorded noncritical defects in
+[part 05](./05-emception-stabilization-and-polish.md), before language expansion
+in part 06. The [acceptance handoff](./04-end-to-end-validation/06-acceptance-and-develop-integration.md#handoff-to-part-05-stabilization)
+requires every Emception-related finding to link to that phase's register.
 Failed resources remain visibly failed/unavailable and tracked until repaired;
 there is no blanket permission to change Emception or relax a test.
 
@@ -157,7 +159,7 @@ tipo nao pode servir como proxy para o outro.
 | congelamento | mesma revisao, handler, payload e submission no regrade |
 
 A matriz inicial usa somente toolchains ja suportadas e estaveis. Expansoes de
-linguagem da parte 5 nao bloqueiam este gate.
+linguagem da parte 6 nao bloqueiam este gate.
 
 ## Sequencia obrigatoria
 
@@ -274,4 +276,4 @@ silenciosamente para fazer o teste passar.
   do PR integrado das partes 01 a 04.
 - mandatory basic-core cases have actual official score/release/learner
   evidence, not only local or mocked results; carry genuine noncritical debt
-  to the owner-reviewed checkpoint before part 05, without hiding failures.
+  to owner-reviewed part 05, without hiding failures or deferring core defects.

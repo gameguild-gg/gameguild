@@ -1,13 +1,13 @@
-# Subplano 5.2. Suporte a TypeScript no Emception
+# Subplano 6.2. Suporte a TypeScript no Emception
 
 Status: planejado; bloqueado por JavaScript.
 
-Orquestrador: [`Parte 5`](../05-emception-capability-and-language-review.md).
+Orquestrador: [`Parte 6`](../06-emception-capability-and-language-review.md).
 
 Pre-requisitos:
 
-- [`5.0`](./00-shared-capability-baseline.md) concluido;
-- [`5.1`](./01-javascript.md) em `emception-supported`.
+- [`6.0`](./00-shared-capability-baseline.md) concluido;
+- [`6.1`](./01-javascript.md) em `emception-supported`.
 
 ## Objetivo
 
@@ -73,7 +73,7 @@ Gate:
 
 Implementacao:
 
-- registrar TypeScript pelo mecanismo aprovado no subplano 5.0;
+- registrar TypeScript pelo mecanismo aprovado no subplano 6.0;
 - reutilizar o runtime JavaScript sem copiar seu lifecycle;
 - adicionar preset e workspace sample especificos;
 - expor compile/typecheck/run por APIs publicas;

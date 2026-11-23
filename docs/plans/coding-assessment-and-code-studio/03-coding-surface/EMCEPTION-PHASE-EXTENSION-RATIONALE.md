@@ -242,6 +242,9 @@ browser, preset, custom extension or deployment. It does not close CODE-UX-02/03
 or certify the full platform. Seven strict upstream lint warnings remain
 identical to HEAD: six in the facade and one in the core type-test file. No new
 diagnostic or suppression was introduced, but whole-file strict lint is not green.
+Its post-04 follow-up is `CS-EMCEPTION-STRICT-LINT` in the
+[part 05 register](../05-emception-stabilization/FINDINGS.md); this historical
+audit does not authorize cleanup or claim that a later upstream merge fixed it.
 
 Only JavaScript/TypeScript SDK builds and isolated test hosts were generated.
 No compiler/WASM rebuild, IDE deployment, production publication, dev launcher,

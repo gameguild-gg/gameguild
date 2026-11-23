@@ -1116,6 +1116,40 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   compiler/context at a time. It is actual package UI, not a Next-host/persona
   proof, graphics acceptance or a compiler-memory plateau certification.
 
+## `CS-ADR-043`. Formal post-04 polishing and roadmap renumbering
+
+- Date: 2026-11-23. Status: accepted by explicit user instruction; documentation
+  only. No repair, runtime test, phase closure, PR or publication is implied.
+- Formalize the CS-ADR-039/041 post-04 stabilization checkpoint as roadmap part
+  05, after actual official basic-core proof. Renumber the former language part
+  05 and its directory/subplans to 06; renumber Code Studio part 06 to 07.
+  Nested part 3.6/UX gate IDs, canonical coding contracts and prior evidence
+  remain unchanged. Earlier ADR references to "before part 05" used the former
+  language numbering; this decision supersedes that numbering, not their rules.
+- The new part 05 register owns post-04 dispositions for every Emception-related
+  finding: SDK/artifact defects, owned composition gaps, unverified runtime
+  combinations, unavailable extensions and corrected regressions. Preserve
+  stable IDs and link original evidence. Parts 03/04 retain their own progress;
+  do not maintain competing mutable future-debt tables.
+- Separate confirmed defects from optional RAM/compound/assistance proposals.
+  Retained defects need original independent oracles and compatibility proof;
+  optional extensions need explicit reviewed implement/defer/reject decisions.
+  Deferred/unavailable never means implemented, tested or fixed.
+- A core grading, privacy, authorization, frozen-state, release or execution-
+  ownership defect still blocks its affected phase immediately. The new phase
+  is not a waiver or permission to remove accepted core/UX requirements.
+- Every repair follows the Meta-Harness contract-first cycle, strict terminal
+  gates, OS-friendly resource policy and separate Auditor/owner/human review.
+  Emception stays independent; changes need exact scoped owner approval.
+  Preserve the IDE/UI, defaults, consumers, artifacts and migrations. Existing
+  narrow authorizations do not silently become general runtime-edit permission.
+- Preserve the integrated parts 01-04 PR and per-language PR strategy. Later
+  part 05 repairs use separately scoped, validated develop PRs, coordinated
+  with the upstream owner when applicable. No independent IDE release is added.
+- References: [part 05](../05-emception-stabilization-and-polish.md),
+  [findings](../05-emception-stabilization/FINDINGS.md),
+  [state](../05-emception-stabilization/state.md).
+
 ## Modelo para novas decisoes
 
 ```text

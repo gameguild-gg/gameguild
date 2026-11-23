@@ -24,8 +24,13 @@ Registrar toda sobreposicao conhecida ou criada entre:
 Duplicacao e aceita neste programa para evitar alterar a superficie mantida pelo
 time do Emception. Este documento nao e uma lista automatica de refactors. Ele
 fornece evidencia para uma revisao posterior com o responsavel pelo Emception,
-iniciada no subplano 5.0 e retomada quando uma linguagem criar nova copia. O
+iniciada na [parte 05 de polimento](./05-emception-stabilization-and-polish.md)
+e retomada no subplano 6.0 e quando uma linguagem criar nova copia. O
 responsavel decidira o que permanece separado e o que pode convergir.
+
+The tracked review is `CS-EMCEPTION-DUPLICATION-REVIEW` in the
+[post-04 findings register](./05-emception-stabilization/FINDINGS.md).
+Review does not authorize consolidation, source removal or an Emception UI edit.
 
 O registro cobre sobreposicao tecnica, nao preservacao da experiencia de
 produto atual. A composicao exibida hoje como `Coding assignment` em Learning e

@@ -8,7 +8,8 @@ O estado corrente e suas evidencias estao no handoff da parte 3.
 
 Priority decision on 2026-11-23: continue independent core work and carry
 deferrable findings through the part 4 handoff for repair after both plans.
-See CS-ADR-039 and the [post-plan findings](./03-coding-surface/IMPLEMENTATION-STATE.md#current-priority-and-post-plan-findings---2026-11-23).
+See CS-ADR-039/043, the formal [part 05 polishing](./05-emception-stabilization-and-polish.md)
+and its [finding register](./05-emception-stabilization/FINDINGS.md).
 This permits independent implementation, not false gate completion or deferral
 of privacy, official-grade correctness, submission integrity or worker ownership.
 

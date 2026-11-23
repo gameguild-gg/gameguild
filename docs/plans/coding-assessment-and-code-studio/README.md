@@ -163,30 +163,41 @@ AIReview.
 | 2 | [`02`](./02-backend-code-adapter-boundary.md) | modulo backend separado e core sem code | build, testes e arquitetura backend verdes |
 | 3 | [`03`](./03-coding-surface-and-web-integration.md) | coding-surface paralela e composicao web; seis subplanos, com seis etapas adicionais dentro da refundacao 3.6 | contrato coerente; autoria e resolucao completas no corte aceito; runtime comprovado; aceite humano; emception-ui preservado |
 | 4 | [`04`](./04-end-to-end-validation-and-cutover.md) | E2E, auditoria de capabilities e aceite do cutover ja realizado | `CODE-UI-07`, fluxo oficial e negativos de acesso aprovados |
-| 5 | [`05`](./05-emception-capability-and-language-review.md) | orquestracao da expansao aditiva de linguagens | core das partes 01-04 comprovado, checkpoint de estabilizacao pos-04 concluido, baseline comum aprovada e decisao independente por linguagem |
-| 6 | [`06`](./06-code-studio-discovery-and-refoundation.md) | descoberta e eventual refundacao do Code Studio | decisao explicita de produto e arquitetura |
+| 5 | [`05`](./05-emception-stabilization-and-polish.md) | stabilization and polishing of Emception integration, with owner-reviewed repairs | parts 03/04 accepted; confirmed retained defects repaired, original oracles and preserved consumers validated |
+| 6 | [`06`](./06-emception-capability-and-language-review.md) | orquestracao da expansao aditiva de linguagens | parte 05 aceita, baseline comum aprovada e decisao independente por linguagem |
+| 7 | [`07`](./07-code-studio-discovery-and-refoundation.md) | descoberta e eventual refundacao do Code Studio | parte 05 aceita; decisao explicita de produto e arquitetura e baseline de linguagens pertinente |
 
 Nao se inicia a fase 2 enquanto a fase 1 estiver apenas parcialmente definida.
-As fases 5 e 6 nao bloqueiam o fluxo inicial de coding assessment nas linguagens
+As fases 5, 6 e 7 nao bloqueiam o fluxo inicial de coding assessment nas linguagens
 ja suportadas. Elas nao autorizam por si mesmas mudancas no Emception.
 
-### Core proof, then stabilization before part 05
+### Core proof, then part 05 stabilization before language expansion
 
-User disposition on 2026-11-23 (CS-ADR-041): finish the basic coding/grading
-core in parts 03/04, then correct and polish the recorded defects before
-starting part 05. Prove simple `function` and `standard-io` exercises through
+User disposition on 2026-11-23 (CS-ADR-041/043): finish the basic coding/grading
+core in parts 03/04, then correct and polish recorded defects in the formal
+part 05 before starting language expansion in part 06. Prove simple `function`
+and `standard-io` exercises through
 authoring, publication, a real learner attempt, official review, release and
 learner result retrieval. A local execution, unit count or standalone IDE
 does not prove official grading.
 
 The [part 4 acceptance plan](./04-end-to-end-validation/06-acceptance-and-develop-integration.md)
-defines the mandatory core oracle and the post-04 checkpoint. Keep the
-[single findings register](./03-coding-surface/IMPLEMENTATION-STATE.md#current-priority-and-post-plan-findings---2026-11-23):
+defines the mandatory core oracle and handoff to
+[part 05](./05-emception-stabilization-and-polish.md). Keep the
+[single post-04 findings register](./05-emception-stabilization/FINDINGS.md):
 errors remain errors, unsupported resources remain explicitly unavailable and
 each confirmed defect retains its reproducer, owner and repair oracle. Do not
 hide failures, reduce assertions or silently cancel existing required UX work.
 Upstream corrections require the Emception owner's scoped review, not blanket
 authorization from this scheduling decision.
+
+Part 05 has atomic subplans, terminal gates and its own execution
+[state.md](./05-emception-stabilization/state.md). Parts 03/04 keep their original
+evidence and phase progress; all new Emception findings link into the post-04
+register. Core correctness/security/ownership failures still block their source
+gate immediately. Optional extensions are not disguised as repairs.
+CS-ADR-043 renumbers the former language part 05 to 06 and Code Studio part 06
+to 07; nested part 3.6 and its UX gate IDs are unchanged.
 
 A parte 3 possui sequencia interna obrigatoria: caracterizacao e decisoes,
 fundacao do package, perfis e personas, integracao web com CI e consolidacao do
@@ -212,7 +223,7 @@ contratos/API, browser, laboratorio web e aceite ficam em
 [`04-end-to-end-validation/`](./04-end-to-end-validation/), com estado e
 decisoes persistentes para que a validacao nao dependa da conversa.
 
-A parte 5 e executada por subplanos. O baseline comum precede todos; JavaScript
+A parte 6 e executada por subplanos. O baseline comum precede todos; JavaScript
 precede TypeScript; Ruby, SQL e C# podem avancar independentemente depois da
 baseline. Suporte no Emception, preview GameGuild e grading oficial possuem
 gates distintos.
@@ -224,14 +235,18 @@ na mesma linha de trabalho ate o fechamento do catalogo E2E da parte 04. Somente
 depois de todos os gates dessas quatro partes passarem sera aberto um PR unico
 para `develop`, contendo dominio, adapters, backend, superficie e validacao.
 
-A parte 05 usa outra cadencia: cada linguagem e uma entrega independente. O
+Part 05 repairs use separately scoped, validated PRs to `develop`, coordinated
+with the Emception owner for upstream changes. They do not silently enlarge or
+replace the integrated parts 01-04 PR. Final part 05 acceptance precedes languages.
+
+A parte 06 usa outra cadencia: cada linguagem e uma entrega independente. O
 suporte e implementado e validado integralmente em sua propria branch; depois,
 abre-se um PR exclusivo dessa linguagem para `develop`. JavaScript deve estar
 integrado antes de iniciar o PR de TypeScript. Ruby, SQL e C# podem avancar em
 paralelo depois da baseline, mas nenhuma branch pode depender de codigo ainda
 nao integrado de outra linguagem.
 
-Se o subplano 5.0 exigir codigo compartilhado, essa fundacao recebe um PR
+Se o subplano 6.0 exigir codigo compartilhado, essa fundacao recebe um PR
 preparatorio separado para `develop` e deve ser integrada antes dos PRs de
 linguagem. O processo posterior de release da `main` permanece fora deste
 roadmap; cada PR apenas cumpre o requisito de changeset vigente quando ele for
@@ -240,7 +255,7 @@ aplicavel.
 Documento transversal:
 [`DUPLICATION-REGISTER.md`](./DUPLICATION-REGISTER.md) registra todas as copias
 aceitas entre a superficie preservada e os novos packages. Ele deve acompanhar
-as partes 1, 3, 4 e 5.
+as partes 1, 3, 4, 5 e 6.
 
 ## Matriz de preservacao do Emception
 
@@ -250,8 +265,9 @@ as partes 1, 3, 4 e 5.
 | 2 | backend recebe reports por portas proprias; nao altera o runtime browser | nenhuma |
 | 3 | `coding-surface` compoe somente APIs publicas e se adapta a elas | nenhuma |
 | 4 | valida e aceita o cutover dos consumidores de grading realizado na parte 3 | nenhuma |
-| 5 | pode propor novas capabilities e linguagens de forma aditiva | nenhuma; breaking change fica fora deste programa |
-| 6 | Code Studio futuro consome capabilities publicas existentes | nenhuma |
+| 5 | repairs in their owning modules; upstream changes only with scoped owner approval and preserved-consumer proof | nenhuma; no blanket runtime/IDE authorization |
+| 6 | pode propor novas capabilities e linguagens de forma aditiva | nenhuma; breaking change fica fora deste programa |
+| 7 | Code Studio futuro consome capabilities publicas existentes | nenhuma |
 
 Nesta matriz, "aditiva" significa que packages, exports, toolchains, run types,
 defaults, demos e consumidores existentes continuam validos. Duplicar uma
@@ -337,7 +353,7 @@ Emception.
 ### `DISCOVERY-GATE`
 
 Nenhum package novo de Code Studio sera iniciado antes das perguntas e provas
-do plano 06. O resultado valido da descoberta pode ser inclusive nao criar o
+do plano 07. O resultado valido da descoberta pode ser inclusive nao criar o
 package.
 
 ## Regra de validacao
@@ -364,14 +380,15 @@ review, release ou resultado learner tambem seguem
 | `CODE-BACKEND` | pendente | plano 02 concluido |
 | `CODE-SURFACE` | pendente | plano 03 concluido |
 | `CODE-E2E` | pendente | plano 04 concluido |
-| `EMCEPTION-BASELINE` | pendente | subplano 5.0 aprovado |
-| `EMCEPTION-JAVASCRIPT` | bloqueado por baseline | subplano 5.1 classificado |
-| `EMCEPTION-TYPESCRIPT` | bloqueado por baseline e JavaScript | subplano 5.2 classificado |
-| `EMCEPTION-RUBY` | bloqueado por baseline | subplano 5.3 classificado |
-| `EMCEPTION-SQL` | bloqueado por baseline | subplano 5.4 classificado |
-| `EMCEPTION-CSHARP` | bloqueado por baseline | subplano 5.5 classificado |
-| `CODE-STUDIO-DISCOVERY` | pendente | decisao registrada pelo plano 06 |
-| `DUPLICATION-REGISTER` | atualizado pela parte 1 | atualizado a cada copia e revisado na parte 5 |
+| `CODE-POLISH` | planned; waits for parts 03/04 | part 05 gates and owner/human acceptance |
+| `EMCEPTION-BASELINE` | blocked by part 05 | subplano 6.0 aprovado |
+| `EMCEPTION-JAVASCRIPT` | bloqueado por baseline | subplano 6.1 classificado |
+| `EMCEPTION-TYPESCRIPT` | bloqueado por baseline e JavaScript | subplano 6.2 classificado |
+| `EMCEPTION-RUBY` | bloqueado por baseline | subplano 6.3 classificado |
+| `EMCEPTION-SQL` | bloqueado por baseline | subplano 6.4 classificado |
+| `EMCEPTION-CSHARP` | bloqueado por baseline | subplano 6.5 classificado |
+| `CODE-STUDIO-DISCOVERY` | pendente | decisao registrada pelo plano 07 |
+| `DUPLICATION-REGISTER` | atualizado pela parte 1 | atualizado a cada copia; revisao pos-04 na parte 5 e por linguagem na parte 6 |
 
 O estado desta tabela deve ser atualizado ao final de cada fase, junto com os
 comandos executados e os blockers restantes. Um plano so recebe estado

@@ -8,6 +8,13 @@ explicitly authorized minimum public execution-phase metadata extension.
 Per-exercise memory control remains unsupported; the user explicitly approved
 deferring that capability in this delivery (CS-ADR-029).
 
+Post-04 disposition is now centralized in the formal
+[part 05 findings register](../05-emception-stabilization/FINDINGS.md)
+(CS-ADR-043). This file preserves public-boundary diagnosis and historical
+evidence, not a competing repair-status backlog. Link each new gap there with
+its stable ID, owner and required oracle. A core safety/grading failure still
+blocks the current phase immediately; registering a gap never waives its gate.
+
 Este arquivo registra somente necessidades que nao podem ser atendidas pelos
 entrypoints publicos do Emception instalado. Preferencia de API, conveniencia ou
 codigo existente em um internal nao provam um gap.
@@ -60,7 +67,7 @@ exports instalados antes de afirmar suporte a uma combinacao.
   after parts 03 and 04 (CS-ADR-039). Coordinate the eventual disposal hook/fix
   with the Emception owner and rerun the unchanged five-cycle oracle. Do not
   start an iframe redesign, artifact build or global interception now. No
-  external issue has been published; the single ledger owns the follow-up.
+  external issue has been published; part 05 owns the follow-up disposition.
 
 ### `EMC-GAP-002`. Per-exercise memory control
 
