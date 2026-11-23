@@ -16,3 +16,5 @@ export * from './storage';
 export * from './test-results-panel';
 export * from './types';
 export * from './workspace';
+export * from './workbench-session-types';
+export * from './workbench-session';

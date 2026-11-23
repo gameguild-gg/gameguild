@@ -24,9 +24,7 @@ export const resolveCodingRuntimeCapabilities: CodingRuntimeCapabilityResolver =
 
   return {
     program: available(),
-    tests: request.exerciseType === 'function'
-      ? unavailable('function-abi-unavailable')
-      : requiresGraphics
+    tests: requiresGraphics
         ? unavailable('graphics-tests-unavailable')
         : { status: 'available', scope: request.mode === 'learner' ? 'public' : 'full' },
     interactiveInput: environment.runtime === 'wasi' && environment.language === 'cpp'

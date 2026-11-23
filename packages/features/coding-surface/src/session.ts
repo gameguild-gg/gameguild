@@ -4,6 +4,7 @@ import {
   parseCodingSubmission,
   type CodingAuthoringDefinition,
   type CodingLearnerDelivery,
+  type CodingSubmission,
 } from '@game-guild/coding';
 import type { IdeController, WorkspaceFile } from '@gameguild/emception-ide';
 import { computeScore, withWorkspaceOverlay } from 'emception/testing';
@@ -28,8 +29,12 @@ export function createCodingSurfaceSession(options: CreateCodingSurfaceSessionOp
   let status: CodingSurfaceSession['status'] = 'ready';
   let result: CodingPreviewResult | null = null;
   return {
-    get status() { return status; },
-    get result() { return result; },
+    get status() {
+      return status;
+    },
+    get result() {
+      return result;
+    },
     async run(runOptions = {}) {
       if (status === 'running') throw new Error('A coding preview is already running.');
       status = 'running';
@@ -37,10 +42,8 @@ export function createCodingSurfaceSession(options: CreateCodingSurfaceSessionOp
         await options.controller.syncWorkspace();
         const scope = options.mode === 'learner' ? 'public' : 'full';
         const execution = buildCodingExecutionPlan(options.definition, scope);
-        const report = await withWorkspaceOverlay(
-          options.controller.api.workspace,
-          execution.overlay,
-          () => options.controller.api.runTests(execution.plan, { signal: runOptions.signal }),
+        const report = await withWorkspaceOverlay(options.controller.api.workspace, execution.overlay, () =>
+          options.controller.api.runTests(execution.plan, { signal: runOptions.signal }),
         );
         result = {
           scope,
@@ -57,23 +60,25 @@ export function createCodingSurfaceSession(options: CreateCodingSurfaceSessionOp
       }
     },
     async getSubmission() {
-      const files = await options.controller.getFiles();
-      const authoredByPath = new Map(options.definition.files.map((file) => [normalizeCodingPath(file.path), file]));
-      const submissionFiles = files
-        .filter(isTextFile)
-        .flatMap((file) => {
-          const path = normalizeCodingPath(file.path);
-          const authored = authoredByPath.get(path);
-          if (authored) {
-            if (!authored.mutable || file.content === authored.content) return [];
-            return [{ fileId: authored.id, path, encoding: 'text' as const, content: file.content }];
-          }
-          if (!options.definition.allowLearnerCreatedFiles) return [];
-          return [{ fileId: stableFileId(path), path, encoding: 'text' as const, content: file.content }];
-        });
-      return parseCodingSubmission({ schemaVersion: CODING_SUBMISSION_SCHEMA_VERSION, files: submissionFiles });
+      return captureCodingSubmission(options.definition, await options.controller.getFiles());
     },
   };
+}
+
+export function captureCodingSubmission(definition: CodingAuthoringDefinition | CodingLearnerDelivery, files: readonly WorkspaceFile[]): CodingSubmission {
+  const authoredByPath = new Map(definition.files.map((file) => [normalizeCodingPath(file.path), file]));
+  const submissionFiles = files.filter(isTextFile).flatMap((file) => {
+    const path = normalizeCodingPath(file.path);
+    const authored = authoredByPath.get(path);
+    if (authored) {
+      if ('visibility' in authored && authored.visibility === 'private') return [];
+      if (!authored.mutable || file.content === authored.content) return [];
+      return [{ fileId: authored.id, path, encoding: 'text' as const, content: file.content }];
+    }
+    if (!definition.allowLearnerCreatedFiles) return [];
+    return [{ fileId: stableFileId(path), path, encoding: 'text' as const, content: file.content }];
+  });
+  return parseCodingSubmission({ schemaVersion: CODING_SUBMISSION_SCHEMA_VERSION, files: submissionFiles });
 }
 
 function isTextFile(file: WorkspaceFile): file is WorkspaceFile & { type: 'text' } {

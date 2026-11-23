@@ -7,7 +7,6 @@ export type CodingCapabilityUnavailableReason =
   | 'assignment-disallows-files'
   | 'incompatible-toolchain'
   | 'unsupported-environment'
-  | 'function-abi-unavailable'
   | 'graphics-tests-unavailable'
   | 'graphics-not-required'
   | 'interactive-input-unverified'

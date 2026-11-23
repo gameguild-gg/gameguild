@@ -76,11 +76,10 @@ describe('UX03-A: local runtime capability eligibility', () => {
     if (mode === 'learner') expect(result.program).toEqual({ status: 'available' });
   });
 
-  it('does not reinterpret a program run as a supported function verdict', () => {
+  it('offers the proven native function test mapper separately from a program run', () => {
     const result = resolveCodingRuntimeCapabilities(request({ exerciseType: 'function' }));
     expect(result.program).toEqual({ status: 'available' });
-    expect(result.tests).toEqual(unavailable('function-abi-unavailable'));
-    expect(result.tests).not.toHaveProperty('scope');
+    expect(result.tests).toEqual({ status: 'available', scope: 'public' });
   });
 
   it('routes a proven SDL3 program to graphics, not the native batch test path', () => {
@@ -117,7 +116,7 @@ describe('UX03-A: local runtime capability eligibility', () => {
     const result = resolveCodingRuntimeCapabilities(input);
     expect(result.graphics).toEqual({ status: 'available' });
     expect(result.graphicsTarget.required).toBe(true);
-    expect(result.tests).toEqual(unavailable('function-abi-unavailable'));
+    expect(result.tests).toEqual(unavailable('graphics-tests-unavailable'));
   });
 
   it.each(['raylib', 'allegro5'] as const)('does not promote the unverified %s runtime from its preset alone', runtime => {
