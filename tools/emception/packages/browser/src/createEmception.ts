@@ -292,7 +292,7 @@ function wrap(client: WorkerClient): BrowserEmceptionAPI {
                             }),
                             runOptions,
                         );
-                        if (compile.exitCode !== 0) return compile;
+                        if (compile.exitCode !== 0) return { ...compile, phase: 'compile' };
                     }
 
                     const linkArgs = preset.linkArgv({
@@ -305,12 +305,13 @@ function wrap(client: WorkerClient): BrowserEmceptionAPI {
                     }
                     linkArgs.splice(firstObjectIndex, 1, ...objectPaths);
                     const link = await run(preset.linkTool, linkArgs, runOptions);
-                    if (link.exitCode !== 0) return link;
+                    if (link.exitCode !== 0) return { ...link, phase: 'link' };
 
-                    return await run('wasi-run', ['wasi-run', wasmPath], {
+                    const executed = await run('wasi-run', ['wasi-run', wasmPath], {
                         ...runOptions,
                         ...(stdinStr === undefined ? {} : { stdin: stdinStr }),
                     });
+                    return { ...executed, phase: 'run' };
                 } finally {
                     await Promise.allSettled(scratchPaths.map((path) => client.deleteFile(path)));
                 }
@@ -337,6 +338,7 @@ function wrap(client: WorkerClient): BrowserEmceptionAPI {
                 // api.run actually enriches it at runtime, so cast is sound.
                 const r = result.run as ToolResult;
                 return {
+                    phase: 'run',
                     exitCode: r.exitCode,
                     stdout: stdoutBuf || r.stdout,
                     stderr: stderrBuf || r.stderr,
@@ -344,8 +346,12 @@ function wrap(client: WorkerClient): BrowserEmceptionAPI {
                     timedOut: r.timedOut,
                 };
             }
-            const failed = (result.compile ?? result.link ?? result.run) as ToolResult | undefined;
+            if (result.finalPhase !== 'compile' && result.finalPhase !== 'link') {
+                throw new Error('compileAndRun: pipeline ended without an execution result');
+            }
+            const failed = (result.finalPhase === 'compile' ? result.compile : result.link) as ToolResult | undefined;
             return {
+                phase: result.finalPhase,
                 exitCode: result.exitCode,
                 stdout: stdoutBuf || failed?.stdout || '',
                 stderr: stderrBuf || failed?.stderr || '',

@@ -73,9 +73,13 @@ export async function executeCodeAssessment(request: CodeWorkerRequest): Promise
       }
     };
     const compile = api.compileAndRun.bind(api);
-    api.compileAndRun = (source, options) => protect(onOutput => compile(source, {
-      ...options, stdout: onOutput, stderr: onOutput,
-    }));
+    api.compileAndRun = (source, options) => protect(async onOutput => {
+      const result = await compile(source, { ...options, stdout: onOutput, stderr: onOutput });
+      if (result.phase !== 'compile' && result.phase !== 'link' && result.phase !== 'run') {
+        throw new Error('Code runtime did not report a valid execution phase.');
+      }
+      return result;
+    });
     const run = api.run.bind(api);
     api.run = (command, argv, options) => protect(onOutput => run(command, argv, {
       ...options, stdout: onOutput, stderr: onOutput,

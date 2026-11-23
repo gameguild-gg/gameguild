@@ -48,7 +48,7 @@ const request = {
   definition: { Environment: { Language: 'cpp' }, Data: { Files: { 'main.cpp': { Encoding: 'text', Content: 'int main(){}' } } } },
   files: {},
 };
-const result = { stdout: '', stderr: '', timedOut: false, exitCode: 0, durationMs: 1 };
+const result = { stdout: '', stderr: '', timedOut: false, exitCode: 0, durationMs: 1, phase: 'run' };
 
 function setup(compile) {
   let disposed = 0;
@@ -120,6 +120,27 @@ test('worker: successful result retains the existing boolean receipt and one dis
   assert.equal(state.disposed(), 1);
 });
 
+for (const phase of [undefined, null, 'unknown', 1]) {
+  test(`phase: official worker refuses missing/invalid execution metadata ${String(phase)}`, async () => {
+    const state = setup(async () => ({ ...result, phase }));
+    await assert.rejects(executeCodeAssessment(request), /execution phase/);
+    assert.equal(state.disposed(), 1);
+  });
+}
+
+for (const phase of ['compile', 'link']) {
+  test(`phase: official worker preserves ${phase} as a student failure, not unavailable execution`, async () => {
+    const state = setup(async () => ({ ...result, exitCode: 1, phase }));
+    state.fixture.runTests = async api => {
+      const observation = await api.compileAndRun(undefined, {});
+      assert.equal(observation.phase, phase);
+      return { cases: [{ passed: false }] };
+    };
+    assert.deepEqual(await executeCodeAssessment(request), [false]);
+    assert.equal(state.disposed(), 1);
+  });
+}
+
 for (const language of ['CPP', 'C', 'Sdl-Cpp', 'Raylib-Cpp', 'Allegro-Cpp']) {
   test(`worker: retains the historical default preset for legacy ${language}`, async () => {
     const state = setup(async () => result);
@@ -148,7 +169,7 @@ function configuredRequest() {
   };
 }
 
-test('WB-B worker: forwards exact published timeout and explicit source before a decoy main', async () => {
+test('WB-B worker: preserves timeout and source ordering without excluding other translation units', async () => {
   const state = setup(async () => result);
   assert.deepEqual(await executeCodeAssessment(configuredRequest()), [true]);
   assert.equal(state.fixture.plan.timeoutMsPerCase, 1379);

@@ -139,3 +139,39 @@ test('facade forwards workspace deletion to the Worker client', async () => {
 
   assert.deepEqual(deletedPaths, ['/home/user/private-test.cpp']);
 });
+
+for (const mode of ['source', 'files']) {
+  for (const terminalPhase of ['compile', 'link', 'run']) {
+    test(`phase: facade exposes ${terminalPhase} for ${mode} without running later stages`, async () => {
+      const calls = [];
+      const phaseFor = { clang: 'compile', 'wasm-ld': 'link', 'wasi-run': 'run' };
+      const api = wrapWorkerClient(makeStubClient({
+        run: async (command) => {
+          calls.push(command);
+          return { exitCode: phaseFor[command] === terminalPhase ? 1 : 0,
+            stdout: '', stderr: '', durationMs: 1, timedOut: false };
+        },
+      }));
+      const result = mode === 'source'
+        ? await api.compileAndRun('int main(){return 1;}')
+        : await api.compileAndRun(undefined, { build: {
+            toolchain: ToolchainPreset.CPP, sources: ['/home/user/solution.cpp', '/home/user/helper.cpp'],
+          } });
+      assert.equal(result.phase, terminalPhase);
+      assert.equal(result.exitCode, 1);
+      assert.equal(typeof result.stdout, 'string');
+      assert.equal(typeof result.stderr, 'string');
+      assert.equal(result.timedOut, false);
+      assert.equal(phaseFor[calls.at(-1)], terminalPhase);
+      if (terminalPhase !== 'run') assert.ok(!calls.includes('wasi-run'));
+      if (terminalPhase === 'compile') assert.ok(!calls.includes('wasm-ld'));
+    });
+  }
+}
+
+test('phase: raw facade.run retains its original result without inventing a pipeline stage', async () => {
+  const api = wrapWorkerClient(makeStubClient());
+  const result = await api.run('clang', ['--version']);
+  assert.equal(result.phase, undefined);
+  assert.equal(result.stdout, 'hi\n');
+});

@@ -44,6 +44,9 @@ export function assertToolResult(value: unknown, context?: string): ToolResult {
   if (r.signal !== undefined && typeof r.signal !== 'string') {
     throw new EmceptionError(`ToolResult.signal, when present, must be a string${where}`);
   }
+  if (r.phase !== undefined && r.phase !== 'compile' && r.phase !== 'link' && r.phase !== 'run') {
+    throw new EmceptionError(`ToolResult.phase, when present, must be compile, link or run${where}`);
+  }
   return value as ToolResult;
 }
 

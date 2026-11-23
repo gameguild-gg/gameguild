@@ -94,6 +94,10 @@ expectType<string>(result.stderr);
 expectType<number>(result.durationMs);
 expectType<boolean>(result.timedOut);
 expectType<string | undefined>(result.signal);
+expectType<'compile' | 'link' | 'run' | undefined>(result.phase);
+expectAssignable<ToolResult>({ exitCode: 0, stdout: '', stderr: '', durationMs: 0, timedOut: false });
+expectAssignable<ToolResult>({ exitCode: 1, stdout: '', stderr: '', durationMs: 1, timedOut: false, phase: 'compile' });
+expectError<ToolResult['phase']>('unknown');
 
 // ── TestCase discriminated union ──────────────────────────────────────────────
 

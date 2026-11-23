@@ -229,3 +229,17 @@ test('doctest: empty source set → fails fast', async () => {
     assert.equal(report.failed, 1);
     assert.match(report.cases[0].diagnostic, /no source files/);
 });
+
+for (const phase of ['compile', 'link']) {
+    test(`phase: doctest rejects ${phase} even if build output contains a passing summary`, async () => {
+        const api = makeApi({ compileImpl: async () => ({
+            phase, exitCode: 1, stdout: SAMPLE_DOCTEST_PASS, stderr: 'synthetic build failure', durationMs: 1, timedOut: false,
+        }) });
+        const report = await runTests(api, {
+            build: { sources: ['main.cpp'] }, cases: [{ kind: 'doctest', sourceFiles: ['test.cpp'] }],
+        });
+        assert.equal(report.failed, 1);
+        assert.equal(report.cases[0].passed, false);
+        assert.match(report.cases[0].diagnostic, /compil|link/i);
+    });
+}

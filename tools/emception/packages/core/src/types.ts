@@ -243,6 +243,10 @@ export interface CompileOptions extends RunOptions {
  *   SHOULD reflect the abort (commonly non-zero).
  * - `signal` is set when execution was terminated by a signal (timeout,
  *   abort, or external kill). It is omitted on normal exit.
+ * - `phase`, when supplied by a compile-and-run pipeline, identifies the
+ *   terminal stage. A compile/link failure is not a completed program, even
+ *   if its output/exit matches a test. Raw tools and existing adapters may
+ *   omit it; absence alone does not prove that a program executed.
  *
  * Adapters MUST NOT throw to indicate a tool failure: a non-zero exit, a
  * crash, or a timeout is still a successful adapter call that returns a
@@ -256,6 +260,7 @@ export interface ToolResult {
   durationMs: number;
   timedOut: boolean;
   signal?: string;
+  phase?: 'compile' | 'link' | 'run';
 }
 
 /**

@@ -59,3 +59,19 @@ test('isToolResult is a non-throwing predicate', () => {
     assert.equal(isToolResult({ ...ok, durationMs: -5 }), false);
     assert.equal(isToolResult(null), false);
 });
+
+for (const phase of ['compile', 'link', 'run']) {
+    test(`phase: ToolResult accepts and preserves ${phase}`, () => {
+        const value = { ...ok, phase };
+        assert.equal(assertToolResult(value).phase, phase);
+        assert.equal(isToolResult(value), true);
+    });
+}
+
+for (const phase of ['write', 'unknown', null, 1, {}]) {
+    test(`phase: ToolResult rejects malformed metadata ${JSON.stringify(phase)}`, () => {
+        const value = { ...ok, phase };
+        assert.throws(() => assertToolResult(value, 'pipeline'), /phase.*pipeline/);
+        assert.equal(isToolResult(value), false);
+    });
+}

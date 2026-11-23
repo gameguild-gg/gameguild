@@ -261,3 +261,54 @@ test('runTests: aggregates totalDurationMs and per-case pass/fail counts', async
     assert.equal(report.cases.length, 3);
     assert.ok(report.totalDurationMs >= 0);
 });
+
+for (const phase of ['compile', 'link']) {
+    for (const expectedExit of [undefined, 1]) {
+        test(`phase: stdio rejects ${phase} even with empty stdout and expected exit ${expectedExit}`, async () => {
+            const api = makeApi({ compileImpl: async () => ({
+                phase, exitCode: 1, stdout: '', stderr: 'synthetic build failure', durationMs: 1, timedOut: false,
+            }) });
+            const report = await runTests(api, { cases: [{ kind: 'stdio', expectedStdout: '', expectedExit }] });
+            assert.equal(report.cases[0].passed, false);
+            assert.equal(report.failed, 1);
+            assert.match(report.cases[0].diagnostic, /compil|link/i);
+        });
+    }
+    test(`phase: stdio-file rejects ${phase} even with intentionally empty output fixture`, async () => {
+        const api = makeApi({
+            readFileImpl: async () => new Uint8Array(),
+            compileImpl: async () => ({ phase, exitCode: 1, stdout: '', stderr: 'synthetic build failure', durationMs: 1, timedOut: false }),
+        });
+        const report = await runTests(api, { cases: [{ kind: 'stdio-file', inFile: 'input.txt', expectedOutFile: 'output.txt' }] });
+        assert.equal(report.failed, 1);
+        assert.equal(report.cases[0].passed, false);
+        assert.match(report.cases[0].diagnostic, /compil|link/i);
+    });
+}
+
+for (const exitCode of [0, 1]) {
+    test(`phase: completed stdio preserves expected program exit ${exitCode}`, async () => {
+        const api = makeApi({ compileImpl: async () => ({ phase: 'run', exitCode, stdout: '', stderr: '', durationMs: 1, timedOut: false }) });
+        const report = await runTests(api, { cases: [{ kind: 'stdio', expectedStdout: '', expectedExit: exitCode }] });
+        assert.equal(report.passed, 1);
+        assert.equal(report.failed, 0);
+    });
+}
+
+test('phase: completed program still fails an incorrect expected exit', async () => {
+    const api = makeApi({ compileImpl: async () => ({ phase: 'run', exitCode: 1, stdout: '', stderr: '', durationMs: 1, timedOut: false }) });
+    const report = await runTests(api, { cases: [{ kind: 'stdio', expectedStdout: '', expectedExit: 0 }] });
+    assert.equal(report.failed, 1);
+    assert.match(report.cases[0].diagnostic, /exit/i);
+});
+
+test('phase: build-failure diagnostics retain hidden-path redaction', async () => {
+    const api = makeApi({
+        listFilesImpl: async () => [{ path: 'private/reference.cpp', visibility: 'solution' }],
+        compileImpl: async () => ({ phase: 'compile', exitCode: 1, stdout: '', stderr: 'error in private/reference.cpp', durationMs: 1, timedOut: false }),
+    });
+    const report = await runTests(api, { redactHidden: true, cases: [{ kind: 'stdio', expectedStdout: '' }] });
+    assert.equal(report.failed, 1);
+    assert.match(report.cases[0].diagnostic, /<hidden>/);
+    assert.doesNotMatch(report.cases[0].diagnostic, /private\/reference.cpp/);
+});

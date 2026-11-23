@@ -12,7 +12,7 @@
 // vendoring) land. Stubs throw a descriptive "not yet implemented" error
 // rather than silently passing so partial wiring can't ship false greens.
 
-import type { EmceptionAPI, TestCase, TestCaseResult, TestPlan, TestReport } from '../types.js';
+import type { EmceptionAPI, TestCase, TestCaseResult, TestPlan, TestReport, ToolResult } from '../types.js';
 import { compileMatcher, runMatcher, type ClangAstNode, type MatchResult } from './clang-query/matcher.js';
 import { parseDoctestConsole } from './doctest/parse.js';
 
@@ -44,12 +44,13 @@ const handlers: { [K in TestCase['kind']]: TestKindHandler<K> } = {
     const stdoutOk = matches(result.stdout, test.expectedStdout);
     const stderrOk = test.expectedStderr === undefined ? true : matches(result.stderr, test.expectedStderr);
     const exitOk = test.expectedExit === undefined ? true : result.exitCode === test.expectedExit;
-    const passed = stdoutOk && stderrOk && exitOk && !result.timedOut;
+    const buildFailure = describeBuildFailure(result);
+    const passed = buildFailure === undefined && stdoutOk && stderrOk && exitOk && !result.timedOut;
     return {
       name: test.name ?? 'stdio',
       passed,
       durationMs: nowMs() - start,
-      diagnostic: passed ? undefined : describeStdioFailure(result, test, { stdoutOk, stderrOk, exitOk }),
+      diagnostic: passed ? undefined : buildFailure ?? describeStdioFailure(result, test, { stdoutOk, stderrOk, exitOk }),
     };
   },
   'stdio-file': async (em, test, plan, timeoutMs) => {
@@ -87,16 +88,17 @@ const handlers: { [K in TestCase['kind']]: TestKindHandler<K> } = {
       timeoutMs,
     });
 
-    const passed = !result.timedOut && result.stdout === expectedStdout;
+    const buildFailure = describeBuildFailure(result);
+    const passed = buildFailure === undefined && !result.timedOut && result.stdout === expectedStdout;
     return {
       name: test.name ?? 'stdio-file',
       passed,
       durationMs: nowMs() - start,
       diagnostic: passed
         ? undefined
-        : result.timedOut
+        : buildFailure ?? (result.timedOut
           ? `Timed out reading ${test.inFile}.`
-          : `stdout mismatch for ${test.inFile}:\n  expected: ${JSON.stringify(expectedStdout)}\n  actual:   ${JSON.stringify(result.stdout)}`,
+          : `stdout mismatch for ${test.inFile}:\n  expected: ${JSON.stringify(expectedStdout)}\n  actual:   ${JSON.stringify(result.stdout)}`),
     };
   },
   'clang-query': async (em, test, plan, timeoutMs) => {
@@ -216,6 +218,10 @@ const handlers: { [K in TestCase['kind']]: TestKindHandler<K> } = {
       };
     }
 
+    const buildFailure = describeBuildFailure(result);
+    if (buildFailure !== undefined) {
+      return { name: test.name ?? 'doctest', passed: false, durationMs: nowMs() - start, diagnostic: buildFailure };
+    }
     const report = parseDoctestConsole(result.stdout);
     const passed = report.status === 'success' && report.cases.failed === 0 && report.assertions.failed === 0;
     return {
@@ -226,6 +232,12 @@ const handlers: { [K in TestCase['kind']]: TestKindHandler<K> } = {
     };
   },
 };
+
+function describeBuildFailure(result: ToolResult): string | undefined {
+  if (result.timedOut || (result.phase !== 'compile' && result.phase !== 'link')) return undefined;
+  const stage = result.phase === 'compile' ? 'Compilation' : 'Linking';
+  return `${stage} failed (exit ${result.exitCode}).${result.stderr ? `\n${result.stderr}` : ''}`;
+}
 
 /**
  * Run every case in `plan`, emitting a `test-case` event after each, and
