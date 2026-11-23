@@ -52,8 +52,11 @@ Here those prerequisites are revalidated, not unlocked for the first time.
 - the official lane verifies the pinned schema-2 assets and any applicable
   exact-source producer provenance; no compulsory new release for UI changes;
 - browser E2E oficial passou sem manifest fabricado ou verificacao relaxada;
-- nenhuma fonte de `tools/emception/**` ou `@game-guild/emception-ui` foi
-  alterada;
+- no unauthorized upstream/retained-UI change; preserve the explicit narrow
+  runtime/worker exceptions and their tests recorded in part 3's governance
+  and ADRs, rather than treating an approved exception as a new blanket veto;
+- carry the accepted post-plan findings under CS-ADR-039 separately from
+  passed core evidence; no hidden skip, false academic verdict or private leak;
 - parte 3 registra `CODE-UI-07` como concluido com link ou run ID da evidencia.
 
 ## Bloqueios

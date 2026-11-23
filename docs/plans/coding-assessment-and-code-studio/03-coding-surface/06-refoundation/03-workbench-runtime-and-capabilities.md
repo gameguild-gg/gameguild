@@ -20,6 +20,21 @@ Cleanup is not complete: three anonymous listeners per cycle remain inside
 the published SDL glue (EMC-GAP-003). The real harness exits nonzero. Do not
 wire/present this as a fully accepted capability or close CODE-UX-03.
 
+Execution priority updated by explicit user instruction on 2026-11-23
+(CS-ADR-039): defer the residual SDL artifact repair until after parts 03/04.
+Continue independent textual execution and UI work, with actual graphics
+failures preserved and no claim of complete lifecycle acceptance. The
+[single ledger](../IMPLEMENTATION-STATE.md#current-priority-and-post-plan-findings---2026-11-23)
+records owners, repair oracles and non-deferrable correctness boundaries.
+
+The independent text port now has strict contract/lifecycle evidence and six
+passing real C++/WASI controls, using public compileAndRun with owned byte I/O
+(CS-ADR-040). It starts no runtime on construction, accepts interactive bytes
+after a real native prompt, and separates finite batch input/EOF from program
+output. Cold sequential controls prove cancellation/worker disposal, not a
+repeated-mount memory plateau or the production xterm/editor integration.
+Those workbench and UX03-C obligations remain next; CODE-UX-03 is still partial.
+
 ## Invariants and boundaries
 
 Apply [GOVERNANCE.md](./GOVERNANCE.md). Allowed changes are the owned surface,

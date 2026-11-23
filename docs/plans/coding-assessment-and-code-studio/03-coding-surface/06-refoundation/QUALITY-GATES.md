@@ -249,6 +249,27 @@ The current five-cycle report fails listener cleanup (EMC-GAP-003); preserve
 that nonzero result until the root cause is resolved. No required skip, relaxed
 128 MiB plateau, hidden orphan listener or canonical promotion is allowed.
 
+### Focused public text-port proof
+
+```bash
+GAMEGUILD_CODE_WORKER_BROWSER_CHANNEL=chrome node apps/web/scripts/coding-surface-program-e2e.mjs
+```
+
+Apply the same OS-headroom/CPU policy and verified assets as the graphical
+proof, without concurrent heavy builds. The command writes fresh `program-*`
+evidence and exits nonzero on a missing input/EOF/channel/compiler/timeout or
+worker-disposal oracle. One browser is used with one cold context/compiler at
+a time; each control fully closes before the next begins. Explicit collection
+avoids carrying collectible prior compiler buffers into the next cold control.
+
+The six required controls are finite batch, actual user input after a native
+prompt, empty batch/EOF, cancellation while awaiting input, compile failure and
+student-program timeout. The report binds owned source, built public SDK,
+harness and manifest hashes. A bridge's prefetch request alone is not a prompt
+or proof that the program received input. This is a local public-port proof,
+not a shell, production xterm/Monaco UI, academic verdict, persona E2E or the
+separate five-cycle same-context plateau. Keep those acceptance layers open.
+
 ## G-REGRESSION and G-FINAL
 
 ```bash

@@ -6,6 +6,12 @@ com seis etapas proprias antes da parte 4. A prova grafica local detecta a
 pendencia de cleanup `EMC-GAP-003`; nao ha aceite da nova UI de producao.
 O estado corrente e suas evidencias estao no handoff da parte 3.
 
+Priority decision on 2026-11-23: continue independent core work and carry
+deferrable findings through the part 4 handoff for repair after both plans.
+See CS-ADR-039 and the [post-plan findings](./03-coding-surface/IMPLEMENTATION-STATE.md#current-priority-and-post-plan-findings---2026-11-23).
+This permits independent implementation, not false gate completion or deferral
+of privacy, official-grade correctness, submission integrity or worker ownership.
+
 ## Objetivo
 
 Criar `@game-guild/coding-surface` como uma nova superficie React reutilizavel

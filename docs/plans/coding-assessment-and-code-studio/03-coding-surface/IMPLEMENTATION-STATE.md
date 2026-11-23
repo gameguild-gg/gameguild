@@ -2,6 +2,98 @@
 
 Last updated: 2026-11-23.
 
+## Current priority and post-plan findings - 2026-11-23
+
+- User requested commits before continuing, and explicitly prioritizes finishing
+  parts 03 and 04 over correcting deferrable runtime/enhancement findings.
+  CS-ADR-039 records this execution-order decision. The prior pending SDL
+  repair/iframe question is superseded: neither approach is being implemented.
+- Committed the preceding work separately: `2ebdabd6ae` (authorized SDK fixes),
+  `9a44da314b` (owned graphical port and proof), `92df896f3a` (evidence/decisions).
+  Pre-commit surface regression: 157 tests pass. No push or remote publication.
+- Active row: independent UX03-B text execution/input, scoped gate passed.
+  Allowed paths: owned program-session contracts/implementation/tests, package
+  exports/architecture, an isolated public-API browser fixture/harness, and
+  current plan/decision/state records. Preserve SDK/IDE/UI/compiler/presets.
+- Contract: immutable public candidate/files; separate batch and interactive
+  input/output; no academic effects; bounded preparation/program/output;
+  cancellation and actual disposal before restart. Use public orchestration,
+  not copied compiler flags or a replacement executor. Gates: strict types,
+  independent behavioral RED, G-SURFACE/lint and focused real-artifact input
+  proof under the existing OS-headroom policy. No full stack needed for this row.
+- Deferral is not a green test or approval of an unsupported capability. Continue
+  independent textual/authoring/learner/E2E work; retain actual failed reports.
+  Part 4 must carry these findings in its handoff and exclude no failing core
+  workflow silently. Security, private projection, immutable attempts, official
+  scores/release, cancellation and worker ownership remain mandatory.
+
+| Finding / owner | Disposition after parts 03 and 04 | Reopening oracle / current limitation |
+| --- | --- | --- |
+| `EMC-GAP-003` / Emception SDL artifact owner | defer artifact disposal fix; no global event interception or iframe redesign now | rerun the unchanged five-cycle graphics proof; document-listener plateau must pass; local graphics is not promoted as leak-free production support |
+| `CS-RUNTIME-UNRESOLVED-IMPORT` / Emception toolchain owner | defer general undefined-import policy investigation | reproduce undefined target and require a genuine failure without changing legitimate programs; core grading fixtures retain negative controls; any discovered false academic pass blocks that flow |
+| `EMC-GAP-001` / coding + Emception owners | retain accepted simple-type function scope; compound values later | typed arrays/matrices and actual browser/official parity; no string-encoding workaround |
+| `EMC-GAP-002` / runtime owner | retain explicitly deferred per-program RAM control | real enforceable runtime memory control; UI cannot publish an unenforced limit |
+| instructor preparation/file/assistance proposals / coding owner | optional expansion after core authoring and both plans | specify defaults, contracts and enforcement first; see the existing deferred-controls section, not new assumed product settings |
+
+### UX03-B text execution result
+
+- Implementation commit: `04374fe181`; the following documentation commit
+  records this scoped result and the accepted post-plan priority. No push.
+- Public contract compiled and three type-contract tests passed before behavior.
+  Independent RED: 23 failures among 27 behavioral tests, at the deliberately
+  unimplemented owned factory. Four validation tests already failed closed.
+  Kept `runtime/20261123-program-red.json`; no infrastructure failure is counted
+  as a behavioral oracle. Three later Auditor controls add split UTF-8 channel
+  decoding, delayed timer dispatch and pending execution ownership.
+- Implemented `createCodingProgramSession()`: immutable strictly parsed public
+  delivery/candidate, lazy boot, separate bounded preparation/program timers,
+  finite batch bytes/EOF versus interactive stdin, separate stdout/stderr,
+  bounded visible output/input and actual disposal acknowledgement. No academic
+  command, test verdict, reference solution or score is emitted.
+- It adapts process I/O around the existing public browser `compileAndRun`
+  helper, without compiler flags or another pipeline. The public browser
+  callback's numeric EOF is -1, including asynchronous EOF; the strict type
+  check caught the incompatible Promise<number|null> form before release.
+  `waitingForInput` describes the SDK's prefetch bridge, not proof that native
+  code has blocked in fd_read. No SDK source or retained UI change was needed.
+- Bound of this new proof: C++/WASI, one native source plus public headers/assets.
+  Unsupported source shapes/environments are rejected before boot, never
+  silently truncated. Existing multi-source test/official mappers are unchanged.
+  Input is capped at 64 KiB per local run; visible logs at 100000 characters;
+  actual output/time follow the published definition. RAM remains unavailable.
+- Actual local-asset proof: `runtime/program-ljMk66/report.json` passes six
+  independent controls: finite batch, user input after a real prompt, empty
+  batch/EOF with exit 3, stop while awaiting input, compiler error and an
+  infinite student's-program timeout. All finish with zero owned workers;
+  no uncaught page exceptions. Source, SDK-build, harness and manifest hashes
+  are recorded. This is port calibration, not the production xterm/editor UI,
+  persona grading flow, repeated-mount plateau or whole CODE-UX-03 acceptance.
+- Preserve earlier evidence: `program-8lQE6G` failed because its test checked
+  output immediately after the SDK prefetched stdin; the native prompt/output
+  oracle remains required. `program-8GqP4D` was stopped by the OS guard during
+  repeated compiler sessions in one context; it is not a passing runtime run.
+  The final command isolates cold controls sequentially and explicitly records
+  `repeatedMountPlateau: false`; it does not hide that separate open oracle.
+- Final resource report `runtime/20261123-program-cold-resources.json`: exit 0,
+  4757 MiB peak owned RSS, 6946 MiB minimum available versus 4772 MiB reserve,
+  zero memory PSI/OOM, 1 MiB swap, about 69 seconds, CPUs 0-7. Exactly one
+  browser/context/compiler at a time; all owned jobs/servers are closed.
+- G-SURFACE: strict types, 191 tests/zero failures/zero skips and full strict
+  lint pass; web harness strict lint passes. No API/platform/schema/client,
+  dependencies, launchers, compiler/preset/harness, SDK or preserved UI delta
+  after the preceding commits. No full API/web build or canonical promotion.
+- Auditor verified every recorded owned-source, built SDK, harness and manifest
+  hash against the final checkout. G-DOC passes 49 documents, 190 local links,
+  seven atomic tables/25 complete rows; git diff --check passes. All command
+  sessions needed by this slice are complete; no owned browser/server remains.
+
+Next exact action: compose the lazy editor/program/input/results foundation
+into the owned workbench, keeping form edits offline and contexts isolated,
+then execute the independent UX04-A task views over existing draft contracts.
+Required UX03-C repeated-mount ownership and production terminal/UI evidence
+stay open. Continue the core user journeys, not optional SDL artifact repair,
+new assistance settings or unrelated platform corrections.
+
 ## Active continuation: UX03-B graphical execution port - 2026-11-23
 
 - Entry: `b07338ce46`, clean worktree; user requests continuation of part 3.

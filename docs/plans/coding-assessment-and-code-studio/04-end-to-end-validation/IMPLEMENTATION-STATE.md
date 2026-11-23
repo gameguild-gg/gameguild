@@ -1,6 +1,18 @@
 # Estado de implementacao da parte 4
 
-Atualizado: 2026-11-21.
+Atualizado: 2026-11-23.
+
+## Post-plan debt handoff
+
+CS-ADR-039 in part 3 records the user's priority: complete core parts 03/04
+before deferrable artifact/enhancement work. Reuse the single
+[post-plan findings register](../03-coding-surface/IMPLEMENTATION-STATE.md#current-priority-and-post-plan-findings---2026-11-23),
+not a second mutable status list. Preserve failed graphics-cleanup evidence;
+do not skip a core E2E failure or report graphics as leak-free. At acceptance,
+list accepted limitations, exact failing oracles, owners and repair actions
+separately from passed workflows. Privacy, official verdicts, immutable
+submissions/release and worker ownership remain mandatory. This priority does
+not claim that CODE-UX-06 is complete or start part 4 prematurely.
 
 ## Baseline observada
 

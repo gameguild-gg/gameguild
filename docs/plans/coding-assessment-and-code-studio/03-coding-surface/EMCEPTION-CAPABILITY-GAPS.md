@@ -27,7 +27,7 @@ exports instalados antes de afirmar suporte a uma combinacao.
 | N/A | nenhuma confirmada | editor, VFS e test runner | coding-surface | `@gameguild/emception-browser` fornece `createEmception()` headless; `emception/testing` fornece planos e resultados; Monaco e a camada de edicao do host | N/A | rejeitado |
 | `EMC-GAP-001` | argumentos/retornos funcionais compostos | exercicios com arrays e matrizes | coding e coding-surface; executor oficial | installed public harness rejects compound values; official validator is scalar-only | initial simple-type scope explicitly accepted; typed compound support remains a follow-up, without string encoding | fallback aceito |
 | `EMC-GAP-002` | configurable per-exercise memory limit | publish execution requirements faithfully without claiming unenforced restrictions | coding draft and official worker | public CreateEmceptionOptions, RunOptions and NativeBuildConfig expose no per-program memory cap | explicit capability deferral approved; preserve data, no silent ignore or runtime change | escopo reduzido |
-| `EMC-GAP-003` | complete graphical-session listener teardown | safely reopen, switch candidate and unmount without retaining the former runtime | coding-surface local graphics port; independent canvas consumers | public stop can call native SDL_AppQuit, but three anonymous document mouse handlers remain in the published SDL glue without removal handles | no accepted fallback; structural product/owner choice pending; no global event interception | confirmado |
+| `EMC-GAP-003` | complete graphical-session listener teardown | safely reopen, switch candidate and unmount without retaining the former runtime | coding-surface local graphics port; independent canvas consumers | public stop can call native SDL_AppQuit, but three anonymous document mouse handlers remain in the published SDL glue without removal handles | user defers artifact repair until after parts 03/04 (CS-ADR-039); retain failing oracle and do not promote leak-free graphics | deferred / confirmed |
 
 ### `EMC-GAP-003`. Anonymous SDL document listener lifetime
 
@@ -56,10 +56,11 @@ exports instalados antes de afirmar suporte a uma combinacao.
   another application's listeners, rewriting generated glue to hide the leak,
   relaxing the oracle or claiming that deleting a canvas releases document
   closures. Native cleanup remains useful but is not complete disposal.
-- Next decision requested: coordinate an artifact-level disposal hook/fix with
-  the Emception owner, or authorize a separate feasibility analysis of a
-  disposable browsing context. No extra implementation or artifact build is
-  authorized merely by this record. No external issue has been published.
+- Current disposition: the user explicitly deferred this correction until
+  after parts 03 and 04 (CS-ADR-039). Coordinate the eventual disposal hook/fix
+  with the Emception owner and rerun the unchanged five-cycle oracle. Do not
+  start an iframe redesign, artifact build or global interception now. No
+  external issue has been published; the single ledger owns the follow-up.
 
 ### `EMC-GAP-002`. Per-exercise memory control
 

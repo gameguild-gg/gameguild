@@ -1005,6 +1005,57 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   normal source-classifier/provenance rules. This is not an SDK/IDE publication
   task, production UI cutover or automatic canonical capability promotion.
 
+## `CS-ADR-039`. Core-plan priority and explicit post-plan debt
+
+- Date: 2026-11-23. Status: accepted by explicit user instruction.
+- Decision: commit the graphical work, then prioritize completion of parts 03
+  and 04. Record deferrable findings in the single part 3 ledger and carry
+  them into the part 4 acceptance handoff. Do not expand into an upstream SDL
+  artifact repair or disposable iframe architecture now.
+- EMC-GAP-003 is deferred because native sessions/workers terminate and the
+  corrected real RSS plateau passes; the residual three anonymous mouse
+  listeners per cycle remain a reproduced lifecycle defect. Its unchanged
+  stress oracle still fails. This is not evidence of leak-free production
+  graphics or permission to advertise unverified runtime combinations.
+- Preserve all mandatory core correctness/privacy/ownership gates. A false
+  academic verdict, private-data leak, cross-context mutation, unbounded active
+  worker or incorrect official submission/release is not deferrable. An
+  independent row may proceed without falsely closing the whole prior phase.
+- Scope: temporal prioritization and transparent known-debt handoff, not type/
+  lint/provenance relaxation, skipped assertions, canonical status promotion,
+  upstream modification authorization or automatic human UX acceptance.
+- The ledger lists each owner, observable repair oracle and deferred behavior.
+  Closing either plan must distinguish implemented core evidence from accepted
+  optional limitations and unresolved findings. New critical evidence revisits
+  the classification rather than hiding a failure to preserve the schedule.
+- Supersedes: the pending repair-versus-iframe question in CS-ADR-038 and its
+  immediate-next-action proposal, not the historical failed evidence.
+
+## `CS-ADR-040`. Public program orchestration with owned input channels
+
+- Date: 2026-11-23. Status: implemented within independent UX03-B scope.
+- Use the existing public browser compileAndRun helper and adapt its public
+  run I/O callbacks. Preserve its presets/flags and phases. The adapter adds
+  no compiler, judge, private import, source rewrite or upstream modification.
+- Capture an exact, strictly parsed public candidate. This new bounded port
+  proves C++/WASI with one native source plus headers/assets; unsupported shapes
+  fail before boot. Existing multi-source official/test paths are unchanged.
+- Separate finite exact UTF-8 batch bytes and interactive writes/EOF. Input is
+  at most 64 KiB per local run. Stdout/stderr decode and retain independently;
+  the published aggregate byte cap and a 100000-character presentation bound
+  are distinct. Use the public callback's numeric -1 for asynchronous EOF.
+- SDK stdin is prefetched. Input demand is bridge state, not evidence of
+  native fd_read blocking. A real prompt must arrive before the browser input
+  control supplies bytes; a batch success cannot substitute for that control.
+- Separate bounded preparation and student execution; disposal aborts pending
+  input and prevents restart until both execution and late boot/cleanup drain.
+  Never translate a local process exit into a case verdict or academic score.
+- Independent contracts, behavioral RED, three Auditor negatives, strict
+  types/lint and all 191 surface tests pass. Six real cold-context controls
+  pass under OS-headroom monitoring. Earlier timing/resource failures remain
+  recorded. Cold controls do not prove a repeated-mount memory plateau or the
+  production terminal/workbench/persona flow; those later obligations stay open.
+
 ## Modelo para novas decisoes
 
 ```text

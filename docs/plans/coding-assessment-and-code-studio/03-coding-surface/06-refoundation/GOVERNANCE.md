@@ -166,6 +166,13 @@ An external failure is recorded with its reproducer and owner. It is not waived
 or relabeled green; unaffected checks may proceed within their own boundary.
 Do not broaden this workstream into unrelated authentication/economy fixes.
 
+CS-ADR-039 records the user's explicit core-plan priority: defer noncritical
+findings in the single ledger until after parts 03/04, retain failed evidence
+and continue independent core work. It is not a blanket gate waiver. Private
+projection, official verdict/submission/release correctness and actual worker
+ownership remain mandatory; an affected optional capability is not silently
+promoted while its recorded oracle fails.
+
 ## Negative constraints
 
 - No new explicit/implicit `any`, unvalidated unsafe casts or double assertions
