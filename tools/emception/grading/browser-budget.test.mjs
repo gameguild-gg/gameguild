@@ -4,21 +4,30 @@ import { readFileSync } from 'node:fs';
 import { createRequire, registerHooks } from 'node:module';
 
 const sourceUrl = new URL('./browser.ts', import.meta.url).href;
+const functionSupportSpecifier = '../../../packages/features/coding/src/native-function-support';
+const functionSupportUrl = new URL(`${functionSupportSpecifier}.ts`, sourceUrl).href;
 const require = createRequire(new URL('../package.json', import.meta.url));
 const typescript = require('typescript');
 const fixtureKey = '__codingWorkerBudgetFixture';
 const mockModules = new Map([
   ['@gameguild/emception-browser', `export const createEmception = async () => { globalThis.${fixtureKey}.boots++; return globalThis.${fixtureKey}.api; };`],
   ['emception/testing', `export const runTests = (...args) => globalThis.${fixtureKey}.runTests(...args);
-    export const withWorkspaceOverlay = (...args) => globalThis.${fixtureKey}.withOverlay(...args);`],
+    export const withWorkspaceOverlay = (...args) => globalThis.${fixtureKey}.withOverlay(...args);
+    export const generateDoctestHarness = (signature, cases) => ({filename: 'unused.cpp', source: 'public harness: ' + JSON.stringify({signature, cases})});`],
   ['emception', `export const ToolchainPreset = {CMake: 'cmake', Python: 'python'};
     export const resolveBuild = input => { globalThis.${fixtureKey}.build = input; return {toolchain: input.preset, ...input.callsite}; };`],
-  ['../../../packages/infrastructure/ui-emception/src/assessment/plan', `export const buildAssessmentExecutionPlan = () => ({plan: {cases: [{}]}, overlay: []});`],
+  ['../../../packages/infrastructure/ui-emception/src/assessment/plan', `export const buildAssessmentExecutionPlan = definition => {
+    const tests = [...(definition.Tests?.Public ?? []), ...(definition.Tests?.Private ?? [])];
+    if (!tests.length) return {plan: {cases: [{}]}, overlay: []};
+    return {plan: {cases: tests.map((test, index) => ({kind: 'doctest', name: test.Name, weight: test.Weight, sourceFiles: ['/home/user/retained-' + index + '.cpp']}))},
+      overlay: tests.map((_test, index) => ({path: '/home/user/retained-' + index + '.cpp', content: 'retained harness'}))};
+  };`],
   ['../../../packages/infrastructure/ui-emception/src/assessment/presets', `export const createAssessmentWorkspaceConfig = language => { globalThis.${fixtureKey}.language = language; return {compile: {toolchain: language}}; };`],
 ]);
 const hooks = registerHooks({
   resolve(specifier, context, next) {
     if (context.parentURL === sourceUrl) {
+      if (specifier === functionSupportSpecifier) return { url: functionSupportUrl, shortCircuit: true };
       if (specifier === './execution-budget.js') {
         return { url: new URL('./execution-budget.ts', import.meta.url).href, shortCircuit: true };
       }
@@ -26,22 +35,47 @@ const hooks = registerHooks({
         return { url: `data:text/javascript,${encodeURIComponent(mockModules.get(specifier))}`, shortCircuit: true };
       }
     }
+    if (context.parentURL === functionSupportUrl && specifier === './contracts') {
+      return { url: new URL('../../../packages/features/coding/src/contracts.ts', sourceUrl).href, shortCircuit: true };
+    }
     return next(specifier, context);
   },
 });
 const { executeCodeAssessment } = await import('./browser.ts');
 hooks.deregister();
 
-test('worker: artifact entry does not acquire feature implementation dependencies', () => {
-  const source = typescript.createSourceFile('browser.ts', readFileSync(new URL(sourceUrl), 'utf8'),
+function assertWorkerFeatureImports(text) {
+  const source = typescript.createSourceFile('browser.ts', text,
     typescript.ScriptTarget.Latest, true);
   const featuresRoot = new URL('../../../packages/features/', import.meta.url).href;
   for (const statement of source.statements) {
     if (!typescript.isImportDeclaration(statement) || statement.importClause?.isTypeOnly) continue;
     const specifier = statement.moduleSpecifier.text;
+    if (specifier === functionSupportSpecifier) continue;
     assert.ok(!specifier.startsWith('@game-guild/')
       && !new URL(specifier, sourceUrl).href.startsWith(featuresRoot), `Feature runtime import: ${specifier}`);
   }
+}
+
+test('worker: only the approved pure function composer may be a feature runtime dependency', () => {
+  assertWorkerFeatureImports(readFileSync(new URL(sourceUrl), 'utf8'));
+  const pure = typescript.createSourceFile('native-function-support.ts', readFileSync(new URL(functionSupportUrl), 'utf8'),
+    typescript.ScriptTarget.Latest, true);
+  for (const statement of pure.statements) {
+    if (!typescript.isImportDeclaration(statement) || statement.importClause?.isTypeOnly) continue;
+    assert.equal(statement.moduleSpecifier.text, './contracts');
+  }
+  const contracts = typescript.createSourceFile('contracts.ts',
+    readFileSync(new URL('../../../packages/features/coding/src/contracts.ts', sourceUrl), 'utf8'),
+    typescript.ScriptTarget.Latest, true);
+  assert.equal(contracts.statements.some(typescript.isImportDeclaration), false);
+});
+
+test('worker: import guard rejects whole-domain and surface feature dependencies', () => {
+  for (const specifier of ['@game-guild/coding', '@game-guild/coding-surface', '../../../packages/features/coding/src/index']) {
+    assert.throws(() => assertWorkerFeatureImports(`import {anything} from '${specifier}';`), /Feature runtime import/);
+  }
+  assert.doesNotThrow(() => assertWorkerFeatureImports(`import {composeCodingNativeFunctionSupport} from '${functionSupportSpecifier}';`));
 });
 
 const request = {
@@ -50,13 +84,22 @@ const request = {
 };
 const result = { stdout: '', stderr: '', timedOut: false, exitCode: 0, durationMs: 1, phase: 'run' };
 
-function setup(compile) {
+function setup(compile, automaticPhases = true) {
   let disposed = 0;
   let invoked = 0;
   const fixture = {
     boots: 0,
     api: {
-      compileAndRun: async (...args) => { invoked++; return compile(...args); },
+      compileAndRun: async (...args) => {
+        invoked++;
+        const observed = await compile(...args);
+        if (automaticPhases) {
+          args[1]?.onPhase?.('compile');
+          if (observed.phase === 'link' || observed.phase === 'run') args[1]?.onPhase?.('link');
+          if (observed.phase === 'run') args[1]?.onPhase?.('run');
+        }
+        return observed;
+      },
       run: async () => result,
       workspace: { setBuild: async () => undefined, writeFile: async () => undefined },
       dispose: () => { disposed++; },
@@ -118,6 +161,71 @@ test('worker: successful result retains the existing boolean receipt and one dis
   const state = setup(async () => result);
   assert.deepEqual(await executeCodeAssessment(request), [true]);
   assert.equal(state.disposed(), 1);
+});
+
+function functionRequest(language = 'cpp') {
+  const input = configuredRequest();
+  input.definition.ExerciseType = 'function';
+  input.definition.Environment.Language = language;
+  input.definition.Execution.Toolchain.Key = `${language}-emception`;
+  const group = {
+    kind: 'functional', Name: 'public function', Weight: 1.25,
+    Function: { FunctionName: 'sum', Parameters: [{ Name: 'left', Type: 'integer' }, { Name: 'right', Type: 'integer' }], ReturnType: { Type: 'integer' } },
+    Cases: [{ Inputs: [{ Type: 'integer', Content: 2 }, { Type: 'integer', Content: 3 }], Expected: { Type: 'integer', Content: 5 } }],
+  };
+  input.definition.Tests = { Public: [group], Private: [{ ...structuredClone(group), Name: 'private function', Weight: 2.5 }] };
+  return input;
+}
+
+for (const language of ['c', 'cpp']) {
+  test(`function support: official ${language} regenerates transient helpers and retains group receipts`, async () => {
+    const state = setup(async () => result);
+    let overlay;
+    state.fixture.withOverlay = async (_workspace, files, operation) => { overlay = files; return operation(); };
+    state.fixture.runTests = async (_api, plan) => {
+      assert.deepEqual(plan.cases.map(item => item.name), ['public function', 'private function']);
+      assert.deepEqual(plan.cases.map(item => item.weight), [1.25, 2.5]);
+      assert.deepEqual(plan.cases.map(item => item.sourceFiles), [
+        [`/tmp/gameguild-function-0.${language === 'c' ? 'c' : 'cpp'}`],
+        [`/tmp/gameguild-function-1.${language === 'c' ? 'c' : 'cpp'}`],
+      ]);
+      return { cases: [{ passed: true }, { passed: false }] };
+    };
+    assert.deepEqual(await executeCodeAssessment(functionRequest(language)), [true, false]);
+    assert.equal(overlay.length, 2);
+    assert.ok(overlay.every(file => file.path.startsWith('/tmp/gameguild-function-')));
+    assert.ok(overlay.every(file => file.content.includes('__attribute__((weak)) int main(void)')));
+    assert.ok(overlay.every(file => file.content.includes('sum(int,int) __attribute__((weak))')));
+    assert.equal(overlay.some(file => file.content.includes('retained harness')), false);
+    assert.equal(state.disposed(), 1);
+  });
+}
+
+test('function support: invalid frozen function values fail before runtime boot', async () => {
+  const state = setup(async () => result);
+  const input = functionRequest();
+  input.definition.Tests.Public[0].Cases[0].Expected.Content = '5; injected()';
+  await assert.rejects(executeCodeAssessment(input), /function.*value|literal|integer/i);
+  assert.equal(state.fixture.boots, 0);
+});
+
+test('function support: graphics execution is not silently treated as WASI function testing', async () => {
+  const state = setup(async () => result);
+  const input = functionRequest();
+  Object.assign(input.definition.Environment, { Runtime: 'sdl3', Tools: 'emcc', LibBundle: 'sdl3' });
+  await assert.rejects(executeCodeAssessment(input), /WASI/);
+  assert.equal(state.fixture.boots, 0);
+});
+
+test('function support: historical definitions retain their original execution mapper', async () => {
+  const state = setup(async () => result);
+  const configured = functionRequest();
+  const input = { ...configured, definition: { ...configured.definition, Execution: undefined, Environment: { Language: 'cpp' } } };
+  let paths;
+  state.fixture.withOverlay = async (_workspace, files, operation) => { paths = files.map(file => file.path); return operation(); };
+  state.fixture.runTests = async () => ({ cases: [{ passed: true }, { passed: false }] });
+  assert.deepEqual(await executeCodeAssessment(input), [true, false]);
+  assert.deepEqual(paths, ['/home/user/retained-0.cpp', '/home/user/retained-1.cpp']);
 });
 
 for (const phase of [undefined, null, 'unknown', 1]) {
@@ -204,18 +312,90 @@ test('WB-B worker: enforces the frozen output budget, not its larger legacy defa
   assert.equal(state.disposed(), 1);
 });
 
-test('WB-B worker: a hung compiler is cancelled at the frozen time limit', async context => {
-  context.mock.timers.enable({ apis: ['setTimeout'] });
+test('phase budgets worker: a hung compiler uses the infrastructure deadline, not the exercise deadline', async context => {
+  context.mock.timers.enable({ apis: ['Date', 'setTimeout'], now: 0 });
   const state = setup(() => new Promise(() => undefined));
   const pending = executeCodeAssessment(configuredRequest());
-  const rejected = assert.rejects(pending, /runtime.*budget/);
+  const rejected = assert.rejects(pending, /preparation.*budget/);
   await new Promise(setImmediate);
   context.mock.timers.tick(1379);
   await new Promise(setImmediate);
   const disposedAtLimit = state.disposed();
-  context.mock.timers.tick(30_000);
+  context.mock.timers.tick(120_000 - 1379);
   await rejected;
-  assert.equal(disposedAtLimit, 1);
+  assert.equal(disposedAtLimit, 0);
+  assert.equal(state.disposed(), 1);
+});
+
+test('phase budgets worker: preparation does not spend the frozen student allowance', async context => {
+  context.mock.timers.enable({ apis: ['Date', 'setTimeout'], now: 0 });
+  const state = setup(async (_source, options) => {
+    options.onPhase('compile'); context.mock.timers.tick(2000);
+    options.onPhase('link'); context.mock.timers.tick(2000);
+    options.onPhase('run'); context.mock.timers.tick(1378);
+    return result;
+  }, false);
+  assert.deepEqual(await executeCodeAssessment(configuredRequest()), [true]);
+  assert.equal(state.disposed(), 1);
+});
+
+test('phase budgets worker: a hung student is cancelled relative to the run start', async context => {
+  context.mock.timers.enable({ apis: ['Date', 'setTimeout'], now: 0 });
+  const state = setup((_source, options) => {
+    options.onPhase('compile'); context.mock.timers.tick(2000);
+    options.onPhase('link'); options.onPhase('run');
+    return new Promise(() => undefined);
+  }, false);
+  const pending = executeCodeAssessment(configuredRequest());
+  const rejected = assert.rejects(pending, /runtime.*budget/);
+  await new Promise(setImmediate);
+  context.mock.timers.tick(1378);
+  const beforeDeadline = state.disposed();
+  context.mock.timers.tick(1);
+  await rejected;
+  assert.equal(beforeDeadline, 0);
+  assert.equal(state.disposed(), 1);
+});
+
+test('phase budgets worker: fallback raw compiler calls are not charged a nested student budget', async context => {
+  context.mock.timers.enable({ apis: ['Date', 'setTimeout'], now: 0 });
+  const state = setup(async (_source, options) => {
+    options.onPhase('compile');
+    await state.fixture.api.run('clang', [], options);
+    options.onPhase('link'); options.onPhase('run');
+    return result;
+  }, false);
+  state.fixture.api.run = async () => { context.mock.timers.tick(2000); return result; };
+  assert.deepEqual(await executeCodeAssessment(configuredRequest()), [true]);
+  assert.equal(state.disposed(), 1);
+});
+
+test('phase budgets worker: missing lifecycle metadata fails closed', async () => {
+  const state = setup(async () => result, false);
+  await assert.rejects(executeCodeAssessment(configuredRequest()), /execution phase/);
+  assert.equal(state.disposed(), 1);
+});
+
+test('phase budgets worker: failed pending compilation cannot let a later raw tool bypass cancellation', async context => {
+  context.mock.timers.enable({ apis: ['Date', 'setTimeout'], now: 0 });
+  const state = setup((_source, options) => {
+    options.onPhase('compile');
+    return new Promise(() => undefined);
+  }, false);
+  let rawCalls = 0;
+  state.fixture.api.run = async () => { rawCalls++; return result; };
+  state.fixture.runTests = async api => {
+    try { await api.compileAndRun(undefined, {}); } catch { /* The engine records the failed case. */ }
+    try { await api.run('clang-query', []); } catch { /* Further tools must remain cancelled. */ }
+    return { cases: [{ passed: false }] };
+  };
+  const rejected = assert.rejects(executeCodeAssessment(configuredRequest()), /preparation budget/);
+  await new Promise(setImmediate);
+  context.mock.timers.tick(120_000);
+  await rejected;
+  await new Promise(setImmediate);
+  assert.equal(rawCalls, 0);
+  assert.equal(state.disposed(), 1);
 });
 
 for (const mutation of ['runtime', 'tools', 'version', 'memory', 'missing-execution', 'missing-file', 'private-entry', 'merged-file-count',

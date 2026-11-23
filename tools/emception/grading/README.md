@@ -35,3 +35,19 @@ handler resolution, separate asset selection, and rejection of incompatible
 identities. Native assessment execution is required for accepting the current
 runtime. Validation output does not automatically promote the canonical Quiz
 and Grading capability snapshot.
+
+## Execution budgets
+
+The current worker applies the frozen exercise time limit only from the
+public facade's `run` start notification. Compilation and linking share a
+separate 120-second infrastructure deadline per invocation, never per source
+file. Missing or out-of-order stage notifications fail closed. This avoids
+charging toolchain preparation to a learner or guessing stages from output.
+The existing aggregate output-byte guard spans all stages, and the outer
+five-minute worker watchdog remains unchanged. Neither budget can run
+unboundedly. Raw tool operations retain their previous guard.
+
+The worker bundle must include the callback-capable public facade from the
+same checkout. This is a local consumer build, not a new IDE/toolchain release.
+Historical snapshots/identities and retained runtime deployments are not
+rewritten; retained runtime bundles continue to use their own policy.

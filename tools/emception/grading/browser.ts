@@ -1,10 +1,12 @@
 import { createEmception } from '@gameguild/emception-browser';
-import { runTests, withWorkspaceOverlay } from 'emception/testing';
+import { generateDoctestHarness, runTests, withWorkspaceOverlay } from 'emception/testing';
 import { resolveBuild, ToolchainPreset, type TestPlan } from 'emception';
 import { buildAssessmentExecutionPlan } from '../../../packages/infrastructure/ui-emception/src/assessment/plan';
 import { createAssessmentWorkspaceConfig, type CodingLanguage } from '../../../packages/infrastructure/ui-emception/src/assessment/presets';
-import type { CodingAssessmentDefinition } from '../../../packages/infrastructure/ui-emception/src/assessment/types';
-import { executeBudgetedCode, validateCodeExecutionBudget, type CodeBudgetedOperation, type CodeExecutionBudget } from './execution-budget.js';
+import type { CodingAssessmentDefinition, CodingAssessmentParameter } from '../../../packages/infrastructure/ui-emception/src/assessment/types';
+import { composeCodingNativeFunctionSupport } from '../../../packages/features/coding/src/native-function-support';
+import type { CodingFunctionTest, CodingScalarType, CodingScalarValue } from '../../../packages/features/coding/src/contracts';
+import { CODE_PREPARATION_BUDGET, executeBudgetedCode, validateCodeExecutionBudget, type CodeBudgetedOperation, type CodeExecutionBudget } from './execution-budget.js';
 import { CODE_TOOLCHAIN_V3 } from './toolchain-binding.mjs';
 
 const EXECUTION_BUDGET = Object.freeze({ timeLimitMs: 30_000, outputLimitBytes: 2_000_000 });
@@ -49,6 +51,7 @@ export async function executeCodeAssessment(request: CodeWorkerRequest): Promise
   if (build.toolchain === ToolchainPreset.CMake || build.toolchain === ToolchainPreset.Python) {
     throw new Error('This Code adapter requires a native compilation preset.');
   }
+  const execution = composeOfficialFunctionPlan(definition, configuration, canonical);
   const api = await createEmception({ tty: 'none', manifestUrl: '/cdn/manifest.json' });
   let disposed = false;
   const dispose = () => {
@@ -61,10 +64,10 @@ export async function executeCodeAssessment(request: CodeWorkerRequest): Promise
     let infrastructureFailure: unknown;
     let rejectFailure: (error: unknown) => void = () => undefined;
     const failure = new Promise<never>((_resolve, reject) => { rejectFailure = reject; });
-    const protect = async (execute: CodeBudgetedOperation['execute']) => {
+    const protect = async (execute: CodeBudgetedOperation['execute'], preparing = false) => {
       if (failed) throw infrastructureFailure;
       try {
-        return await executeBudgetedCode(budget, { execute, dispose });
+        return await executeBudgetedCode(budget, { execute, dispose }, preparing ? CODE_PREPARATION_BUDGET : undefined);
       } catch (error) {
         failed = true;
         infrastructureFailure = error;
@@ -73,17 +76,29 @@ export async function executeCodeAssessment(request: CodeWorkerRequest): Promise
       }
     };
     const compile = api.compileAndRun.bind(api);
-    api.compileAndRun = (source, options) => protect(async onOutput => {
-      const result = await compile(source, { ...options, stdout: onOutput, stderr: onOutput });
-      if (result.phase !== 'compile' && result.phase !== 'link' && result.phase !== 'run') {
-        throw new Error('Code runtime did not report a valid execution phase.');
+    let compiling = false;
+    api.compileAndRun = (source, options) => protect(async (onOutput, onPhase) => {
+      compiling = true;
+      try {
+        const result = await compile(source, { ...options, stdout: onOutput, stderr: onOutput,
+          onPhase: phase => { onPhase(phase); options?.onPhase?.(phase); },
+        });
+        if (result.phase !== 'compile' && result.phase !== 'link' && result.phase !== 'run') {
+          throw new Error('Code runtime did not report a valid execution phase.');
+        }
+        return result;
+      } finally {
+        compiling = false;
       }
-      return result;
-    });
+    }, true);
     const run = api.run.bind(api);
-    api.run = (command, argv, options) => protect(onOutput => run(command, argv, {
-      ...options, stdout: onOutput, stderr: onOutput,
-    }));
+    // The source-text facade delegates to api.run. Its outer compile guard
+    // already observes the streams/stages; a nested student timer is incorrect.
+    api.run = (command, argv, options) => {
+      if (failed) return Promise.reject(infrastructureFailure);
+      if (compiling) return run(command, argv, options);
+      return protect(onOutput => run(command, argv, { ...options, stdout: onOutput, stderr: onOutput }));
+    };
     await api.workspace.setBuild(build);
     for (const [path, file] of Object.entries(files)) {
       const data = file.encoding === 'base64'
@@ -91,7 +106,6 @@ export async function executeCodeAssessment(request: CodeWorkerRequest): Promise
         : file.content;
       await api.workspace.writeFile(path, data);
     }
-    const execution = buildAssessmentExecutionPlan(definition, 'full');
     // Build paths must refer to exactly the persisted workspace files. Header files
     // are available to includes, but are not compiled as translation units.
     const plan: TestPlan = {
@@ -99,10 +113,9 @@ export async function executeCodeAssessment(request: CodeWorkerRequest): Promise
       build,
       timeoutMsPerCase: budget.timeLimitMs,
     };
-    const overlay = execution.overlay.map((file) => ({ ...file, path: canonical(file.path) }));
     // A terminated runtime cannot restore its scratch VFS. Failure must settle
     // independently of pending overlay cleanup; the host then closes the context.
-    const report = await Promise.race([failure, withWorkspaceOverlay(api.workspace, overlay,
+    const report = await Promise.race([failure, withWorkspaceOverlay(api.workspace, execution.overlay,
       () => runTests(api, plan))]);
     // The reusable preview engine represents errors as failed cases. Official
     // grading must distinguish a failed student test from unavailable execution.
@@ -111,6 +124,71 @@ export async function executeCodeAssessment(request: CodeWorkerRequest): Promise
     return report.cases.map((test) => test.passed);
   } finally {
     dispose();
+  }
+}
+
+function composeOfficialFunctionPlan(
+  definition: CodingAssessmentDefinition,
+  configuration: PublishedExecutionConfiguration | undefined,
+  canonical: (path: string) => string,
+) {
+  const execution = buildAssessmentExecutionPlan(definition, 'full');
+  const tests = [...(definition.Tests?.Public ?? []), ...(definition.Tests?.Private ?? [])];
+  const generated: { path: string; content: string }[] = [];
+  const replaced = new Set<string>();
+  const cases = execution.plan.cases.map((planCase, index) => {
+    const test = tests[index];
+    if (!configuration || test?.kind !== 'functional') return planCase;
+    if (configuration.environment.runtime !== 'wasi') throw new TypeError('Native function tests require the WASI runtime.');
+    const source: Pick<CodingFunctionTest, 'function' | 'cases'> = {
+      function: {
+        name: test.Function.FunctionName,
+        parameters: (test.Function.Parameters ?? []).map(parameter => ({ name: parameter.Name, type: parameter.Type })),
+        returnType: test.Function.ReturnType.Type,
+      },
+      cases: test.Cases.map((item, position) => ({
+        id: `case-${position}`, inputs: item.Inputs.map(nativeScalar), expected: nativeScalar(item.Expected),
+      })),
+    };
+    const language = configuration.environment.language;
+    const file = language === 'c'
+      ? composeCodingNativeFunctionSupport({ language, index, test: source })
+      : composeCodingNativeFunctionSupport({ language, index, test: source,
+        createCppHarness: bridgeSymbol => generateDoctestHarness({
+          functionName: bridgeSymbol,
+          parameters: source.function.parameters.map(parameter => ({ name: parameter.name, type: harnessType(parameter.type), content: undefined })),
+          returnType: { type: harnessType(source.function.returnType), content: undefined },
+        }, source.cases.map(item => ({
+          Inputs: item.inputs.map(value => ({ type: harnessType(value.type), content: value.value })),
+          Expected: { type: harnessType(item.expected.type), content: item.expected.value },
+        })), { index, name: bridgeSymbol }).source,
+      });
+    if (planCase.kind !== 'doctest') throw new Error('Code function test mapping is inconsistent.');
+    for (const path of planCase.sourceFiles) replaced.add(path);
+    generated.push(file);
+    return { ...planCase, sourceFiles: [file.path] };
+  });
+  return {
+    plan: { ...execution.plan, cases },
+    overlay: [...execution.overlay.filter(file => !replaced.has(file.path)).map(file => ({ ...file, path: canonical(file.path) })), ...generated],
+  };
+}
+
+function nativeScalar(parameter: CodingAssessmentParameter): CodingScalarValue {
+  const value = parameter.Content;
+  if (parameter.Type === 'integer' && typeof value === 'number') return { type: 'integer', value };
+  if (parameter.Type === 'float' && typeof value === 'string') return { type: 'float', value };
+  if (parameter.Type === 'boolean' && typeof value === 'boolean') return { type: 'boolean', value };
+  if (parameter.Type === 'string' && typeof value === 'string') return { type: 'string', value };
+  throw new TypeError('Native function value does not match its declared type.');
+}
+
+function harnessType(type: CodingScalarType): 'Integer' | 'Float' | 'Boolean' | 'String' {
+  switch (type) {
+    case 'integer': return 'Integer';
+    case 'float': return 'Float';
+    case 'boolean': return 'Boolean';
+    case 'string': return 'String';
   }
 }
 
