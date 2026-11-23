@@ -35,6 +35,23 @@ describe('coding surface architecture', () => {
     );
     expect(exported).toContain('./authoring-persistence');
     expect(exported).toContain('./authoring-persistence-types');
+    expect(exported).toContain('./runtime-session');
+    expect(exported).toContain('./runtime-types');
+  });
+
+  it('keeps runtime acquisition lazy and outside academic/host commands', () => {
+    for (const name of ['runtime-session.ts', 'runtime-types.ts']) {
+      const source = readFileSync(join(import.meta.dirname, name), 'utf8');
+      const file = ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true);
+      for (const statement of file.statements) {
+        if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) continue;
+        const specifier = statement.moduleSpecifier.text;
+        expect(['@game-guild/coding', '@gameguild/emception-browser', 'emception', './runtime-types']).toContain(specifier);
+        if (specifier !== '@game-guild/coding') expect(statement.importClause?.isTypeOnly).toBe(true);
+      }
+      expect(source).not.toMatch(/\b(?:localStorage|sessionStorage|indexedDB|new\s+Worker)\b/);
+      expect(source).not.toMatch(/\b(?:submit|release|grantPermission|fetchAssessment)\s*\(/);
+    }
   });
 });
 

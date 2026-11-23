@@ -3,6 +3,8 @@ export * from './authoring-persistence-types';
 export * from './coding-surface';
 export * from './execution-plan';
 export * from './profile-registry';
+export * from './runtime-session';
+export * from './runtime-types';
 export * from './session';
 export * from './storage';
 export * from './test-results-panel';
