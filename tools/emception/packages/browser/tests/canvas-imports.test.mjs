@@ -20,7 +20,7 @@ const text = (value) => {
 };
 const section = (id, payload) => [id, ...bytes(payload.length), ...payload];
 
-function applicationWasm(profile, importedName = 'glBindBuffer') {
+function applicationWasm(profile, importedName = 'glBindBuffer', includeQuit = false) {
   const sdl = profile === 'sdl3-runtime';
   const types = [
     4,
@@ -32,21 +32,23 @@ function applicationWasm(profile, importedName = 'glBindBuffer') {
   const init = [0, 0x41, ...bytes(34962), 0x41, 7, 0x10, 0, 0x41, 0, 0x0b];
   const iterate = [0, 0x41, 1, 0x0b];
   const exports = sdl
-    ? [3, ...text('memory'), 2, 0, ...text('SDL_AppInit'), 0, 1, ...text('SDL_AppIterate'), 0, 2]
+    ? [includeQuit ? 4 : 3, ...text('memory'), 2, 0, ...text('SDL_AppInit'), 0, 1, ...text('SDL_AppIterate'), 0, 2,
+      ...(includeQuit ? [...text('SDL_AppQuit'), 0, 3] : [])]
     : [2, ...text('memory'), 2, 0, ...text('main'), 0, 1];
   return new Uint8Array([
     0, 97, 115, 109, 1, 0, 0, 0,
     ...section(1, types),
     ...section(2, [1, ...text('env'), ...text(importedName), 0, 0]),
-    ...section(3, sdl ? [2, 1, 2] : [1, 3]),
+    ...section(3, sdl ? includeQuit ? [3, 1, 2, 0] : [2, 1, 2] : [1, 3]),
     ...section(5, [1, 0, 1]),
     ...section(7, exports),
-    ...section(10, sdl ? [2, ...bytes(init.length), ...init, ...bytes(iterate.length), ...iterate]
+    ...section(10, sdl ? [includeQuit ? 3 : 2, ...bytes(init.length), ...init, ...bytes(iterate.length), ...iterate,
+      ...(includeQuit ? [8, 0, 0x20, 0, 0x20, 1, 0x10, 0, 0x0b] : [])]
                       : [1, ...bytes(init.length), ...init]),
   ]);
 }
 
-function fixture(profile, importedName) {
+function fixture(profile, importedName, includeQuit) {
   const forwarded = [];
   const revoked = [];
   const artifact = {
@@ -57,7 +59,7 @@ function fixture(profile, importedName) {
     runtimePath: `/usr/lib/emscripten/${profile}.mjs`,
     wasmPath: '/workspace/main.wasm',
     runtimeGlue: new Uint8Array(),
-    wasm: applicationWasm(profile, importedName),
+    wasm: applicationWasm(profile, importedName, includeQuit),
   };
   const dependencies = {
     createModuleUrl: () => 'memory:canvas-import-regression',
@@ -129,5 +131,17 @@ test('a real runtime trap rejects startup instead of being treated as a main-loo
   const trap = new WebAssembly.RuntimeError('unreachable');
   dependencies.importModule = async () => ({ default: async () => ({ _main() { throw trap; } }) });
   await assert.rejects(startCanvasArtifact(artifact, { canvas: { width: 800, height: 600 } }, dependencies), (error) => error === trap);
+  assert.deepEqual(revoked, ['memory:canvas-import-regression']);
+});
+
+test('stopping the SDL callback lifecycle invokes native cleanup exactly once', async (t) => {
+  animationFrames(t);
+  const { artifact, dependencies, forwarded, revoked } = fixture('sdl3-runtime', 'glBindBuffer', true);
+  assert.equal(WebAssembly.validate(artifact.wasm), true);
+  const session = await startCanvasArtifact(artifact, { canvas: { width: 320, height: 180 } }, dependencies);
+  assert.deepEqual(forwarded, [[34962, 7]]);
+  session.stop();
+  session.stop();
+  assert.deepEqual(forwarded, [[34962, 7], [0, 1]]);
   assert.deepEqual(revoked, ['memory:canvas-import-regression']);
 });

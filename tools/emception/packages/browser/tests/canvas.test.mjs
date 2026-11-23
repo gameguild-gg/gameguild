@@ -91,3 +91,19 @@ test('canvas runtime starts and disposes through the generated module factory', 
   session.stop();
   assert.equal(pauseCount, 1);
 });
+
+test('canvas disposal still revokes its owned URL when the module cleanup throws', async () => {
+  const failure = new Error('synthetic pause failure');
+  const revoked = [];
+  const artifact = { runtimeProfile: 'raylib-runtime', runtimeGlue: new Uint8Array(), wasm: new Uint8Array() };
+  const session = await startCanvasArtifact(artifact, { canvas: { width: 320, height: 180 } }, {
+    createModuleUrl: () => 'memory:disposal-failure',
+    revokeModuleUrl: url => revoked.push(url),
+    importModule: async () => ({ default: async () => ({
+      callMain() {}, pauseMainLoop() { throw failure; },
+    }) }),
+  });
+  assert.throws(() => session.stop(), error => error === failure);
+  session.stop();
+  assert.deepEqual(revoked, ['memory:disposal-failure']);
+});

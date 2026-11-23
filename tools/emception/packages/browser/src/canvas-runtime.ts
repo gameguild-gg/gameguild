@@ -57,7 +57,11 @@ function startEntrypoint(
                 if (Number(result) === 0) frame = requestAnimationFrame(step);
             };
             frame = requestAnimationFrame(step);
-            return () => cancelAnimationFrame(frame);
+            return () => {
+                cancelAnimationFrame(frame);
+                const quit = callable(rawExports, 'SDL_AppQuit');
+                if (quit) Reflect.apply(quit, rawExports, [0, 1]);
+            };
         }
     }
 
@@ -79,6 +83,7 @@ function startEntrypoint(
 function canvasInstantiation(
     artifact: CanvasArtifact,
     onOutput: (text: string) => void,
+    onError: (text: string) => void,
     capture: { exports?: WebAssembly.Exports; memory: WebAssembly.Memory | null },
     fail: (error: unknown) => void,
 ): (imports: WebAssembly.Imports, receive: (instance: WebAssembly.Instance) => void) => WebAssembly.Exports {
@@ -96,7 +101,7 @@ function canvasInstantiation(
             ...imports,
             env: environment,
             ...(artifact.runtimeProfile === 'sdl3-runtime' ? {
-                wasi_snapshot_preview1: createCanvasWasiImports(() => capture.memory, onOutput),
+                wasi_snapshot_preview1: createCanvasWasiImports(() => capture.memory, onOutput, onError),
             } : {}),
         };
         WebAssembly.compile(ownedBuffer(artifact.wasm)).then((module) => WebAssembly.instantiate(module, resolvedImports)).then((instance) => {
@@ -148,7 +153,7 @@ export async function startCanvasArtifact(
         };
         let failInstantiation: (error: unknown) => void = () => undefined;
         const instantiationFailed = new Promise<never>((_, reject) => { failInstantiation = reject; });
-        config.instantiateWasm = canvasInstantiation(artifact, printError, capture, failInstantiation);
+        config.instantiateWasm = canvasInstantiation(artifact, print, printError, capture, failInstantiation);
         const value: unknown = await Promise.race([
             Promise.resolve().then(() => Reflect.apply(factory, namespace, [config])),
             instantiationFailed,
@@ -160,10 +165,16 @@ export async function startCanvasArtifact(
             stop() {
                 if (stopped) return;
                 stopped = true;
-                stopEntrypoint();
-                const pause = callable(value, 'pauseMainLoop');
-                if (pause) Reflect.apply(pause, value, []);
-                dependencies.revokeModuleUrl(moduleUrl);
+                try {
+                    stopEntrypoint();
+                } finally {
+                    try {
+                        const pause = callable(value, 'pauseMainLoop');
+                        if (pause) Reflect.apply(pause, value, []);
+                    } finally {
+                        dependencies.revokeModuleUrl(moduleUrl);
+                    }
+                }
             },
         };
     } catch (error) {

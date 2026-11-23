@@ -1,6 +1,7 @@
 export function createCanvasWasiImports(
     getMemory: () => WebAssembly.Memory | null,
     write: (text: string) => void,
+    writeError: (text: string) => void = write,
 ): Record<string, CallableFunction> {
     const success = 0;
     const badFile = 8;
@@ -25,6 +26,7 @@ export function createCanvasWasiImports(
         },
         environ_get: () => success,
         fd_write(fd: number, iovs: number, count: number, written: number): number {
+            if (fd !== 1 && fd !== 2) return badFile;
             const memory = getMemory();
             if (!memory) return badFile;
             const view = new DataView(memory.buffer);
@@ -35,7 +37,7 @@ export function createCanvasWasiImports(
                 const offset = iovs + index * 8;
                 const start = view.getUint32(offset, true);
                 const length = view.getUint32(offset + 4, true);
-                if (length > 0) write(decoder.decode(bytes.subarray(start, start + length)));
+                if (length > 0) (fd === 1 ? write : writeError)(decoder.decode(bytes.subarray(start, start + length)));
                 total += length;
             }
             view.setUint32(written, total, true);
