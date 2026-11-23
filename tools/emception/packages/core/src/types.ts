@@ -221,6 +221,13 @@ export interface RunOptions {
 export interface CompileOptions extends RunOptions {
   sources?: string[];
   build?: Partial<WorkspaceBuildConfig>;
+  /**
+   * Optional synchronous notification before each build/execution stage starts.
+   * Multi-source compilation emits `compile` once, not once per source file.
+   * Stages after a failure are not emitted. A thrown callback stops the pipeline.
+   * Observation only: this does not change timeout policy for existing callers.
+   */
+  onPhase?: (phase: 'compile' | 'link' | 'run') => void;
 }
 
 /**

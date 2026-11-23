@@ -29,6 +29,13 @@ const result = await emception.compileAndRun(
 emception.dispose();
 ```
 
+`compileAndRun(sourceOrFiles, { onPhase })` optionally reports `compile`,
+`link`, then `run` synchronously before each stage. Multi-source builds report
+`compile` once for the entire compilation stage. Failed stages do not emit
+later starts. A callback that throws stops the pipeline before the next tool.
+The callback does not change compiler arguments, results or timeout policy;
+callers that omit it retain their existing behavior.
+
 When `manifestUrl` is omitted, the Browser loads the matching version of
 `@gameguild/emception-toolchain` from its pinned jsDelivr URL. To self-host,
 copy that package's `cdn/` directory and pass the resulting manifest URL.

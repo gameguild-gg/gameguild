@@ -175,3 +175,45 @@ test('phase: raw facade.run retains its original result without inventing a pipe
   assert.equal(result.phase, undefined);
   assert.equal(result.stdout, 'hi\n');
 });
+
+for (const mode of ['source', 'files']) {
+  for (const failure of [undefined, 'compile', 'link', 'run']) {
+    test(`phase start: ${mode} emits ordered stages before tools, stopping at ${failure ?? 'success'}`, async () => {
+      const events = [];
+      const stages = { clang: 'compile', 'wasm-ld': 'link', 'wasi-run': 'run' };
+      const api = wrapWorkerClient(makeStubClient({
+        run: async command => {
+          events.push(`tool:${stages[command]}`);
+          return { exitCode: stages[command] === failure ? 1 : 0,
+            stdout: '', stderr: '', durationMs: 1, timedOut: false };
+        },
+      }));
+      const options = { onPhase: phase => { events.push(`start:${phase}`); },
+        ...(mode === 'files' ? { build: { toolchain: ToolchainPreset.CPP,
+          sources: ['/home/user/one.cpp', '/home/user/two.cpp'] } } : {}) };
+      const result = await api.compileAndRun(mode === 'source' ? 'int main(){}' : undefined, options);
+      const expected = ['start:compile', 'tool:compile'];
+      if (mode === 'files' && failure !== 'compile') expected.push('tool:compile');
+      if (failure !== 'compile') expected.push('start:link', 'tool:link');
+      if (failure !== 'compile' && failure !== 'link') expected.push('start:run', 'tool:run');
+      assert.deepEqual(events, expected);
+      assert.equal(result.phase, failure ?? 'run');
+    });
+  }
+
+  test(`phase start: ${mode} callback cancellation stops before linking`, async () => {
+    const commands = [];
+    const deleted = [];
+    const cancellation = new Error('caller cancellation');
+    const api = wrapWorkerClient(makeStubClient({
+      run: async command => { commands.push(command); return { exitCode: 0, stdout: '', stderr: '', durationMs: 1, timedOut: false }; },
+      deleteFile: async path => { deleted.push(path); },
+    }));
+    await assert.rejects(api.compileAndRun(mode === 'source' ? 'int main(){}' : undefined, {
+      ...(mode === 'files' ? { build: { toolchain: ToolchainPreset.CPP, sources: ['/home/user/one.cpp'] } } : {}),
+      onPhase: phase => { if (phase === 'link') throw cancellation; },
+    }), error => error === cancellation);
+    assert.deepEqual(commands, ['clang']);
+    if (mode === 'files') assert.ok(deleted.some(path => path.endsWith('-0.o')));
+  });
+}

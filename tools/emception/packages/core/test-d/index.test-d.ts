@@ -5,6 +5,7 @@
  * Requires a build first (handled by the script).
  */
 import type {
+    CompileOptions,
     EmceptionAPI,
     FileEntry,
     NativeBuildConfig,
@@ -84,6 +85,15 @@ const runOpts: RunOptions = {};
 expectType<string | undefined>(runOpts.workspace);
 expectType<number | undefined>(runOpts.timeoutMs);
 expectType<AbortSignal | undefined>(runOpts.signal);
+
+const compileOpts: CompileOptions = {};
+expectAssignable<CompileOptions>(runOpts);
+expectType<((phase: 'compile' | 'link' | 'run') => void) | undefined>(compileOpts.onPhase);
+expectAssignable<CompileOptions>({ onPhase: (phase) => {
+    expectType<'compile' | 'link' | 'run'>(phase);
+} });
+const invalidCompileObserver = (phase: 'write') => phase;
+expectError<CompileOptions>({ onPhase: invalidCompileObserver });
 
 // ── ToolResult ───────────────────────────────────────────────────────────────
 

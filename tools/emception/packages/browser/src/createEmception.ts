@@ -283,6 +283,7 @@ function wrap(client: WorkerClient): BrowserEmceptionAPI {
                         await Promise.allSettled([client.deleteFile(wasmPath)]);
                     }
 
+                    opts?.onPhase?.('compile');
                     for (let index = 0; index < sourcePaths.length; index++) {
                         const compile = await run(
                             preset.compileTool,
@@ -304,9 +305,11 @@ function wrap(client: WorkerClient): BrowserEmceptionAPI {
                         throw new Error('compileAndRun: preset linker argv does not contain its object path');
                     }
                     linkArgs.splice(firstObjectIndex, 1, ...objectPaths);
+                    opts?.onPhase?.('link');
                     const link = await run(preset.linkTool, linkArgs, runOptions);
                     if (link.exitCode !== 0) return { ...link, phase: 'link' };
 
+                    opts?.onPhase?.('run');
                     const executed = await run('wasi-run', ['wasi-run', wasmPath], {
                         ...runOptions,
                         ...(stdinStr === undefined ? {} : { stdin: stdinStr }),
@@ -331,6 +334,9 @@ function wrap(client: WorkerClient): BrowserEmceptionAPI {
                 stdin: stdinStr,
                 onStdout,
                 onStderr,
+                onPhase: (phase: import('./presets.js').CompilePhase) => {
+                    if (phase !== 'write') opts?.onPhase?.(phase);
+                },
             };
             const result = await pipeline(api, pipelineOpts);
             if (result.finalPhase === 'run' && result.run) {
