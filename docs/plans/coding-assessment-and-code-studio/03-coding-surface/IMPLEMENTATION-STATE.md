@@ -8,6 +8,13 @@ Last updated: 2026-11-23.
   parts 03 and 04 over correcting deferrable runtime/enhancement findings.
   CS-ADR-039 records this execution-order decision. The prior pending SDL
   repair/iframe question is superseded: neither approach is being implemented.
+- Clarified by the user in CS-ADR-041: by the end of part 04, real simple
+  function and standard-I/O exercises must prove the entire official grading
+  journey, including wrong-answer/error negatives and released learner results.
+  Local ports or the preserved working IDE are not substitutes. Then perform
+  owner-reviewed stabilization of recorded defects before entering part 05.
+  This does not waive required core/UX, privacy, execution-ownership or
+  academic-integrity acceptance.
 - Committed the preceding work separately: `2ebdabd6ae` (authorized SDK fixes),
   `9a44da314b` (owned graphical port and proof), `92df896f3a` (evidence/decisions).
   Pre-commit surface regression: 157 tests pass. No push or remote publication.
@@ -27,7 +34,7 @@ Last updated: 2026-11-23.
   workflow silently. Security, private projection, immutable attempts, official
   scores/release, cancellation and worker ownership remain mandatory.
 
-| Finding / owner | Disposition after parts 03 and 04 | Reopening oracle / current limitation |
+| Finding / owner | Disposition after parts 03 and 04, before part 05 | Reopening oracle / current limitation |
 | --- | --- | --- |
 | `EMC-GAP-003` / Emception SDL artifact owner | defer artifact disposal fix; no global event interception or iframe redesign now | rerun the unchanged five-cycle graphics proof; document-listener plateau must pass; local graphics is not promoted as leak-free production support |
 | `CS-RUNTIME-UNRESOLVED-IMPORT` / Emception toolchain owner | defer general undefined-import policy investigation | reproduce undefined target and require a genuine failure without changing legitimate programs; core grading fixtures retain negative controls; any discovered false academic pass blocks that flow |
@@ -93,6 +100,14 @@ then execute the independent UX04-A task views over existing draft contracts.
 Required UX03-C repeated-mount ownership and production terminal/UI evidence
 stay open. Continue the core user journeys, not optional SDL artifact repair,
 new assistance settings or unrelated platform corrections.
+Part 04 must produce its separate official-grading core report before any
+claim that basic coding grading works. The post-04 repair checkpoint is then
+mandatory before part 05; do not start language expansion to avoid known debt.
+
+CS-ADR-041 scheduling update is documentation-only: G-DOC checks 49 documents,
+197 local links and seven atomic tables/25 complete rows; diff whitespace is
+clean. No product/runtime test, gate completion, commit or push is claimed by
+this clarification. Production work resumes at the exact action above.
 
 ## Active continuation: UX03-B graphical execution port - 2026-11-23
 

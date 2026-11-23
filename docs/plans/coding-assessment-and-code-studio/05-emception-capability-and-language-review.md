@@ -12,8 +12,10 @@ Este arquivo define ordem, gates comuns e estado. Cada linguagem possui um
 subplano proprio e pode ser aprovada, adiada ou rejeitada sem bloquear as
 demais. Nenhum subplano autoriza mudanca destrutiva no Emception.
 
-Pre-requisito recomendado: partes 1 a 4 concluidas nas linguagens ja
-suportadas.
+Required entry (CS-ADR-041): parts 1 to 4 have proved basic coding through
+official grading, followed by the owner-reviewed
+[post-04 stabilization checkpoint](./04-end-to-end-validation/06-acceptance-and-develop-integration.md#post-04-stabilization-before-part-05).
+Do not start language expansion to bypass defects in the retained core.
 
 ## Baseline observada
 
@@ -53,7 +55,7 @@ substituir os contratos existentes.
 
 | ID | Subplano | Dependencia | Entrega |
 | --- | --- | --- | --- |
-| 0 | [`00-shared-capability-baseline`](./05-emception-language-expansion/00-shared-capability-baseline.md) | nenhuma | baseline e modelo aditivo de extensao aprovados |
+| 0 | [`00-shared-capability-baseline`](./05-emception-language-expansion/00-shared-capability-baseline.md) | official core proof in parts 01-04 and post-04 stabilization | baseline e modelo aditivo de extensao aprovados |
 | 1 | [`01-javascript`](./05-emception-language-expansion/01-javascript.md) | subplano 00 | runtime JavaScript isolado |
 | 2 | [`02-typescript`](./05-emception-language-expansion/02-typescript.md) | subplanos 00 e 01 | toolchain TypeScript sobre runtime aprovado |
 | 3 | [`03-ruby`](./05-emception-language-expansion/03-ruby.md) | subplano 00 | runtime Ruby isolado |

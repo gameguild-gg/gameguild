@@ -5,7 +5,7 @@ coding-surface e parte 4 bloqueada ate o gate 3.6.
 
 Data: 2026-11-06.
 
-Atualizado: 2026-11-19.
+Atualizado: 2026-11-23.
 
 ## Objetivo
 
@@ -163,12 +163,30 @@ AIReview.
 | 2 | [`02`](./02-backend-code-adapter-boundary.md) | modulo backend separado e core sem code | build, testes e arquitetura backend verdes |
 | 3 | [`03`](./03-coding-surface-and-web-integration.md) | coding-surface paralela e composicao web; seis subplanos, com seis etapas adicionais dentro da refundacao 3.6 | contrato coerente; autoria e resolucao completas no corte aceito; runtime comprovado; aceite humano; emception-ui preservado |
 | 4 | [`04`](./04-end-to-end-validation-and-cutover.md) | E2E, auditoria de capabilities e aceite do cutover ja realizado | `CODE-UI-07`, fluxo oficial e negativos de acesso aprovados |
-| 5 | [`05`](./05-emception-capability-and-language-review.md) | orquestracao da expansao aditiva de linguagens | baseline comum aprovada e decisao independente por linguagem |
+| 5 | [`05`](./05-emception-capability-and-language-review.md) | orquestracao da expansao aditiva de linguagens | core das partes 01-04 comprovado, checkpoint de estabilizacao pos-04 concluido, baseline comum aprovada e decisao independente por linguagem |
 | 6 | [`06`](./06-code-studio-discovery-and-refoundation.md) | descoberta e eventual refundacao do Code Studio | decisao explicita de produto e arquitetura |
 
 Nao se inicia a fase 2 enquanto a fase 1 estiver apenas parcialmente definida.
 As fases 5 e 6 nao bloqueiam o fluxo inicial de coding assessment nas linguagens
 ja suportadas. Elas nao autorizam por si mesmas mudancas no Emception.
+
+### Core proof, then stabilization before part 05
+
+User disposition on 2026-11-23 (CS-ADR-041): finish the basic coding/grading
+core in parts 03/04, then correct and polish the recorded defects before
+starting part 05. Prove simple `function` and `standard-io` exercises through
+authoring, publication, a real learner attempt, official review, release and
+learner result retrieval. A local execution, unit count or standalone IDE
+does not prove official grading.
+
+The [part 4 acceptance plan](./04-end-to-end-validation/06-acceptance-and-develop-integration.md)
+defines the mandatory core oracle and the post-04 checkpoint. Keep the
+[single findings register](./03-coding-surface/IMPLEMENTATION-STATE.md#current-priority-and-post-plan-findings---2026-11-23):
+errors remain errors, unsupported resources remain explicitly unavailable and
+each confirmed defect retains its reproducer, owner and repair oracle. Do not
+hide failures, reduce assertions or silently cancel existing required UX work.
+Upstream corrections require the Emception owner's scoped review, not blanket
+authorization from this scheduling decision.
 
 A parte 3 possui sequencia interna obrigatoria: caracterizacao e decisoes,
 fundacao do package, perfis e personas, integracao web com CI e consolidacao do

@@ -14,6 +14,14 @@ separately from passed workflows. Privacy, official verdicts, immutable
 submissions/release and worker ownership remain mandatory. This priority does
 not claim that CODE-UX-06 is complete or start part 4 prematurely.
 
+User clarification in CS-ADR-041: part 04 must prove simple scalar-function
+and standard-I/O exercises through official grading and released learner
+results, with independent correct/wrong/error and access controls. Core
+failures admit no blocker waiver. Then complete the
+[post-04 stabilization checkpoint](./06-acceptance-and-develop-integration.md#post-04-stabilization-before-part-05)
+with the responsible owners before part 05. This does not claim new runtime/
+E2E success or discard existing required UX work.
+
 ## Baseline observada
 
 - branch: `feature/coding-grading`;

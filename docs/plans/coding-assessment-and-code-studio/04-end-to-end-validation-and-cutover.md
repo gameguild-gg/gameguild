@@ -19,6 +19,27 @@ O resultado deve dizer, com evidencia reproduzivel:
 - se autoria, test run, tentativa, review e release concordam entre UI e API;
 - se `function` e `standard-io` usam o mesmo pipeline oficial sem fallback.
 
+## Required basic core and subsequent stabilization
+
+CS-ADR-041 records the user's acceptance order: by the end of part 04, prove
+simple code through official grading, not only local execution. Use a scalar
+function such as integer addition and a standard-I/O sum with fixed public/
+private cases, known correct/wrong submissions and technical-error controls.
+Real instructor/learner sessions cover authoring, publication, frozen
+submission, official review, release and learner results after refresh/new
+session. Independent expected scores/feedback are mandatory.
+
+No core case can be waived as an accepted external blocker merely to announce
+that grading works. Private data, authorization, submission integrity, official
+results and worker ownership remain required. Preserve other accepted UX
+requirements; this baseline is not permission to delete them from the catalog.
+The local runtime proofs and preserved IDE do not close this acceptance.
+
+After the core is accepted, correct/polish recorded noncritical defects before
+part 05 through the [post-04 stabilization checkpoint](./04-end-to-end-validation/06-acceptance-and-develop-integration.md#post-04-stabilization-before-part-05).
+Failed resources remain visibly failed/unavailable and tracked until repaired;
+there is no blanket permission to change Emception or relax a test.
+
 ## Estado de entrada
 
 - partes [`01`](./01-domain-contracts-and-typescript-adapter.md) e
@@ -251,3 +272,6 @@ silenciosamente para fazer o teste passar.
 - o diff final nao inclui expansao de linguagem nem refundacao do Code Studio;
 - a branch final reconciliada com `develop` passa pelos gates aplicaveis antes
   do PR integrado das partes 01 a 04.
+- mandatory basic-core cases have actual official score/release/learner
+  evidence, not only local or mocked results; carry genuine noncritical debt
+  to the owner-reviewed checkpoint before part 05, without hiding failures.

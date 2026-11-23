@@ -4,6 +4,11 @@ Status: planejado; bloqueia todos os subplanos de linguagem.
 
 Orquestrador: [`Parte 5`](../05-emception-capability-and-language-review.md).
 
+Entry requires the official basic-core proof from parts 01-04 and completion
+of the [post-04 stabilization checkpoint](../04-end-to-end-validation/06-acceptance-and-develop-integration.md#post-04-stabilization-before-part-05)
+(CS-ADR-041). This subplan must not bypass unresolved defects in the retained
+coding/grading core by starting language expansion instead.
+
 ## Objetivo
 
 Registrar o comportamento publico atual do Emception e decidir como novas

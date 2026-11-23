@@ -1056,6 +1056,33 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   recorded. Cold controls do not prove a repeated-mount memory plateau or the
   production terminal/workbench/persona flow; those later obligations stay open.
 
+## `CS-ADR-041`. Prove basic official grading, then stabilize before part 05
+
+- Date: 2026-11-23. Status: accepted by explicit user clarification of
+  CS-ADR-039. This records scheduling/acceptance, not executed proof.
+- By the end of part 04, simple function and standard-I/O exercises must work
+  through actual authoring/publication, learner attempt, official review,
+  release and learner results. Use independent correct/wrong controls and
+  technical-error negatives. Assert official score/feedback and visibility
+  against known expectations, not merely a successful local program exit.
+- A working Emception IDE is a reusable execution base, not proof of our host
+  permissions, frozen submissions, private-case boundaries or grading. The
+  existing 191 surface tests and six runtime controls do not close official E2E.
+- Noncritical failures retain their real status, reproducer, owner, user-facing
+  limitation and repair oracle. Never fabricate a grade, silently fall back
+  for an unavailable resource or mark its failed test green. Core grading,
+  privacy, authorization and worker ownership cannot be deferred. No existing
+  required UX item is silently removed by this decision.
+- After part 04 core acceptance and before part 05, review the recorded bugs
+  with their owners, fix/regress retained functionality and complete the
+  stabilization checkpoint in part 4's acceptance plan. Future optional
+  capabilities/enhancements remain separate from confirmed defects.
+- Every repair follows specification/contract, an independent RED, a minimum
+  owned change and strict applicable gates. Emception changes need scoped
+  owner approval and preserved-consumer regressions. No runtime publication,
+  platform/schema change, migration or PR operation is authorized by this
+  sequence. Human/canonical acceptance is never inferred from the plan.
+
 ## Modelo para novas decisoes
 
 ```text
