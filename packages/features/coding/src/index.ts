@@ -7,3 +7,5 @@ export * from './errors';
 export * from './paths';
 export * from './projection';
 export * from './schemas';
+export * from './native-function-support-types';
+export * from './native-function-support';
