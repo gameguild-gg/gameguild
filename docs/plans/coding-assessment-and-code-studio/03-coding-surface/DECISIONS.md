@@ -846,6 +846,125 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   rationale, compatibility qualifications and evidence are in
   [EMCEPTION-PHASE-EXTENSION-RATIONALE.md](./EMCEPTION-PHASE-EXTENSION-RATIONALE.md).
 
+## `CS-ADR-035`. Local capability eligibility is not runtime or academic success
+
+- Date: 2026-11-22. Status: accepted within the existing UX03-A ownership;
+  independent preparation, not production UI integration or a new upstream grant.
+- Decision: a pure coding-surface resolver consumes the explicit exercise
+  family, environment/frozen identity, host-authorized mode and existing
+  learner-file policy and host read-only restriction. It returns
+  available/unavailable local operations and reasons, plus a graphics-target
+  requirement independent of panel visibility.
+  It receives no private cases, references, credentials or academic commands.
+- Boundaries: authoring edits start no runtime. Program runs, technical tests
+  and interactive input are separate. Only learner-public scope is offered
+  in learner mode; reviewer execution remains read-only diagnostics. The host
+  still owns authorization and execution must still preflight the artifact.
+- Evidence scope: current pinned WASI C/C++ program/batch controls and SDL3
+  canvas controls support their corresponding diagnostic paths. Function ABI,
+  graphics case execution and unverified environment/input combinations stay
+  unavailable with a concrete reason; no profile boolean or selected preset
+  is treated as conformance. This is a temporary technical status, not silent
+  removal of a promised exercise family or a change to grading policy.
+- Consequences: minimizing a required canvas does not remove its execution
+  target. Execution availability is distinct from worker readiness and a
+  successful program/result. Missing upstream capability follows the existing
+  EMCEPTION-GATE. The separate upstream-harness proposal was subsequently
+  superseded by the approved owned composition in CS-ADR-036.
+
+## `CS-ADR-036`. Owned native function support files, not an upstream harness patch
+
+- Date: 2026-11-23. Status: approach explicitly approved by the user;
+  feasibility and implementation gates remain separate.
+- Context: a missing startup can be supplied by composition. C++ additionally
+  needs a bridge between an ordinary function and the existing harness's C
+  linkage. Native C cannot compile that C++ harness merely by changing its
+  filename; it needs a C-compatible call/report template.
+- Decision: first prove both paths with positive/negative real-artifact
+  controls. Keep Emception's public C++ generator and generic test engine;
+  supply temporary ABI/startup files. A native C call/report adapter may emit
+  the report consumed by that same engine. No alternative compiler, judge,
+  score/release policy, private upstream import or C-as-C++ substitution.
+- Ownership: pure technical source composition belongs to coding; the surface
+  orchestrates local public cases, the trusted worker composes official cases.
+  Both must consume the same owned source generator. No React dependency or
+  client-generated executable payload is trusted by official grading.
+- Artifact boundary: only the exact pure source-composition module may cross
+  the worker's prior feature-import restriction, with a negative dependency
+  test. The existing repository-policy job already rebuilds the grading worker
+  from the checkout; preserve that verification. SDK/toolchain acquisition is
+  separate and its classifier/provenance rules remain unchanged. Do not require
+  an upstream SDK publication merely because an owned template changes.
+- Preservation: no public Emception core/browser/harness/IDE/UI, preset or
+  compiler flag change. Supplied startup must be checked against retained
+  main-containing solutions. Never rewrite published revisions or submissions.
+  Technical files hidden from editor navigation are not secrets; private
+  cases remain server-only. Register any necessary template duplication.
+- Supersedes: the pending proposal to extend the upstream generator for this
+  finding, and the blanket prohibition on owned function call/report support
+  only within this narrow scope. Compound values, new languages, graphics and
+  exercise memory remain outside this decision.
+- Implementation contract: the pure composer validates scalar representation,
+  generates support outside /home/user, and accepts a C++ public-harness factory
+  instead of importing a runtime. C uses int/double/_Bool/const-char-pointer
+  signatures; C++ retains int/double/bool/std::string. Weak target declarations
+  reject absent functions even when zero is expected. Weak startup preserves
+  a separately linked existing main. Inputs and submitted files are not rewritten.
+- Preservation of history: the configured official path regenerates the
+  support; definitions without the explicit execution configuration retain
+  their original mapper. No snapshot is rewritten and no new contract version
+  or alias is introduced. Result-group ordering/weights/boolean receipts and
+  existing runtime/output budgets are retained.
+- Evidence: initial twelve real WASM feasibility controls pass. Strict composer
+  contracts precede 33/33 independent RED and 130 passing coding tests; the
+  preview/worker have independent failure tests and current-source worker build.
+  These do not replace the pending real production-mapper/scalar/receipt proof.
+
+## `CS-ADR-037`. Student time and preparation time are separate budgets
+
+- Date: 2026-11-23. Status: business rule and the narrow optional facade
+  callback explicitly authorized by the user; scoped implementation, contracts
+  and real scalar/budget proofs pass. Overall phase acceptance remains separate.
+- Evidence: two C++ string groups exceed the existing combined 30-second
+  guard during linking, after successful compilation and before checking the
+  answer. Private-scratch/fixed-output controls reproduce the same boundary.
+  Increasing that combined timeout would not implement the requested meaning.
+- Decision: apply the published exercise time limit only while the student's
+  program executes. Compilation/linking must have a separate finite
+  infrastructure budget, with cancellation and no unlimited preparation.
+  Do not add a persisted teacher field, migration or contract version merely
+  to express an infrastructure budget. Preserve historical data/receipts and
+  evaluate the affected frozen worker paths explicitly.
+- Integration constraint: distinguish phases by an explicit supported callback,
+  not output text, number of exit events or guessed elapsed-time subtraction.
+  The existing public low-level helper exposes onPhase, but the native
+  multi-source facade does not forward that lifecycle. Duplicating its native
+  build pipeline would violate the single-compiler boundary. An optional
+  facade callback is now authorized in CompileOptions, the browser facade and
+  their focused contract/compatibility tests only. No IDE/preset/harness change.
+- Bounded policy: 120000 ms total preparation per compile-and-run invocation,
+  not per source or phase. This gives headroom above the measured 26-second
+  first group and the second group's more-than-30-second preparation without
+  charging that cost to the learner. The student timer starts only at run.
+  Keep the existing aggregate output byte guard and five-minute whole-worker
+  watchdog; neither is relaxed. Raw tool operations retain their existing
+  budget. Reject missing/regressing phase signals, expired preparation and
+  inconsistent terminal metadata. No silent old-SDK fallback in this worker.
+- Atomic sequence: validate additive types first; record failing independent
+  phase-order/cancellation and budget tests; minimal facade forwarding and
+  worker integration; strict types/lint, core/browser/UI regressions and real
+  scalar/public/private receipt proof. One heavy job at a time under the
+  existing OS-available-memory guard. Source-byte and temporary cleanup
+  checks remain mandatory.
+- Proof: additive type/assignability tests, 28 independent lifecycle/budget/
+  worker RED, a further cancellation-bypass RED and 795 passing regressions.
+  All ten current-preview and ten rebuilt final-worker scalar controls pass.
+  Three real final controls preserve the retained mapper and distinguish a
+  normally completing from an infinite C program under the same 3000-ms limit,
+  without producing a grade on cancellation. Presets/harness/IDE source stay
+  unchanged. The rationale and ledger retain hashes/resources, the earlier
+  failed producer evidence and seven pre-existing upstream lint warnings.
+
 ## Modelo para novas decisoes
 
 ```text

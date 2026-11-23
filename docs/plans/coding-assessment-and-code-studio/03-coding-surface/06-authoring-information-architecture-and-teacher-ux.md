@@ -13,13 +13,23 @@ Independent UX03-A preparation now has backed-up, verified local 4.5.2 assets
 and a typed lazy runtime port. Its isolated browser boot/disposal check passes,
 not production UI integration. The user subsequently authorized a minimum
 public terminal-phase extension and initial-file semantics (CS-ADR-034).
-Their 12 real-worker controls pass; function ABI, graphics, interactive/resource
+Their 12 real-worker controls pass; graphics, interactive/resource
 acceptance and existing upstream lint debt remain open. The single ledger
-records exact evidence and limitations. No mandatory
-Emception build, IDE publication or `dev:fast` change is introduced.
+records exact evidence and limitations. Independent UX03-A preparation also
+includes tested local capability eligibility (CS-ADR-035): frozen identity,
+mode/read-only/file policy and canvas requirements, without runtime boot or
+production UI cutover. CS-ADR-036 supersedes the separate upstream-harness
+proposal: owned temporary native support now has contract/unit integration
+and passing scalar production-mapper preview/official-worker parity. The
+separately authorized phase-start callback and bounded preparation/student
+budgets (CS-ADR-037) pass the formerly failing C++ string control, all ten
+final official controls and the real finite/infinite/retained controls. These
+scoped corrections do not close workbench integration or whole-phase acceptance.
+No whole-toolchain build, standalone IDE publication or `dev:fast` change is
+introduced. Local consumer/worker builds remain required for changed source.
 Production refoundation and product acceptance are not complete.
 
-Updated: 2026-11-22.
+Updated: 2026-11-23.
 
 Gate IDs: `CODE-UX-01` through `CODE-UX-06`.
 

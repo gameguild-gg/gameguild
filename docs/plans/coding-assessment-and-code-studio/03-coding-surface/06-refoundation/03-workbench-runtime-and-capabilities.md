@@ -6,6 +6,10 @@ open. The lazy runtime port, local assets and isolated real-browser boot/
 disposal checks are recorded in the shared ledger. The explicitly authorized
 phase/initial-file correction now has 12 passing real-worker controls, not
 broader function/graphics, production workbench or human acceptance.
+Independent capability resolution is also implemented and tested under
+CS-ADR-035; it is eligibility preparation, not an executor, private-data gate
+or wired production UI. CS-ADR-036 replaces the upstream-harness proposal with
+approved owned native support composition; its real parity gate remains open.
 
 ## Invariants and boundaries
 
@@ -13,7 +17,9 @@ Apply [GOVERNANCE.md](./GOVERNANCE.md). Allowed changes are the owned surface,
 its public-runtime integration, tests and necessary host composition. Emception
 source/UI remain preserved except the narrow public phase extension authorized
 in CS-ADR-034; only declared editor/terminal libraries and public
-runtime APIs are available. No local diagnostic becomes an official grade.
+runtime APIs are available. The product-specific grading wrapper additionally
+consumes the exact shared pure function composer under CS-ADR-036, not the
+surface or a feature barrel. No local diagnostic becomes an official grade.
 
 ## Outcome
 
@@ -62,10 +68,36 @@ been changed. Independent asset/lazy-boot preparation alone does not resolve
 those findings. Partial corrections do not
 close this gate or turn an unsupported combination into an available one.
 
+Function continuation on 2026-11-23: twelve isolated real-WASM controls prove
+ordinary native functions with supplied startup/ABI support, including absent
+targets expecting zero, wrong answers, compiler errors and retained main.
+`coding/src/native-function-support.ts` now supplies shared source composition
+to the surface mapper and the official worker. The C++ generator and generic
+engine remain unchanged; C uses a native call/report template. Unit contracts
+and worker build pass. The original string two-group proof exposed a
+combined preparation/program timeout; the user approved separate bounded
+preparation and student-execution budgets in CS-ADR-037. The necessary explicit
+phase-start callback was subsequently explicitly authorized and now has
+passing type/lifecycle/budget tests. All ten production-mapper public previews
+and ten rebuilt final-worker scalar controls now pass, plus retained and
+finite/infinite-program controls. Preserve receipt/source/cleanup proof before
+wiring capability eligibility; no automatic canonical promotion follows.
+A weak target-presence check does not
+resolve imports called inside the student's function. Graphics, runtime
+lifecycle and the overall CODE-UX-03 acceptance remain independent.
+
 1. Implement a tested capability resolver from family requirements, environment
    support, assignment settings and authorized mode. Distinguish a hidden
    optional panel from an unavailable operation and a missing required capability.
    Do not infer the exercise family from a preset or extension.
+   The independent `resolveCodingRuntimeCapabilities()` now takes explicit
+   family, frozen environment/identity, host-authorized mode, existing read-only
+   restriction and learner-file policy. It exposes local eligibility/reasons;
+   it does not boot, authorize a request or claim successful execution. Current
+   function ABI, graphics test execution and unverified environment/input
+   combinations remain unavailable. The required graphics target survives
+   panel minimization. Wire this port only during the planned workbench cutover;
+   current profile booleans are not proof of runtime conformance.
 2. Compose editor, file access, diagnostics, test results, console, interactive
    terminal and graphics as explicit regions. Use existing Monaco, xterm and
    resizable-panel integrations when appropriate; do not add libraries to

@@ -297,3 +297,71 @@ The permanent regression assertions are in the changed core result/engine/type
 tests, browser facade tests and grading-worker tests. The separate official
 worker evidence and remaining plan gates are in the
 [implementation ledger](./IMPLEMENTATION-STATE.md).
+
+## Addendum: optional phase-start notifications - 2026-11-23
+
+The user separately authorized `CompileOptions.onPhase` after the two-group
+C++ string control reproduced a 30-second timeout during linking, before any
+student comparison. Terminal `ToolResult.phase` cannot tell a caller when to
+start a timer: it arrives only after the operation finishes.
+
+The existing low-level public helper already has `onPhase`, but it compiles
+one source string. Replacing the multi-file facade with that helper would
+lose translation-unit semantics or require another compiler orchestrator.
+Parsing tool output or counting exit events would not be a stable contract.
+
+The narrow addition is:
+
+```ts
+interface CompileOptions extends RunOptions {
+  // Existing sources/build options remain unchanged.
+  onPhase?: (phase: 'compile' | 'link' | 'run') => void;
+}
+```
+
+The native facade calls this optional synchronous observer before the first
+compilation, linking and program execution. Multiple source files still emit
+one compilation start. The source-text path forwards the existing helper's
+notifications, excluding its internal file-write stage. A failed stage emits
+no later starts; a thrown observer stops before the next tool. The callback
+is consumed locally by the facade, not serialized into a worker message.
+
+This does not introduce grading knowledge into Emception. The SDK exposes
+only generic lifecycle observation. The product-specific grading wrapper
+owns the separate 120000-ms total preparation deadline and the frozen
+exercise deadline starting at `run`. Preparation is never reset per source
+or link phase. The time measure is execution-phase wall time, including
+runtime startup, not a claim of instruction-only CPU accounting. Aggregate
+output limits and the five-minute worker watchdog remain unchanged. A missing
+or regressing notification is unavailable execution, never an invented pass
+or a learner's zero grade. The current worker must bundle the matching facade.
+
+### Why existing IDE consumers are preserved
+
+- The option is absent by default; previous options remain assignable.
+- Emitted command arguments, presets, flags, source bytes, terminal result
+  metadata, toolchain artifacts and the public testing harness are unchanged.
+- Existing callers do not acquire a new timer or grading policy. Only the
+  owned grading wrapper chooses to use the lifecycle callback for budgeting.
+- Canvas, raw `run`, the IDE component and `@game-guild/emception-ui` are not
+  edited. An optional observer does not alter their layout or execution path.
+- Local TypeScript/package/worker builds are consumer checks. No standalone
+  IDE deployment, SDK publication or compiler rebuild is required here.
+
+### Verification boundary
+
+Strict type tests cover absent/valid callbacks and reject an invalid stage
+observer. Ten independent facade tests cover both source-text and multi-file
+paths, start-before-tool ordering, exactly-once compilation notification,
+terminal failure and callback cancellation. Budget tests cover finite shared
+preparation, fresh learner time, hung preparation/programs, phase violations,
+output overflow and the fallback path's nested raw tool calls. Existing core,
+browser, IDE, web component and retained UI suites are rerun independently.
+
+The actual current-source worker passes the formerly failing C++ string
+public/private control, all ten official scalar controls and three real
+retained/finite/infinite controls. Full scalar parity, resource measurements,
+exact commands and the seven pre-existing upstream lint warnings are recorded in
+the implementation ledger. These checks do not close graphics execution,
+unresolved imports inside a student's function, workbench integration or
+human acceptance; no canonical capability status is promoted automatically.

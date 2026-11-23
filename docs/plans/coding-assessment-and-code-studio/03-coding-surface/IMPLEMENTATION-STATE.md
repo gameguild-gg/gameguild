@@ -1,6 +1,238 @@
 # Coding surface implementation state
 
-Last updated: 2026-11-22.
+Last updated: 2026-11-23.
+
+## Native function support through owned composition - 2026-11-23
+
+- Entry: `c733a556c3`; preserve all earlier uncommitted UX03-A capability work.
+  CS-ADR-036 records the user's explicit choice of owned support/templates,
+  superseding the upstream-harness proposal, not upstream preservation.
+- Current stage: typed/template and phase-budget integration implemented and
+  audited; real scalar/runtime proof passes. Full G-RUNTIME and
+  CODE-UX-02/03 remain open for their separate acceptance obligations.
+  Do not promote function eligibility, canonical status or human acceptance.
+- Ownership: coding owns a pure source composer and C++ public-harness factory
+  port; surface owns public/full preview mapping; the product-specific worker
+  regenerates official support from the frozen definition. Only that exact
+  pure module crosses its import guard, with positive/negative boundary tests.
+  The current-checkout worker build remains mandatory. SDK acquisition and
+  its classifier/provenance are separate and unchanged.
+- Preserved: Emception harness/IDE, retained UI, presets/flags,
+  dependencies, API/platform/schema, historical migrations, launchers and
+  actual submitted bytes. The only core/browser change is the explicitly
+  authorized optional phase-start contract/forwarding (CS-ADR-037). No new
+  package or compiler/judge. No account reset,
+  unrelated service stop, upstream SDK publication or whole-toolchain build.
+- Source contract: ordinary functions need no main/extern-C boilerplate.
+  C uses int/double/_Bool/const-char-pointer; C++ retains the public scalar
+  harness and ordinary-function ABI bridge. Weak presence checks reject absent
+  targets expecting zero; supplied weak startup preserves existing main.
+  Temporary support stays outside /home/user and is restored/removed by the
+  public overlay. Headers are not separate translation units. Cases, group
+  order/weights and receipt shape remain unchanged. Historical definitions
+  without explicit execution configuration retain their original mapper.
+- Input validation rejects unsafe/nonrepresentable native literals explicitly:
+  int32 bounds, finite decimal syntax, embedded NUL/unpaired surrogates and
+  C++ strings the existing serializer cannot represent. No silent coercion,
+  truncation, invented compound transport or reinterpretation of C as C++.
+  Unknown/mismatched language identities and graphics function execution fail
+  before composition. Generic unresolved imports inside a student's function
+  remain a separate finding; checking target presence does not resolve them.
+- Contract-first record: strict composer port before behavior; corrected
+  independent RED 33/33; four official integration RED with the historical
+  mapper control already passing; two additional identity RED. Surface RED
+  includes four intended mapper failures, a corrected invalid fixture and
+  JS-realm assertion correction, not six new product defects. Assert original
+  error identity and restored byte values; preserve projection/overlay code.
+- Feasibility: twelve fixed real-WASM C/C++ controls pass, including correct,
+  wrong, compile failure, absent-zero, present-zero and retained-main sources.
+  Peak 5579 MiB; minimum available 9064 MiB; no OOM/resource stop.
+- Initial production parity: ten public previews and seven scalar official
+  controls pass; C++ string preparation fails before comparison. Preserve that
+  failed report, its actual bundle hash and the three independent negative/
+  historical controls. Checkout hashes are not a producer/build receipt.
+- Root cause: independent private-scratch and fixed-output controls both hit
+  the unchanged combined 30-second budget. First C++ string group completes in
+  about 26 seconds. The second spends about 23 seconds in two successful
+  compilation steps, then is cancelled during linking. Output-path reuse is
+  not the cause; no wrong-answer comparison has run. This diagnostic's exit 0
+  means observations were captured, not that either product control passed.
+- Budget rule explicitly approved: the published exercise time limit applies
+  only to student execution. Compilation/linking need a separate bounded
+  infrastructure budget (CS-ADR-037). Do not merely increase the existing
+  combined timeout or remove cancellation. The public low-level helper has
+  onPhase, but the native multi-source facade did not expose that contract.
+  The user subsequently explicitly authorized the narrow optional facade
+  callback. CompileOptions.onPhase and the typed preparation port passed
+  contract checks before behavior. The infrastructure policy is 120000 ms
+  total preparation; aggregate output and global watchdog stay. The facade
+  adds six callback-forwarding lines, never another native pipeline. The
+  worker avoids a second student timer around fallback raw compiler calls.
+  Independent RED: 28 failures among 110 selected tests (23 lifecycle/budget
+  and five worker integration failures); old controls remained green. The
+  initial timer-test diagnostic had an asynchronous assertion cleanup issue,
+  corrected before that second RED run without changing expected behavior.
+- Current new gates: 136 worker contracts and strict bundle build; 273 core,
+  57 browser, 26 IDE, seven webcomponent and 27 retained-UI tests pass. The
+  browser suite's existing opt-in Node smoke remains skipped; actual
+  sandboxed-browser/WASM controls supply the required runtime layer. Feature
+  gates rechecked: coding 130, adapter 16, surface 123, all strict types.
+  Total: 795 passing unit/contract/regression tests. Unsuppressed strict lint
+  passes all owned feature sources, worker/budget, public type and new facade
+  tests. Whole-file facade/type-fixture lint has seven pre-existing unused
+  declarations, independently reproduced from HEAD via ESLint stdin. Do not
+  suppress them or report the whole-file lint as warning-clean. Root ESLint
+  also prints its existing React-detection/pages configuration notices.
+- Adversarial audit found a cancellation edge: the fallback's compilation
+  scope could remain pending after termination, allowing a later raw tool
+  to bypass protect. An independent RED records one unwanted raw call;
+  the minimal failed-state check now rejects it before the compilation
+  bypass. All 87 budget/worker tests pass. The first complete matrix uses
+  its fixed pre-audit bundle: ten previews and ten official controls pass.
+  The final guarded bundle was rebuilt and all ten official controls were
+  repeated successfully. Preserve both producer hashes, never mixed results.
+- Final real proof: C/C++ integer, float, boolean and string public previews
+  return [true], their deliberately partial implementations return [true,false]
+  officially, and absent-zero targets return [false]. All preview source bytes
+  remain unchanged and transient files are removed. Final worker SHA-256:
+  bbba59817b176d4617ec0a896c1ab302d43d60303c4ad7aa6638a6b317383948.
+  Manifest SHA-256 remains f4b9f7944f4def6678cafa7895bb0f766255683e60b0abcd306196a01a581dd8.
+  Three further final-bundle controls pass: retained C++ extern-C/main returns
+  [true,true]; a normal C program with a frozen 3000-ms limit passes despite
+  10775 ms of total preparation/worker startup; the paired infinite program
+  stops in 13145 ms total, with exit 1, sanitized execution-failed diagnostic
+  and NO grade receipt. The 3/3 gate exits 0 because that failure is expected.
+- Scope: scalar composition and separate budget findings have real proof.
+  This does not settle generic undefined imports, graphics/interactive work,
+  workbench integration, persona flows or human acceptance.
+  Capability eligibility/canonical status are not promoted automatically.
+- Resources: one compiler/browser at a time; latest proofs use CPUs 0-7,
+  leaving four logical CPUs free. Keep the 4772 MiB available-memory reserve,
+  PSI/paging/OOM guard, separate 120-second preparation and frozen student
+  limits (at most 30 seconds/2 MB). Final official matrix: peak 8848 MiB,
+  minimum available 6573 MiB, 21 MiB global swap activity, zero PSI/OOM/stops;
+  safety controls: peak 4705 MiB, minimum available 10861 MiB, no OOM/stop. No fixed
+  total-RSS cap, forced allocation of host RAM/swap or unrelated process kill.
+- Evidence under ignored apps/web/test-results/coding-surface-refoundation/
+  runtime/: 20261123-function-composition-presence-events has passing
+  feasibility, all original failed exploratory attempts remain in sibling
+  probe/instrumented/presence directories; composer-red-types.json,
+  surface-typed-red.json, worker-red.tap and identity-red.json preserve RED.
+  20261123-function-production-parity preserves incomplete parity and hashes;
+  20261123-function-full-string-diagnostic preserves the paired budget failure;
+  20261123-function-official-negatives has three fresh verified receipts.
+  Current proof: 20261123-phase-budget-full-matrix (ten current-preview and
+  ten pre-audit official controls), 20261123-phase-budget-final-official (all
+  ten rebuilt final-worker controls), and 20261123-phase-budget-final-safety
+  (three final controls). Sibling *-resources.json and static-gates.json retain
+  commands, resources, RED counts and baseline lint debt. The earlier focused
+  string proof is retained as 20261123-phase-budget-string-control.
+  Reproduction archive: 20261123-phase-budget-repro.tgz; SHA-256
+  f51c6a66065cc838303fc0cfecc67c036a383026b05fb11aab31c87b303ef53c.
+  It contains diagnostic sources/guard, not another human scenario CLI or
+  compiler assets. Rebuild the worker from the tested checkout; adapt local
+  paths and use fresh evidence directories, never overwrite old receipts.
+- Documentation gate: 49 documents, 187 local links, seven atomic tables and
+  25 complete rows pass; git diff --check passes. Static gate logs are in the
+  phase-budget-static-gates.json. No full API/web build applies to this
+  package/worker slice. SDK/component builds are local consumer checks, not
+  a standalone IDE/toolchain build or publication. All owned jobs closed.
+- Next action: resume UX03 workbench/runtime-capability integration from the
+  updated finding matrix. Preserve unverified combinations as unavailable;
+  investigate undefined imports and graphics through their declared boundaries.
+  Full-phase closure still needs all applicable gates, including the visible
+  upstream lint debt, independent UI/runtime and human acceptance.
+- Commit handoff: the user requested separate local commits after validation.
+  `3d9aec305e` records capability eligibility; `9f43ccc413` records pure native
+  composition and preview integration; `86ff793c62` records the authorized
+  optional public phase observer; `fa757f0791` records official native grading
+  and separate preparation/student budgets. The synchronized plan, rationale
+  and evidence ledger are a separate documentation commit. Committing does
+  not change the tested source bytes or close the remaining gates. No push
+  was requested or performed; generated ignored evidence is not committed.
+
+## UX03-A capability resolution preparation - 2026-11-22
+
+- Entry: `c733a556c3`; preserve the existing uncommitted continuation notes.
+  The user requested continuation of part 3.6. The separate harness question
+  has not been answered explicitly; do not infer a new protected-source grant.
+- Active slice/stage: independent UX03-A capability resolver / audited foundation.
+  No production UI cutover or broader CODE-UX-02/03 closure. Supported
+  operations and acknowledged gaps must remain distinguishable without
+  launching a runtime or imposing academic policy.
+- Allowed files: new runtime capability contracts/resolver and focused tests
+  under packages/features/coding-surface/src, index/architecture tests and this
+  ledger/ADR/UX03 documentation. Closing synchronization includes the coordinator,
+  consumer map and existing identity-duplication entry, not a new ownership rule.
+  No Emception/retained UI, API/schema, dependency,
+  asset, preset/compiler, dev launcher or existing execution-path change.
+- Specification: resolve local operation eligibility from explicit family,
+  frozen environment/toolchain, authorized surface mode and the existing
+  allowLearnerCreatedFiles assignment flag and host readOnly restriction.
+  Authoring forms cannot execute;
+  learner tests use public scope only; reviewer diagnostics remain local and
+  file creation is unavailable in inspection/validation modes. File creation
+  during ordinary authoring does not require a bootable runtime.
+- Canvas: target requirement derives from runtime, never family or panel
+  visibility. Minimizing graphics cannot remove a required target. Program
+  execution is not a function-test verdict. Current function-ABI and official
+  graphics findings stay explicit; unverified combinations remain unavailable,
+  not a successful result or an academic zero.
+- Contract gate precedes behavior: strict G-SURFACE typecheck and the focused
+  type-contract suite, then independent behavioral RED. Closing gate is full
+  G-SURFACE plus G-DOC and an unchanged protected-source diff. This pure
+  foundation needs no API/Next/compiler build, service or account; existing
+  real runtime observations bound the declared support and are not rerun or
+  promoted by resolver unit tests. Use one process group, CPUs 0-3 and the
+  OS-headroom/PSI guard.
+- Contract stage: strict package typecheck and all three new type-contract
+  tests exit 0 before resolver behavior. No bootstrap failure counted as RED.
+  Next: independently assert availability, projection scope, retained canvas
+  requirements, frozen identity rejection, file policy and zero runtime boot.
+- Behavioral RED: all 27 new cases fail against the typed stub for missing
+  resolution, after strict typecheck passes. The raw nonzero result is retained
+  in ignored runtime/20261122-ux03a-capabilities/red-tests.json below the
+  refoundation evidence directory. No import or infrastructure failure counted.
+  Builder now implements only the pure resolver; Auditor/closing gates follow.
+- First full suite: 112/112 pass, no skips. Auditor returns to contract stage
+  for the existing host readOnly restriction: it must override author/learner
+  file creation without disabling permitted diagnostic execution. Add that
+  explicit input and independent negative cases before its minimal correction.
+- Auditor refinement: the new strict contract compiles; all three selected
+  readOnly cases then fail for the missing restriction/validation, with 27
+  deliberately unselected cases (not gate closure). The minimal override and
+  strict boolean check are now implemented; rerun the complete suite with no
+  selection or required skips. Preserve readonly-red.json as failed evidence.
+- Closing G-SURFACE: strict typecheck, all 115 tests across eight files and
+  unsuppressed strict package ESLint exit 0; no required skips. Preserved
+  emception-ui regression passes 27/27 in seven suites. This supplies contract
+  preparation for CS-REF-10/11/12/21, not their required browser/runtime/human
+  acceptance. No full API/web build applies to this package-only pure port.
+- Resources: all tasks sequential on CPUs 0-3 under the OS guard; peak observed
+  682 MiB and minimum available 15322 MiB, above the 4772 MiB reserve. No new
+  OOM, resource stop or surviving owned job. No runtime/browser boot was needed.
+- Auditor: same-agent adversarial review, not independent/human acceptance.
+  Sources import only owned types/domain constants; no academic commands,
+  storage, network, dynamic import or worker. There is no diff from entry in
+  Emception/retained UI, API/platform, presets, dependencies or dev launchers.
+  Availability is technical eligibility, not artifact readiness or a result;
+  the unchanged production workbench is not cut over by this helper.
+- Evidence: ignored apps/web/test-results/coding-surface-refoundation/runtime/
+  20261122-ux03a-capabilities contains original RED, read-only refinement RED,
+  the complete final Vitest report, command resource reports and verification.json
+  with the six source/test hashes and protected-path checks. The read-only
+  verifier first failed to spawn git inside the sandbox (EPERM); its identical
+  unrestricted rerun passes. That environment failure is not a product RED.
+  G-DOC checks 49 documents, 187 links, seven atomic tables and 25 complete
+  rows with no failures; git diff --check passes. No canonical status promoted.
+- Historical next action, superseded by CS-ADR-036: obtain the separate function-harness authorization before
+  changing that protected generator or its dependent function execution path.
+  No explicit additional harness grant is recorded; this slice remains owned
+  coding-surface-only preparation.
+  Preserve explicit function/graphics limitations; do not impose extern-C/main
+  boilerplate, invent a host harness or substitute a WASI run for canvas.
+  Independent work may proceed under its own atomic specification. Whole
+  CODE-UX-02/03 and the broader refoundation remain open.
 
 ## Commit and continuation checkpoint - 2026-11-22
 
@@ -9,7 +241,7 @@ Last updated: 2026-11-22.
   or independent IDE refactor was requested.
 - Commits: `33b62e2b4f` records the minimum execution-phase correction and its
   rationale; `18103947ff` records the independently tested lazy runtime port.
-  The next commit groups initial-file semantics with the reconciled plan,
+  `c733a556c3` groups initial-file semantics with the reconciled plan,
   decisions, evidence and handoff. Generated assets/evidence remain ignored.
 - Closing documentation audit: 49 parsed documents, 187 local links, seven
   atomic tables and 25 complete rows; no failures. `git diff --check` passes.
@@ -24,6 +256,30 @@ Last updated: 2026-11-22.
   or capability promotion is authorized. If composition cannot meet the
   declared contract, record the exact gap and apply EMCEPTION-GATE before
   dependent implementation. CODE-UX-02/03 remain open.
+- Investigation result at `c733a556c3`: the public functional generator accepts
+  only index/name options, always emits C++ with an extern-C declaration and
+  constructor-run assertions, and supplies no main. The selected C preset
+  forces every source to C; the C++ preset forces every source to C++.
+  The high-level native facade forwards source/output but not native flags
+  into preset compilation. Relabeling the generated file or passing a build
+  flag cannot repair the existing language/linkage/startup contract. Prior
+  real-worker failures in CS-RUNTIME-FUNCTION-ABI remain the execution evidence;
+  this continuation adds source-level confirmation, not a new browser pass.
+- Structural stop: CS-ADR-034 explicitly excludes the harness. A new user
+  question requests a narrowly scoped public C/C++ functional-harness option
+  and explicit function-exercise runner, preserving the current default, IDE,
+  presets and compiler flags, with compatibility tests. No protected edit or
+  substitute host harness was made. Wait for that answer before designing the
+  dependent contract; independently supported work remains permissible.
+- Post-commit G-SURFACE rerun: strict typecheck, all 80 tests and unsuppressed
+  strict ESLint exit 0. One command at a time on CPUs 0-3 under the OS guard;
+  peak owned RSS 631 MiB, minimum available RAM 15081 MiB against 4772 MiB
+  reserve, no new OOM or resource stop. No API/Next build, developer service,
+  account, database, asset or upstream source change during this continuation.
+- Next exact action: resolve the pending harness authorization; if accepted,
+  specify and compile its language/startup/scalar contracts before writing
+  behavioral tests or implementation. If declined, record the unavailable
+  function capability rather than imposing boilerplate or a false fallback.
 
 ## IDE compatibility and change rationale audit - 2026-11-22
 

@@ -3,7 +3,7 @@
 Status: public compound-value limitation confirmed in `CODE-UX-01`; initial
 scalar-only scope explicitly accepted by the user on 2026-11-20. Compound
 support remains deferred. Compiler flags/harness and IDE/UI remain preserved;
-CS-ADR-028 records the grading-worker safety exception and CS-ADR-034 the
+CS-ADR-028/036 record grading-worker safety/owned native composition and CS-ADR-034 the
 explicitly authorized minimum public execution-phase metadata extension.
 Per-exercise memory control remains unsupported; the user explicitly approved
 deferring that capability in this delivery (CS-ADR-029).
@@ -113,16 +113,19 @@ No canonical promotion or completed phase/release/human gate is implied.
 | Oracle | Observation / source boundary | Required UX03 disposition |
 | --- | --- | --- |
 | `CS-RUNTIME-NATIVE-ENTRY` | user explicitly approved initial editor source, allowing main elsewhere; all source units/order preserved | scoped real worker and owned label/selection tests pass; duplicate/absent main fails linking; no new main-location requirement or serialized rename |
-| `CS-RUNTIME-FUNCTION-ABI` | the C preset forces C compilation while `generateDoctestHarness` emits C++; C++ references also require compatible linkage and startup | test both languages against their actual public harness/ABI; a returned harness string is not conformance; mark unavailable or apply EMCEPTION-GATE if public composition cannot meet the contract |
+| `CS-RUNTIME-FUNCTION-ABI` | CS-ADR-036 supplies shared C call/report and ordinary C++ ABI/startup source composition without altering the public harness | all ten production-mapper public previews and ten rebuilt final-worker controls pass for the four scalar types in C/C++, including private failures and absent-zero functions; source/cleanup/receipt checks pass; no automatic eligibility/canonical promotion or claim of compound-value support |
 | `CS-RUNTIME-GRAPHICS` | native `compileAndRun` runs through WASI; SDL3/raylib/Allegro preset selection does not establish loading canvas runtime glue/callbacks | prove actual output through the public canvas lifecycle and distinguish diagnostic support from authoritative server grading; no headless-WASI fallback for a graphics requirement |
 | `CS-RUNTIME-COMPILE-FAILURE` | corrected using authorized optional public phase; official worker rejects missing/unknown phase | real compile/link controls cannot pass empty stdout or matching-exit assertions; valid empty/expected-nonzero runs preserved; no diagnostic guessing or parallel comparator |
 | `CS-RUNTIME-UNRESOLVED-IMPORT` | a synthetic undefined-function program returns run/exit 0; existing preset permits undefined imports | investigate with the Emception owner; do not mistake this fixture for a linker failure, change compiler flags or claim stage metadata proves import implementation |
+| `CS-RUNTIME-FUNCTION-PREPARATION-BUDGET` | original C++ string proof hit the combined guard during linking; user separately authorized the optional phase-start callback in CS-ADR-037 | scoped correction proved: 120-second shared preparation budget and frozen student limit start at explicit run; all scalar controls pass, finite/infinite programs remain distinguishable without grade receipts on cancellation; IDE/presets/harness unchanged; independent full-phase gates remain open |
 
 Owner: coding/grading investigates its public integration during UX03-A/B;
 the Emception owner approves any genuine upstream contract/implementation need.
 Do not remove retained exercises, rewrite snapshots, expose reference solutions,
 substitute compiler bytes or silently change legacy exit semantics. None of
-these findings authorizes a parallel harness, private import or IDE edit.
+these findings authorizes a parallel compiler/judge, private import or IDE edit.
+CS-ADR-036 narrowly authorizes owned scalar call/report/startup composition,
+not compound transport or a replacement public test engine.
 
 `tools/emception/packages/browser/src/canvas.ts` expoe build/start/stop por API
 publica. O workbench atual nao a integra; isso pertence a coding-surface, nao

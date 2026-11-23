@@ -29,6 +29,18 @@ Adopted: 2026-11-19, by explicit product instruction (Meta-Harness).
    facade and the existing public test engine, their focused tests, and the
    grading worker's phase guard may change. This is not permission to refactor
    the compiler, harness, IDE/UI, other runtime implementations or CI policy.
+   Additional composition decision on 2026-11-23 (CS-ADR-036): preserve the
+   upstream harness and supply owned transient ABI/startup/C call-report
+   files through public APIs. The official grading wrapper may consume only
+   the shared pure source-composition module, with dependency negatives and
+   its existing current-checkout worker build. Preserve separate SDK artifact
+   classification/provenance; this is not an SDK publication requirement,
+   producer waiver or permission for core/IDE changes.
+   Additional explicit exception approved on 2026-11-23 (CS-ADR-037): add an
+   optional compile/link/run start callback to CompileOptions and the browser
+   facade, with focused compatibility/type tests. The owned grading wrapper
+   uses it for separate bounded preparation/student timers. Preserve presets,
+   harness, IDE/UI and all other upstream behavior; no new compiler pipeline.
 5. Preserve published revisions, submitted files and historical migrations.
    Inventory actual stored data before changing interpretation. A necessary
    storage change follows `SCHEMA-GATE`, with a real migration and upgrade proof.
@@ -62,7 +74,7 @@ Adopted: 2026-11-19, by explicit product instruction (Meta-Harness).
 | `apps/api/Source/Modules/GameGuild.Learning.Assessments.CodeAdapter/` | server-side code adapter |
 | `apps/api/Source/GameGuild.API/` | host registration and product-specific bridges |
 | `apps/api/tests/` | affected contract, domain, integration and architecture tests |
-| `tools/emception/`, `packages/infrastructure/ui-emception/` | preserved upstream product and UI; read-only except the explicitly authorized grading-worker scope in CS-ADR-028 and narrow public-phase scope in CS-ADR-034; IDE/UI remain unchanged |
+| `tools/emception/`, `packages/infrastructure/ui-emception/` | preserved upstream product and UI; read-only except the authorized grading-worker scope in CS-ADR-028/036/037 and narrow public-phase scope in CS-ADR-034/037; IDE/UI remain unchanged |
 | platform modules listed in root `AGENTS.md` | no coding-specific edits or dependencies |
 
 ## Dependency graph
@@ -79,6 +91,7 @@ apps/web -> coding-surface -> coding -> zod
 apps/web -> authorized API client and host persistence/command ports
 
 trusted grading worker wrapper -> owned transport/budget/frozen-binding guards
+                               -> exact pure coding native-function-support module
                                -> public Emception execution/testing APIs
 
 API composition root -> Courses
@@ -98,11 +111,15 @@ Callback ports invert control without reversing these imports. Existing
 third-party dependencies are not authorization to install another library.
 Check public exports and declared dependencies before planning their use.
 The worker wrapper is the already product-specific grading boundary, not an
-Emception core/browser/IDE dependency on coding. It must not import feature
-implementations into its separately fingerprinted artifact. Its small typed
+Emception core/browser/IDE dependency on coding. CS-ADR-036 permits only the
+shared pure native function source-composition module as a feature dependency,
+with a current-source worker build and dependency negatives; all other feature runtime
+imports remain forbidden. Its small typed
 wire/path guard deliberately mirrors the domain contract and has independent
-negative tests (CS-ADR-032). No manifest, installation, CI policy, upstream
-implementation or public-runtime export is changed.
+negative tests (CS-ADR-032). No manifest, installation, CI policy or public
+runtime export is changed outside the narrowly authorized phase contract and
+facade forwarding in CS-ADR-034/037. No compiler/harness/IDE changes follow
+from either exception.
 
 ## Mandatory atomic cycle
 
@@ -159,7 +176,10 @@ Do not broaden this workstream into unrelated authentication/economy fixes.
 - No teacher secrets in a learner fixture, browser cache or preview. No real
   course data/credentials in committed screenshots or test fixtures.
 - No manufactured artifact/provenance, permissive compiler identity, private
-  upstream imports, parallel harness/compiler, or undeclared dependency.
+  upstream imports, parallel compiler/judge, or undeclared dependency. Owned
+  native function support is limited to CS-ADR-036's shared call/report
+  composition; compound transport and a replacement general test engine remain
+  prohibited.
 - No hardcoded preview that ignores the edited draft, configuration forms in
   terminal output, or raw string fields substituting for the promised typed
   function interaction. Optional advanced raw input must roundtrip safely.
