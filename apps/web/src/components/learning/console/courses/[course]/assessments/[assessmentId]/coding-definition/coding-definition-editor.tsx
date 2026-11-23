@@ -147,6 +147,7 @@ interface TestRow {
 
 export function CodingDefinitionEditor({
   courseId,
+  assessmentId,
   assessmentSlug,
   programId,
   contentId,
@@ -234,11 +235,10 @@ export function CodingDefinitionEditor({
   // the page no longer has that surface (preset picker moved into the IDE
   // header). Seed once on mount so fileRows + testRows aren't empty.
   useEffect(() => {
-    if (initialContent) return;
+    if (initialContent || seededRef.current) return;
     seededRef.current = true;
     handleLanguageChange(initialLang);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [initialContent, initialLang]);
 
   // ── Validation ──
   const validationErrors = useMemo(
@@ -533,6 +533,7 @@ export function CodingDefinitionEditor({
               {ideMounted ? (
                 <CodingSurface
                   mode="author"
+                  contextKey={`author:${programId}:${contentId ?? assessmentId}`}
                   manifestUrl={EMCEPTION_MANIFEST_URL}
                   definition={codingAssignmentToDraftDefinition(
                     buildContent({

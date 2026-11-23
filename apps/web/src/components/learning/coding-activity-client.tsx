@@ -157,6 +157,7 @@ function CodingActivitySession({
   const receiveRunResult = useCallback((runResult: CodingPreviewResult) => {
     setReport(runResult.report);
   }, []);
+  const invalidateRunResult = useCallback(() => setReport(null), []);
 
   const seedFiles = useMemo(() => publicSeedFiles(assignment), [assignment]);
   const delivery = useMemo(
@@ -269,6 +270,7 @@ function CodingActivitySession({
           {Editor && runtime && delivery ? (
             <Editor
               mode="learner"
+              contextKey={runtime.submissionId}
               definition={delivery}
               workspaceConfig={workspaceConfig}
               workspaceStorageKey={draftStorageKey}
@@ -278,6 +280,7 @@ function CodingActivitySession({
               passingScore={passingScore}
               onSessionReady={receiveSession}
               onPreviewRun={receiveRunResult}
+              onPreviewInvalidated={invalidateRunResult}
             />
           ) : runtimeError || editorLoadError ? (
             <p role="alert" className="text-sm text-destructive">

@@ -1,10 +1,13 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { codingContractFixture } from '@game-guild/coding/testing';
+import { CODING_TOOLCHAIN } from '@game-guild/coding';
+import { createEmception } from '@gameguild/emception-browser';
 import { CodingSurface } from './coding-surface';
 import { getCodingSurfaceProfile } from './profile-registry';
 import { codingWorkspaceStorageKey } from './storage';
 import { workspaceConfigFromDefinition } from './workspace';
+import type { CodingEditorController } from './types';
 
 const { runtime } = vi.hoisted(() => ({ runtime: {
   workspace: {
@@ -27,6 +30,13 @@ const { runtime } = vi.hoisted(() => ({ runtime: {
 
 vi.mock('@gameguild/emception-browser', () => ({
   createEmception: vi.fn(async () => runtime),
+}));
+
+vi.mock('./preview-runner', () => ({
+  runCodingPreview: vi.fn(async () => ({
+    scope: 'public', academic: false, report: await runtime.runTests(),
+    score: { score: 100, passed: false, feedback: 'Local evidence' },
+  })),
 }));
 
 vi.mock('@monaco-editor/react', () => ({
@@ -99,7 +109,8 @@ describe('CodingSurface', () => {
   });
 
   it('renders per-case evidence after a learner preview', async () => {
-    render(<CodingSurface mode="learner" definition={learnerByType['standard-io']} maxScore={200} />);
+    const definition = executableDelivery();
+    render(<CodingSurface mode="learner" definition={definition} maxScore={200} />);
     const runButton = await screen.findByRole('button', { name: 'Run public tests' });
     await waitFor(() => expect((runButton as HTMLButtonElement).disabled).toBe(false));
     fireEvent.click(runButton);
@@ -109,6 +120,38 @@ describe('CodingSurface', () => {
     fireEvent.click(screen.getByTestId('test-case-1'));
     expect(screen.getByTestId('test-case-diagnostic-1').textContent).toContain('expected output');
     expect(screen.getByTestId('test-results-panel').textContent).toContain('not an official grade');
+    fireEvent.change(screen.getByTestId('monaco-editor'), { target: { value: 'edited after run' } });
+    expect(await screen.findByText(/Outdated result/)).toBeTruthy();
+  });
+
+  it('makes the editor and submission available without booting a runtime', async () => {
+    vi.mocked(createEmception).mockClear();
+    const onReady = vi.fn<(editor: CodingEditorController) => void>();
+    const onSubmit = vi.fn();
+    render(<CodingSurface mode="learner" definition={executableDelivery()} onReady={onReady} onSubmit={onSubmit} />);
+    await waitFor(() => expect(onReady).toHaveBeenCalled());
+    expect(onReady.mock.calls[0]?.[0]).not.toHaveProperty('api');
+    fireEvent.change(screen.getByTestId('monaco-editor'), { target: { value: 'offline edited code' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit solution' }));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ files: expect.arrayContaining([expect.objectContaining({ content: 'offline edited code' })]) })));
+    expect(createEmception).not.toHaveBeenCalled();
+  });
+
+  it('starts a clean workspace when the authenticated context changes', async () => {
+    const definition = executableDelivery();
+    const { rerender } = render(<CodingSurface mode="learner" contextKey="attempt-a" definition={definition} />);
+    fireEvent.change(screen.getByTestId('monaco-editor'), { target: { value: 'attempt-a code' } });
+    rerender(<CodingSurface mode="learner" contextKey="attempt-b" definition={definition} />);
+    expect(screen.getByDisplayValue(definition.files[0].content)).toBeTruthy();
+    expect(screen.queryByDisplayValue('attempt-a code')).toBeNull();
+  });
+
+  it('does not persist private author buffers as learner drafts', async () => {
+    const key = 'coding-private-author-test';
+    window.localStorage.removeItem(key);
+    render(<CodingSurface mode="author" definition={authoringByType['standard-io']} workspaceStorageKey={key} />);
+    fireEvent.change(screen.getByTestId('monaco-editor'), { target: { value: 'author draft' } });
+    expect(window.localStorage.getItem(key)).toBeNull();
   });
 
   it('uses the complete-test command in grader mode', async () => {
@@ -150,3 +193,11 @@ describe('CodingSurface', () => {
     expect(await screen.findByDisplayValue('int helper(){return 7;}')).toBeTruthy();
   });
 });
+
+function executableDelivery() {
+  const definition = structuredClone(codingContractFixture.learnerDelivery);
+  definition.environment = { language: 'cpp', runtime: 'wasi' };
+  definition.toolchain = { key: 'cpp-emception', ...CODING_TOOLCHAIN };
+  definition.limits = { timeLimitMs: 30_000, outputLimitBytes: 2_000_000, maxFileCount: 16 };
+  return definition;
+}

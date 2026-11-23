@@ -2,23 +2,27 @@
 
 import Editor from '@monaco-editor/react';
 import { normalizeCodingPath, type CodingAuthoringDefinition, type CodingLearnerDelivery } from '@game-guild/coding';
-import type { BrowserEmceptionAPI } from '@gameguild/emception-browser';
-import type { IdeController, IdeExtension, WorkspaceConfig, WorkspaceFile } from '@gameguild/emception-ide';
+import type { WorkspaceConfig, WorkspaceFile } from '@gameguild/emception-ide';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { createCodingEditorFiles, restoreCodingEditorFiles } from './editor-files';
+import { captureCodingSubmission } from './session';
+import type { CodingEditorController, CodingSurfaceExtension, CodingSurfaceMode } from './types';
 
 interface CodingWorkbenchProps {
   readonly definition: CodingAuthoringDefinition | CodingLearnerDelivery;
+  readonly mode: CodingSurfaceMode;
+  readonly contextKey: string;
   readonly workspaceConfig: WorkspaceConfig;
   readonly workspaceStorageKey?: string;
   readonly enableWorkspace: boolean;
   readonly allowFileCreation: boolean;
-  readonly manifestUrl?: string;
   readonly readOnly: boolean;
   readonly details: ReactNode;
   readonly controls: ReactNode;
   readonly result: ReactNode;
-  readonly extensions: readonly IdeExtension[];
-  readonly onReady: (controller: IdeController) => void;
+  readonly extensions: readonly CodingSurfaceExtension[];
+  readonly onReady: (controller: CodingEditorController) => void;
+  readonly onFilesChange: () => void;
 }
 
 /**
@@ -27,129 +31,74 @@ interface CodingWorkbenchProps {
  */
 export function CodingWorkbench({
   definition,
+  mode,
+  contextKey,
   workspaceConfig,
   workspaceStorageKey,
   enableWorkspace,
   allowFileCreation,
-  manifestUrl,
   readOnly,
   details,
   controls,
   result,
   extensions,
   onReady,
+  onFilesChange,
 }: CodingWorkbenchProps) {
   // A mounted attempt owns its workspace. Hosts use replaceFiles when a
   // language/template changes, so object churn in definition must not erase edits.
-  const [initialFiles] = useState(() =>
-    createInitialFiles(definition, workspaceConfig, enableWorkspace ? workspaceStorageKey : undefined),
-  );
+  const [initial] = useState(() => {
+    const files = createCodingEditorFiles(definition, workspaceConfig, mode);
+    try {
+      const saved =
+        typeof window !== 'undefined' && mode === 'learner' && enableWorkspace && workspaceStorageKey ? window.localStorage.getItem(workspaceStorageKey) : null;
+      return { files: saved ? restoreCodingEditorFiles(files, definition, JSON.parse(saved)) : files, error: null };
+    } catch {
+      return { files, error: 'Local draft could not be restored. The saved copy has not been overwritten.' };
+    }
+  });
+  const initialFiles = initial.files;
   const [files, setFiles] = useState<Record<string, WorkspaceFile>>(initialFiles);
   const filesRef = useRef(files);
-  filesRef.current = files;
   const [activePath, setActivePath] = useState(() => selectInitialPath(initialFiles, definition.entryPoint.path));
-  const [api, setApi] = useState<BrowserEmceptionAPI | null>(null);
-  const [runtimeState, setRuntimeState] = useState<'loading' | 'ready' | 'error'>('loading');
-  const [runtimeError, setRuntimeError] = useState<string | null>(null);
-  const [consoleOutput, setConsoleOutput] = useState('');
-
-  const appendOutput = useCallback((text: string) => {
-    setConsoleOutput((previous) => `${previous}${text}`.slice(-100_000));
-  }, []);
-
+  const [editorError, setEditorError] = useState<string | null>(initial.error);
+  const definitionRef = useRef(definition);
   useEffect(() => {
-    let active = true;
-    let ownedApi: BrowserEmceptionAPI | null = null;
-    setRuntimeState('loading');
-    setRuntimeError(null);
-
-    void import('@gameguild/emception-browser')
-      .then(({ createEmception }) =>
-        createEmception({
-          manifestUrl,
-          tty: 'none',
-          onStdout: appendOutput,
-          onStderr: appendOutput,
-        }),
-      )
-      .then(async (nextApi) => {
-        ownedApi = nextApi;
-        if (!active) {
-          nextApi.dispose();
-          return;
-        }
-        const toolchain = workspaceConfig.compile.toolchain;
-        if (toolchain) await nextApi.workspace.setBuild({ toolchain });
-        await syncFiles(nextApi, filesRef.current);
-        if (!active) return;
-        setApi(nextApi);
-        setRuntimeState('ready');
-      })
-      .catch((error: unknown) => {
-        if (!active) return;
-        setRuntimeState('error');
-        setRuntimeError(error instanceof Error ? error.message : String(error));
-      });
-
-    return () => {
-      active = false;
-      ownedApi?.dispose();
-    };
-  }, [appendOutput, manifestUrl, workspaceConfig.compile.toolchain]);
-
-  const syncWorkspace = useCallback(async () => {
-    if (!api) throw new Error('The coding runtime is not ready.');
-    await syncFiles(api, filesRef.current);
-  }, [api]);
+    definitionRef.current = definition;
+  }, [definition]);
 
   const replaceFiles = useCallback(
     async (nextFiles: readonly WorkspaceFile[]) => {
       const normalized = normalizeWorkspaceFiles(nextFiles);
-      if (api) {
-        const removed = Object.keys(filesRef.current).filter((path) => normalized[path] == null);
-        await Promise.all(
-          removed.map(async (path) => {
-            if ((await api.workspace.readFile(path)) !== null) await api.workspace.deleteFile(path);
-          }),
-        );
-        await syncFiles(api, normalized);
-      }
       filesRef.current = normalized;
       setFiles(normalized);
-      setActivePath((current) => (normalized[current] ? current : selectInitialPath(normalized, definition.entryPoint.path)));
+      setActivePath((current) => (normalized[current] ? current : selectInitialPath(normalized, definitionRef.current.entryPoint.path)));
+      onFilesChange();
     },
-    [api, definition.entryPoint.path],
+    [onFilesChange],
   );
 
   const setFilesReadOnly = useCallback((paths: readonly string[], nextReadOnly: boolean) => {
     const normalizedPaths = new Set(paths.map(normalizeCodingPath));
-    setFiles((previous) => {
-      const next = { ...previous };
-      for (const path of normalizedPaths) {
-        const file = next[path];
-        if (file) next[path] = { ...file, readonly: nextReadOnly };
-      }
-      filesRef.current = next;
-      return next;
-    });
+    const next = { ...filesRef.current };
+    for (const path of normalizedPaths) {
+      const file = next[path];
+      if (file) next[path] = { ...file, readonly: nextReadOnly };
+    }
+    filesRef.current = next;
+    setFiles(next);
   }, []);
 
-  const controller = useMemo<IdeController | null>(
-    () =>
-      api
-        ? {
-            api,
-            getFiles: async () => Object.values(filesRef.current).map((file) => ({ ...file })),
-            syncWorkspace,
-            replaceFiles,
-            setFilesReadOnly,
-          }
-        : null,
-    [api, replaceFiles, setFilesReadOnly, syncWorkspace],
+  const controller = useMemo<CodingEditorController>(
+    () => ({
+      getFiles: async () => Object.values(filesRef.current).map((file) => ({ ...file })),
+      replaceFiles,
+      setFilesReadOnly,
+    }),
+    [replaceFiles, setFilesReadOnly],
   );
 
   useEffect(() => {
-    if (!controller) return;
     onReady(controller);
     const dispose = extensions.flatMap((extension) => {
       const cleanup = extension.onReady?.(controller);
@@ -159,10 +108,13 @@ export function CodingWorkbench({
   }, [controller, extensions, onReady]);
 
   useEffect(() => {
-    if (!enableWorkspace || !workspaceStorageKey || typeof window === 'undefined') return;
-    const serializable = Object.fromEntries(Object.entries(files).filter(([, file]) => file.type === 'text'));
-    window.localStorage.setItem(workspaceStorageKey, JSON.stringify({ files: serializable, activePath }));
-  }, [activePath, enableWorkspace, files, workspaceStorageKey]);
+    if (mode !== 'learner' || initial.error || !enableWorkspace || !workspaceStorageKey) return;
+    try {
+      window.localStorage.setItem(workspaceStorageKey, JSON.stringify(captureCodingSubmission(definitionRef.current, Object.values(files))));
+    } catch {
+      setEditorError('Local draft could not be saved. Keep this page open until your solution is submitted.');
+    }
+  }, [enableWorkspace, files, initial.error, mode, workspaceStorageKey]);
 
   const activeFile = files[activePath] ?? null;
   const textFiles = Object.values(files).filter((file) => file.type === 'text');
@@ -171,15 +123,14 @@ export function CodingWorkbench({
   const changeActiveFile = useCallback(
     (content: string | undefined) => {
       if (content == null) return;
-      setFiles((previous) => {
-        const current = previous[activePath];
-        if (!current || current.type !== 'text' || current.readonly || readOnly) return previous;
-        const next = { ...previous, [activePath]: { ...current, content } };
-        filesRef.current = next;
-        return next;
-      });
+      const current = filesRef.current[activePath];
+      if (!current || current.type !== 'text' || current.readonly || readOnly || current.content === content) return;
+      const next = { ...filesRef.current, [activePath]: { ...current, content } };
+      filesRef.current = next;
+      setFiles(next);
+      onFilesChange();
     },
-    [activePath, readOnly],
+    [activePath, onFilesChange, readOnly],
   );
 
   const addFile = useCallback(() => {
@@ -190,19 +141,24 @@ export function CodingWorkbench({
     try {
       path = normalizeCodingPath(requested);
     } catch (error) {
-      setRuntimeError(error instanceof Error ? error.message : String(error));
+      setEditorError(error instanceof Error ? error.message : String(error));
       return;
     }
     if (filesRef.current[path]) {
-      setRuntimeError(`A file already exists at ${path}.`);
+      setEditorError(`A file already exists at ${path}.`);
+      return;
+    }
+    if (Object.keys(filesRef.current).length >= definitionRef.current.limits.maxFileCount) {
+      setEditorError('The exercise file limit has been reached.');
       return;
     }
     const next = { ...filesRef.current, [path]: { path, type: 'text' as const, content: '' } };
     filesRef.current = next;
     setFiles(next);
     setActivePath(path);
-    setRuntimeError(null);
-  }, [allowFileCreation, readOnly]);
+    setEditorError(null);
+    onFilesChange();
+  }, [allowFileCreation, onFilesChange, readOnly]);
 
   const extensionToolbar = controller
     ? extensions.map((extension) => <ExtensionSlot key={`${extension.id}:toolbar`}>{extension.toolbarEnd?.(controller)}</ExtensionSlot>)
@@ -225,9 +181,9 @@ export function CodingWorkbench({
 
       <section className="gg-coding-workspace" aria-label="Code workspace">
         <div className="gg-coding-toolbar">
-          <div className="gg-coding-runtime-status" data-state={runtimeState}>
+          <div className="gg-coding-runtime-status" data-state="ready">
             <span className="gg-coding-status-dot" aria-hidden="true" />
-            {runtimeState === 'loading' ? 'Starting runtime' : runtimeState === 'error' ? 'Runtime unavailable' : 'Ready'}
+            Editor ready
           </div>
           <div className="gg-coding-toolbar-actions">
             {extensionToolbar}
@@ -264,7 +220,7 @@ export function CodingWorkbench({
         <div className="gg-coding-editor" data-testid="coding-editor">
           {activeFile?.type === 'text' ? (
             <Editor
-              path={activeFile.path}
+              path={`coding://${encodeURIComponent(contextKey)}${activeFile.path}`}
               value={activeFile.content}
               language={languageForPath(activeFile.path)}
               theme="vs-dark"
@@ -289,23 +245,13 @@ export function CodingWorkbench({
         <section className="gg-coding-output" aria-label="Execution and test results">
           <div className="gg-coding-output-header">
             <strong>Tests and output</strong>
-            {consoleOutput ? (
-              <button type="button" className="gg-coding-clear" onClick={() => setConsoleOutput('')}>
-                Clear output
-              </button>
-            ) : null}
           </div>
-          {runtimeError ? (
+          {editorError ? (
             <p role="alert" className="gg-coding-error">
-              {runtimeError}
+              {editorError}
             </p>
           ) : null}
           <div className="gg-coding-result">{result}</div>
-          {consoleOutput ? (
-            <pre className="gg-coding-console" aria-label="Program output">
-              {consoleOutput}
-            </pre>
-          ) : null}
           {extensionBottom}
         </section>
       </section>
@@ -317,53 +263,6 @@ function ExtensionSlot({ children }: { readonly children: ReactNode }) {
   return children == null ? null : <>{children}</>;
 }
 
-function createInitialFiles(
-  definition: CodingAuthoringDefinition | CodingLearnerDelivery,
-  workspaceConfig: WorkspaceConfig,
-  storageKey: string | undefined,
-): Record<string, WorkspaceFile> {
-  const definitionByPath = new Map(definition.files.map((file) => [normalizeCodingPath(file.path), file]));
-  const initial: Record<string, WorkspaceFile> = {};
-
-  for (const [rawPath, bundle] of Object.entries(workspaceConfig.files)) {
-    const path = normalizeCodingPath(rawPath);
-    const authored = definitionByPath.get(path);
-    initial[path] = {
-      path,
-      type: bundle.encoding === 'base64' ? 'image' : 'text',
-      content: bundle.content,
-      readonly: authored ? !authored.mutable : false,
-    };
-  }
-  for (const [path, file] of definitionByPath) {
-    initial[path] ??= {
-      path,
-      type: file.encoding === 'base64' ? 'image' : 'text',
-      content: file.content,
-      readonly: !file.mutable,
-    };
-  }
-
-  if (!storageKey || typeof window === 'undefined') return initial;
-  try {
-    const parsed = JSON.parse(window.localStorage.getItem(storageKey) ?? 'null') as {
-      files?: Record<string, WorkspaceFile>;
-    } | null;
-    if (!parsed?.files) return initial;
-    for (const persisted of Object.values(parsed.files)) {
-      const path = normalizeCodingPath(persisted.path);
-      const authored = initial[path];
-      if (authored?.readonly) continue;
-      if (!authored && !definition.allowLearnerCreatedFiles) continue;
-      if (persisted.type !== 'text') continue;
-      initial[path] = { ...persisted, path, type: 'text', readonly: authored?.readonly ?? false };
-    }
-  } catch {
-    // Invalid local drafts never block the server-provided exercise.
-  }
-  return initial;
-}
-
 function normalizeWorkspaceFiles(files: readonly WorkspaceFile[]): Record<string, WorkspaceFile> {
   return Object.fromEntries(
     files.map((file) => {
@@ -371,21 +270,6 @@ function normalizeWorkspaceFiles(files: readonly WorkspaceFile[]): Record<string
       return [path, { ...file, path }];
     }),
   );
-}
-
-async function syncFiles(api: BrowserEmceptionAPI, files: Record<string, WorkspaceFile>): Promise<void> {
-  await Promise.all(
-    Object.values(files).map((file) => {
-      const content = file.type === 'image' ? decodeBase64(file.content) : file.content;
-      return api.workspace.writeFile(file.path, content);
-    }),
-  );
-}
-
-function decodeBase64(value: string): Uint8Array {
-  const normalized = value.includes(',') ? value.slice(value.indexOf(',') + 1) : value;
-  const decoded = atob(normalized);
-  return Uint8Array.from(decoded, (character) => character.charCodeAt(0));
 }
 
 function selectInitialPath(files: Record<string, WorkspaceFile>, entryPoint: string): string {

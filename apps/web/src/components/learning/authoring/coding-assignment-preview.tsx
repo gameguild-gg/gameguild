@@ -6,7 +6,7 @@ import {
   createCodingWorkspaceConfig,
   type CodingWorkspaceLanguage,
 } from "@game-guild/coding-surface";
-import { useEffect, useMemo, useState, type ComponentType } from "react";
+import { useEffect, useId, useMemo, useState, type ComponentType } from "react";
 import { EMCEPTION_MANIFEST_URL } from "@/lib/emception/manifest-url";
 import { codingAssignmentToAuthoringDefinition } from "@/lib/coding-assignment/coding-surface-bridge";
 
@@ -17,6 +17,10 @@ interface CodingAssignmentPreviewProps {
 export function CodingAssignmentPreview({
   assignment,
 }: CodingAssignmentPreviewProps) {
+  const instanceId = useId();
+  const encoded = JSON.stringify(assignment);
+  const [context, setContext] = useState({ encoded, generation: 0 });
+  if (context.encoded !== encoded) setContext({ encoded, generation: context.generation + 1 });
   const [Editor, setEditor] =
     useState<ComponentType<CodingAuthorTestSurfaceProps> | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -82,6 +86,7 @@ export function CodingAssignmentPreview({
     <div className="h-[70vh] min-h-[500px] overflow-hidden rounded-md border">
       <Editor
         mode="author-test"
+        contextKey={`${instanceId}:${context.generation}`}
         manifestUrl={EMCEPTION_MANIFEST_URL}
         definition={definition}
         workspaceConfig={workspaceConfig}

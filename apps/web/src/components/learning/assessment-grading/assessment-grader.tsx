@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useId, useMemo, useState } from 'react';
 import {
   CodingSurface,
   createCodingWorkspaceConfig,
@@ -72,9 +72,12 @@ export function AssessmentGrader({
   submittedFiles,
   maxScore,
   manifestUrl,
+  submissionId,
   onComputedScore,
 }: AssessmentGraderProps): React.JSX.Element {
+  const instanceId = useId();
   const [computed, setComputed] = useState<ComputedScore | null>(null);
+  const invalidateComputed = useCallback(() => setComputed(null), []);
   const mergedFiles = useMemo(
     () => mergeWorkspaceWithSubmission(assignment, submittedFiles),
     [assignment, submittedFiles],
@@ -136,6 +139,7 @@ export function AssessmentGrader({
       <div className="min-h-[400px] flex-1 border">
         <CodingSurface
           mode="grader"
+          contextKey={submissionId ?? instanceId}
           definition={definition}
           manifestUrl={manifestUrl}
           title="Grade submission"
@@ -145,6 +149,7 @@ export function AssessmentGrader({
           maxScore={maxScore}
           passingScore={0}
           onPreviewRun={handleRunResult}
+          onPreviewInvalidated={invalidateComputed}
         />
       </div>
     </div>

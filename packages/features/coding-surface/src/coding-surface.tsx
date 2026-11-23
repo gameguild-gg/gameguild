@@ -1,159 +1,308 @@
 import { CODE_CONTENT_TYPE } from '@game-guild/grading-adapter-code';
-import type { IdeController } from '@gameguild/emception-ide';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { CodingWorkbench } from './coding-workbench';
+import { CodingProgramOutput } from './program-output';
 import { getCodingSurfaceProfile, listCodingSurfaceProfiles } from './profile-registry';
-import { createCodingSurfaceSession } from './session';
+import { resolveCodingRuntimeCapabilities } from './runtime-capabilities';
 import { CodingTestResultsPanel } from './test-results-panel';
-import type { CodingPreviewResult, CodingSurfaceProps, CodingSurfaceSession } from './types';
+import type { CodingEditorController, CodingSurfaceProps } from './types';
+import { createCodingWorkbenchSession } from './workbench-session';
+import type { CodingWorkbenchSession, CodingWorkbenchState } from './workbench-session-types';
 import { workspaceConfigFromDefinition } from './workspace';
 
+const NO_EXTENSIONS = Object.freeze([]);
+
 export function CodingSurface(props: CodingSurfaceProps) {
+  const instanceId = useId();
+  const teardown = useRef<Promise<void>>(Promise.resolve());
   const status = props.status ?? 'ready';
   if (status !== 'ready') return <CodingSurfaceState status={status} message={props.statusMessage} />;
   if (props.definition.files.length === 0) return <CodingSurfaceState status="empty" message="This coding exercise has no workspace files." />;
-  return <ReadyCodingSurface {...props} />;
+  const contextKey = `${props.mode}:${props.contextKey ?? props.workspaceStorageKey ?? instanceId}`;
+  return <ReadyCodingSurface key={contextKey} {...props} contextKey={contextKey} teardown={teardown} />;
 }
 
-function ReadyCodingSurface(props: CodingSurfaceProps) {
+function ReadyCodingSurface(props: CodingSurfaceProps & { readonly contextKey: string; readonly teardown: { current: Promise<void> } }) {
   const profile = getCodingSurfaceProfile(props.definition.exerciseType);
-  const controllerRef = useRef<IdeController | null>(null);
-  const readOnlyPathsRef = useRef<readonly string[]>([]);
-  const [controller, setController] = useState<IdeController | null>(null);
-  const [session, setSession] = useState<CodingSurfaceSession | null>(null);
-  const [result, setResult] = useState<CodingPreviewResult | null>(null);
-  const [runError, setRunError] = useState<string | null>(null);
-  const [running, setRunning] = useState(false);
+  const [editor, setEditor] = useState<CodingEditorController | null>(null);
+  const sessionRef = useRef<CodingWorkbenchSession | null>(null);
+  const callbacks = useRef(props);
+  useEffect(() => {
+    callbacks.current = props;
+  });
+  const [session, setSession] = useState<CodingWorkbenchSession | null>(null);
+  const [state, setState] = useState<CodingWorkbenchState | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const workspaceConfig = useMemo(
-    () => props.workspaceConfig ?? workspaceConfigFromDefinition(props.definition),
-    [props.definition, props.workspaceConfig],
-  );
-
-  const receiveController = useCallback((nextController: IdeController) => {
-    if (controllerRef.current === nextController) return;
-    controllerRef.current = nextController;
-    setController(nextController);
-  }, []);
+  const [inputMode, setInputMode] = useState<'batch' | 'interactive'>('batch');
+  const [stdin, setStdin] = useState('');
+  const encodedDefinition = JSON.stringify(props.definition);
+  const [definitionSnapshot, setDefinitionSnapshot] = useState({ encoded: encodedDefinition, definition: props.definition });
+  if (definitionSnapshot.encoded !== encodedDefinition) setDefinitionSnapshot({ encoded: encodedDefinition, definition: props.definition });
+  const definition = definitionSnapshot.definition;
+  const workspaceConfig = useMemo(() => props.workspaceConfig ?? workspaceConfigFromDefinition(props.definition), [props.definition, props.workspaceConfig]);
+  const receiveEditor = useCallback((controller: CodingEditorController) => setEditor(controller), []);
 
   useEffect(() => {
-    if (!controller) return;
-    props.onReady?.(controller);
-  }, [controller, props.onReady]);
+    if (!editor) return;
+    callbacks.current.onReady?.(editor);
+  }, [editor, props.onReady]);
 
   useEffect(() => {
-    if (!controller) return;
-    controller.setFilesReadOnly(readOnlyPathsRef.current, false);
-    const readOnlyPaths = props.definition.files.filter((file) => !file.mutable).map((file) => file.path);
-    controller.setFilesReadOnly(readOnlyPaths, true);
-    readOnlyPathsRef.current = readOnlyPaths;
-    const nextSession = createCodingSurfaceSession({
-      controller,
-      definition: props.definition,
+    if (!editor) return;
+    let current = true;
+    editor.setFilesReadOnly(
+      definition.files.filter((file) => file.mutable).map((file) => file.path),
+      false,
+    );
+    editor.setFilesReadOnly(
+      definition.files.filter((file) => !file.mutable).map((file) => file.path),
+      true,
+    );
+    const next = createCodingWorkbenchSession({
+      candidateKey: props.contextKey,
+      definition,
       mode: props.mode,
+      editor,
+      manifestUrl: props.manifestUrl ?? '/emception/manifest.json',
       maxScore: props.maxScore,
       passingScore: props.passingScore,
-      onResult: (next) => {
-        setResult(next);
-        props.onPreviewRun?.(next);
-      },
+      beforeExecution: props.teardown.current,
     });
-    setResult(null);
-    setRunError(null);
-    setSession(nextSession);
-    props.onSessionReady?.(nextSession);
-  }, [controller, props.definition, props.maxScore, props.mode, props.onPreviewRun, props.onSessionReady, props.passingScore]);
+    sessionRef.current = next;
+    setSession(next);
+    setState(next.getState());
+    setError(null);
+    const unsubscribe = next.subscribe(() => {
+      if (current) setState(next.getState());
+    });
+    callbacks.current.onSessionReady?.(next);
+    return () => {
+      current = false;
+      unsubscribe();
+      if (next.getState().result) callbacks.current.onPreviewInvalidated?.();
+      if (sessionRef.current === next) sessionRef.current = null;
+      const closing = next.dispose();
+      props.teardown.current = closing;
+      // Keep a failed barrier rejected for the next context, but observe it now.
+      void closing.catch((cause: unknown) => {
+        if (current) setError(message(cause));
+      });
+    };
+  }, [definition, editor, props.contextKey, props.manifestUrl, props.maxScore, props.mode, props.passingScore, props.teardown]);
 
-  useEffect(() => () => {
-    controllerRef.current?.setFilesReadOnly(readOnlyPathsRef.current, false);
-    controllerRef.current = null;
+  const invalidate = useCallback(() => {
+    callbacks.current.onPreviewInvalidated?.();
+    const current = sessionRef.current;
+    if (current) void current.invalidate().catch((cause: unknown) => setError(message(cause)));
   }, []);
 
-  const run = useCallback(async () => {
-    if (!session || running) return;
-    setRunning(true);
-    setRunError(null);
-    try { await session.run(); }
-    catch (error) { setRunError(error instanceof Error ? error.message : String(error)); }
-    finally { setRunning(false); }
-  }, [running, session]);
+  const execute = useCallback(
+    async (operation: 'tests' | 'program' | 'stop') => {
+      const current = sessionRef.current;
+      if (!current) return;
+      setError(null);
+      try {
+        if (operation === 'stop') await current.stop();
+        else if (operation === 'program') await current.runProgram(inputMode === 'batch' ? { kind: 'batch', text: stdin } : { kind: 'interactive' });
+        else {
+          const result = await current.run();
+          if (sessionRef.current === current && !current.getState().stale) callbacks.current.onPreviewRun?.(result);
+        }
+      } catch (cause: unknown) {
+        if (sessionRef.current === current && current.getState().error) setError(message(cause));
+      }
+    },
+    [inputMode, stdin],
+  );
 
   const submit = useCallback(async () => {
-    if (props.mode !== 'learner' || !props.onSubmit || !session || submitting) return;
+    const current = sessionRef.current;
+    const host = callbacks.current;
+    if (host.mode !== 'learner' || !host.onSubmit || !current || submitting) return;
     setSubmitting(true);
-    try { await props.onSubmit(await session.getSubmission()); }
-    finally { setSubmitting(false); }
-  }, [props, session, submitting]);
+    try {
+      await host.onSubmit(await current.getSubmission());
+    } catch (cause: unknown) {
+      setError(message(cause));
+    } finally {
+      setSubmitting(false);
+    }
+  }, [submitting]);
 
-  const runLabel = props.mode === 'learner'
-    ? 'Run public tests'
-    : props.mode === 'grader'
-      ? 'Run full tests'
-      : 'Preview tests';
+  const capabilities = props.definition.environment
+    ? resolveCodingRuntimeCapabilities({
+        exerciseType: props.definition.exerciseType,
+        execution: { environment: props.definition.environment, toolchain: props.definition.toolchain },
+        mode: props.mode === 'author' ? 'author-test' : props.mode,
+        readOnly: props.readOnly ?? false,
+        allowLearnerCreatedFiles: props.definition.allowLearnerCreatedFiles,
+        graphicsPanelVisible: false,
+      })
+    : null;
+  const textEnvironment = props.definition.environment?.runtime === 'wasi' && props.definition.limits.memoryLimitBytes === undefined;
+  const nativeSources = props.definition.files.filter((file) => file.encoding === 'text' && /\.(?:c|cc|cpp|cxx)$/i.test(file.path));
+  const canRunProgram =
+    textEnvironment && props.definition.environment?.language === 'cpp' && nativeSources.length === 1 && capabilities?.program.status === 'available';
+  const canRunTests = textEnvironment && capabilities?.tests.status === 'available';
+  const busy = Boolean(state && state.operation !== 'idle' && state.operation !== 'disposed');
+  const runLabel = props.mode === 'learner' ? 'Run public tests' : props.mode === 'grader' ? 'Run full tests' : 'Preview tests';
 
   return (
-    <section data-coding-content-type={CODE_CONTENT_TYPE} data-coding-mode={props.mode} data-exercise-type={profile.type} style={{ display: 'grid', gridTemplateRows: 'auto minmax(420px, 1fr)', minHeight: 500, height: '100%', overflow: 'hidden' }}>
+    <section
+      data-coding-content-type={CODE_CONTENT_TYPE}
+      data-coding-mode={props.mode}
+      data-exercise-type={profile.type}
+      style={{ display: 'grid', gridTemplateRows: 'auto minmax(420px, 1fr)', minHeight: 500, height: '100%', overflow: 'hidden' }}
+    >
       <header style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 12, borderBottom: '1px solid rgb(63 63 70)', padding: '10px 12px' }}>
-        <div style={{ minWidth: 0, flex: 1 }}>
-          <strong>{props.title ?? profile.label}</strong>
-          <p style={{ margin: '2px 0 0', fontSize: 12, opacity: 0.75 }}>{profile.guidance[props.mode]}</p>
-        </div>
+        <strong style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere' }}>{props.title ?? profile.label}</strong>
         {props.mode === 'author' ? (
           <label>
             <span style={{ marginRight: 6 }}>Exercise type</span>
             <select
               aria-label="Exercise type"
               value={props.definition.exerciseType}
-              onChange={(event) => props.onDefinitionChange?.({ ...props.definition, exerciseType: event.target.value as typeof props.definition.exerciseType })}
               disabled={!props.onDefinitionChange}
+              onChange={(event) => {
+                const type = listCodingSurfaceProfiles().find((item) => item.type === event.target.value)?.type;
+                if (type) props.onDefinitionChange?.({ ...props.definition, exerciseType: type });
+              }}
             >
-              {listCodingSurfaceProfiles().map((item) => <option key={item.type} value={item.type}>{item.label}</option>)}
+              {listCodingSurfaceProfiles().map((item) => (
+                <option key={item.type} value={item.type}>
+                  {item.label}
+                </option>
+              ))}
             </select>
           </label>
-        ) : <span>{profile.label}</span>}
-        {props.mode === 'learner' && props.onSubmit ? <button type="button" onClick={() => void submit()} disabled={!session || submitting}>{submitting ? 'Submitting...' : 'Submit solution'}</button> : null}
+        ) : props.title ? (
+          <span>{profile.label}</span>
+        ) : null}
+        {props.mode === 'learner' && props.onSubmit ? (
+          <button type="button" onClick={() => void submit()} disabled={!session || submitting}>
+            {submitting ? 'Submitting...' : 'Submit solution'}
+          </button>
+        ) : null}
         {props.mode === 'grader' && props.onReviewDecision ? (
           <div>
-            <button type="button" onClick={() => props.onReviewDecision?.('approve')}>Approve</button>
-            <button type="button" onClick={() => props.onReviewDecision?.('request-changes')}>Request changes</button>
+            <button type="button" onClick={() => props.onReviewDecision?.('approve')}>
+              Approve
+            </button>
+            <button type="button" onClick={() => props.onReviewDecision?.('request-changes')}>
+              Request changes
+            </button>
           </div>
         ) : null}
         {props.header}
       </header>
       <CodingWorkbench
         definition={props.definition}
-        manifestUrl={props.manifestUrl}
+        mode={props.mode}
+        contextKey={props.contextKey}
         workspaceConfig={workspaceConfig}
         workspaceStorageKey={props.workspaceStorageKey}
         enableWorkspace={props.enableWorkspace ?? true}
-        allowFileCreation={props.mode !== 'learner' || props.definition.allowLearnerCreatedFiles}
+        allowFileCreation={capabilities?.createFiles.status === 'available'}
         readOnly={props.readOnly ?? false}
-        onReady={receiveController}
-        extensions={props.extensions ?? []}
-        details={<CodingProfileContext profile={profile} props={props} />}
-        controls={(
-          <button type="button" onClick={() => void run()} disabled={!session || running}>
-            {running ? 'Running...' : runLabel}
-          </button>
-        )}
-        result={(
+        onReady={receiveEditor}
+        onFilesChange={invalidate}
+        extensions={props.extensions ?? NO_EXTENSIONS}
+        details={<CodingProfileContext props={props} />}
+        controls={
+          <>
+            <button
+              type="button"
+              onClick={() => void execute('program')}
+              disabled={!session || busy || !canRunProgram}
+              title={canRunProgram ? 'Run program without evaluating tests' : 'Program execution is unavailable for this environment or source shape'}
+            >
+              Run program
+            </button>
+            <button
+              type="button"
+              onClick={() => void execute('tests')}
+              disabled={!session || busy || !canRunTests}
+              title={canRunTests ? runLabel : 'Test execution is unavailable for this environment or binding'}
+            >
+              {state?.operation === 'tests' ? 'Running tests...' : runLabel}
+            </button>
+            <button type="button" onClick={() => void execute('stop')} disabled={!busy || state?.operation === 'stopping'}>
+              Stop
+            </button>
+          </>
+        }
+        result={
           <div aria-label="Coding preview results">
-            {runError ? <p role="alert">{runError}</p> : null}
-            {result ? <CodingTestResultsPanel result={result} maxScore={props.maxScore ?? 100} /> : <p>No preview run yet.</p>}
+            {error || state?.error ? <p role="alert">{error ?? state?.error}</p> : null}
+            {!canRunTests ? <p role="status">Local tests unavailable for this environment or binding.</p> : null}
+            {canRunProgram ? (
+              <fieldset disabled={busy} style={{ border: 0, padding: 0, margin: '0 0 12px', minWidth: 0 }}>
+                <legend>Program input</legend>
+                <label style={{ marginRight: 12 }}>
+                  <input type="radio" name={`input-${props.contextKey}`} checked={inputMode === 'batch'} onChange={() => setInputMode('batch')} />
+                  Batch
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name={`input-${props.contextKey}`}
+                    checked={inputMode === 'interactive'}
+                    onChange={() => setInputMode('interactive')}
+                    disabled={capabilities?.interactiveInput.status !== 'available'}
+                  />
+                  Interactive
+                </label>
+                {inputMode === 'batch' ? (
+                  <textarea
+                    aria-label="Program stdin"
+                    value={stdin}
+                    onChange={(event) => setStdin(event.target.value)}
+                    rows={2}
+                    style={{ display: 'block', width: '100%', boxSizing: 'border-box' }}
+                  />
+                ) : null}
+              </fieldset>
+            ) : null}
+            {state?.program ? (
+              <CodingProgramOutput
+                key={state.executionId}
+                state={state.program}
+                interactive={inputMode === 'interactive' && state.operation === 'program'}
+                onInput={(text) => {
+                  try {
+                    sessionRef.current?.writeInput(text);
+                  } catch (cause: unknown) {
+                    setError(message(cause));
+                  }
+                }}
+                onEndInput={() => {
+                  try {
+                    sessionRef.current?.endInput();
+                  } catch (cause: unknown) {
+                    setError(message(cause));
+                  }
+                }}
+              />
+            ) : null}
+            {state?.program && state.programStale ? <p role="status">Outdated program output. Code or exercise settings changed.</p> : null}
+            {state?.stale && state.result ? <p role="status">Outdated result. Code or exercise settings changed.</p> : null}
+            {state?.result ? (
+              <div data-stale={state.stale || undefined}>
+                <CodingTestResultsPanel result={state.result} maxScore={props.maxScore ?? 100} />
+              </div>
+            ) : (
+              <p>No preview run yet.</p>
+            )}
           </div>
-        )}
+        }
       />
     </section>
   );
 }
 
-function CodingProfileContext({
-  profile,
-  props,
-}: {
-  readonly profile: ReturnType<typeof getCodingSurfaceProfile>;
-  readonly props: CodingSurfaceProps;
-}) {
+function CodingProfileContext({ props }: { readonly props: CodingSurfaceProps }) {
+  const profile = getCodingSurfaceProfile(props.definition.exerciseType);
   switch (props.mode) {
     case 'author': {
       const Renderer = profile.renderers.author;
@@ -174,7 +323,21 @@ function CodingProfileContext({
   }
 }
 
-function CodingSurfaceState({ status, message }: { status: Exclude<CodingSurfaceProps['status'], undefined>; message?: string }) {
-  const labels = { loading: 'Loading coding exercise...', empty: 'Coding exercise is empty.', error: 'Coding exercise could not be loaded.', unavailable: 'Coding executor is unavailable.', ready: 'Coding exercise is ready.' };
-  return <div role={status === 'error' ? 'alert' : 'status'} data-coding-state={status} style={{ display: 'grid', minHeight: 320, placeItems: 'center' }}>{message ?? labels[status]}</div>;
+function CodingSurfaceState({ status, message: supplied }: { status: Exclude<CodingSurfaceProps['status'], undefined>; message?: string }) {
+  const labels = {
+    loading: 'Loading coding exercise...',
+    empty: 'Coding exercise is empty.',
+    error: 'Coding exercise could not be loaded.',
+    unavailable: 'Coding executor is unavailable.',
+    ready: 'Coding exercise is ready.',
+  };
+  return (
+    <div role={status === 'error' ? 'alert' : 'status'} data-coding-state={status} style={{ display: 'grid', minHeight: 320, placeItems: 'center' }}>
+      {supplied ?? labels[status]}
+    </div>
+  );
+}
+
+function message(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
