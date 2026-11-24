@@ -4,36 +4,64 @@ using GameGuild.Identity.Context.Actors;
 using GameGuild.Learning.Assessments.Grading.Authoring;
 using GameGuild.Learning.Assessments.Grading.Contracts;
 using GameGuild.Learning.Courses;
+using GameGuild.Learning.Grading.Contracts;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Learning.Assessments.CodeAdapter;
-public sealed class CodeProgramContentPublicationParticipant(IApplicationDbContext context, CodeAssessmentTypeAdapter adapter, IAssessmentGradingSync gradingSync, IAssessmentAuthoringService authoring, IActorContextAccessor actors) : IProgramContentPublicationParticipant
+
+public sealed class CodeProgramContentPublicationParticipant(IApplicationDbContext context, CodeAssessmentTypeAdapter adapter, IAssessmentAuthoringService authoring, IActorContextAccessor actors) : IProgramContentPublicationParticipant
 {
+    private const string DefaultInstructorReviewConfiguration =
+        "{\"schemaVersion\":1,\"instructor\":{\"requireOverrideReason\":false}}";
+
     public bool CanHandle(ProgramContent content) => content.Type == ProgramContentType.Code;
     public Task PreparePublishAsync(ProgramContent content, AuthoringContentPayload payload, Guid actorId) =>
         PreparePublishAsync(content, payload, actorId, CancellationToken.None);
 
     public async Task PreparePublishAsync(ProgramContent content, AuthoringContentPayload payload, Guid actorId, CancellationToken cancellationToken)
     {
-        if (!payload.JsonBody.HasValue)
+        if (content.Type != ProgramContentType.Code || !payload.JsonBody.HasValue)
         {
             throw new ValidationException("Code content is required before publication.");
         }
 
-        var projection = adapter.ProjectAuthoring(payload.JsonBody.Value);
-        var definition = CodeAssessmentTypeAdapter.ReadDefinition(projection.Content);
-        await gradingSync.SyncAsync(content.Id, definition.Grading.MaxScore, cancellationToken).ConfigureAwait(false);
-        var assessment = await RequireAssessmentAsync(content.Id, cancellationToken).ConfigureAwait(false);
         var actor = actors.ActorContext;
-        if (actor.SubjectIdAsGuid != actorId || !actor.TenantId.HasValue || (assessment.TenantId.HasValue && assessment.TenantId != actor.TenantId))
+        if (!actor.IsAuthenticated || actor.SubjectIdAsGuid != actorId || !actor.TenantId.HasValue ||
+            (content.TenantId.HasValue && content.TenantId != actor.TenantId))
         {
             throw new ValidationException("A matching tenant-scoped actor is required to publish Code assessments.");
         }
 
+        var projection = adapter.ProjectAuthoring(payload.JsonBody.Value);
+        var assessment = await context.Set<Assessment>()
+            .SingleOrDefaultAsync(value => value.ContentId == content.Id && value.DeletedAt == null, cancellationToken)
+            .ConfigureAwait(false);
+        if (assessment is not null &&
+            (assessment.CourseId != content.ProgramId || assessment.Type != AssessmentType.Assignment ||
+             (assessment.TenantId.HasValue && assessment.TenantId != actor.TenantId)))
+        {
+            throw new ValidationException("The linked assessment does not match the Code content scope.");
+        }
+
+        if (assessment is null)
+        {
+            const ReviewMethods reviewMethods = ReviewMethods.AutomatedReview | ReviewMethods.InstructorReview;
+            assessment = Assessment.Create(content.ProgramId, payload.Title, AssessmentType.Assignment,
+                projection.MaxScore, payload.IsRequired, contentId: content.Id, reviewMethods: reviewMethods, slug: payload.Slug);
+            assessment.TenantId = content.TenantId ?? actor.TenantId;
+            assessment.SetDescription(payload.Description);
+            assessment.SetDeliveryContract(SubmissionModality.Code, AssessmentPresentationMode.SingleStep);
+            assessment.SetReviewPolicy(reviewMethods, DefaultInstructorReviewConfiguration,
+                assessment.AttemptContributionMode, assessment.ContentCompletionMode, assessment.ResultReleaseMode, assessment.ResultReleaseScheduledFor);
+            context.Set<Assessment>().Add(assessment);
+            return;
+        }
+
+        assessment.SetMaxScore(projection.MaxScore);
         assessment.TenantId ??= actor.TenantId;
         if (assessment.ReviewMethods.HasFlag(ReviewMethods.InstructorReview) && string.IsNullOrWhiteSpace(assessment.ReviewConfigurationCanonicalJson))
         {
-            assessment.SetReviewPolicy(assessment.ReviewMethods, "{\"schemaVersion\":1,\"instructor\":{\"requireOverrideReason\":false}}", assessment.AttemptContributionMode, assessment.ContentCompletionMode, assessment.ResultReleaseMode, assessment.ResultReleaseScheduledFor);
+            assessment.SetReviewPolicy(assessment.ReviewMethods, DefaultInstructorReviewConfiguration, assessment.AttemptContributionMode, assessment.ContentCompletionMode, assessment.ResultReleaseMode, assessment.ResultReleaseScheduledFor);
         }
 
         context.Set<Assessment>().Update(assessment);
