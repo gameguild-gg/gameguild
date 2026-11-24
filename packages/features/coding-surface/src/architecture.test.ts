@@ -48,6 +48,26 @@ describe('coding surface architecture', () => {
     expect(exported).toContain('./exercise-validation');
     expect(exported).toContain('./exercise-validation-types');
     expect(exported).toContain('./exercise-preparation');
+    expect(exported).toContain('./learner-practice-types');
+    expect(exported).toContain('./learner-practice');
+    expect(exported).toContain('./learner-cases');
+  });
+
+  it('keeps personal case preparation offline and outside academic and author-only state', () => {
+    const allowed: Record<string, readonly string[]> = {
+      'learner-practice-types.ts': ['@game-guild/coding'],
+      'learner-practice.ts': ['@game-guild/coding', './learner-practice-types'],
+      'learner-cases.tsx': ['react', 'lucide-react', './learner-practice', './learner-practice-types', './learner-practice.css'],
+    };
+    for (const [name, imports] of Object.entries(allowed)) {
+      const source = readFileSync(join(import.meta.dirname, name), 'utf8');
+      const file = ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true);
+      for (const statement of file.statements) {
+        if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)) expect(imports).toContain(statement.moduleSpecifier.text);
+      }
+      expect(source).not.toMatch(/\b(?:localStorage|sessionStorage|indexedDB|Worker|fetch|createEmception|validationSolutions|CodingAuthoringDefinition)\b/);
+      expect(source).not.toMatch(/\b(?:submit|release|grantPermission|runTests|compileAndRun)\s*\(/);
+    }
   });
 
   it('keeps authoring views offline and outside academic persistence/execution', () => {

@@ -1,0 +1,208 @@
+.cs-practice {
+  --practice-border: var(--border, #414550);
+  --practice-muted: var(--muted-foreground, #a8adb7);
+  --practice-active: var(--primary, #41c1ef);
+  color: var(--foreground, #eceef2);
+  background: var(--background, #14161a);
+  font:
+    13px/1.5 system-ui,
+    sans-serif;
+  letter-spacing: 0;
+  min-width: 0;
+}
+
+.cs-practice *,
+.cs-practice *::before,
+.cs-practice *::after {
+  box-sizing: border-box;
+}
+
+.cs-practice-toolbar,
+.cs-practice-tabs,
+.cs-practice-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.cs-practice-toolbar {
+  justify-content: space-between;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--practice-border);
+  padding: 8px;
+}
+
+.cs-practice button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.cs-practice-actions button {
+  border-color: var(--practice-border);
+  min-width: 36px;
+  flex-shrink: 0;
+}
+
+.cs-practice button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.cs-practice button:focus-visible,
+.cs-practice input:focus-visible,
+.cs-practice textarea:focus-visible {
+  outline: 2px solid var(--practice-active);
+  outline-offset: 2px;
+}
+
+.cs-practice [role='tab'][aria-selected='true'] {
+  border-bottom-color: var(--practice-active);
+  color: var(--practice-active);
+}
+
+.cs-practice-body {
+  display: grid;
+  grid-template-columns: minmax(120px, 180px) minmax(0, 1fr);
+  min-height: 240px;
+}
+
+.cs-practice-list {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  border-right: 1px solid var(--practice-border);
+  padding: 8px;
+  gap: 4px;
+  min-width: 0;
+}
+
+.cs-practice-list button {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.cs-practice-list [aria-pressed='true'] {
+  background: var(--accent, #2c3138);
+}
+
+.cs-practice-details {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.cs-practice-field {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.cs-practice-field label,
+.cs-practice-list p {
+  color: var(--practice-muted);
+  overflow-wrap: anywhere;
+}
+
+.cs-practice-field input,
+.cs-practice-field textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--practice-border);
+  border-radius: 4px;
+  color: inherit;
+  background: transparent;
+  font:
+    13px/1.5 ui-monospace,
+    monospace;
+  letter-spacing: 0;
+}
+
+.cs-practice-field textarea {
+  resize: vertical;
+}
+
+.cs-practice-field [readonly] {
+  background: var(--muted, #202328);
+}
+
+.cs-practice-expectation {
+  display: grid;
+  gap: 6px;
+}
+
+.cs-practice-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cs-practice-check input {
+  accent-color: var(--practice-active);
+}
+
+.cs-practice-error {
+  color: var(--destructive, #ff9292);
+  overflow-wrap: anywhere;
+  padding: 0 12px;
+}
+
+.cs-practice-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: #0009;
+}
+
+.cs-practice-dialog {
+  width: min(100%, 400px);
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  padding: 16px;
+  border: 1px solid var(--practice-border);
+  border-radius: 6px;
+  background: var(--background, #14161a);
+  overflow-wrap: anywhere;
+}
+
+.cs-practice-dialog h3 {
+  font-size: 15px;
+  margin: 0;
+}
+
+.cs-practice-dialog .cs-practice-actions {
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 560px) {
+  .cs-practice-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cs-practice-list {
+    border-right: 0;
+    border-bottom: 1px solid var(--practice-border);
+    max-height: 180px;
+    overflow: auto;
+  }
+}

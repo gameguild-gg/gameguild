@@ -69,6 +69,11 @@ Human acceptance, other entry requirements and broader phase/runtime gates
 remain open. Neither compilation, old failed evidence nor a stale binary
 closes them.
 
+UX05-A1 now prepares isolated learner cases through an offline controlled
+panel and pure public-only model (CS-ADR-051). The existing solving UI is not
+replaced in this slice. Shared execution/composition, actual runtime/persona
+acceptance and official submission/release remain separate pending work.
+
 Updated: 2026-11-24.
 
 Gate IDs: `CODE-UX-01` through `CODE-UX-06`.

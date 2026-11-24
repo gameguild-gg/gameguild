@@ -1,6 +1,9 @@
 # 3.6.5. Learner and review experiences
 
-Status: planned. Gate: `CODE-UX-05`. Depends on `CODE-UX-04`.
+Status: in progress; UX05-A1 offline case preparation is implemented, with
+closing evidence in the shared ledger. Shared solving/execution (A2), actual
+runtime/persona acceptance (A3), B and C remain open. Gate: `CODE-UX-05`.
+Depends on `CODE-UX-04`, with the named entry exception below.
 
 Specific entry exception: CS-ADR-050 allows independent core preparation while
 the global preference offline finding awaits part 05 investigation. Carry the
@@ -30,6 +33,29 @@ implementation -> Quality gate; see [QUALITY-GATES.md](./QUALITY-GATES.md).
 | UX05-A | solve both families using samples/custom input and diagnose errors | shared learner/preview props, immutable samples, scratch and authorized result states | expected/actual display, no-oracle output, stale/cancel/error states; scratch never changes teacher/academic data | focused problem/editor/cases/results views with usable narrow navigation | contract compilation + G-SURFACE/G-WEB + G-RUNTIME for CS-REF-03/04/14 |
 | UX05-B | recover edits and submit the exact visible snapshot once | scoped recovery and official-submit intent/ack/retry contract | refresh/actor switch, duplicate click, retry, later edits and no silent reset | host recovery/submission integration and distinct submitted state | G-SURFACE/G-WEB + G-RUNTIME for CS-REF-07/15; affected API cases |
 | UX05-C | inspect frozen attempts and show only authorized released feedback | reviewer read-only props and host pending/withheld/released read models | later teacher edits cannot change reviewed work; unreleased data withheld; feedback survives runtime failure | reviewer and learner feedback composition with adaptive regions | G-WEB + G-RUNTIME for CS-REF-16 + applicable quiz-grading protocol; persona walkthroughs |
+
+### UX05-A execution checkpoints
+
+Boundary decision: [CS-ADR-051](../DECISIONS.md#cs-adr-051-prepare-learner-cases-independently-from-execution-and-grades).
+
+1. **A1, offline case preparation:** define/compile public-only controlled
+   practice state and component ports, then prove immutable public cases,
+   personal copy/edit/duplicate/confirmed-delete, incomplete scalar buffers,
+   missing versus empty expectations and context separation. Implement only
+   the pure model and offline panel. Gate: strict package types, contract and
+   component/model tests, architecture negatives, unsuppressed lint and affected
+   existing consumers. This does not enable a run action or close runtime/API
+   requirements; the current solver is not replaced by an unfinished panel.
+2. **A2, solving composition and execution:** install the panel in the shared
+   learner/preview workspace with focused problem/editor/case/result views.
+   Reuse one existing execution owner. Specify and test known-expectation
+   comparison versus no-oracle observation, including typed function input,
+   cancellation, errors and stale results. No fabricated expected value,
+   private reference solution, alternative executor or academic command.
+3. **A3, acceptance:** prove actual UI/runtime behavior for both families and
+   current-source host/persona integration using the existing bounded harnesses.
+   Keep CS-REF-03/04/14, human approval and official grading distinct. An A1
+   component/type pass cannot promote these later gates.
 
 ## Work
 

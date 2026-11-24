@@ -1449,6 +1449,44 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   inventory/consumer regressions. No implementation, schema, dependency,
   launcher, authentication, Emception or UI change is part of this decision.
 
+## `CS-ADR-051`. Prepare learner cases independently from execution and grades
+
+- Date: 2026-11-24. Status: implemented within the approved UX05-A scope;
+  final closing evidence belongs in the shared implementation ledger.
+- Context: the existing shared learner/preview solver owns public-test
+  execution and cancellation, but has no personal-case observation port.
+  Function inputs without an expected result cannot honestly produce a
+  correctness verdict. Installing partially implemented run controls would
+  conflate preparation, execution and academic grading.
+- Decision: split UX05-A into A1 offline case preparation, A2 shared solving
+  composition/execution and A3 actual runtime/persona acceptance. A1 adds a
+  controlled component and pure in-memory model in `coding-surface`, consuming
+  only the strict public learner delivery and existing scalar draft types.
+  It does not replace the current solver or add a runtime/host/storage port.
+- Data: clone and freeze public cases and the coherent public function
+  signature; personal cases never mutate them. Flatten public function value
+  cases into independently inspectable samples. Preserve stdout, stderr and
+  exit expectations. Null means no expectation; empty text is intentional
+  data. Incomplete scalar text remains editable, not executable or correct.
+  Reject mismatched families/signatures, invalid identities, type/arity
+  changes, academic fields and oversized buffers without truncating content.
+- Interaction: public cases are read-only; add, rename, copy/duplicate and
+  confirmed delete affect the current personal context only. Keyboard tabs,
+  confirmation focus and disabled-state guards accompany responsive fields.
+  Empty public function data does not justify inventing a function signature.
+- Boundaries: public package exports -> controlled cases -> owned pure model
+  -> public `@game-guild/coding` contracts/parser. No Emception/IDE/UI source,
+  platform/API/schema, launcher, dependency or global preference is changed.
+  A1 creates no worker, submission, grade, released result or persistence.
+- Consequences: A2 must reuse the existing single execution owner and specify
+  comparison versus observation before enabling personal execution. Public
+  preparation tests and isolated screenshots cannot close CS-REF-03/04/14,
+  recovery/submission/release or human acceptance. CS-ADR-050 stays explicit.
+- Evidence: contract compilation preceded independent behavioral RED;
+  model/component/architecture checks and isolated browser controls are
+  recorded with exact commands, provenance and limitations in the ledger.
+- Affects: UX05-A1 preparation and its exported controlled ports only.
+
 ## Modelo para novas decisoes
 
 ```text

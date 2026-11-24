@@ -5,7 +5,111 @@ Last updated: 2026-11-24.
 Only the first active continuation is current. Later continuation sections
 retain historical evidence and do not authorize restarting earlier work.
 
-## Active continuation: UX04-C / C3 actual-host acceptance - 2026-11-24
+## Active continuation: UX05-A1 offline learner cases - 2026-11-24
+
+- Entry: user requested a commit and continuation; `75354c301e` commits the
+  explicit part-05 offline-investigation deferral. No push is requested.
+  CS-ADR-050 remains a named scheduling exception, not a clean C3 result.
+- Stage: UX05-A1 preparation is implemented and its scoped terminal gates
+  pass. This is not all of UX05-A, product cutover or runtime acceptance.
+  CS-ADR-051 records the contract/execution/grade separation. Next is A2.
+- Specification: immutable public cases may be copied into personal cases;
+  personal inputs retain incomplete scalar text; missing expected output is
+  distinct from intentional empty output. Add, rename, edit, duplicate and
+  confirmed delete operate only on the current in-memory practice context.
+  No runtime, storage, host, submission, grade or protected authoring data is
+  available to this panel. No fabricated pass or expected value is generated.
+- Allowed production files: new `learner-practice-types.ts`,
+  `learner-practice.ts`, `learner-cases.tsx`, `learner-practice.css` and their
+  public package exports and the narrowly named CSS module declaration.
+  Tests: new contract/model/component cases plus
+  existing architecture negatives. Do not change API, schema, dependency,
+  launcher, global preferences or any Emception/IDE/UI source.
+- The controlled panel will be installed in the shared learner/preview solving
+  composition with execution ports in UX05-A2. Native custom-call observation,
+  cancellation/stale-result behavior and real runtime/persona acceptance remain
+  UX05-A2/A3 obligations. Do not enable an unimplemented run action now.
+- Contract-first evidence: strict compilation and all three contract fixtures
+  passed before behavioral implementation. The independent RED report
+  `ux05-a1-red.json` has 32 expected missing-behavior failures and four passes,
+  not import/bootstrap failures. An additional audit negative independently
+  failed when incoherent public families/signatures were accepted; the model
+  now rejects them before preparing fields. Do not treat the filtered RED
+  invocation as a closing suite.
+- Implementation: `codingLearnerPractice` validates strict public delivery,
+  clones/freezes public samples/signature, flattens public function value
+  cases and creates scoped personal text buffers. It preserves incomplete
+  input and null versus empty stdout/stderr/exit/return expectations. It
+  rejects duplicate/invalid identities, wrong arity/types, academic fields
+  and oversized buffers instead of truncating or inventing an expected result.
+  `CodingLearnerCases` adds controlled read-only sample inspection and personal
+  copy/add/rename/edit/duplicate/confirmed-delete, keyboard tabs, deletion
+  focus restoration/trapping, disabled editing and visible operation errors.
+- Final terminal evidence (ignored artifacts under
+  `apps/web/test-results/coding-surface-refoundation/`):
+
+| Gate | Actual result | Evidence |
+| --- | --- | --- |
+| Strict package types | exit 0; includes all versioned source and fixtures | `ux05-a1-types-final-resources.json` |
+| Complete coding-surface suite, one worker | exit 0; 342 tests/26 files, zero failures/skips; 47 new contract/model/component cases and one new architecture case | `ux05-a1-surface-final.json` |
+| Existing six-file web consumer group | exit 0; 118 tests, zero failures/skips; dependencies mocked, no actual-host claim | `ux05-a1-web.json` |
+| Full strict web types | exit 0 with the existing 6144-MiB maximum Node heap; no source/config waiver | `ux05-a1-web-types-6g-resources.json` |
+| Full package unsuppressed ESLint | exit 0, zero diagnostics; `--no-inline-config --max-warnings=0` | `ux05-a1-lint-final-resources.json` |
+| Real isolated component browser diagnostic | both families, six layouts at 1440/390/320 px, no horizontal overflow, no uncaught errors or workers; only HTML/JS/CSS requests | `ux05-a1-browser/report.json` and six PNGs |
+| Documentation/patch hygiene | exit 0; 59 Markdown files, 264 local links, 12 complete atomic tables/36 rows; `git diff --check` clean | current G-DOC audit |
+
+- Exact terminal commands: `pnpm --filter @game-guild/coding-surface
+  typecheck`; `pnpm --filter @game-guild/coding-surface test --maxWorkers=1`;
+  `pnpm exec eslint --no-inline-config --max-warnings=0
+  packages/features/coding-surface/src`; and `NODE_OPTIONS=--max-old-space-size=6144
+  pnpm --filter @game-guild/web exec tsc --noEmit --pretty false`.
+  The six-file web Vitest selection is:
+  `src/components/learning/authoring/lesson-authoring-workspace.test.tsx`,
+  `src/components/learning/authoring/lesson-authoring-workspace-picker.test.tsx`,
+  `src/lib/coding-assignment/coding-surface-bridge.test.ts`,
+  `src/components/learning/coding-activity-client.test.tsx`,
+  `src/app/[locale]/learn/courses/[slug]/activities/[activityId]/coding-activity.test.tsx`
+  and `src/components/learning/assessment-grading/assessment-grader.test.tsx`,
+  using `pnpm --filter @game-guild/web exec vitest run` and `--maxWorkers=1`.
+  New model/panel/contract/test/style files and the CSS declaration also pass
+  the existing Prettier configuration. G-DOC uses
+  `node /tmp/coding-ux02c-doc-audit.mjs`.
+- Resource observations: the existing OS-pressure supervisor and CPUs 0-3
+  were used sequentially, leaving eight CPUs outside affinity. Peak owned RSS:
+  package tests 747 MiB, package types 698 MiB, strict lint 707 MiB, web tests
+  1220 MiB, full web types 6246 MiB and isolated browser 615 MiB. Minimum
+  available memory across the final checks was 11489 MiB versus a 4772-MiB
+  reserve, with zero measured PSI stalls/new kernel OOM kills. The first web
+  types invocation exhausted Node's default approximately 4-GiB heap and
+  exited nonzero (`ux05-a1-web-types-resources.json`); the supported command
+  maximum was increased for the retry, not allocated in advance or committed
+  as a launcher/config change. Initial local type/lint diagnostics were fixed
+  at their causes without suppressions or relaxed types.
+- Browser diagnostic: temporary fixture/driver use the production component
+  and current source hashes, checked against the final files. Public data is
+  unchanged after personal edits; no-oracle defaults remain null; real
+  keyboard deletion cancellation/confirmation and tab movement pass. Screenshots
+  were inspected. This is an isolated component proof, not Next/API, Monaco,
+  native execution, persona, official grading or human acceptance. The temporary
+  driver is `/tmp/coding-ux05-a1-browser.mjs`; its source fixture and output
+  are ignored test evidence, not a new public CLI. Browser/server were closed.
+- Visible diagnostic limitations: the existing jsdom canvas cases still print
+  four unsupported `getContext()` notices without failing their assertions;
+  no native canvas claim follows. The isolated Vite fixture emits two Lucide
+  `use client` directive warnings; it is not an RSC/production web build.
+  Neither observation was suppressed or converted into a claim of warning-free
+  runtime acceptance. Protected Emception/IDE/UI, API, dependency and launcher
+  diffs are empty; no DB migration or canonical capability status changed.
+- Next: UX05-A2 must specify and compile the shared solving/execution ports
+  before implementation, then prove comparison versus observation without a
+  hidden oracle or fabricated expected value. Scope practice state and run
+  identity to actor/revision/attempt, reuse one existing execution owner,
+  preserve invalid input for correction, and prove cancellation/stale-result
+  behavior. Install the panel only with the working shared learner/preview
+  composition; no second executor or academic command. A3 actual host/runtime/
+  persona and human acceptance, UX05-B/C, and the named C3 exception remain open.
+
+## Previous continuation: UX04-C / C3 actual-host acceptance - 2026-11-24
 
 - Entry: user requested separate commits, then continuation. C1 document
   adapters are `4b032f019f`; C2 Learning composition, authorized route
