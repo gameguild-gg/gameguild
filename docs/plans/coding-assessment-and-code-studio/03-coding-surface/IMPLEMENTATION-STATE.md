@@ -2,6 +2,120 @@
 
 Last updated: 2026-11-23.
 
+## Active continuation: UX04-A authoring task views - 2026-11-23
+
+- Entry: `0243e5b812`, clean tree. The requested part 05 planning commit is
+  complete; no push. Continue the independent UX04-A row already named below,
+  not part 05 repair execution or whole CODE-UX-04 acceptance.
+- Specification: controlled Problem/Environment/Starter/Tests views over the
+  accepted incomplete authoring draft. Preserve edits, selected cases/files and
+  signature buffers across navigation. Use typed function values or exact I/O
+  fields, distinct missing/empty expectations, duplicate/delete operations and
+  lossless change review. No compiler starts during authoring.
+- Allowed files: new owned authoring types, draft-view helpers, React task
+  components/styles and focused tests; public exports/architecture checks;
+  an isolated actual-component browser fixture and web test harness; current
+  state/ADR/consumer/duplication records. Existing declared Lucide icons may be
+  added as a direct package dependency with only its necessary lock entry.
+  No new library/version, SDK/IDE/UI, API/schema, launcher or compiler edit.
+- Stage order: type contracts first, then independent behavioral RED, minimum
+  implementation, strict G-SURFACE/G-CONTRACT and the affected host baseline,
+  then actual component desktop/mobile/offline task proof and Auditor review.
+  Actual reference/incorrect execution and host save/reopen/conflict wiring
+  remain UX04-B/C. Do not remove the host forms before their consumers migrate.
+- Result: independent UX04-A package task views implemented; scoped terminal
+  and actual-component gates pass. Whole CODE-UX-03/04, host persistence cutover,
+  official grading and human acceptance remain open. CS-ADR-044 records scope.
+
+### UX04-A results and retained evidence
+
+- Contract first: the distinct controlled authoring props compiled and three
+  contract tests passed before behavior. They consume the existing
+  `CodingAuthoringDraft`; the host supplies context, IDs and change callbacks.
+  No second schema, execution port, academic command or author-browser storage.
+- Independent first RED: 17 behavioral failures at the empty component;
+  `authoring-red.json` is retained in ignored refoundation evidence. Actual
+  views now cover Problem/Environment/Starter/Tests, typed scalar/function and
+  exact-I/O editing, nullable versus empty expectations, case groups, file
+  policies, offline Monaco and explicit family/signature/environment review.
+  Draft numeric buffers remain text, not Number/NaN coercions. Unsupported
+  graphical/RAM options are not promoted.
+- A later Auditor regression exposed a real stale protected-path binding on
+  file rename. `authoring-auditor-red.json` records 24 passes and that failure.
+  Rename now updates linked replacement paths by stable file ID, preserving
+  protected source bytes and keeping publication validation coherent. The
+  original blanket metadata-equality assertion was corrected: code bytes are
+  preserved, but matching path metadata must follow the identified file.
+- The actual-browser focus oracle then exposed loss of focus when confirming
+  a signature collapses its fields. `authoring-ZAOEgY/report.json` remains
+  failed. Restore focus to the disclosure summary when the original control
+  becomes hidden; otherwise retain ordinary trigger restoration. New unit
+  and real-browser controls pass without relaxing the focus assertion.
+- Final G-SURFACE: strict typecheck, 257 tests in 19 files, zero failures/skips,
+  full package `--no-inline-config --max-warnings=0` lint. G-CONTRACT: coding
+  130 tests and adapter 16 tests plus strict types/lint pass. Two existing jsdom
+  canvas notices remain visible; no canvas package/mock suppression was added.
+- G-WEB baseline: six actual files/133 tests, zero failures/skips, in
+  `authoring-host-regressions.json`. Exact paths are the learner client,
+  learner activity route, definition editor, lesson workspace, grader and wire
+  bridge. The initial command matched only five files/116 tests because of an
+  incorrect client path; it did not close the six-file gate. Corrected paths
+  and the report's actual testResults list prove the final selection. Vitest's
+  describe-suite count is not a file count. Harness lint passes under the
+  existing web config with the already documented empty suppression map.
+- Real actual-component proof: `authoring-flUZal/report.json`, all four named
+  required cases pass (function, standard I/O, keyboard and layout), actual
+  installed Monaco and eight desktop/wide/mobile captures. Zero compiler
+  requests/workers, zero browser draft-storage entries and zero page errors.
+  Inspected the final mobile source, wide function tests and mobile I/O tests.
+  Primary tabs fit narrow screens; completed signature fields collapse without
+  losing buffers; metadata and case configuration are outside execution output.
+- Preserve `authoring-fk6M7h/report.json`: the initial fixture waited for a tab
+  shared by the old/new contexts, letting the next workflow type before React
+  mounted the requested context. The harness now waits for the exact returned
+  context key and asserts the initial statement acknowledgement. This was a
+  fixture synchronization correction, not a passing earlier run.
+  `authoring-YLQF2a` passed before the additional focus oracle; final source and
+  harness hashes are recorded in `authoring-flUZal`.
+- Resource report `authoring-browser-resources-accepted.json`: exit 0, peak
+  owned-group RSS 1731 MiB, minimum available 9460 MiB versus 4772 MiB reserve,
+  zero memory PSI/OOM, 1 MiB paging, about four seconds, CPUs 0-3. No fixed RAM
+  allocation, WASM compiler or API stack. All owned browsers/servers closed.
+  Vite's visible use-client notices belong to the isolated CSR bundle and do
+  not establish a Next-host build/SSR pass.
+- Existing Lucide 1.59.0 is declared directly for the owned controls. Offline
+  metadata resolution could not find that already installed locked version;
+  reuse the exact existing web lock resolution, with only the three-line new
+  importer entry. Frozen offline install exits 0 without script execution or
+  new versions. The earlier pnpm sandbox cache failure was retried with access,
+  not classified as behavioral RED. Preserve normal manifest/lock CI impact
+  classification and conditional exact-source producer requirements.
+- G-REGRESSION: preserved Emception UI 27 tests, CI classifier/required gate 95
+  tests and preflight helpers 26 tests pass. No SDK/IDE/UI/compiler/preset,
+  API/platform/schema/migration, launcher or generated-client edit. No new
+  human scenario CLI, runtime publication, API/full-web build or canonical
+  capability promotion. No whole-phase/human acceptance is implied.
+
+Exact gate commands are in `06-refoundation/QUALITY-GATES.md`; the focused
+authoring command ran sequentially under the existing OS guard. Final G-DOC:
+58 documents, 254 local links and 12 atomic tables/36 complete rows pass with
+zero failures; `git diff --check` passes. Independently verified all ten source
+hashes and the harness hash in the accepted browser report against the final
+checkout; both consumers resolve the exact same installed Lucide directory.
+Protected runtime/IDE/UI/API/launcher paths have no task diff. All command
+sessions needed by the slice are complete, with no owned browser/server left.
+The requested planning and UX04-A implementation are recorded separately. The
+authoring implementation is being committed before starting UX04-B; no push.
+
+Next exact action: UX04-B in `06-refoundation/04-instructor-authoring-and-validation.md`.
+Specify candidate-bound reference/incorrect solution preparation and genuinely
+redacted learner preview, then contracts, independent RED and minimum owned
+integration over the proven public ports. UX04-C still owns host save/reopen,
+conflict/recovery, panel/file-tab fidelity and migration of the existing console
+form consumer. Do not remove that host before it can use the complete new flow.
+Required runtime stress/graphics, official part 04 E2E and human gates stay open;
+their Emception debt remains linked to the formal part 05 register.
+
 ## Active continuation: production text workbench - 2026-11-23
 
 - Entry: `2bfbdd63a5`, clean tree. The requested documentation commit is done.
@@ -123,11 +237,9 @@ Last updated: 2026-11-23.
   rows, zero failures; whitespace audit passes. Every task-required command
   session is complete and all owned browser/fixture servers are closed.
 
-Next exact action: UX04-A in `06-refoundation/04-instructor-authoring-and-validation.md`.
-Compose the agreed teacher task views over existing draft contracts, keep
-editing offline and remove long authoring forms from execution/output regions.
-Do not call this completion of part 03/04. Preserve separate runtime stress,
-official grading and human acceptance gates while advancing independent rows.
+Prior workbench handoff: UX04-A teacher task views, now implemented in the scoped
+checkpoint above. Follow its current UX04-B next action, not this historical
+handoff. This does not complete part 03/04 or waive their runtime/official gates.
 
 ## Current priority and post-plan findings - 2026-11-23
 

@@ -1,6 +1,9 @@
 # 3.6.4. Instructor authoring and exercise validation
 
-Status: planned. Gate: `CODE-UX-04`. Depends on `CODE-UX-03`.
+Status: independent UX04-A package task views implemented and locally validated
+on 2026-11-23 (CS-ADR-044). UX04-B/C and whole `CODE-UX-04` acceptance remain
+open. Final phase entry/acceptance still depends on `CODE-UX-03`; advancing this
+independent offline row does not waive its runtime or human gates.
 
 ## Invariants and boundaries
 
@@ -28,11 +31,17 @@ implementation -> Quality gate; see [QUALITY-GATES.md](./QUALITY-GATES.md).
 
 | Slice | Specification | Contract / schema | Test oracle | Minimal implementation | Quality gate |
 | --- | --- | --- | --- | --- | --- |
-| UX04-A | blank-to-complete authoring for both families with compatible defaults | task props/events, signature-derived fields and case operations over accepted draft | typed edits/duplicates/deletes, field errors, no lost navigation state and no runtime boot | Problem/Environment/Starter/Tests task views and compact case editor | contract compilation + G-SURFACE + affected G-WEB; inspect adopted UXP-02 behavior |
+| UX04-A | blank-to-complete authoring for both families with compatible defaults | task props/events, signature-derived fields and case operations over accepted draft | typed edits/duplicates/deletes, field errors, no lost navigation state and no runtime boot | Problem/Environment/Starter/Tests task views and compact case editor | contract compilation + G-SURFACE + affected G-WEB + G-AUTHORING; inspect adopted UXP-02 behavior |
 | UX04-B | prepare and validate correct/wrong solutions; faithful learner preview | candidate-bound validation and redacted preview ports with isolated scratch | reference passes, wrong solution fails, edits stale results; non-default preview reflects draft without private canary | validation preparation/results and shared solving preview | G-SURFACE + G-WEB + G-RUNTIME for CS-REF-05/19 |
 | UX04-C | save/reopen, change impact, conflict recovery and constrained layouts | existing persistence/status ports and lossless transformation intents | save failure is not Saved; cancel preserves input; keyboard/focus and task controls survive panel changes | real persistence/recovery integration and adaptive authoring composition | G-SURFACE + G-WEB + focused G-RUNTIME for CS-REF-01/02/08; instructor walkthrough |
 
 ## Work
+
+UX04-A exposes `CodingAuthoringSurface` over the existing incomplete draft; its
+actual-component proof is not the Learning production cutover. The existing host
+forms remain until UX04-B/C supply exercise validation and acknowledged host
+persistence. Their removal and final save/reopen/learner-preview walkthrough are
+still required, not silently dropped because package tests pass.
 
 1. Implement a dedicated authoring surface with a simple exercise-family
    selector and task views: Problem, Environment, Starter code, Tests, Validate

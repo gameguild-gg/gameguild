@@ -43,6 +43,25 @@ describe('coding surface architecture', () => {
     expect(exported).toContain('./graphics-session-types');
     expect(exported).toContain('./program-session');
     expect(exported).toContain('./program-session-types');
+    expect(exported).toContain('./authoring-types');
+    expect(exported).toContain('./authoring-surface');
+  });
+
+  it('keeps authoring views offline and outside academic persistence/execution', () => {
+    const names = readdirSync(import.meta.dirname).filter((name) => /^authoring-(?:model|types|surface|fields|problem|environment|starter|tests)\.(?:ts|tsx)$/.test(name));
+    expect(names).toHaveLength(8);
+    for (const name of names) {
+      const source = readFileSync(join(import.meta.dirname, name), 'utf8');
+      const file = ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true);
+      for (const statement of file.statements) {
+        if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) continue;
+        const specifier = statement.moduleSpecifier.text;
+        expect(specifier === '@game-guild/coding' || specifier === 'react' || specifier === 'lucide-react'
+          || specifier === '@monaco-editor/react' || specifier.startsWith('./authoring')).toBe(true);
+      }
+      expect(source).not.toMatch(/\b(?:localStorage|sessionStorage|indexedDB|createEmception|new\s+Worker|fetch)\b/);
+      expect(source).not.toMatch(/\b(?:submit|release|grantPermission|runTests|compileAndRun)\s*\(/);
+    }
   });
 
   it('keeps runtime acquisition lazy and outside academic/host commands', () => {

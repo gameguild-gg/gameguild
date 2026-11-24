@@ -284,6 +284,22 @@ it does not duplicate their comparison or compiler implementation. The
 retained low-level `session.ts` shares its pure submission capture helper.
 No automatic synchronization with the preserved upstream UI is introduced.
 
+`DUP-PL-020`: `apps/web/scripts/coding-surface-authoring-e2e.mjs` reuses the
+owned workbench proof's Vite/loopback/local-Monaco/browser teardown scaffolding
+from `fcac79341a`. It independently exercises the real controlled authoring
+views without compiler/SDK/API execution. Required draft/navigation/focus/layout
+oracles are separate from program/test/graphics controls. No upstream source is
+copied and this fixture cannot satisfy official grading. Owner: coding/grading;
+CS-ADR-044. Keep the independent assertions if test scaffolding later converges.
+
+UX04-A also temporarily overlaps the host's `standard-test-editor.tsx`,
+`functional-test-editor.tsx` and file-policy controls with the new owned
+`authoring-tests.tsx`/`authoring-starter.tsx`. These are independent views over
+the canonical draft, not copied Emception UI or a second persisted model. Host
+forms stay functional until UX04-C migrates their consumers, then only the
+superseded grading-owned forms can be removed with regression proof. No
+automatic upstream convergence, source deletion or matching-policy change.
+
 ## Gate de revisao futura
 
 A revisao com o responsavel pelo Emception deve decidir item por item:

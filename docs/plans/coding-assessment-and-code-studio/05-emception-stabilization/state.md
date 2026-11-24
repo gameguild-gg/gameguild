@@ -7,8 +7,9 @@ Updated: 2026-11-23.
 - State: planned; execution not started, waiting for required parts 03/04 gates.
 - Decision: [CS-ADR-043](../03-coding-surface/DECISIONS.md#cs-adr-043-formal-post-04-polishing-and-roadmap-renumbering).
 - Active product work remains in the
-  [part 03 ledger](../03-coding-surface/IMPLEMENTATION-STATE.md), currently
-  UX04-A teacher task views. This phase does not replace that next action.
+  [part 03 ledger](../03-coding-surface/IMPLEMENTATION-STATE.md). Follow its top
+  active checkpoint instead of duplicating a changing row here. This phase
+  does not replace that next action.
 - Finding dispositions live only in [FINDINGS.md](./FINDINGS.md). Source
   evidence/history stays linked, not deleted or copied into passing results.
 - Current edit scope: planning Markdown only, roadmap/link updates and numbering.

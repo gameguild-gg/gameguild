@@ -18,7 +18,8 @@
     "@game-guild/grading-adapter-code": "workspace:^",
     "@gameguild/emception-browser": "workspace:*",
     "@gameguild/emception-ide": "workspace:*",
-    "emception": "workspace:*"
+    "emception": "workspace:*",
+    "lucide-react": "^1.59.0"
   },
   "peerDependencies": {
     "@monaco-editor/react": "^4.7.0",

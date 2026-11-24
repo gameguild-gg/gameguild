@@ -971,6 +971,9 @@ importers:
       emception:
         specifier: workspace:*
         version: link:../../../tools/emception/packages/core
+      lucide-react:
+        specifier: ^1.59.0
+        version: 1.59.0(@types/react@19.3.0)(react@19.2.8)
       react-resizable-panels:
         specifier: ^4.14.5
         version: 4.14.5(react-dom@19.2.8(react@19.2.8))(react@19.2.8)

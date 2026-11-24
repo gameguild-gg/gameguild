@@ -1150,6 +1150,39 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   [findings](../05-emception-stabilization/FINDINGS.md),
   [state](../05-emception-stabilization/state.md).
 
+## `CS-ADR-044`. Controlled offline instructor task views
+
+- Date: 2026-11-23. Status: implemented within independent UX04-A scope;
+  whole CODE-UX-03/04, production host cutover and human acceptance stay open.
+- Expose `CodingAuthoringSurface` with the existing incomplete authoring draft,
+  host context/ID factory and synchronous controlled edit callback. Problem,
+  Environment, Starter and Tests are task views, not another schema, generic
+  IDE extension slot or owner of academic/persistence policy.
+- Use existing domain transactions for family/signature/environment impact;
+  confirm against the exact current baseline and keep cancellation lossless.
+  File rename follows stable IDs into replacement-path metadata while retaining
+  protected code bytes. Failed host updates/colliding IDs remain visible and
+  cannot mutate the supplied snapshot.
+- Function inputs remain typed scalars; I/O preserves whitespace and missing
+  versus intentionally empty expectations. Scaffold generation supplies only
+  ordinary editable C/C++ source, no reference answer, harness or execution.
+  Keep unsupported runtime/RAM combinations visibly unavailable.
+- Editing uses installed Monaco, with no compiler, SDK boot, browser author
+  persistence or official side effects. Review focus returns to a visible
+  trigger/disclosure summary. Responsive task/case/file controls use available
+  width and explicit labels/icons from existing Lucide, not the preserved IDE.
+- Declare the existing locked Lucide version directly; reuse its identical
+  resolved package/peer identity. No new runtime/library version, SDK/IDE/UI,
+  API/schema, launchers or compiler change. Preserve normal dependency-source
+  classification and exact-source CI policy.
+- The old Learning form consumer remains until UX04-B/C can bind validation,
+  acknowledged save/reopen/conflict/recovery and true redacted preview. Local
+  package evidence is not a host migration or official grading claim.
+- Evidence: contract-before-implementation, original behavioral RED and two
+  later independent regression oracles, strict package/domain/host tests and
+  actual desktop/mobile Monaco fixture are recorded in the single ledger.
+  No failed report is hidden or automatically promoted to human acceptance.
+
 ## Modelo para novas decisoes
 
 ```text

@@ -34,7 +34,12 @@ program/test controls. Eight real native UI controls, five offline editor
 cycles, package/host regressions and the full web typecheck pass. The shared
 ledger preserves the exact provenance, resource observations and failed prior
 attempts. This is not whole CODE-UX-03, Next-host/persona/official grading or
-graphics acceptance. The next independent row is UX04-A teacher task views.
+graphics acceptance. CS-ADR-044 now implements the independent UX04-A controlled
+teacher task views over the existing incomplete draft. Strict package/domain
+and host regressions plus an actual offline Monaco desktop/mobile task proof
+pass. These views are not yet installed in the Learning host: reference/wrong
+validation and full save/reopen/conflict cutover remain UX04-B/C. The next
+independent row is UX04-B; whole phase/runtime/human gates remain open.
 
 Updated: 2026-11-23.
 

@@ -306,6 +306,27 @@ plateau. Graphics, all supported runtime combinations, official grading and
 human acceptance keep their independent required oracles; no canonical status
 is automatically promoted by this focused report.
 
+## G-AUTHORING: actual offline instructor task views
+
+```bash
+GAMEGUILD_CODE_WORKER_BROWSER_CHANNEL=chrome node apps/web/scripts/coding-surface-authoring-e2e.mjs
+```
+
+Use the existing OS-headroom guard and reserved CPU policy. This fixture mounts
+the real `CodingAuthoringSurface` and installed local Monaco without an API,
+learner account, compiler asset or SDK boot. Require the exact function,
+standard-I/O, keyboard and layout case IDs, preserved draft values across tasks,
+typed/exact-output edits, duplicate/delete cancellation, focus restoration and
+desktop/wide/mobile captures. Editing must create no compiler workers/requests
+or author browser-storage entries. Missing cases and page exceptions fail.
+
+The harness waits for the exact returned authoring context, not a tab shared
+with the previous mount. Keep source/harness hashes and earlier failed reports.
+This is package task-view evidence, not reference/wrong execution, host save/
+reopen, SSR, official grading or human acceptance. Those stay with UX04-B/C and
+the later complete phase gates. No manifest/toolchain build is needed merely
+to edit fields; conditional source-producer CI requirements remain unchanged.
+
 ## G-REGRESSION and G-FINAL
 
 ```bash

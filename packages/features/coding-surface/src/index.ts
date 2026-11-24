@@ -1,5 +1,7 @@
 export * from './authoring-persistence';
 export * from './authoring-persistence-types';
+export * from './authoring-types';
+export * from './authoring-surface';
 export * from './coding-surface';
 export * from './execution-plan';
 export * from './graphics-session';
