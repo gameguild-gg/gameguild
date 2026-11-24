@@ -702,8 +702,13 @@ describe("LessonAuthoringWorkspace", () => {
       async (_courseId: string, _contentId: string, revision: number) => ({
         success: true,
         data: {
-          draft: { ...stored, revision: revision + 1, basePublishedVersion: 4 },
-          publishedContent: { slug: stored.payload.slug },
+          draft: { ...stored, revision: revision + 1, basePublishedVersion: 5 },
+          publishedContent: {
+            id: "lesson-1",
+            programId: "course-1",
+            version: 5,
+            slug: stored.payload.slug,
+          },
         },
       }),
     );
@@ -903,7 +908,15 @@ describe("LessonAuthoringWorkspace", () => {
     let stored = currentCodingDraft();
     let finish: (result: {
       success: true;
-      data: { draft: AuthoringDraft; publishedContent: { slug: string } };
+      data: {
+        draft: AuthoringDraft;
+        publishedContent: {
+          id: string;
+          programId: string;
+          version: number;
+          slug: string;
+        };
+      };
     }) => void = () => {
       throw new Error("Missing deferred publication");
     };
@@ -951,7 +964,12 @@ describe("LessonAuthoringWorkspace", () => {
         success: true,
         data: {
           draft: published,
-          publishedContent: { slug: stored.payload.slug },
+          publishedContent: {
+            id: "lesson-1",
+            programId: "course-1",
+            version: 4,
+            slug: stored.payload.slug,
+          },
         },
       }),
     );

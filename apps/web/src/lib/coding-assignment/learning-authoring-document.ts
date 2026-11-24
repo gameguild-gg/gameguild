@@ -82,6 +82,27 @@ export function assertLearningCodingSaveAcknowledgement(value: unknown, expected
   }
 }
 
+export function assertLearningCodingPublicationAcknowledgement(value: unknown, expected: LearningCodingSaveExpectation): void {
+  if (
+    !Number.isSafeInteger(expected.basePublishedVersion) ||
+    expected.basePublishedVersion < 0 ||
+    !record(value) ||
+    !record(value.publishedContent) ||
+    value.publishedContent.id !== expected.contentId ||
+    value.publishedContent.programId !== expected.programId ||
+    value.publishedContent.slug !== expected.payload.slug ||
+    typeof value.publishedContent.version !== 'number' ||
+    !Number.isSafeInteger(value.publishedContent.version) ||
+    value.publishedContent.version <= expected.basePublishedVersion
+  ) {
+    throw new TypeError('The coding publication acknowledgement does not match the published lesson and version.');
+  }
+  assertLearningCodingSaveAcknowledgement(value.draft, {
+    ...expected,
+    basePublishedVersion: value.publishedContent.version,
+  });
+}
+
 function record(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
 }

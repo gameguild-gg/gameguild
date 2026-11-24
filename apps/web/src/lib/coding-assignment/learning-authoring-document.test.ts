@@ -6,6 +6,7 @@ import { codingAssignmentToAuthoringDefinition, codingAuthoringDefinitionToAssig
 import { narrowCodingAssignmentContent } from './types';
 import {
   assertLearningCodingSaveAcknowledgement,
+  assertLearningCodingPublicationAcknowledgement,
   prepareLearningCodingPublication,
   readLearningCodingDocument,
   type LearningCodingSaveExpectation,
@@ -169,5 +170,56 @@ describe('UX04-C: exact host draft acknowledgement', () => {
     expect(() => assertLearningCodingSaveAcknowledgement(null, expected())).toThrow();
     expect(() => assertLearningCodingSaveAcknowledgement(acknowledgement(), { ...expected(), programId: '' })).toThrow();
     expect(() => assertLearningCodingSaveAcknowledgement(acknowledgement(), { ...expected(), revision: Number.MAX_SAFE_INTEGER })).toThrow();
+  });
+});
+
+describe('UX04-C: authoritative publication acknowledgement', () => {
+  const expected = (): LearningCodingSaveExpectation => ({
+    programId: 'course',
+    contentId: 'content',
+    revision: 7,
+    basePublishedVersion: 3,
+    payload: payload(),
+  });
+  const published = () => ({
+    draft: { programId: 'course', contentId: 'content', revision: 8, basePublishedVersion: 5, payload: payload() },
+    publishedContent: { id: 'content', programId: 'course', version: 5, slug: 'add-values' },
+  });
+
+  it('accepts the exact advanced content version rather than assuming publication is one entity write', () => {
+    expect(() => assertLearningCodingPublicationAcknowledgement(published(), expected())).not.toThrow();
+  });
+
+  it.each([
+    { version: 3 },
+    { version: 2 },
+    { version: undefined },
+    { version: Number.NaN },
+    { version: 4.5 },
+    { id: 'another-content' },
+    { programId: 'another-course' },
+    { slug: 'another-slug' },
+    { version: 6 },
+  ])('rejects an absent, stale, unscoped or inconsistent publication %#', (change) => {
+    const value = published();
+    expect(() =>
+      assertLearningCodingPublicationAcknowledgement({ ...value, publishedContent: { ...value.publishedContent, ...change } }, expected()),
+    ).toThrow();
+  });
+
+  it.each([
+    { revision: 7 },
+    { revision: 9 },
+    { programId: 'other-course' },
+    { contentId: 'other-content' },
+    { payload: { ...payload(), title: 'A different candidate' } },
+    { basePublishedVersion: 4 },
+  ])('requires the same scope, exact next draft revision and unchanged payload %#', (change) => {
+    const value = published();
+    expect(() => assertLearningCodingPublicationAcknowledgement({ ...value, draft: { ...value.draft, ...change } }, expected())).toThrow();
+  });
+
+  it.each([Number.NaN, -1])('rejects an invalid pre-publication base %#', (basePublishedVersion) => {
+    expect(() => assertLearningCodingPublicationAcknowledgement(published(), { ...expected(), basePublishedVersion })).toThrow();
   });
 });

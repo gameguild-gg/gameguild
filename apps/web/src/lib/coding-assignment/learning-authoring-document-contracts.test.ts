@@ -5,6 +5,7 @@ import type { CodingAuthoringSurfaceProps } from '@game-guild/coding-surface';
 import { describe, expectTypeOf, it } from 'vitest';
 import {
   assertLearningCodingSaveAcknowledgement,
+  assertLearningCodingPublicationAcknowledgement,
   prepareLearningCodingPublication,
   readLearningCodingDocument,
   type LearningCodingDocumentSource,
@@ -22,6 +23,10 @@ describe('UX04-C: Learning coding document contracts', () => {
   it('validates unknown save responses against one frozen host payload and revision', () => {
     expectTypeOf(assertLearningCodingSaveAcknowledgement).toEqualTypeOf<(value: unknown, expected: LearningCodingSaveExpectation) => void>();
     expectTypeOf<LearningCodingDocumentSource['document']>().toEqualTypeOf<unknown>();
+  });
+
+  it('checks publication against the authoritative published content and the frozen candidate', () => {
+    expectTypeOf(assertLearningCodingPublicationAcknowledgement).toEqualTypeOf<(value: unknown, expected: LearningCodingSaveExpectation) => void>();
   });
 
   it('binds the existing controlled surface without moving persistence or grading into its props', () => {

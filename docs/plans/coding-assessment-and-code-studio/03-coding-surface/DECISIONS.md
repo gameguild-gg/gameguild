@@ -1352,6 +1352,36 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   separately counted in the consumer map. The ledger records exact commands,
   reports, resource headroom and remaining actual-host/human obligations.
 
+## `CS-ADR-049`. Publication uses the authoritative content version
+
+- Date: 2026-11-24. Status: owned web guard implemented and unit-tested;
+  actual-host acceptance blocked on the separately identified backend defect.
+- The first actual Next/API authoring proof accepted the function draft but
+  rejected a successful publication: base version advanced from 1 to 3, not 2.
+  A UI assumption about one entity write is not an authoritative version check.
+  The stronger check then exposed a distinct defect: actual content was version
+  2 while its returned draft base was 3 (`host-authoring-3XbDH9`). This is not
+  a valid multi-write publication and must not be accepted by loosening the UI.
+- Ordinary saves still require the exact next draft revision, unchanged
+  publication base and frozen payload. Publication separately requires the
+  returned published content's matching course/content/slug and a valid
+  advanced version, with the returned draft rebased to that same version,
+  exactly one newer draft revision and an identical frozen payload.
+- Do not replace this with a guessed increment of two, an unchecked version,
+  ignored payload differences or a backend/platform versioning change. The
+  existing public DTO already carries identity and version; no schema,
+  compatibility branch, migration, SDK/IDE/UI or authorization change is needed.
+- Evidence: failed `host-authoring-n4cj6r` and diagnostic
+  `host-authoring-mhQqat` reports. Keep their failed disposition. Negatives
+  reject stale/mismatched version, scope, slug, revision and payload. Contract
+  compilation preceded two intended RED failures; the final 12-file/227-case
+  host selection passes. C3's publication case still fails truthfully.
+- The proposed backend correction stages Code assessment changes without the
+  premature `SaveChanges`, following the Quiz publication participant. This
+  extends the active C3 file boundary and awaits the explicit user decision;
+  neither this guard nor its tests authorize platform or SDK changes.
+- Affects: UX04-C/C3 and the owned Learning publication acknowledgement only.
+
 ## Modelo para novas decisoes
 
 ```text

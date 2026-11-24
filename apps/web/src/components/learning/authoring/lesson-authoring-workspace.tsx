@@ -9,6 +9,7 @@ import { QuizContentEditor } from "@/components/learning/console/courses/[course
 import { CodingAuthoringSurface } from "@game-guild/coding-surface";
 import {
   assertLearningCodingSaveAcknowledgement,
+  assertLearningCodingPublicationAcknowledgement,
   prepareLearningCodingPublication,
   readLearningCodingDocument,
 } from "@/lib/coding-assignment/learning-authoring-document";
@@ -704,11 +705,11 @@ function ReadyLessonAuthoringWorkspace({
       if (result.success) {
         const publishedDraft = result.data.draft;
         if (isCode) {
-          assertLearningCodingSaveAcknowledgement(publishedDraft, {
+          assertLearningCodingPublicationAcknowledgement(result.data, {
             programId: courseId,
             contentId: item.id,
             revision: savedDraft.revision,
-            basePublishedVersion: savedDraft.basePublishedVersion + 1,
+            basePublishedVersion: savedDraft.basePublishedVersion,
             payload: savedDraft.payload,
           });
           setCodingAssignment(
