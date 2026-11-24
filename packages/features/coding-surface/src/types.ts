@@ -3,6 +3,7 @@ import type { WorkspaceConfig, WorkspaceFile } from '@gameguild/emception-ide';
 import type { TestReport } from 'emception';
 import type { ScoreResult } from 'emception/testing';
 import type { ComponentType, ReactNode } from 'react';
+import type { CodingWorkbenchSession } from './workbench-session-types';
 
 export type CodingSurfaceMode = 'author' | 'author-test' | 'learner' | 'grader';
 export type CodingSurfaceStatus = 'ready' | 'loading' | 'empty' | 'error' | 'unavailable';
@@ -76,6 +77,9 @@ interface CodingSurfaceCommonProps {
   readonly header?: ReactNode;
   readonly onReady?: (controller: CodingEditorController) => void;
   readonly onSessionReady?: (session: CodingSurfaceSession) => void;
+  /** Optional local owner: allows a preview to drain before another context runs. */
+  readonly onWorkbenchReady?: (session: CodingWorkbenchSession) => void;
+  readonly beforeExecution?: Promise<void>;
   readonly onPreviewRun?: (result: CodingPreviewResult) => void;
   readonly onPreviewInvalidated?: () => void;
 }

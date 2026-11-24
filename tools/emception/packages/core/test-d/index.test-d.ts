@@ -85,9 +85,13 @@ const runOpts: RunOptions = {};
 expectType<string | undefined>(runOpts.workspace);
 expectType<number | undefined>(runOpts.timeoutMs);
 expectType<AbortSignal | undefined>(runOpts.signal);
+expectType<(() => void) | undefined>(runOpts.onProgramStart);
+expectAssignable<RunOptions>({ onProgramStart: () => undefined });
+expectError<RunOptions>({ onProgramStart: 'now' });
 
 const compileOpts: CompileOptions = {};
 expectAssignable<CompileOptions>(runOpts);
+expectAssignable<CompileOptions>({ onProgramStart: () => undefined });
 expectType<((phase: 'compile' | 'link' | 'run') => void) | undefined>(compileOpts.onPhase);
 expectAssignable<CompileOptions>({ onPhase: (phase) => {
     expectType<'compile' | 'link' | 'run'>(phase);

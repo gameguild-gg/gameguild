@@ -1,8 +1,264 @@
 # Coding surface implementation state
 
-Last updated: 2026-11-23.
+Last updated: 2026-11-24.
 
-## Active continuation: UX04-A authoring task views - 2026-11-23
+Only the first active continuation is current. Later continuation sections
+retain historical evidence and do not authorize restarting earlier work.
+
+## Active continuation: UX04-B exercise checks and learner preview - 2026-11-23
+
+- Entry: `d087071dcc`, clean tree. UX04-A is committed; no push. Continue only
+  UX04-B, not host persistence cutover or whole phase acceptance.
+- Specification (`CS-REF-05/19`): author-only reference/incorrect replacements
+  are edited separately from starter files. Check immutable copies against all
+  current cases, sequentially through the existing public preview runner.
+  Reference passes only if every case passes; an incorrect solution is detected
+  only by an executed failed expectation, never by compilation, transport or
+  teardown failure. Missing solutions/oracles remain explicit, not fabricated.
+- Contract stage: candidate-bound observable coordinator, cancellation/drain
+  barrier, per-solution diagnostics and strict redacted preview projection.
+  Any draft edit invalidates success and cancels older work. Preview consumes
+  only learner delivery and the same solving component, with independent
+  scratch, no browser persistence and no official command callback. Opening,
+  closing, navigation and context replacement cannot overlap owned runtimes.
+- Allowed files: owned surface contracts/coordinator/validation preparation and
+  task UI, existing preview runner's opt-in successful-build guard, shared
+  solving composition's lifecycle callback/barrier and structured problem,
+  focused tests, actual-component fixture/harness and current plan/ADR records.
+  No dependency, host writer, API/schema/migration, SDK/IDE/UI or launcher edit.
+  The later explicit CS-ADR-046 approval adds only its named SDK extension;
+  it does not remove the other boundaries or authorize an IDE/UI edit.
+- Stage order: specify, compile type contracts, retain independent behavioral
+  RED, minimally implement, then G-SURFACE/G-CONTRACT, affected six-file web
+  baseline, real sequential reference/wrong/preview proof and Auditor audit.
+  No local checks count as academic results or full Next/persona E2E.
+- Status: contracts compiled before behavior; independent RED retained.
+  Implementation, 294 surface tests, strict package types/lint, full web types,
+  all six web files/133 tests and extended offline Monaco checks pass in scope.
+  The authorized optional program-start correction passes SDK compatibility
+  tests and the real I/O reference. The complete native proof is still failed:
+  the OS guard stopped it for insufficient RAM headroom while checking the I/O
+  incorrect solution. UX04-B is partial, not accepted. CS-ADR-045/046 and the
+  evidence below distinguish correction from full acceptance. UX04-C is next,
+  not started; do not migrate persistence or remove host forms.
+- Current continuation: the user requested committing this partial checkpoint
+  and continuing. Read-only preflight now reports about 16 GiB available RAM,
+  sufficient to repeat the unchanged six-case native proof under the same OS
+  reserve. Do not stop the user's applications, reduce the reserve, run another
+  compiler concurrently or retry blindly. The optional SDK contract/test cycle
+  is already implemented and validated; do not restart it. Preserve the failed
+  gate and five-second program limit until fresh complete evidence passes.
+  No core obligation is transferred to the post-04 polishing backlog.
+- Approved extension boundary: core RunOptions/worker protocol/orchestrator,
+  browser facade/worker-client/worker-entry/native WASI ToolRunner, their type
+  and Node tests, and the owned preview consumer/tests. One optional start
+  notification after WASM preparation, before constructors/entry. Default
+  callers send no new notification request; preserve IDE/UI, presets, output,
+  toolchain artifacts, official worker and all existing commands. Build only
+  changed local SDK TypeScript consumers, not the toolchain or IDE. CS-ADR-046
+  records this scope; it is not general upstream repair authorization.
+
+### UX04-B intermediate evidence (not final acceptance)
+
+- `exercise-validation-red.json`: 18 behavioral failures at missing preparation,
+  coordinator and build-guard behavior; 13 controls already pass. The separate
+  `exercise-authoring-red.json` retains seven absent task/preview workflows.
+  Contract tests and the full package typecheck passed before UI behavior.
+- Promise rejection `toThrow` in this installed test environment reported an
+  empty matcher message for actual typed errors. Use exact structural
+  name/message assertions, matching the established runner test pattern;
+  retained error identities and cancellation/coverage assertions stay required.
+  Initial Testing Library/formatter syntax mistakes were corrected as harness
+  bootstrap errors, never counted as product RED or gate success.
+- `exercise-preview-auditor-red.json` catches lost focus after returning from
+  scratch; its cancellation/navigation controls pass. The additional StrictMode
+  oracle in `exercise-strictmode-red.json` exposes replay subscription to a
+  disposed coordinator. Create/dispose the coordinator within each effect
+  ownership cycle, not as a permanently disposed state initializer. The
+  focused rerun passes; its intentional selection is not a whole-suite gate.
+- Real attempt `runtime/exercise-check-gTdpeh/report.json` proves the function
+  reference/incorrect pair and public preview execution but fails the retained
+  return-focus assertion. Real Monaco needs focus restoration after editor
+  readiness; unit mocks alone were insufficient. This report remains failed.
+  Its OS report shows zero pressure/OOM and no resource stop, not a RAM fault.
+- `authoring-EhgTbI` fails to load newly emitted MJS chunks: the older offline
+  fixture server lacked their JavaScript Content-Type. Correct only that MIME
+  mapping. `authoring-uTZTQ5` then passes all five named controls, including
+  both-family real-Monaco preview return focus, with zero compiler requests/
+  workers/storage entries. Peak owned RSS 1803 MiB, minimum available 8014 MiB
+  against 4772 MiB reserve, zero PSI/swap/OOM, about five seconds, CPUs 0-3.
+  These offline checks cannot substitute for the still-running native proof.
+- `runtime/exercise-check-nN5LH4` passes the function reference/incorrect pair,
+  public solving preview, real-Monaco return focus and cancel/drain controls.
+  It then fails the harness's exact invalid-source capture: Monaco completed
+  the intentionally unmatched delimiters. Use an explicit `#error` fixture
+  without delimiter ambiguity; retain exact captured bytes and the same
+  compilation-error/non-detection assertions. No application workaround,
+  disabled editor assistance or weakened verdict oracle. Final native rerun
+  remains in progress. Domain 130/adapter 16 tests and strict types pass.
+- `runtime/exercise-check-grX9Dc` passes function, compilation-error and actual
+  cancellation controls, then fails I/O incorrect detection: the application
+  correctly shows `Coding preview execution-timeout`, not a caught incorrect
+  answer. Resource evidence: peak owned RSS 6314 MiB, minimum available 4716
+  MiB, transient swap 554 MiB, zero PSI/OOM and no sustained guard stop. This
+  does not prove an SDK defect or a passing I/O run. Remove retained earlier
+  family/browser buffers from the test environment: close each browser before
+  the next family and stream static assets rather than buffering whole bundles.
+  Keep the program's five-second limit, preparation budget, pinned SDK and
+  expected verdicts unchanged. Observe any terminal solution status before
+  asserting its exact value, so an error fails promptly rather than waiting
+  for an impossible success element. Do not retry a failed operation in place.
+- Closing terminal checks already complete: `exercise-surface-final.json`
+  independently confirms 23 files/290 passes/zero failures or required skips;
+  `exercise-web-regressions.json` confirms the six exact files/133 passes/zero
+  failures/skips. Domain 130/adapter 16 tests and package/domain/adapter strict
+  types/lint pass. Preserved Emception UI 27, CI classifier/required gate 95
+  and preflight helpers 26 tests pass. No backend or SDK code changed.
+- Full web TypeScript check passes under the OS guard, CPUs 0-3, 6 GiB maximum
+  Node heap (not a reservation): peak owned RSS 1797 MiB, minimum available
+  8277 MiB versus 4772 MiB reserve, zero PSI/OOM, 1 MiB paging, about 11.5 s.
+  `exercise-web-types-resources.json` retains the metrics. No compiler/source
+  check was disabled and no generated-client, API or optimized-web build ran.
+- `runtime/exercise-check-ZKjA1K` again proves the function/cancel/build controls,
+  but the OS guard stops I/O preparation after sustained headroom below reserve:
+  6177 MiB owned peak, 4624 MiB minimum available versus 4772 MiB reserve,
+  zero PSI/OOM and 1 MiB paging. The selected light budget test was also
+  running briefly; subsequent native verification is fully sequential, with
+  no other test process alongside it. Keep this resource refusal nonpassing.
+- The harness still held its Vite dependency/build graph in the browser/server
+  process. `fixture-build-red.tap` proves the parent-import failure (three
+  contract passes, one architecture RED). A small test-only builder now runs
+  in a child and must exit before browser acquisition; both fixtures share
+  that configuration. Four focused builder tests pass, including unknown kind
+  and outside-evidence rejection. No new human CLI or execution engine.
+- A separate Auditor oracle proves a real owned budget defect: restoration of
+  private overlays after the program returned was still charged to the student
+  timer. The first fake workspace always read null, so it never attempted the
+  delayed deletion; `exercise-budget-auditor-red.json` is a harness timeout,
+  not behavioral RED. The realistic fake in `exercise-budget-auditor-red-2.json`
+  reaches restoration and demonstrates premature runtime disposal. Return to
+  the unchanged bounded preparation budget after compileAndRun settles, never
+  extend the active student-program limit. All 15 runner tests then pass.
+  This is owned preview composition only, not an Emception or worker edit;
+  it does not retrospectively prove the cause of the earlier native timeout.
+- `runtime/exercise-check-ryCsvQ` retains a further failed full attempt after
+  child-builder separation and owned overlay-budget correction: function,
+  cancellation and broken-compilation controls pass; the correct I/O solution
+  times out. `exercise-browser-resources-final.json` is not passing despite
+  its name: exit 1, peak 5791 MiB, minimum available 4925 MiB versus reserve
+  4772 MiB, zero PSI/OOM, 78 MiB paging, 189.5 s. No required case was waived.
+- A second independent runner oracle proves that the public `exit` event
+  arrives before native scratch restoration inside compileAndRun returns.
+  The owned consumer now returns to the unchanged preparation budget on this
+  exclusive run-phase exit and unsubscribes during cleanup. The 16 runner
+  tests pass, including both cleanup boundaries and actual active-program
+  deadline enforcement. This uses a public event, not an SDK edit or a claim
+  about when the program starts.
+- `runtime/exercise-check-IkD8Fk` is an explicitly partial I/O diagnosis,
+  not the required default six-case proof. It still fails incorrect detection
+  with an execution timeout: peak 5999 MiB, minimum available 4751 MiB,
+  reserve 4772 MiB, PSI some/full 1.26/1.08, 263 MiB paging, no OOM or
+  sustained guard stop. `exercise-stdio-exit-resources.json` retains that
+  failed attempt. No heavy validation ran concurrently.
+- `runtime/exercise-check-DA2oLK` adds bounded timestamped browser-console
+  observation without changing the executor, fixtures, assertions or limits.
+  In the correct I/O solution's first case, the public run stage includes
+  about 1.1 s of artifact loading and 656 ms of WebAssembly compilation before
+  `main()` executes and completes. In its second case, the last worker event
+  is `Compiling WASM module`; no program-entry event occurs before the same
+  five-second execution deadline cancels it. Thus that stage is too early to
+  distinguish infrastructure preparation from student execution. This is not
+  evidence that scanf, the answer or the comparison failed. Report: 816 console
+  entries, zero omitted; peak 5699 MiB, minimum available 4881 MiB, reserve
+  4772 MiB, zero PSI/OOM, 8 MiB paging, 58 s. The proof remains failed.
+- Structural Stop & Ask: user explicitly authorized an optional public
+  browser-SDK acknowledgement after WASM preparation and before program entry,
+  with unchanged IDE/default behavior and compatibility tests. This approval
+  is separate from earlier narrow authorizations; no broader edit is implied.
+  Do not raise the student deadline, replace scanf, parse console text as a
+  production signal, retry until green or promote a diagnostic-only selection.
+- Closing package evidence `exercise-surface-accepted-terminal.json` proves
+  exactly 23 files/292 passes/zero failures/skips; the name means terminal
+  checks only, not native/phase acceptance. Full package TypeScript and strict
+  lint also pass. Existing jsdom canvas notices remain visible without waivers.
+  Offline `authoring-tNPw5C` proves all five controls, including redacted
+  real-Monaco preview and focus: 1340 MiB peak, minimum available 9228 MiB,
+  zero PSI/OOM, 1 MiB paging, about 4.5 s. No host cutover or official grading
+  command occurred.
+- CS-ADR-046 contract stage passes: core `test:types` and browser strict
+  typecheck precede behavior. `program-start-sdk-red.tap` preserves five
+  failing start/forwarding controls with four passing legacy/negative controls;
+  `program-start-preview-red.json` preserves two independent premature-clock/
+  missing-acknowledgement failures with 16 controls passing. No assertion,
+  program limit, fixture or expected answer was relaxed.
+- The optional typed callback now reaches the native worker through an opt-in
+  correlated notification after WASM preparation and before constructors/entry.
+  Existing callers request no new message. All nine focused SDK controls and
+  18 owned runner controls pass, including real-WASM constructor ordering,
+  completed/unknown/duplicate IDs, original default results and failed
+  preparation. Core Node regressions pass 276/276; browser 68 pass/one existing
+  optional remote smoke skipped; unchanged UI 27/27 passes. Local core/browser
+  TypeScript outputs were built, not the IDE, compiler or binary toolchain.
+- Exact upstream lint audit remains nonzero: seven errors and seven warnings
+  across the touched SDK files/type fixture. `program-start-sdk-lint-baseline.json`
+  uses the same unsuppressed ESLint configuration against HEAD/current content
+  and proves identical rule/message/severity diagnostics; both new tests have
+  zero findings. No waiver, rule relaxation or unrelated upstream repair. This
+  is no-regression evidence, not a warning-clean whole-SDK gate. Record the
+  additional baseline errors in part 05, preserving its prior warnings too.
+- Full web TypeScript after the owned exit correction passes again:
+  `exercise-web-types-terminal.json`, exit 0, peak 1785 MiB, minimum available
+  8134 MiB versus 4772 MiB reserve, zero PSI/swap/OOM, 9.5 s, CPUs 0-3.
+  The post-start-extension final package/web/native checks remain the closing
+  evidence; do not certify them from this earlier pass.
+- `runtime/exercise-check-sQbj1J` uses the authorized start correction and
+  unchanged five-second limit. Function reference/incorrect/public-preview,
+  cancel and broken-compilation controls pass. The real I/O reference also
+  passes both current cases, with total preparation/check durations about
+  32.6 s and 13.9 s rather than falsely charging that time to the program.
+  Before the incorrect I/O solution settles, the OS guard stops only owned
+  work for sustained headroom below reserve. Keep the entire report nonpassing:
+  exit 1, peak 7537 MiB, minimum available 4574 MiB versus 4772 MiB reserve,
+  PSI some/full 0.18/0.18, 816 MiB paging, no OOM, 228.5 s, CPUs 0-3.
+  `exercise-program-start-native-resources.json` records the resource refusal.
+  No student/expected answer was changed; this is not another execution timeout
+  or proof of an SDK memory leak. Full I/O wrong/preview acceptance is missing.
+- A read-only process audit after the refusal found no retained proof browser
+  or memory-heavy dev:fast stack to stop. Other desktop applications own the
+  existing workload; none was closed. The proof journal now retains each
+  completed solution observation immediately and a bounded tail of console
+  events, without promoting observations to required-case success. Earlier
+  failed reports and omitted-entry counts remain intact.
+- Final post-start package evidence `program-start-surface-final.json` proves
+  exactly 23 files/294 passes/no required failures or skips; package strict
+  TypeScript and lint pass. Full web TypeScript passes under the OS guard in
+  `program-start-web-types-final.json`: peak 1795 MiB, minimum available 9288
+  MiB, reserve 4772 MiB, zero PSI/OOM, 1 MiB paging, 11 s. The six-file host
+  regression rerun is retained in `program-start-web-final.json`.
+- The new signal is consumed by local exercise tests only in this slice.
+  The standalone `program-session.ts` run budget and official worker still
+  consume the earlier stage notification. Preserve their separate part 03/04
+  timing/parity obligation in `CS-RUNTIME-PROGRAM-START-BUDGET`; do not claim
+  all execution paths corrected from this local reference pass.
+- Final offline actual-component rerun `authoring-3EkBTG/report.json` passes
+  all five required task/preview controls with the current SDK and real Monaco,
+  zero compiler requests/workers and no draft-storage entries. Resource report
+  `program-start-authoring-offline-final.json`: exit 0, peak 1336 MiB, minimum
+  available 9657 MiB versus 4772 MiB reserve, zero PSI/OOM, 1 MiB paging,
+  about 5 s, CPUs 0-3. This does not replace the incomplete native proof.
+- Closing Node harness/CI/preflight/builder regression selection passes all
+  125 tests; exact-source artifact-policy tests pass 36/36, with their existing
+  intentional duplicate-archive warnings visible. The exact six web report
+  entries independently confirm 133 passes/zero failures/skips. Prettier
+  checks all new owned code/harnesses and SDK tests. G-DOC checks 59 documents,
+  259 local links and 12 atomic tables/36 complete rows with zero failures.
+- Requested baseline commit is `d087071dcc`. The user has now requested a
+  separate UX04-B/CS-ADR-046 checkpoint commit despite the incomplete native
+  gate; committing does not approve the phase. No
+  push, user-application shutdown, API/schema/migration, IDE/UI, preset,
+  official-worker, launcher or compiler-artifact change occurred.
+
+## Previous continuation: UX04-A authoring task views - 2026-11-23
 
 - Entry: `0243e5b812`, clean tree. The requested part 05 planning commit is
   complete; no push. Continue the independent UX04-A row already named below,
@@ -23,7 +279,8 @@ Last updated: 2026-11-23.
   then actual component desktop/mobile/offline task proof and Auditor review.
   Actual reference/incorrect execution and host save/reopen/conflict wiring
   remain UX04-B/C. Do not remove the host forms before their consumers migrate.
-- Result: independent UX04-A package task views implemented; scoped terminal
+- Result: committed as `d087071dcc`; independent UX04-A task views implemented;
+  scoped terminal
   and actual-component gates pass. Whole CODE-UX-03/04, host persistence cutover,
   official grading and human acceptance remain open. CS-ADR-044 records scope.
 
@@ -104,15 +361,12 @@ hashes and the harness hash in the accepted browser report against the final
 checkout; both consumers resolve the exact same installed Lucide directory.
 Protected runtime/IDE/UI/API/launcher paths have no task diff. All command
 sessions needed by the slice are complete, with no owned browser/server left.
-The requested planning and UX04-A implementation are recorded separately. The
-authoring implementation is being committed before starting UX04-B; no push.
+The requested planning and UX04-A implementation were recorded separately;
+authoring was committed as `d087071dcc` before UX04-B. No push occurred.
 
-Next exact action: UX04-B in `06-refoundation/04-instructor-authoring-and-validation.md`.
-Specify candidate-bound reference/incorrect solution preparation and genuinely
-redacted learner preview, then contracts, independent RED and minimum owned
-integration over the proven public ports. UX04-C still owns host save/reopen,
-conflict/recovery, panel/file-tab fidelity and migration of the existing console
-form consumer. Do not remove that host before it can use the complete new flow.
+Historical handoff: UX04-B is now governed by the active continuation at the
+top of this ledger. UX04-C still owns host save/reopen, conflict/recovery,
+panel/file-tab fidelity and migration of the existing console form consumer.
 Required runtime stress/graphics, official part 04 E2E and human gates stay open;
 their Emception debt remains linked to the formal part 05 register.
 

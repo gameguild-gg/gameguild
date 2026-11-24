@@ -37,11 +37,16 @@ attempts. This is not whole CODE-UX-03, Next-host/persona/official grading or
 graphics acceptance. CS-ADR-044 now implements the independent UX04-A controlled
 teacher task views over the existing incomplete draft. Strict package/domain
 and host regressions plus an actual offline Monaco desktop/mobile task proof
-pass. These views are not yet installed in the Learning host: reference/wrong
-validation and full save/reopen/conflict cutover remain UX04-B/C. The next
-independent row is UX04-B; whole phase/runtime/human gates remain open.
+pass. CS-ADR-045 adds candidate-bound correct/incorrect solution checks and a
+strict redacted preview through the actual solver. UX04-B terminal/offline
+gates pass. The user-authorized CS-ADR-046 optional start acknowledgement fixes
+the observed premature preparation clock, with compatibility and real I/O
+reference proof. The complete native run was then stopped for OS RAM headroom;
+the ledger retains the failure. UX04-B is partial, not accepted. These views
+are not yet installed in the Learning host. UX04-C save/reopen/conflict cutover
+has not started; whole phase/runtime/human gates remain open.
 
-Updated: 2026-11-23.
+Updated: 2026-11-24.
 
 Gate IDs: `CODE-UX-01` through `CODE-UX-06`.
 

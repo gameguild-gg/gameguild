@@ -1183,6 +1183,104 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   actual desktop/mobile Monaco fixture are recorded in the single ledger.
   No failed report is hidden or automatically promoted to human acceptance.
 
+## `CS-ADR-045`. Candidate-bound exercise checks and isolated solving preview
+
+- Date: 2026-11-23. Status: owned UX04-B implementation and terminal gates
+  pass; required native I/O completion remains open after an OS-headroom refusal.
+  CS-ADR-046 supplies the separately authorized precise start signal. The
+  current ledger records failed and passing evidence separately.
+  Host cutover and whole-phase/human acceptance are separate.
+- Retain the existing draft/canonical reference-solution metadata. Edit stable
+  source replacements separately from starter files. Prepare immutable copies,
+  validate IDs/path/policies with the existing domain parser and omit the other
+  protected solutions from each execution copy. No schema, migration or API
+  change is required, and a reference is not mandatory for manual review work.
+- `createCodingExerciseValidationSession` owns one sequential operation over
+  the existing `runCodingPreview`, its public test engine and native mapper.
+  Reference success requires full case coverage with every case passing;
+  incorrect detection requires executed failed expectations. The owned runner
+  has an opt-in successful-build guard so a broken compilation/link cannot
+  certify test quality. Transport, limits and cleanup failures remain errors,
+  not numeric wrong-answer estimates. Display diagnostics without scores.
+  After compileAndRun settles, overlay restoration uses the existing bounded
+  infrastructure budget, not the finished student's execution timer. Independent
+  RED proves that distinction; the active program limit is not increased.
+  Subscribe to the exclusive runtime's public run-phase `exit` event to end
+  that clock before the facade's internal scratch restoration; unsubscribe on
+  every exit. The event is ignored during compile/link and after cancellation.
+- Exact candidate changes invalidate prior results and cancel/drain active
+  work. Cleanup failure remains a rejected barrier and blocks reuse. Context
+  disposal waits for owned work; never reset the barrier to make a later run
+  pass. React effect setup/cleanup owns coordinator instances, including the
+  StrictMode replay used by development.
+- `Learner preview` consumes only the strict domain learner projection and
+  mounts the same `CodingSurface` solving composition. Its scratch is memory
+  only, independent on each opening, with no official submission/review/release
+  callback or browser storage. Show the edited structured problem/examples/
+  constraints through the shared learner component, not a second preview UI.
+- The shared surface adds optional `beforeExecution` and `onWorkbenchReady`
+  lifecycle ports; existing consumers are unchanged. Freeze the prior barrier
+  for each preview lifetime. Stop/drain private checking before preview and
+  stop/drain preview before returning. Do not overlap compiler ownership.
+- Restore keyboard focus using real editor readiness, not timers or relaxed
+  assertions. Real Monaco exposed an asynchronous focus loss that mocks did
+  not; retain its failed report and the independent offline/runtime oracles.
+- The original owned composition changes no upstream SDK, IDE/UI,
+  compiler/preset, artifact publication/provenance,
+  dependency, host writer or grading-policy change. Existing Learning forms
+  stay until UX04-C supplies acknowledged persistence and consumer migration.
+  Local exercise checks do not constitute official grading or human acceptance.
+  CS-ADR-046 separately authorizes only its optional SDK start acknowledgement.
+- Browser proof infrastructure builds only the owned fixture in a child that
+  exits before browser acquisition. Stream heavy assets and close each browser
+  before the next family. This avoids retained bundler memory without relaxing
+  RAM reserve, program time/output or verdict assertions. It is not an Emception
+  build, new human CLI or same-context compiler-memory plateau claim.
+- The native I/O diagnosis shows that the public run-phase signal precedes
+  artifact loading and WebAssembly compilation/instantiation, not just program
+  entry. A five-second deadline can expire before `main()` is called. The
+  retained timestamped console report establishes that mismatch, not an stdin
+  or wrong-answer defect. Do not derive production lifecycle from log text,
+  raise the deadline or waive I/O acceptance. A precise optional SDK start
+  signal requires new scoped authorization and compatibility proof. Until
+  then no upstream edit or final UX04-B/host cutover is authorized by this ADR.
+
+## `CS-ADR-046`. Optional native program-start acknowledgement
+
+- Date: 2026-11-23. Status: explicitly authorized and implemented; contract,
+  Node compatibility and real I/O reference controls pass. Full native
+  acceptance remains open after an OS-headroom refusal; no failed report is
+  promoted. Standalone program/official consumer timing stays separately open.
+- The public compile/link/run stage predates native artifact loading and
+  WebAssembly compilation. It cannot delimit the student's execution budget.
+  Keep that existing stage contract unchanged and add an optional typed
+  `onProgramStart` observer for the browser's native WASI path.
+- Request the notification only when a caller supplies the observer. Correlate
+  it to one pending run; ignore duplicate, unknown and completed run IDs.
+  Forward no callback functions across postMessage. Emit after WASM preparation
+  and before global constructors or entry, not before a build or failed module
+  initialization. Existing callers, results, shell/input and IDE defaults keep
+  their behavior. Other runtime families do not gain a claimed start signal.
+- The owned preview retains its bounded infrastructure budget until that
+  acknowledgement and uses the unchanged student limit afterward. Missing
+  acknowledgement fails closed. The public exit/cleanup distinction remains
+  independently tested. No log-text lifecycle, synthetic expected output,
+  deadline increase, new schema, protocol-version compatibility layer or new
+  compiler is introduced.
+- Allowed source files: core `types.ts`, `worker-protocol.ts` and
+  `runtime/worker-orchestrator.ts`; browser `createEmception.ts`,
+  `worker-client.ts`, `worker-entry.ts` and `tool-runner.ts`; strict type/Node
+  fixtures and the owned preview consumer/tests. No IDE/UI, preset, official
+  grading worker, binary artifact or publication change. Only local SDK
+  TypeScript builds are needed to consume changed source.
+- Gates: contract compilation before behavior; independent start/routing and
+  budget RED; complete affected Node suites and preserved UI regressions;
+  owned strict package/web gates; unchanged default six-case native proof with
+  OS headroom and source identities. Record original/current upstream lint
+  diagnostics without suppressing or opportunistically repairing other debt.
+- Rationale and compatibility scope:
+  [optional program start](./EMCEPTION-PROGRAM-START-RATIONALE.md).
+
 ## Modelo para novas decisoes
 
 ```text

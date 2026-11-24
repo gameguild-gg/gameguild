@@ -73,6 +73,8 @@ export interface RunOptions {
   cwd?: string;
   onStdout?: (text: string) => void;
   onStderr?: (text: string) => void;
+  /** Native WASI only: after preparation, before constructors/entry. */
+  onProgramStart?: () => void;
   stdin?: () => number | null | Promise<number>;
   /**
    * When true, the tool invocation is an info/version query (e.g. --version).
@@ -3167,6 +3169,9 @@ sys.excepthook = _hook
       const startFn = instance.exports._start as (() => unknown) | undefined;
       const mainFn = instance.exports.main as ((argc: number, argv: number) => number) | undefined;
       const initFn = instance.exports.__wasm_call_ctors as (() => void) | undefined;
+
+      // Module preparation is infrastructure; constructors are already user code.
+      if (startFn || mainFn || initFn) options.onProgramStart?.();
 
       // Call global constructors if present
       if (initFn) {

@@ -216,6 +216,12 @@ export interface RunOptions {
   signal?: AbortSignal;
   workspace?: string;
   preloadBundles?: string[];
+  /**
+   * Optional browser-native WASI notification after module preparation and
+   * before constructors/entry execute. Other runtimes may not acknowledge it.
+   * Does not change stage callbacks, execution results or timeout policy.
+   */
+  onProgramStart?: () => void;
 }
 
 export interface CompileOptions extends RunOptions {

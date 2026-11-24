@@ -172,6 +172,7 @@ function wrap(client: WorkerClient): BrowserEmceptionAPI {
             const fn = opts.stderr;
             browser.onStderr = (text: string) => { (fn as (c: Uint8Array) => void)(encoder.encode(text)); };
         }
+        if (typeof opts.onProgramStart === 'function') browser.onProgramStart = opts.onProgramStart;
         if (typeof opts.stdin === 'string') {
             const bytes = encoder.encode(opts.stdin.endsWith('\n') ? opts.stdin : opts.stdin + '\n');
             let i = 0;
@@ -312,6 +313,7 @@ function wrap(client: WorkerClient): BrowserEmceptionAPI {
                     opts?.onPhase?.('run');
                     const executed = await run('wasi-run', ['wasi-run', wasmPath], {
                         ...runOptions,
+                        ...(opts?.onProgramStart ? { onProgramStart: opts.onProgramStart } : {}),
                         ...(stdinStr === undefined ? {} : { stdin: stdinStr }),
                     });
                     return { ...executed, phase: 'run' };
@@ -338,7 +340,14 @@ function wrap(client: WorkerClient): BrowserEmceptionAPI {
                     if (phase !== 'write') opts?.onPhase?.(phase);
                 },
             };
-            const result = await pipeline(api, pipelineOpts);
+            const pipelineApi: EmceptionAPI = opts?.onProgramStart ? {
+                ...api,
+                run: (command, argv, runOptions) => api.run(command, argv, {
+                    ...runOptions,
+                    ...(command === 'wasi-run' ? { onProgramStart: opts.onProgramStart } : {}),
+                }),
+            } : api;
+            const result = await pipeline(pipelineApi, pipelineOpts);
             if (result.finalPhase === 'run' && result.run) {
                 // presets types `.run` as the browser ToolResult (no timing);
                 // api.run actually enriches it at runtime, so cast is sound.

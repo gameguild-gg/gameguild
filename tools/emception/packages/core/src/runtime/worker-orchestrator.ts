@@ -55,6 +55,8 @@ export interface WorkerRunOptions {
   onStdout?: (text: string) => void;
   /** Receive incremental stderr chunks while the run is in progress. */
   onStderr?: (text: string) => void;
+  /** Opt-in native WASI start, correlated to this pending run only. */
+  onProgramStart?: () => void;
   /** If true, the worker will allocate a SAB stdin channel and send `stdinRequest`. */
   wantStdin?: boolean;
   /**
@@ -164,6 +166,7 @@ export class WorkerOrchestrator {
       onStdout?: (text: string) => void;
       onStderr?: (text: string) => void;
       onStdinRequest?: (ctrl: SharedArrayBuffer, data: SharedArrayBuffer) => void;
+      onProgramStart?: () => void;
     }
   >();
 
@@ -222,11 +225,12 @@ export class WorkerOrchestrator {
     const responsePromise = this.rpc.request(
       (id) => {
         capturedId = id;
-        if (options.onStdout !== undefined || options.onStderr !== undefined || options.onStdinRequest !== undefined) {
+        if (options.onStdout !== undefined || options.onStderr !== undefined || options.onStdinRequest !== undefined || options.onProgramStart !== undefined) {
           this.runCallbacks.set(id, {
             onStdout: options.onStdout,
             onStderr: options.onStderr,
             onStdinRequest: options.onStdinRequest,
+            onProgramStart: options.onProgramStart,
           });
         }
         return {
@@ -238,6 +242,7 @@ export class WorkerOrchestrator {
             env: options.env,
             cwd: options.cwd,
             wantStdin: options.wantStdin ?? false,
+            ...(options.onProgramStart === undefined ? {} : { wantProgramStart: true }),
             hints: options.hints,
           },
         };
@@ -364,6 +369,14 @@ export class WorkerOrchestrator {
         const cb = this.runCallbacks.get(msg.id);
         cb?.onStderr?.(msg.text);
         this.opts.onStderr?.(msg.id, msg.text);
+        break;
+      }
+
+      case 'programStart': {
+        const callbacks = this.runCallbacks.get(msg.id);
+        const start = callbacks?.onProgramStart;
+        if (callbacks) callbacks.onProgramStart = undefined;
+        start?.();
         break;
       }
 

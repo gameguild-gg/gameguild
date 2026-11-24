@@ -372,8 +372,8 @@ describe('UX04-A controlled instructor authoring', () => {
     const first = screen.getByRole('tab', { name: 'Problem' });
     first.focus();
     fireEvent.keyDown(first, { key: 'End' });
-    expect(screen.getByRole('tab', { name: 'Tests' }).getAttribute('aria-selected')).toBe('true');
-    fireEvent.keyDown(screen.getByRole('tab', { name: 'Tests' }), { key: 'Home' });
+    expect(screen.getByRole('tab', { name: 'Validate exercise' }).getAttribute('aria-selected')).toBe('true');
+    fireEvent.keyDown(screen.getByRole('tab', { name: 'Validate exercise' }), { key: 'Home' });
     edit('Exercise type', 'standard-io');
     fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
     expect(screen.queryByRole('dialog')).toBeNull();

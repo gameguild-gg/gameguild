@@ -343,7 +343,7 @@ async function handleRun(
   id: number,
   tool: string,
   argv: string[],
-  options: { env?: Record<string, string>; cwd?: string; wantStdin?: boolean; hints?: { bundlesNeeded?: string[] } },
+  options: { env?: Record<string, string>; cwd?: string; wantStdin?: boolean; wantProgramStart?: boolean; hints?: { bundlesNeeded?: string[] } },
 ): Promise<void> {
   if (!runner) {
     post({ type: 'runResult', id, exitCode: 1, stdout: '', stderr: 'Worker not booted' });
@@ -374,6 +374,7 @@ async function handleRun(
     cwd: options.cwd,
     onStdout: (text) => post({ type: 'stdout', id, text }),
     onStderr: (text) => post({ type: 'stderr', id, text }),
+    ...(options.wantProgramStart ? { onProgramStart: () => post({ type: 'programStart', id }) } : {}),
     stdin: stdinFn,
     hints: options.hints,
   });

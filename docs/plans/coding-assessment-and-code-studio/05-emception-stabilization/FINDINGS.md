@@ -1,6 +1,6 @@
 # Post-04 Emception findings register
 
-Updated: 2026-11-23. Phase: planned, not executed.
+Updated: 2026-11-24. Phase: planned, not executed.
 
 This is the authoritative mutable register for part 05 dispositions. The
 [part 03 ledger](../03-coding-surface/IMPLEMENTATION-STATE.md) retains original
@@ -38,7 +38,8 @@ incorrect release or overlapping/leaked active execution block the affected
 | `CS-RUNTIME-GRAPHICS` / partial | coding-surface owner; public SDL canvas renders, but native WASI execution does not execute the required callbacks; local port is not production/official graphics acceptance | 5.2: use only public canvas lifecycle, preserve explicit unavailable official combinations and prove affected host UI before enabling; no invented visual judge |
 | `CS-RUNTIME-REPEATED-EXECUTION` / unverified | coding-surface/runtime owners; cold contexts and five offline editor cycles do not prove five repeated native executions in one live context | 5.3: unchanged ownership checks plus warmed memory/listener plateau, repeated run/cancel/context switch/unmount, OS-headroom measurements; classify any actual leak before repair |
 | `CS-RUNTIME-CAPABILITY-MATRIX` / unverified | coding-surface owner; the full family/language/environment/output matrix is not certified by the bounded C++/WASI and SDL proofs | 5.0 inventory, then 5.1/5.2/5.3: actual checks for each offered combination; unverified options remain unavailable, not silently converted to WASI |
-| `CS-EMCEPTION-STRICT-LINT` / open | Emception SDK owner; seven pre-existing unsuppressed unused-declaration warnings keep the recorded whole-file facade/type-fixture lint nonzero | 5.0 reconcile against current upstream, then 5.3 owner-approved minimal cleanup and exact strict lint/type/runtime regressions; do not suppress or call historical debt warning-clean |
+| `CS-RUNTIME-PROGRAM-START-BUDGET` / partial, native completion resource-blocked | coding budget consumers with Emception SDK owner; the public run-stage signal precedes artifact loading/WASM compilation; local test accounting now uses the authorized precise acknowledgement | CS-ADR-046 passes unit/type/compatibility and real I/O reference controls; finish the unchanged part 03 proof after OS headroom permits; standalone program and official budget consumers retain their part 03/04 timing/parity gates; 5.1 retains regressions afterward, without deferring core obligations |
+| `CS-EMCEPTION-STRICT-LINT` / open | Emception SDK owner; seven pre-existing errors plus seven warnings keep strict lint of the now-touched SDK/type files nonzero; exact HEAD comparison proves no introduced finding | 5.0 reconcile against current upstream, then 5.3 owner-approved minimal cleanup and exact strict lint/type/runtime regressions; do not suppress or call historical debt warning-clean |
 
 ### Original evidence and constraints
 
@@ -64,16 +65,49 @@ incorrect release or overlapping/leaked active execution block the affected
   including one executing-context replacement and five offline editor cycles.
   It explicitly records `compilerMemoryPlateau: false`. These are not five
   same-context compiler executions. Retain all reports and measure afresh.
+  `runtime/exercise-check-sQbj1J` also stops under the OS headroom guard during
+  I/O incorrect-solution preparation, after the function and I/O reference
+  controls pass: 7537 MiB owned peak, 4574 MiB minimum available, 4772 MiB
+  reserve, 816 MiB paging, no OOM. This is a resource refusal, not proof of a
+  leak or a passing complete proof. More available RAM is requested; do not
+  reduce the reserve or infer a warmed compiler plateau from cold contexts.
 - Capability matrix: the new program port currently proves one C++/WASI source
   plus headers/assets; the test/official paths have separate scalar C/C++
   multi-source evidence. Do not silently drop other source units. Enumerate
   C interactive input and graphical presets rather than generalizing a pass.
+- Program-start budget: `runtime/exercise-check-DA2oLK/report.json` records a
+  correct I/O solution's first executed case and its second case timing out
+  while the worker is still compiling WASM, before any `main()` entry event.
+  The same five-second limit and exact verdicts were retained. The attempt
+  reports zero memory PSI/OOM and no resource stop, so this observation is not
+  classified as an OS termination or incorrect-answer/scanf failure. The
+  owned cleanup-budget correction and public run-phase exit subscription have
+  separate independent tests; neither makes the earlier start signal precise.
+  The existing stage contract is not itself wrong: the consumer needs a more
+  precise start acknowledgement. User explicitly approved CS-ADR-046; its
+  optional SDK callback and owned consumer pass the independent contract/Node
+  tests, including default behavior and actual constructor ordering. The
+  real I/O reference now passes in `runtime/exercise-check-sQbj1J`; full native
+  completion is resource-blocked, not accepted. Neither the standalone
+  `program-session.ts` nor the official-worker budget consumer was changed.
+  Parts 03/04 must independently close those timing/parity gates before claiming
+  complete execution/core grading. Preserve that obligation, not just the local
+  fix, when reconciling this entry.
+  Reproduce with the existing exercise-validation harness, both default
+  families for acceptance; an I/O-only diagnostic report cannot close the gate.
 - Strict lint: the [phase-extension rationale](../03-coding-surface/EMCEPTION-PHASE-EXTENSION-RATIONALE.md)
   and original ledger record six warnings in `createEmception.ts` and one in
   `core/test-d/index.test-d.ts`, reproduced against both HEAD and changed source.
   This is baseline debt, not a regression introduced by the phase extension.
   It remains a nonpassing strict gate until actually rechecked/corrected; a
   new upstream cleanup requires scope approval, not a retrospective waiver.
+  The authorized CS-ADR-046 expansion now also touches `worker-entry.ts` and
+  `tool-runner.ts`: exact unsuppressed HEAD/current comparison adds seven
+  already-existing any/this-alias errors, while retaining those seven warnings.
+  `program-start-sdk-lint-baseline.json` in the same evidence root records
+  identical rule/message/severity lists and zero findings in the new tests.
+  None is introduced or suppressed by the optional start signal; strict
+  whole-file lint still fails and is not promoted by a zero-delta audit.
 
 All `runtime/*` references above are relative to ignored
 `apps/web/test-results/coding-surface-refoundation/`. Their limits and hashes

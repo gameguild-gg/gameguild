@@ -5,7 +5,7 @@ import { createServer } from 'node:http';
 import { extname, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium, expect } from 'playwright/test';
-import { build } from 'vite';
+import { buildCodingSurfaceFixture } from './coding-surface-fixture-build.mjs';
 import { createCodeBrowserLaunchOptions } from '../../../tools/emception/grading/browser-launch-options.mjs';
 
 const repo = fileURLToPath(new URL('../../../', import.meta.url));
@@ -24,6 +24,14 @@ const sourceFiles = [
   'authoring-tests.tsx',
   'authoring-surface.tsx',
   'authoring.css',
+  'authoring-validation.tsx',
+  'authoring-validation-results.tsx',
+  'authoring-learner-preview.tsx',
+  'exercise-validation.ts',
+  'exercise-validation-types.ts',
+  'exercise-preparation.ts',
+  'coding-surface.tsx',
+  'coding-workbench.tsx',
   'testing/authoring-browser.tsx',
 ];
 const hash = (bytes) => createHash('sha256').update(bytes).digest('hex');
@@ -34,7 +42,7 @@ const report = {
   persisted: false,
   officialGrading: false,
   passed: false,
-  requiredCases: ['UX04-A-function', 'UX04-A-standard-io', 'UX04-A-layout', 'UX04-A-keyboard'],
+  requiredCases: ['UX04-A-function', 'UX04-A-standard-io', 'UX04-A-layout', 'UX04-A-keyboard', 'UX04-B-preview-ui'],
   cases: [],
   errors: [],
   compilerRequests: [],
@@ -44,30 +52,11 @@ const report = {
     await Promise.all(sourceFiles.map(async (path) => [path, hash(await readFile(resolve(repo, 'packages/features/coding-surface/src', path)))])),
   ),
   harnessHash: hash(await readFile(fileURLToPath(import.meta.url))),
+  fixtureBuilderHash: hash(await readFile(new URL('./coding-surface-fixture-build.mjs', import.meta.url))),
 };
 const persist = () => writeFile(resolve(evidence, 'report.json'), JSON.stringify(report, null, 2) + '\n');
 await persist();
-await build({
-  configFile: false,
-  root: resolve(repo, 'apps/web'),
-  publicDir: false,
-  base: '/bundle/',
-  define: { 'process.env.NODE_ENV': JSON.stringify('production') },
-  resolve: { dedupe: ['react', 'react-dom'] },
-  build: {
-    outDir: output,
-    emptyOutDir: false,
-    target: 'es2022',
-    minify: false,
-    lib: {
-      entry: resolve(repo, 'packages/features/coding-surface/src/testing/authoring-browser.tsx'),
-      formats: ['es'],
-      fileName: () => 'authoring.js',
-      cssFileName: 'authoring',
-    },
-  },
-  worker: { format: 'es' },
-});
+await buildCodingSurfaceFixture('authoring', output);
 const server = createServer(async (request, response) => {
   response.setHeader('Cache-Control', 'no-store');
   try {
@@ -92,7 +81,8 @@ const server = createServer(async (request, response) => {
     }
     response.setHeader(
       'Content-Type',
-      { '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.ttf': 'font/ttf' }[extname(path)] ?? 'application/octet-stream',
+      { '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.ttf': 'font/ttf' }[extname(path)] ??
+        'application/octet-stream',
     );
     response.end(await readFile(path));
   } catch {
@@ -200,11 +190,23 @@ try {
     await expect(page.getByLabel('Statement', { exact: true })).toHaveValue('Add two integers.');
     await command('Check fields');
     await expect(page.getByRole('status')).toHaveText('Exercise fields are complete.');
+    await task('Validate exercise');
+    await command('Add reference solution');
+    await expect(page.locator('.monaco-editor')).toBeVisible();
+    await command('Learner preview');
+    await expect(page.getByRole('heading', { name: 'Learner preview', exact: true })).toBeFocused();
+    await expect(page.locator('.monaco-editor')).toBeVisible();
+    await page.locator('.monaco-editor .view-lines').click();
+    await page.keyboard.press('Control+KeyA');
+    await page.keyboard.insertText('scratch must not persist');
+    await command('Back to authoring');
+    await expect(page.locator('.monaco-editor')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Learner preview', exact: true })).toBeFocused();
     report.cases.push(`UX04-A-${family}`);
   }
   await page.getByRole('tab', { name: 'Problem', exact: true }).focus();
   await page.keyboard.press('End');
-  await expect(page.getByRole('tab', { name: 'Tests', exact: true })).toBeFocused();
+  await expect(page.getByRole('tab', { name: 'Validate exercise', exact: true })).toBeFocused();
   await page.keyboard.press('Home');
   await expect(page.getByRole('tab', { name: 'Problem', exact: true })).toBeFocused();
   await page.getByLabel('Exercise type', { exact: true }).selectOption('function');
@@ -213,7 +215,7 @@ try {
   await expect(page.getByRole('button', { name: 'Confirm change', exact: true })).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  report.cases.push('UX04-A-keyboard', 'UX04-A-layout');
+  report.cases.push('UX04-A-keyboard', 'UX04-A-layout', 'UX04-B-preview-ui');
   assert.equal(report.compilerRequests.length, 0, 'authoring fetched compiler assets');
   assert.equal(report.compilerWorkers, 0, 'authoring booted a compiler');
   assert.deepEqual(await page.evaluate(() => [localStorage.length, sessionStorage.length]), [0, 0]);

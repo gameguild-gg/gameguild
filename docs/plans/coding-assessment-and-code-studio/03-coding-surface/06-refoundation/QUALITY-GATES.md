@@ -306,6 +306,73 @@ plateau. Graphics, all supported runtime combinations, official grading and
 human acceptance keep their independent required oracles; no canonical status
 is automatically promoted by this focused report.
 
+### Focused exercise preparation and redacted preview proof
+
+The scoped CS-ADR-046 optional native start extension additionally requires:
+
+```bash
+pnpm --filter emception test:types
+pnpm --filter @gameguild/emception-browser build
+node --test --test-concurrency=1 tools/emception/packages/core/tests/program-start.test.mjs tools/emception/packages/browser/tests/program-start.test.mjs
+node --test --test-concurrency=1 tools/emception/packages/core/tests/*.test.mjs
+node --test --test-concurrency=1 tools/emception/packages/browser/tests/*.test.mjs
+pnpm --filter @game-guild/emception-ui test
+```
+
+These are local SDK TypeScript builds, not compiler/artifact or IDE builds.
+Prove opt-in/once-only run correlation, unchanged default messages/results,
+actual WASM constructor/start ordering, failed-preparation rejection and owned
+preparation/program/cleanup budget separation. Missing program-start evidence
+must fail closed. Record pre-existing optional remote-smoke skips explicitly;
+they do not replace the real browser proof below. Unsuppressed upstream lint
+debt stays nonpassing, even when an exact HEAD comparison proves no regression.
+
+```bash
+GAMEGUILD_CODE_WORKER_BROWSER_CHANNEL=chrome node apps/web/scripts/coding-surface-exercise-validation-e2e.mjs
+```
+
+Apply the existing verified-local-artifact, OS-headroom and reserved-CPU policy;
+run no other heavy build/compiler alongside it. The command uses actual owned
+teacher/learner components, installed local Monaco and the public runtime.
+It creates no accounts, API stack or official attempts. It writes fresh
+`runtime/exercise-check-*` reports with owned/SDK/composer/manifest/harness
+hashes. No Emception source build or independent IDE publication is required for these
+unchanged compatible local assets.
+Use one browser at a time, with a cold browser per exercise family and streamed
+assets, to avoid carrying prior compiler/bundle buffers into the next family.
+This deliberately does not establish a same-context compiler-memory plateau.
+The owned fixture builder runs in a separate child and exits before acquiring
+the browser; its Vite graph must not stay resident in the proof process.
+The four focused builder controls must pass:
+
+```bash
+node --test --test-concurrency=1 apps/web/scripts/coding-surface-fixture-build.test.mjs
+```
+
+Require all six named controls: function, standard I/O, redacted preview,
+compilation failure, cancel/drain and layout. In each family the reference
+passes both public/private cases and the deliberately wrong solution fails
+them; neither modifies starter/source metadata. Draft edits stale the result.
+Preview shows the non-default current structured problem, runs only the public
+case through the same solver, contains no private canary in DOM/editor models
+and resets scratch on reopening with zero browser storage or academic calls.
+Compilation failure cannot become `incorrect-detected`. Opening preview while
+checking waits for actual worker closure. Observe at most one compiler and
+zero retained workers, with desktop/mobile screenshots and inspected framing.
+
+For diagnosis only, `CODING_EXERCISE_FAMILY=function` or `standard-io` selects
+one family and records `partialSelection: true`. Unknown selectors fail.
+Passing a partial report never closes the required default six-case gate.
+Retain bounded timestamped browser-console evidence, its omitted-entry count,
+resource report and failed screenshot for investigation. Console text is an
+observation, not a production program-start signal or a substitute oracle.
+
+Keep failure reports and the exact focus oracle. React StrictMode and real
+Monaco readiness need their own controls; mocks cannot certify those behaviors.
+This is local package evidence for `CS-REF-05/19`, not host save/reopen,
+authorized persona/publication/release E2E, broader runtime stress or human
+acceptance. Those gates remain independently required.
+
 ## G-AUTHORING: actual offline instructor task views
 
 ```bash
@@ -315,10 +382,13 @@ GAMEGUILD_CODE_WORKER_BROWSER_CHANNEL=chrome node apps/web/scripts/coding-surfac
 Use the existing OS-headroom guard and reserved CPU policy. This fixture mounts
 the real `CodingAuthoringSurface` and installed local Monaco without an API,
 learner account, compiler asset or SDK boot. Require the exact function,
-standard-I/O, keyboard and layout case IDs, preserved draft values across tasks,
+standard-I/O, keyboard, layout and `UX04-B-preview-ui` case IDs, preserved draft values across tasks,
 typed/exact-output edits, duplicate/delete cancellation, focus restoration and
 desktop/wide/mobile captures. Editing must create no compiler workers/requests
 or author browser-storage entries. Missing cases and page exceptions fail.
+The added preview UI control opens/edits/closes scratch with real Monaco in
+both families, checking return focus without executing any code. It cannot
+replace the separate runtime proof above.
 
 The harness waits for the exact returned authoring context, not a tab shared
 with the previous mount. Keep source/harness hashes and earlier failed reports.

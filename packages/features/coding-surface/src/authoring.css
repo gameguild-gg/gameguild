@@ -325,6 +325,45 @@
   cursor: pointer;
   font-weight: 600;
 }
+.cs-author-solution-add {
+  margin-top: 16px;
+}
+.cs-author-solution-editor {
+  height: 440px;
+  min-width: 0;
+  border: 1px solid var(--cs-border);
+}
+.cs-author-solution-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+}
+.cs-author-check-results article {
+  padding: 16px 0;
+  border-top: 1px solid var(--cs-border);
+}
+.cs-author-check-results header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+.cs-author-check-results details {
+  margin: 8px 0;
+}
+.cs-author-check-results pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.cs-author-check-results [data-stale] {
+  opacity: 0.7;
+}
+.cs-author-learner-preview {
+  min-width: 0;
+  height: 780px;
+  max-height: 85dvh;
+  min-height: 600px;
+}
 .cs-author-signature summary code {
   margin-left: 12px;
   font-size: 13px;

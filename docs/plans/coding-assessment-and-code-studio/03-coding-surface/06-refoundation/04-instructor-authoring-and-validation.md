@@ -1,9 +1,15 @@
 # 3.6.4. Instructor authoring and exercise validation
 
 Status: independent UX04-A package task views implemented and locally validated
-on 2026-11-23 (CS-ADR-044). UX04-B/C and whole `CODE-UX-04` acceptance remain
-open. Final phase entry/acceptance still depends on `CODE-UX-03`; advancing this
-independent offline row does not waive its runtime or human gates.
+and committed as `d087071dcc` on 2026-11-23 (CS-ADR-044). UX04-B owned
+implementation, terminal and offline-preview gates pass; required native I/O
+acceptance remains open after an OS-headroom refusal. The authorized optional
+program-start correction passes compatibility and real reference controls,
+not the complete native gate (CS-ADR-045/046).
+UX04-C has not started; whole `CODE-UX-04` acceptance remains open. Final phase
+entry/acceptance still depends on `CODE-UX-03`; advancing an independent row
+does not waive its runtime or human gates. See the single implementation ledger
+for the Stop & Ask, failed proofs and next action; do not cut over host forms.
 
 ## Invariants and boundaries
 

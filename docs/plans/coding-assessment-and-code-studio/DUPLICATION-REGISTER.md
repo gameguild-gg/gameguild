@@ -300,6 +300,25 @@ forms stay functional until UX04-C migrates their consumers, then only the
 superseded grading-owned forms can be removed with regression proof. No
 automatic upstream convergence, source deletion or matching-policy change.
 
+`DUP-PL-021`: `apps/web/scripts/coding-surface-exercise-validation-e2e.mjs`
+reuses the owned authoring/workbench loopback, local-Monaco, asset preflight and
+browser lifecycle structure at `d087071dcc`. Its assertions independently
+exercise protected-solution preparation and genuinely redacted solving preview
+through the existing public runner. The fixture's synthetic draft builder is
+shared with focused unit tests; it is not an execution engine or answer oracle.
+No compiler, judge, IDE or upstream UI code is copied. The extended offline
+authoring proof retains zero-runtime assertions; neither fixture replaces the
+other's evidence layer. Owner: coding/grading; CS-ADR-045. Keep these independent
+privacy, verdict, focus and cancellation controls if scaffolding is consolidated
+after parts 03/04.
+
+UX04-B subsequently shares only these two owned fixtures' build configuration
+in `coding-surface-fixture-build.mjs`. A separate child releases the bundler
+before browser/runtime memory is acquired; four focused tests protect entries,
+output ownership and parent import boundaries. Source/composer/SDK checks and
+independent authoring/runtime oracles stay in their original harnesses. This
+does not consolidate upstream code or the distinct execution stress proofs.
+
 ## Gate de revisao futura
 
 A revisao com o responsavel pelo Emception deve decidir item por item:

@@ -45,6 +45,9 @@ describe('coding surface architecture', () => {
     expect(exported).toContain('./program-session-types');
     expect(exported).toContain('./authoring-types');
     expect(exported).toContain('./authoring-surface');
+    expect(exported).toContain('./exercise-validation');
+    expect(exported).toContain('./exercise-validation-types');
+    expect(exported).toContain('./exercise-preparation');
   });
 
   it('keeps authoring views offline and outside academic persistence/execution', () => {
@@ -62,6 +65,28 @@ describe('coding surface architecture', () => {
       expect(source).not.toMatch(/\b(?:localStorage|sessionStorage|indexedDB|createEmception|new\s+Worker|fetch)\b/);
       expect(source).not.toMatch(/\b(?:submit|release|grantPermission|runTests|compileAndRun)\s*\(/);
     }
+  });
+
+  it('keeps exercise checks behind the existing runner and preview behind a learner-only port', () => {
+    const allowed: Record<string, readonly string[]> = {
+      'exercise-preparation.ts': ['@game-guild/coding'],
+      'exercise-validation-types.ts': ['@game-guild/coding', './runtime-types', './types'],
+      'exercise-validation.ts': ['@game-guild/coding', './exercise-preparation', './preview-runner', './types', './exercise-validation-types'],
+      'authoring-learner-preview.tsx': ['@game-guild/coding', './workbench-session-types', './coding-surface'],
+    };
+    for (const [name, imports] of Object.entries(allowed)) {
+      const source = readFileSync(join(import.meta.dirname, name), 'utf8');
+      const file = ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true);
+      for (const statement of file.statements) {
+        if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)) expect(imports).toContain(statement.moduleSpecifier.text);
+      }
+      expect(source).not.toMatch(/\b(?:localStorage|sessionStorage|indexedDB|fetch|createEmception|Worker|compileAndRun)\b/);
+      expect(source).not.toMatch(/\b(?:submit|release|grantPermission|runTests)\s*\(/);
+    }
+    const preview = readFileSync(join(import.meta.dirname, 'authoring-learner-preview.tsx'), 'utf8');
+    expect(preview).not.toMatch(/\b(?:CodingAuthoringDraft|CodingAuthoringDefinition|validationSolutions|onSubmit|onReviewDecision|workspaceStorageKey)\b/);
+    expect(preview).toContain('enableWorkspace={false}');
+    expect(preview).toContain('mode="learner"');
   });
 
   it('keeps runtime acquisition lazy and outside academic/host commands', () => {

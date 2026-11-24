@@ -17,6 +17,7 @@ describe('bounded preview uses the public test engine', () => {
     expect(fixture.disposed).toHaveBeenCalledTimes(1);
     fixture.api.compileAndRun.mockImplementationOnce(async (_source, options) => {
       options?.onPhase?.('run');
+      options?.onProgramStart?.();
       return toolResult('wrong\n');
     });
     const wrong = await runCodingPreview(fixture.options);
@@ -33,6 +34,7 @@ describe('bounded preview uses the public test engine', () => {
     };
     fixture.api.compileAndRun.mockImplementation(async (_source, options) => {
       options?.onPhase?.('run');
+      options?.onProgramStart?.();
       expect(options?.build).toHaveProperty('sources');
       expect(fixture.writes.some(([path]) => path.startsWith('/tmp/gameguild-function-'))).toBe(true);
       return toolResult(
@@ -56,10 +58,53 @@ describe('bounded preview uses the public test engine', () => {
     await expect(runCodingPreview(fixture.options)).rejects.toMatchObject({ message: expect.stringContaining('phase') });
   });
 
-  it('requires the run-start callback that establishes the student execution deadline', async () => {
+  it('requires the program-start callback that establishes the student execution deadline', async () => {
     const fixture = setup();
     fixture.api.compileAndRun.mockResolvedValueOnce(toolResult('ready\n'));
-    await expect(runCodingPreview(fixture.options)).rejects.toMatchObject({ message: expect.stringContaining('run-start') });
+    await expect(runCodingPreview(fixture.options)).rejects.toMatchObject({ message: expect.stringContaining('program-start') });
+  });
+
+  it('does not accept the early run stage as proof of actual program start', async () => {
+    const fixture = setup();
+    fixture.api.compileAndRun.mockImplementationOnce(async (_source, options) => {
+      options?.onPhase?.('run');
+      return toolResult('ready\n');
+    });
+    await expect(runCodingPreview(fixture.options)).rejects.toMatchObject({ message: expect.stringContaining('program-start') });
+  });
+
+  it('keeps WASM loading and compilation in preparation until actual program start', async () => {
+    vi.useFakeTimers();
+    const fixture = setup();
+    fixture.options.definition.limits.timeLimitMs = 10;
+    const preparing = deferred<void>();
+    const prepared = deferred<void>();
+    fixture.api.compileAndRun.mockImplementationOnce(async (_source, options) => {
+      options?.onPhase?.('run');
+      preparing.resolve();
+      await prepared.promise;
+      options?.onProgramStart?.();
+      return toolResult('ready\n');
+    });
+    const running = runCodingPreview(fixture.options).catch((cause: unknown) => cause);
+    await preparing.promise;
+    try {
+      await vi.advanceTimersByTimeAsync(11);
+      expect(fixture.disposed).not.toHaveBeenCalled();
+    } finally {
+      prepared.resolve();
+    }
+    expect(await running).toMatchObject({ academic: false, report: { passed: 1, failed: 0 } });
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it.each(['compile', 'link'] as const)('does not certify a broken %s stage as a detected incorrect solution', async (phase) => {
+    const fixture = setup();
+    fixture.api.compileAndRun.mockResolvedValueOnce({ ...toolResult(), phase, exitCode: 1, stderr: 'invalid source' });
+    await expect(runCodingPreview({ ...fixture.options, requireSuccessfulBuild: true })).rejects.toMatchObject({
+      message: `Solution ${phase === 'compile' ? 'compilation' : 'linking'} failed (exit 1).\ninvalid source`,
+    });
+    expect(fixture.disposed).toHaveBeenCalled();
   });
 
   it('bounds streaming UTF-8 output and stops before returning a test verdict', async () => {
@@ -82,6 +127,7 @@ describe('bounded preview uses the public test engine', () => {
     fixture.api.compileAndRun.mockImplementation(async (_source, options) => {
       begin = () => {
         options?.onPhase?.('run');
+        options?.onProgramStart?.();
         started.resolve();
       };
       await fixture.closed.promise;
@@ -96,6 +142,75 @@ describe('bounded preview uses the public test engine', () => {
     await vi.advanceTimersByTimeAsync(11);
     expect(await running).toMatchObject({ message: expect.stringContaining('execution-timeout') });
     expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('does not charge post-execution overlay restoration to the finished student program', async () => {
+    vi.useFakeTimers();
+    const fixture = setup();
+    fixture.options.definition.limits.timeLimitMs = 10;
+    fixture.options.definition.files.push({
+      id: 'overlay-fixture',
+      path: '/home/user/support.h',
+      content: '// protected support',
+      encoding: 'text',
+      visibility: 'private',
+      mutable: false,
+    });
+    const restoring = deferred<void>();
+    const restored = deferred<void>();
+    fixture.api.workspace.readFile.mockImplementation(async (path) => {
+      for (const [written, content] of [...fixture.writes].reverse()) {
+        if (written === path) return typeof content === 'string' ? new TextEncoder().encode(content) : content;
+      }
+      return null;
+    });
+    fixture.api.workspace.deleteFile.mockImplementation(async () => {
+      restoring.resolve();
+      await restored.promise;
+    });
+    const running = runCodingPreview({ ...fixture.options, mode: 'author-test' }).catch((cause: unknown) => cause);
+    await Promise.race([
+      restoring.promise,
+      running.then((outcome) => {
+        throw new Error('Execution ended before restoration.', { cause: outcome });
+      }),
+    ]);
+    try {
+      await vi.advanceTimersByTimeAsync(11);
+      expect(fixture.disposed).not.toHaveBeenCalled();
+    } finally {
+      restored.resolve();
+    }
+    expect(await running).toMatchObject({ academic: false, report: { passed: 1, failed: 0 } });
+    expect(fixture.disposed).toHaveBeenCalledTimes(1);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it('ends the student timer at public exit even while compileAndRun is restoring native scratch', async () => {
+    vi.useFakeTimers();
+    const fixture = setup();
+    fixture.options.definition.limits.timeLimitMs = 10;
+    const exited = deferred<void>();
+    const restored = deferred<void>();
+    fixture.api.compileAndRun.mockImplementation(async (_source, options) => {
+      options?.onPhase?.('run');
+      options?.onProgramStart?.();
+      const listener = fixture.api.on.mock.calls.find(([event]) => event === 'exit')?.[1];
+      listener?.({ exitCode: 0, durationMs: 1 });
+      exited.resolve();
+      await restored.promise;
+      return toolResult('ready\n');
+    });
+    const running = runCodingPreview(fixture.options).catch((cause: unknown) => cause);
+    await exited.promise;
+    try {
+      await vi.advanceTimersByTimeAsync(11);
+      expect(fixture.disposed).not.toHaveBeenCalled();
+    } finally {
+      restored.resolve();
+    }
+    expect(await running).toMatchObject({ academic: false, report: { passed: 1, failed: 0 } });
+    expect(fixture.unsubscribe).toHaveBeenCalledTimes(1);
   });
 
   it('cancels and waits for actual pending acquisition ownership', async () => {
@@ -138,6 +253,7 @@ function setup() {
     throw new Error('Unexpected runtime path.');
   });
   const closed = deferred<void>();
+  const unsubscribe = vi.fn();
   const writes: [string, Uint8Array | string][] = [];
   const api = {
     workspace: {
@@ -159,10 +275,11 @@ function setup() {
     run: forbidden,
     compileAndRun: vi.fn<BrowserEmceptionAPI['compileAndRun']>(async (_source, options) => {
       options?.onPhase?.('run');
+      options?.onProgramStart?.();
       return toolResult('ready\n');
     }),
     runTests: forbidden,
-    on: forbidden,
+    on: vi.fn<BrowserEmceptionAPI['on']>().mockReturnValue(unsubscribe),
     dispose: forbidden,
     canvas: { build: forbidden, start: forbidden, buildAndStart: forbidden, stop: forbidden },
   } satisfies BrowserEmceptionAPI;
@@ -178,7 +295,7 @@ function setup() {
   definition.limits = { timeLimitMs: 30_000, outputLimitBytes: 2_000_000, maxFileCount: 100 };
   definition.tests = definition.tests.filter((test) => test.kind === 'stdio');
   const options = { definition, mode: 'learner' as const, manifestUrl: '/emception/manifest.json', signal: new AbortController().signal, createRuntime };
-  return { api, closed, writes, acquire, disposed, whenDisposed, createRuntime, options };
+  return { api, closed, writes, acquire, disposed, whenDisposed, createRuntime, options, unsubscribe };
 }
 
 function toolResult(stdout = ''): ToolResult {

@@ -9,7 +9,7 @@ describe('UX04-A authoring presentation contract', () => {
     expectTypeOf<CodingAuthoringSurfaceProps['onChange']>().toEqualTypeOf<(draft: CodingAuthoringDraft) => void>();
     expectTypeOf<CodingAuthoringSurfaceProps['createId']>().toEqualTypeOf<(kind: CodingAuthoringIdentityKind) => string>();
     expectTypeOf<Extract<keyof CodingAuthoringSurfaceProps, 'api' | 'storage' | 'onSubmit' | 'onGrade' | 'runtime'>>().toEqualTypeOf<never>();
-    expect(CODING_AUTHORING_TASKS).toEqual(['problem', 'environment', 'starter', 'tests']);
+    expect(CODING_AUTHORING_TASKS).toEqual(['problem', 'environment', 'starter', 'tests', 'validate']);
   });
 
   it.each(['function', 'standard-io'] as const)('accepts incomplete %s data without inventing another persisted model', (family) => {

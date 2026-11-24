@@ -85,6 +85,7 @@ export class WorkerClient {
             cwd: options.cwd,
             onStdout: options.onStdout,
             onStderr: options.onStderr,
+            onProgramStart: options.onProgramStart,
             wantStdin: !!options.stdin,
             onStdinRequest: options.stdin ? (ctrl, data) => this.feedStdin(ctrl, data, options.stdin!) : undefined,
             hints: options.hints,

@@ -29,6 +29,8 @@ export interface RunMessage {
         env?: Record<string, string>;
         cwd?: string;
         wantStdin?: boolean;
+        /** Opt in to a correlated native program-start notification. */
+        wantProgramStart?: boolean;
         /** Opaque hints forwarded to ToolRunner (e.g. which CDN bundles are needed). */
         hints?: { bundlesNeeded?: string[] };
     };
@@ -114,6 +116,12 @@ export interface StderrMessage {
     type: 'stderr';
     id: number;
     text: string;
+}
+
+/** Native WASI preparation completed; constructors/entry are about to execute. */
+export interface ProgramStartMessage {
+    type: 'programStart';
+    id: number;
 }
 
 /** Worker needs stdin bytes for a run (enables exclusive stdin on main). */
@@ -229,6 +237,7 @@ export type WorkerToMainMessage =
     | BootErrorMessage
     | StdoutMessage
     | StderrMessage
+    | ProgramStartMessage
     | StdinRequestMessage
     | ShellStdinRequestMessage
     | RunResultMessage

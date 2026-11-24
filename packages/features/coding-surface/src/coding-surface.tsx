@@ -59,6 +59,9 @@ function ReadyCodingSurface(props: CodingSurfaceProps & { readonly contextKey: s
       definition.files.filter((file) => !file.mutable).map((file) => file.path),
       true,
     );
+    const beforeExecution = Promise.all([props.teardown.current, props.beforeExecution ?? Promise.resolve()]).then(() => undefined);
+    // Observe now, but retain the rejected barrier for execution/disposal to surface.
+    void beforeExecution.catch(() => undefined);
     const next = createCodingWorkbenchSession({
       candidateKey: props.contextKey,
       definition,
@@ -67,7 +70,7 @@ function ReadyCodingSurface(props: CodingSurfaceProps & { readonly contextKey: s
       manifestUrl: props.manifestUrl ?? '/emception/manifest.json',
       maxScore: props.maxScore,
       passingScore: props.passingScore,
-      beforeExecution: props.teardown.current,
+      beforeExecution,
     });
     sessionRef.current = next;
     setSession(next);
@@ -77,6 +80,7 @@ function ReadyCodingSurface(props: CodingSurfaceProps & { readonly contextKey: s
       if (current) setState(next.getState());
     });
     callbacks.current.onSessionReady?.(next);
+    callbacks.current.onWorkbenchReady?.(next);
     return () => {
       current = false;
       unsubscribe();
@@ -89,7 +93,7 @@ function ReadyCodingSurface(props: CodingSurfaceProps & { readonly contextKey: s
         if (current) setError(message(cause));
       });
     };
-  }, [definition, editor, props.contextKey, props.manifestUrl, props.maxScore, props.mode, props.passingScore, props.teardown]);
+  }, [definition, editor, props.beforeExecution, props.contextKey, props.manifestUrl, props.maxScore, props.mode, props.passingScore, props.teardown]);
 
   const invalidate = useCallback(() => {
     callbacks.current.onPreviewInvalidated?.();
@@ -314,7 +318,44 @@ function CodingProfileContext({ props }: { readonly props: CodingSurfaceProps })
     }
     case 'learner': {
       const Renderer = profile.renderers.learner;
-      return <Renderer definition={props.definition} />;
+      const problem = props.definition.problem;
+      return (
+        <>
+          {problem ? (
+            <section aria-label="Problem statement" style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
+              <h2 style={{ fontSize: 16 }}>Problem</h2>
+              <p>{problem.statement}</p>
+              {problem.examples.map((example, index) => (
+                <section key={example.id} aria-label={`Example ${index + 1}`}>
+                  <h3 style={{ fontSize: 14 }}>Example {index + 1}</h3>
+                  <dl>
+                    <dt>Input</dt>
+                    <dd>
+                      <pre style={{ whiteSpace: 'pre-wrap' }}>{example.input}</pre>
+                    </dd>
+                    <dt>Output</dt>
+                    <dd>
+                      <pre style={{ whiteSpace: 'pre-wrap' }}>{example.output}</pre>
+                    </dd>
+                  </dl>
+                  <p>{example.explanation}</p>
+                </section>
+              ))}
+              {problem.constraints.length ? (
+                <>
+                  <h3 style={{ fontSize: 14 }}>Constraints</h3>
+                  <ul>
+                    {problem.constraints.map((constraint, index) => (
+                      <li key={index}>{constraint}</li>
+                    ))}
+                  </ul>
+                </>
+              ) : null}
+            </section>
+          ) : null}
+          <Renderer definition={props.definition} />
+        </>
+      );
     }
     case 'grader': {
       const Renderer = profile.renderers.grader;

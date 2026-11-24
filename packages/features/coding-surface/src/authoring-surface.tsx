@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useId, useMemo, useRef, useState, type KeyboardEvent } from 'react';
-import { BookOpen, Code2, FlaskConical, Settings2 } from 'lucide-react';
+import { BookOpen, Code2, FlaskConical, Settings2, ClipboardCheck } from 'lucide-react';
 import {
   codingDraftOperations,
   parseCodingAuthoringDraft,
@@ -19,6 +19,7 @@ import { authoringIssues, blankDraftTest, blankFunctionCase, starterSource } fro
 import { CodingAuthoringProblem } from './authoring-problem';
 import { CodingAuthoringStarter } from './authoring-starter';
 import { CodingAuthoringTests } from './authoring-tests';
+import { CodingAuthoringValidation } from './authoring-validation';
 import { CODING_AUTHORING_TASKS, type CodingAuthoringSurfaceProps, type CodingAuthoringTask } from './authoring-types';
 import './authoring.css';
 
@@ -27,6 +28,7 @@ const TASKS = {
   environment: { label: 'Environment', icon: Settings2 },
   starter: { label: 'Starter code', icon: Code2 },
   tests: { label: 'Tests', icon: FlaskConical },
+  validate: { label: 'Validate exercise', icon: ClipboardCheck },
 };
 interface ChangeReview {
   baseline: string;
@@ -37,11 +39,12 @@ interface ChangeReview {
 const emptySignature = (): CodingFunctionSignature => ({ name: '', parameters: [], returnType: 'integer' });
 
 export function CodingAuthoringSurface(props: CodingAuthoringSurfaceProps) {
+  const executionOwner = useRef<Promise<void>>(Promise.resolve());
   if (!props.contextKey.trim()) throw new TypeError('Authoring requires an explicit context key.');
-  return <ReadyAuthoringSurface key={props.contextKey} {...props} />;
+  return <ReadyAuthoringSurface key={`${props.contextKey}:${props.manifestUrl ?? ''}`} {...props} executionOwner={executionOwner} />;
 }
 
-function ReadyAuthoringSurface(props: CodingAuthoringSurfaceProps) {
+function ReadyAuthoringSurface(props: CodingAuthoringSurfaceProps & { readonly executionOwner: { current: Promise<void> } }) {
   const draft = useMemo(() => parseCodingAuthoringDraft(props.draft), [props.draft]);
   const [task, setTask] = useState<CodingAuthoringTask>(props.initialTask ?? 'problem');
   const [selectedFileId, selectFile] = useState<string | null>(draft.files[0]?.id ?? null);
@@ -308,6 +311,24 @@ function ReadyAuthoringSurface(props: CodingAuthoringSurfaceProps) {
             deleteFunctionCase={deleteFunctionCase}
           />
         ) : null}
+        <div hidden={task !== 'validate'}>
+          <CodingAuthoringValidation
+            {...view}
+            contextKey={props.contextKey}
+            createId={props.createId}
+            manifestUrl={props.manifestUrl ?? '/emception/manifest.json'}
+            active={task === 'validate'}
+            owner={props.executionOwner}
+            deleteSolution={(solutionId) => {
+              const candidate = structuredClone(draft);
+              candidate.validationSolutions = candidate.validationSolutions.filter((solution) => solution.id !== solutionId);
+              reviewCandidate(candidate, 'Delete protected solution', [
+                'Remove this solution and its protected source copies',
+                'Starter files and test expectations remain unchanged',
+              ]);
+            }}
+          />
+        </div>
       </div>
       {pending ? <ChangeReviewDialog change={pending} disabled={disabled} confirm={confirm} cancel={() => setPending(null)} /> : null}
     </section>
