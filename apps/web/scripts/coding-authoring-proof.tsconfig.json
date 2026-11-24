@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "incremental": false,
+    "noEmit": true,
+    "strict": true,
+    "types": ["node"]
+  },
+  "include": ["./coding-authoring-browser-contracts.mts", "./coding-authoring-browser-contracts.test.mjs", "./coding-authoring-browser-proof.mts"],
+  "exclude": ["../node_modules", "../test-results"]
+}

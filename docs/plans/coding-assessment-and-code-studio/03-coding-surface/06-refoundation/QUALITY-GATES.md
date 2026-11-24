@@ -149,8 +149,31 @@ pnpm --filter @game-guild/web exec vitest run \
 ```
 
 This collaborator-level gate cannot satisfy C3 actual-host persistence or human
-acceptance. The historical `coding-definition-authoring-browser-e2e.mjs` needs
-an explicit current-model flow before it can supply C3 evidence.
+acceptance. C3 replaces the historical script flow with the typed current-model
+driver. Its isolated config retains strict checking and checks its Node tests;
+it does not change or weaken the web configuration.
+
+```bash
+pnpm --filter @game-guild/web exec tsc --project scripts/coding-authoring-proof.tsconfig.json --noEmit --pretty false
+node --test --test-concurrency=1 apps/web/scripts/coding-authoring-browser-contracts.test.mjs
+E2E_RUN=1 node apps/web/scripts/coding-definition-authoring-browser-e2e.mjs
+```
+
+The last command requires a healthy local dev-fast stack. The existing
+`scripts/e2e-stack.mjs` supervisor may start it for the proof; preserve existing
+services and stop only test-owned processes afterward. Run heavy groups
+sequentially, with the existing OS reserve and at least two CPUs free. The
+driver checks every required case, real API roundtrips, no compiler/academic
+requests, error observations and owned cleanup before writing a passing report.
+Inspect its actual-host captures separately; no automated result is human
+approval or official grading acceptance.
+
+If the supervisor's API rebuild hits the OS reserve, preserve the interrupted
+build as failed evidence. Its supported dev-fast no-build path may reuse a
+successful local API binary only after verifying its informational commit and
+an empty managed-source diff against the current checkout. A backend change
+invalidates that proof and requires rebuilding the affected API before the
+real-host test. Do not hide the build result or bypass a changed backend.
 
 If the workspace's bulk-suppression ledger obstructs a scoped audit with stale
 entries, do not add waivers or ignore unpruned status. Use the same existing

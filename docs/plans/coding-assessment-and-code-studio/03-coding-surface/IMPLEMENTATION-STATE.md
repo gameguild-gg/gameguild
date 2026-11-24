@@ -10,8 +10,12 @@ retain historical evidence and do not authorize restarting earlier work.
 - Entry: user requested separate commits, then continuation. C1 document
   adapters are `4b032f019f`; C2 Learning composition, authorized route
   consolidation and owned-form retirement are `48689823d1`. Documentation is
-  committed separately. No push or merge is requested.
-- Stage: specification/contract before browser implementation. Acceptance IDs
+  `38325ea554` records that checkpoint. No push or merge is requested.
+- Stage: actual-host proof implemented; a real Code publication inconsistency
+  blocks C3. The owned web acknowledgement correction passes its terminal
+  regressions. Backend scope extension was submitted as an explicit Stop & Ask;
+  no backend change is made while that decision is pending.
+  Acceptance IDs
   `CS-REF-01/02/08` require both exercise families on the actual Next/API host:
   edit incomplete fields, save/reopen exact content, preserve local work on a
   real revision conflict, explicitly recover, navigate task/panel controls and
@@ -30,9 +34,106 @@ retain historical evidence and do not authorize restarting earlier work.
 - Resources: sequential checks, one browser/compiler owner, at least two CPUs
   free, available-memory/PSI guard and OS reserve. Do not start the historical
   all-in-one official coding cycle as a substitute for this focused gate.
-- Next: validate the browser proof's typed scenario/evidence contract, write
-  independently expected cases, then execute against the real local host.
-  No C3, human, whole-phase or official grading acceptance is claimed yet.
+- Contracts/support: `apps/web/scripts/coding-authoring-browser-contracts.mts`,
+  its Node test, `coding-authoring-browser-proof.mts`, the existing
+  `coding-definition-authoring-browser-e2e.mjs` entry and a strictly typed
+  `coding-authoring-proof.tsconfig.json`. No production import of this harness.
+  Native Node TypeScript is used only for these test tools; the general web
+  tsconfig and dependency manifests remain unchanged.
+- Contract evidence: strict compilation preceded four independent missing-
+  behavior failures (`c3-contract-red.xml`), then four passing Node tests
+  (`c3-contract-green.xml`). Explicit E2E consent, local-only origins, every
+  required named case, zero compiler/academic calls and successful owned
+  cleanup are mandatory. The entry verifies the final evidence; mocks cannot
+  promote actual-host, human or official grading status.
+- Harness diagnosis: importing the generated client's complete namespace into
+  the isolated no-incremental typecheck exhausted the default Node heap. No
+  application/kernel OOM or product failure is inferred. Reusing native fetch
+  for this narrow existing HTTP test boundary with `unknown`/real narrowing
+  reduced the check to 591 MiB, 2.5 s, minimum available 14551 MiB, no PSI/OOM
+  (`c3-driver-final-types-resources.json`). No unsafe cast, compiler waiver,
+  additional library or broad heap reservation was introduced.
+- Stack attempt: the unchanged `scripts/e2e-stack.mjs` started the five
+  previously inactive containers, then rebuilt the API. The OS guard stopped
+  only that owned build at the RAM-reserve boundary: `c3-stack-resources.json`,
+  peak RSS 11087 MiB, minimum available 4531 MiB, reserve 4772 MiB, no new kernel
+  OOM. This is an interrupted build, not a pass. The existing successful API
+  binary identifies `d087071dcca643c3d7ae373b88aebb7cf24ee7a6`; both commit-range
+  and working-tree `apps/api` diffs were empty. The browser proof therefore
+  reuses that identical-managed-source binary through the already supported
+  `DEV_FAST_API_NO_BUILD=1`, `DEV_FAST_API_WATCH=0` and
+  `DEV_FAST_SKIP_COMPOSE=1` path, with Turbopack, four CPUs and the OS guard.
+  No launcher, dependency, Next config, service-owned data or API source change.
+  Account cleanup is deliberately not automated through a
+  platform-admin path: the synthetic account is an unprivileged signup; owned
+  course/content cleanup is mandatory and failures keep the gate nonzero.
+- C3 first actual-host report `host-authoring-n4cj6r` passed function draft/
+  reopen but failed publication acknowledgement. Diagnostic rerun
+  `host-authoring-mhQqat` reproduced publication base 1 -> 3. The host had
+  incorrectly assumed one content-version increment; the existing API's
+  publication participants may persist the content during preparation. The
+  correction is owned web-only: validate the actual published content's
+  identity, advanced version and slug, and match the draft's scope, exact next
+  revision and frozen payload against that authoritative version. Do not
+  weaken the ordinary save guard or change API/platform versioning. Contract
+  compilation and independent negatives precede the minimal fix.
+- The stronger gate then exposed the backend inconsistency in
+  `host-authoring-3XbDH9`: published content version **2**, returned draft base
+  **3**. This is not an accepted two-write version jump. Source trace:
+  `CodeProgramContentPublicationParticipant.PreparePublishAsync` calls
+  `AssessmentGradingSync.SyncAsync`, which persists tracked content before
+  `ProgramContentAuthoringService.Publish` computes its next version. The
+  resulting draft base does not describe the actual published content. The
+  UI must refuse that response; accepting it would leave the next publication
+  subject to a real version conflict.
+- Proposed minimum backend scope, awaiting the user's answer: prepare Code
+  assessment changes without an intermediate save, following the existing Quiz
+  participant's staging pattern, plus independent transaction/version regression
+  tests and neighboring API/security gates. Do not change platform versioning,
+  schema/migrations, authentication, the Emception SDK or IDE/UI. This is a
+  blocking core defect, not post-04 polish or a reason to skip publication.
+- Web proof for CS-ADR-049: strict full web compilation passed before behavior;
+  `c3-publication-red.json` retains two expected failures (positive pure guard
+  and actual host success), 124 controls passing. The adversarial invalid-base
+  controls also failed before their guard (`c3-publication-audit-red.json`).
+  Final focused host selection: `c3-final-host-tests.json`, 12 files, 227 passing
+  cases, zero failures/skips, peak RSS 1239 MiB, minimum available 12142 MiB,
+  no PSI/OOM. The unchanged ordinary save guard and publication-race controls
+  remain mandatory. Closing full web types pass: peak RSS 1757 MiB, minimum
+  available 11699 MiB, 9.0 s, no PSI/OOM. Isolated driver types pass at 594 MiB,
+  2.5 s, no paging/PSI/OOM. Nine changed/new files pass existing unsuppressed
+  ESLint with `--no-inline-config --max-warnings=0`; Node's four final contract
+  cases pass (`c3-contract-final.xml`). No broad compiler/lint waiver.
+  The owned web fix and its ADR are committed separately as `2149cb7024`.
+- Final real-host evidence `host-authoring-S5Rmh9` passes function and standard
+  I/O draft/reopen, including incomplete numeric text, actual Monaco edits and
+  public/private cases. It then fails the mandatory publication invariant
+  (draft base 3 versus published content 2). Zero compiler/academic browser
+  calls, no cleanup errors; peak browser RSS 1701 MiB, minimum available
+  11359 MiB, no PSI/OOM. Later conflict/offline/context/layout cases are not
+  reached and are not claimed as passing. Only the failure capture is available;
+  it is not desktop/mobile UX acceptance.
+- Harness correction: `host-authoring-PgAfBZ` retains an initial-selection
+  timeout. The driver had navigated immediately after the auth cookie appeared,
+  before the login redirect finished. It now awaits the actual workspace
+  navigation and page load before authoring; no sleeps, retries or timeout
+  increase. The subsequent two-family draft proof passes. Required case
+  count/oracles remain unchanged and the terminal prints sanitized root errors.
+- Cleanup: the owned dev-fast guard was explicitly terminated after the proof;
+  the launcher and API shut down, with no remaining owned browser/compiler.
+  Its final resource report records peak RSS 8285 MiB, minimum available
+  6015 MiB versus reserve 4772 MiB, no new kernel OOM. Only the five containers
+  created by this proof were stopped; no volumes/data were removed. Synthetic
+  Member signups remain intentionally unprivileged; all owned courses/content
+  were removed through their ordinary authorized endpoints.
+- Closing plan audit: 59 documents, 262 local links, 12 atomic tables/36 rows,
+  no failures. Prettier passes for all ten exact changed source/config/test
+  files, respecting the two host files' existing style; `git diff --check`
+  passes. The browser proof remains nonzero for the recorded core defect.
+- Next: resolve the explicit backend scope decision, reproduce/fix the
+  transaction defect within that boundary, rebuild the changed API with the OS
+  reserve, then rerun all eight real cases and inspect the captures. No C3,
+  human, whole-phase or official grading acceptance is claimed.
 
 ## Previous continuation: UX04-C Learning integration - 2026-11-24
 

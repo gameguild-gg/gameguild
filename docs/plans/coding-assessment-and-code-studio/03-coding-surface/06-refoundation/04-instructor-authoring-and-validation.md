@@ -17,6 +17,14 @@ entry/acceptance still depends on `CODE-UX-03`; advancing an independent row
 does not waive its runtime or human gates. See the single implementation ledger
 for failed proofs, scoped migration boundaries and next action.
 
+C3's first real-host run now reproduces a blocking Code publication defect:
+the returned draft base is 3 while the actual published content version is 2.
+The web no longer assumes an increment; it requires exact agreement with the
+published identity/version and frozen candidate. Its 227 focused host checks
+pass, but the real publication gate remains nonzero. The proposed correction
+to Code's preparation participant awaits the explicit backend scope decision;
+do not waive this invariant or reclassify it as post-04 polish (CS-ADR-049).
+
 ## Invariants and boundaries
 
 Apply [GOVERNANCE.md](./GOVERNANCE.md). Implement the accepted 01a interactions
@@ -65,6 +73,19 @@ implementation -> Quality gate; see [QUALITY-GATES.md](./QUALITY-GATES.md).
    panel/focus/layout behavior and removal of superseded owned forms after all
    their consumers migrate. Component mocks alone cannot close this checkpoint
    or the separate human/official grading gates.
+
+C3 reuses the existing `coding-definition-authoring-browser-e2e.mjs` test entry,
+not a new human scenario CLI. Its typed driver and Node-tested completion guard
+must run against loopback Next/API only, with explicit `E2E_RUN=1`. The instructor
+is a fresh non-admin Member who owns the fixture course. Seed empty Code content
+through existing API endpoints; author both families through the actual UI,
+including an incomplete numeric buffer, Monaco source and public/private cases.
+Require all eight named cases: both-family draft/reopen and publication/reopen,
+real revision conflict/recovery, an offline save/retry, context navigation and
+desktop/mobile controls. No compiler or academic command is needed for these
+form workflows. An isolated unprivileged account may remain; course/content
+cleanup failures are recorded and fail acceptance. Never dump credentials,
+cookies, complete private authoring payloads or tokens into evidence.
 
 ## Work
 
