@@ -368,6 +368,9 @@ export async function runAuthoringHostProof(environment: AuthoringHostEnvironmen
     'apps/web/scripts/coding-authoring-browser-proof.mts',
     'apps/web/src/components/learning/authoring/lesson-authoring-workspace.tsx',
     'apps/web/src/lib/coding-assignment/learning-authoring-document.ts',
+    'apps/api/Source/Modules/GameGuild.Learning.Assessments.CodeAdapter/CodeProgramContentPublicationParticipant.cs',
+    'apps/api/Source/GameGuild.API/bin/Debug/net10.0/GameGuild.API.dll',
+    'apps/api/Source/GameGuild.API/bin/Debug/net10.0/GameGuild.Learning.Assessments.CodeAdapter.dll',
   ];
   const hashes: Record<string, string> = {};
   for (const path of sourcePaths)

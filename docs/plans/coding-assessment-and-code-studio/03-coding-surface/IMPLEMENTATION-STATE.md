@@ -9,12 +9,14 @@ retain historical evidence and do not authorize restarting earlier work.
 
 - Entry: user requested separate commits, then continuation. C1 document
   adapters are `4b032f019f`; C2 Learning composition, authorized route
-  consolidation and owned-form retirement are `48689823d1`. Documentation is
-  `38325ea554` records that checkpoint. No push or merge is requested.
-- Stage: actual-host proof implemented; a real Code publication inconsistency
-  blocks C3. The owned web acknowledgement correction passes its terminal
-  regressions. Backend scope extension was submitted as an explicit Stop & Ask;
-  no backend change is made while that decision is pending.
+  consolidation and owned-form retirement are `48689823d1`. Documentation
+  commit `38325ea554` records that checkpoint. No push or merge is requested.
+- Stage: the user-authorized minimum backend correction is implemented after
+  independent RED; all 194 CodeAdapter cases pass. The strict complete Debug
+  solution build now passes with the changed API. The real publication gate
+  stays open until current-host architecture/security tests and the browser
+  prove the remaining acceptance requirements, including matching persisted
+  versions.
   Acceptance IDs
   `CS-REF-01/02/08` require both exercise families on the actual Next/API host:
   edit incomplete fields, save/reopen exact content, preserve local work on a
@@ -32,7 +34,12 @@ retain historical evidence and do not authorize restarting earlier work.
   unique owned synthetic resources; no database/reset of existing scenarios.
   Preserve sanitized evidence without credentials, cookies or private solutions.
 - Resources: sequential checks, one browser/compiler owner, at least two CPUs
-  free, available-memory/PSI guard and OS reserve. Do not start the historical
+  free, available-memory/PSI guard and OS reserve. Explicit exception on
+  2026-11-24: the user authorized this full API solution build without a RAM
+  ceiling, memory-pressure cancellation or reserve enforcement, leaving memory
+  management to the OS. Retain serial compilation, CPU affinity and every
+  configured analyzer/type/warning check. This changes no launcher, kernel
+  setting or default policy for other test runs. Do not start the historical
   all-in-one official coding cycle as a substitute for this focused gate.
 - Contracts/support: `apps/web/scripts/coding-authoring-browser-contracts.mts`,
   its Node test, `coding-authoring-browser-proof.mts`, the existing
@@ -86,12 +93,128 @@ retain historical evidence and do not authorize restarting earlier work.
   resulting draft base does not describe the actual published content. The
   UI must refuse that response; accepting it would leave the next publication
   subject to a real version conflict.
-- Proposed minimum backend scope, awaiting the user's answer: prepare Code
+- Authorized minimum backend scope (user: "realize a correção"): prepare Code
   assessment changes without an intermediate save, following the existing Quiz
   participant's staging pattern, plus independent transaction/version regression
   tests and neighboring API/security gates. Do not change platform versioning,
   schema/migrations, authentication, the Emception SDK or IDE/UI. This is a
   blocking core defect, not post-04 polish or a reason to skip publication.
+- Current atomic correction: specification -> compile the unchanged participant
+  contract with new CodeAdapter tests -> independent RED -> minimal staged
+  creation/update -> CodeAdapter/Courses and architecture/security gates ->
+  changed-source API build -> the existing eight-case C3 browser proof.
+  Allowed production edit: `CodeProgramContentPublicationParticipant.cs` only.
+  Its new tests cover no preparation save, consistent first/republication,
+  persisted immutable revisions, retained policy and actor/tenant negatives.
+  Preserve `AssessmentGradingSync` and Courses/platform versioning; no schema,
+  migration, dependency, SDK/IDE/UI or launcher change is authorized by this fix.
+- Correction evidence: strict CodeAdapter test-project build passed with zero
+  warnings before changing production. The first test compile exposed a nullable
+  revision ID in the new fixture; explicit required-ID extraction fixed it.
+  That compile error is harness preparation, not behavioral RED. The real
+  `c3-code-publication-red.trx` then records 13 intended failures and one passing
+  invalid-document control, no skips. Both families reproduce base 3 versus
+  published version 2; actor/scope negatives expose the premature write.
+- Minimal production change now stages new assessments with `Add`, updates
+  existing assessments without saving, and checks actor/content/assessment scope
+  before mutation. It preserves existing score validation, review/release/group
+  settings, shared sync service and the host transaction. Whole CodeAdapter
+  suite passes: `c3-code-publication-green.trx`, 193 cases, no failures/skips,
+  peak RSS 585 MiB, minimum available 15340 MiB, no PSI/OOM. At that checkpoint,
+  the full API build, adjacent/security tests and real-browser gate remained
+  in progress; closing evidence follows below.
+- Changed-source build attempts are not green: the four-CPU full Debug solution
+  was stopped at the OS reserve (12115 MiB peak, 4600 MiB minimum available),
+  and the two-CPU `DOTNET_GCConserveMemory=9` continuation also reached that
+  reserve (12023 MiB peak, 4623 MiB minimum available). Neither emitted a C#
+  error before termination; both recorded zero new kernel OOMs. Child exit 0
+  during cancellation does not pass the build. Reports are
+  `c3-code-publication-solution-build-resources.json` and
+  `c3-code-publication-solution-conserve-resources.json`.
+  A later targeted strict Debug API attempt added process-local
+  `DOTNET_GCHighMemPercent=0x4B` (75%) to the same economical profile, so GC
+  can compact before the supervisor's reserve boundary. This is a documented
+  [GC pressure threshold](https://learn.microsoft.com/en-us/dotnet/core/runtime-config/garbage-collector#high-memory-percent),
+  not a heap ceiling, compiler/analyzer waiver or repository setting change.
+  That attempt was also stopped at the reserve: peak 11706 MiB, minimum
+  available 4537 MiB, zero new OOMs, no successful host build
+  (`c3-code-publication-api-pressure-resources.json`). It did not solve the
+  build constraint and is not a new launcher/default configuration. No more
+  equivalent guarded retries are planned until resource availability changes.
+  The earlier identical-source API reuse is historical only and is not valid
+  after this backend edit. The user was asked whether approximately 4 GiB can
+  be freed; no user process was stopped. No stack/browser was started for this
+  correction, and no existing course or database was reset.
+- User-authorized OS-managed continuation: strict complete Debug
+  `dotnet build apps/api/GameGuild.sln --no-restore --disable-build-servers
+  -m:1 -nr:false -p:UseSharedCompilation=false -p:TreatWarningsAsErrors=true`,
+  CPUs 0-1, `DOTNET_PROCESSOR_COUNT=2`, no guard/heap ceiling or experimental
+  GC settings. Start: 2026-11-24 16:57 -03:00, available RAM approximately
+  16 GiB; kernel `oom_kill=0`, memory PSI 0/0. Result: exit 0, **Build succeeded,
+  0 warnings, 0 errors, 00:25:33.25**, including the changed API, CodeAdapter
+  and solution test assemblies. The minimal project log is
+  `c3-full-solution-os-managed.log`; the terminal completion record is
+  `c3-full-solution-os-managed-result.json`. All configured analyzers,
+  source generators and projects remained enabled. This run continued below
+  the former reserve without a new kernel OOM; no precise peak is claimed from
+  sparse memory observations. Final `oom_kill=0`, PSI averages 0/0 and no
+  remaining solution build/compiler process. Keep the earlier stopped reports
+  as failures, not retroactive passes. No browser/stack, test-suite execution
+  or database operation was part of this build request.
+- Build provenance: SHA-256 of `GameGuild.API.dll` is
+  `167719f28a609207f8bd045fb546c6737c5ef9257083976d3606a5c6229b9128`;
+  CodeAdapter is
+  `bc3b15c12dff9bd0497269e90cd1449efc1f48e60f345c21f6fe17a2943d7234`.
+  The API test output's host DLL matches the API output; CodeAdapter copies
+  in both outputs match its freshly built module DLL. This confirms binary
+  consistency, not executed architecture/security tests or browser acceptance.
+- Auditor correction: the former synchronization call also implicitly refused
+  to create an assessment for non-Code content. The new participant must retain
+  that restriction explicitly. Strict test-contract compilation preceded
+  `c3-code-publication-type-red.trx`: the new content-type control failed
+  because no exception was thrown; seven actor/scope controls passed. The
+  minimal first guard now rejects a non-Code type before any mutation.
+  Final strict CodeAdapter build: zero warnings/errors, peak 554 MiB, no stop.
+  `c3-code-publication-closing.trx`: 194 passed, zero failures/skips, including
+  all 15 new publication cases; peak 444 MiB, minimum available 16001 MiB,
+  no PSI/paging/OOM. In-memory transaction/version proof is not a relational
+  rollback or actual-host acceptance claim.
+- Neighbor/security closing selections all pass with strict project compilation
+  and no required skips. Exact scope and TRX files:
+
+  | Project | Selection | Passed | Evidence |
+  | --- | --- | --- | --- |
+  | CodeAdapter | entire test project | 194 | `c3-code-publication-closing.trx` |
+  | Courses | `.Authoring.`, `CodingAssignmentContentTests`, `CourseContentAuthorizationPipelineTests` | 189 | `c3-code-publication-courses.trx` |
+  | Assessments | `QuizProgramContentPublicationParticipantTests`, `QuizGradingAdapterContractTests`, `QuizProgramContentBoundarySecurityTests` | 26 | `c3-code-publication-quiz.trx` |
+  | Identity.Authorization | `Security`, `TenantPermissionQueryIsolationTests`, `TenantPermissionCommandIsolationTests` | 151 | `c3-code-publication-authorization.trx` |
+  | Identity.Authentication | `Security`, `ApiKeyCrossTenantAccessTests`, `ApiKeyHardeningTests` | 175 | `c3-code-publication-authentication.trx` |
+
+  Total: 735 cases, zero failures/skips in those selections. Each neighboring
+  command uses `dotnet test` on its named project with `--no-restore`,
+  `--disable-build-servers -m:1 -nr:false -p:UseSharedCompilation=false
+  -p:TreatWarningsAsErrors=true` and the table's `FullyQualifiedName~` OR filter.
+  The final CodeAdapter run uses `--no-build --no-restore` only after the
+  successful final strict build with the same flags. Resource reports share
+  the TRX prefixes. No Authentication/Authorization source change was needed.
+  Current-host `GameGuild.API.UnitTests` architecture/security execution and all
+  eight C3 cases remain pending. The subsequent successful full-solution build
+  compiled their current assemblies; compilation does not run those tests.
+- Harness closing checks: strict isolated browser-driver TypeScript and the
+  existing unsuppressed ESLint pass. Four named Node contract cases pass in
+  `c3-code-publication-browser-contracts-final.xml`; a sandbox attempt exposed
+  only its parent-file wrapper, so that one-case count is not accepted as
+  contract evidence. The real-host report now fingerprints the Code participant
+  source and both API/CodeAdapter DLLs as well as the existing web sources.
+- Final hygiene: both changed C# files pass `dotnet format whitespace` in their
+  own projects with exact relative `--include`, `--no-restore` and
+  `--verify-no-changes`. Referenced projects are not silently counted as checked.
+  Initial fixture line-break and existing namespace-spacing findings were
+  fixed; an absolute-path no-op selection is not accepted as formatting proof.
+  The browser driver passes the existing Prettier configuration. Closing G-DOC
+  checks 59 documents, 262 local links and 12 atomic tables/36 rows without a
+  failure; `git diff --check` passes. No commit/push or service startup was made
+  for this backend correction.
 - Web proof for CS-ADR-049: strict full web compilation passed before behavior;
   `c3-publication-red.json` retains two expected failures (positive pure guard
   and actual host success), 124 controls passing. The adversarial invalid-base
@@ -130,10 +253,12 @@ retain historical evidence and do not authorize restarting earlier work.
   no failures. Prettier passes for all ten exact changed source/config/test
   files, respecting the two host files' existing style; `git diff --check`
   passes. The browser proof remains nonzero for the recorded core defect.
-- Next: resolve the explicit backend scope decision, reproduce/fix the
-  transaction defect within that boundary, rebuild the changed API with the OS
-  reserve, then rerun all eight real cases and inspect the captures. No C3,
-  human, whole-phase or official grading acceptance is claimed.
+- Next: execute current API architecture/security gates against the successfully
+  rebuilt assemblies, then rerun all eight real C3 cases and inspect their
+  captures. Preserve the failed reports; do not skip publication or silently
+  repair old test configurations. No additional full build is required merely
+  to repeat this successful compilation. No C3, human, whole-phase or official
+  grading acceptance is claimed.
 
 ## Previous continuation: UX04-C Learning integration - 2026-11-24
 

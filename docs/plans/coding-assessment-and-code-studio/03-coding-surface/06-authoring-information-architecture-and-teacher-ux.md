@@ -53,6 +53,14 @@ legacy adoption because the earlier screenshot was implementation testing;
 continue on the current contract, without an old-editor fallback or migration UI.
 Whole phase, actual-host save/reopen/recovery/layout, official runtime and human
 gates remain open. Terminal component evidence is not actual API acceptance.
+CS-ADR-049's minimum Code publication correction is now implemented after
+independent RED, with 194 CodeAdapter and 541 selected neighbor/security cases
+passing. Changed-source API/full-solution builds were stopped at the OS memory
+reserve; the subsequent user-authorized OS-managed strict complete Debug
+solution build passes with zero warnings/errors in 00:25:33.25. No configured
+check or launcher default was changed. Current API architecture/security
+execution and all eight real C3 cases remain mandatory; neither compilation,
+old failed browser evidence nor a stale host binary closes them.
 
 Updated: 2026-11-24.
 

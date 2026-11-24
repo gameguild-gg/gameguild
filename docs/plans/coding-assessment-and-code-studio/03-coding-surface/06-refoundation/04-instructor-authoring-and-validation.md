@@ -17,13 +17,22 @@ entry/acceptance still depends on `CODE-UX-03`; advancing an independent row
 does not waive its runtime or human gates. See the single implementation ledger
 for failed proofs, scoped migration boundaries and next action.
 
-C3's first real-host run now reproduces a blocking Code publication defect:
+C3's earlier real-host run reproduced a blocking Code publication defect:
 the returned draft base is 3 while the actual published content version is 2.
 The web no longer assumes an increment; it requires exact agreement with the
 published identity/version and frozen candidate. Its 227 focused host checks
-pass, but the real publication gate remains nonzero. The proposed correction
-to Code's preparation participant awaits the explicit backend scope decision;
-do not waive this invariant or reclassify it as post-04 polish (CS-ADR-049).
+pass, but they do not close real publication. The user-authorized correction
+to Code's preparation participant now stages changes without saving, and checks
+scope before mutation. Its final 194-case CodeAdapter gate and 541 selected
+Courses/Quiz/Authorization/Authentication regressions pass, with zero skips.
+Three API/full-solution build attempts were interrupted at the OS memory
+reserve, not accepted as green. The subsequent user-authorized OS-managed
+complete strict Debug solution build passed with zero warnings/errors in
+00:25:33.25, including the changed API and test assemblies, without disabling
+checks or changing launcher defaults. Current API architecture/security test
+execution and all eight real-host cases remain required. Do not waive the
+invariant, reuse an old binary or reclassify the pending proof as post-04
+polish (CS-ADR-049).
 
 ## Invariants and boundaries
 

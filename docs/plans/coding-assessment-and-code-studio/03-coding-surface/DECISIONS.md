@@ -1354,8 +1354,10 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
 
 ## `CS-ADR-049`. Publication uses the authoritative content version
 
-- Date: 2026-11-24. Status: owned web guard implemented and unit-tested;
-  actual-host acceptance blocked on the separately identified backend defect.
+- Date: 2026-11-24. Status: owned web guard and authorized backend correction
+  implemented and regression-tested; the strict changed-source full-solution
+  build passes. Actual-host acceptance awaits current API architecture/security
+  execution and the C3 rerun.
 - The first actual Next/API authoring proof accepted the function draft but
   rejected a successful publication: base version advanced from 1 to 3, not 2.
   A UI assumption about one entity write is not an authoritative version check.
@@ -1375,11 +1377,34 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   `host-authoring-mhQqat` reports. Keep their failed disposition. Negatives
   reject stale/mismatched version, scope, slug, revision and payload. Contract
   compilation preceded two intended RED failures; the final 12-file/227-case
-  host selection passes. C3's publication case still fails truthfully.
-- The proposed backend correction stages Code assessment changes without the
-  premature `SaveChanges`, following the Quiz publication participant. This
-  extends the active C3 file boundary and awaits the explicit user decision;
-  neither this guard nor its tests authorize platform or SDK changes.
+  host selection passes. The retained C3 publication report fails truthfully;
+  the corrected backend has not yet been proven on the actual host.
+- The user subsequently authorized the backend correction ("realize a
+  correção"). Stage Code assessment changes without the premature `SaveChanges`,
+  following the Quiz publication participant. The allowed production edit is
+  that Code participant only; preserve the shared synchronization service and
+  Courses/platform versioning. Add no dependency, schema/migration or SDK change.
+  Compile the existing interface/new test contract before independent RED,
+  then validate staged creation/update, repeated publication, persisted version
+  agreement, immutable revisions and actor/tenant failures. A changed-source
+  API build and real C3 rerun are mandatory. Fifteen new publication cases
+  cover staging without saving, both-family publication/republication, immutable
+  snapshots, retained policies, actor/tenant/course/type negatives and invalid
+  content. The final CodeAdapter suite passes all 194 cases. The added non-Code
+  control independently failed before its minimal guard, preserving the old
+  synchronizer's implicit Code-only creation restriction without calling it.
+  Courses/Quiz/Authorization/Authentication selections bring the total to 735
+  passing cases, zero required skips. Three full-host build attempts were safely
+  interrupted at the OS reserve and are not green; no old binary, disabled
+  analyzer or obsolete-config adoption substitutes. The user then explicitly
+  authorized an OS-managed full build without a RAM cap or memory guard for
+  that run only. The complete strict Debug solution build passed in
+  00:25:33.25 with zero warnings/errors, retaining two CPUs, serial compilation
+  and all configured checks. Current API/CodeAdapter DLL copies were verified
+  identical across host/test outputs; no new kernel OOM or compiler remained.
+  No launcher or default resource policy changed. This closes the build gate,
+  not architecture/security execution, actual-host C3 or human acceptance;
+  earlier interrupted/failed reports retain their outcomes.
 - Affects: UX04-C/C3 and the owned Learning publication acknowledgement only.
 
 ## Modelo para novas decisoes
