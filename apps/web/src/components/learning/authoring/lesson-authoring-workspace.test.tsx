@@ -10,6 +10,17 @@ import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  parseCodingAuthoringDraft,
+  type CodingAuthoringDraft,
+} from "@game-guild/coding";
+import type { CodingAuthoringSurfaceProps } from "@game-guild/coding-surface";
+import type {
+  AuthoringActionResult,
+  AuthoringContentPayload,
+  AuthoringDraft,
+} from "@/lib/learning/authoring";
+import codingDraftFixtures from "../../../../../../packages/features/coding/fixtures/coding-authoring-drafts.json";
 
 const mocks = vi.hoisted(() => ({
   params: { locale: "en-US" } as { locale?: string },
@@ -48,6 +59,49 @@ const mocks = vi.hoisted(() => ({
         options: { renderSideBySide: boolean };
       }
     | undefined,
+  codingSurfaceProps: undefined as CodingAuthoringSurfaceProps | undefined,
+}));
+
+vi.mock("@game-guild/coding-surface", () => ({
+  CodingAuthoringSurface: (props: CodingAuthoringSurfaceProps) => {
+    mocks.codingSurfaceProps = props;
+    return (
+      <section data-testid="coding-authoring-surface">
+        <label>
+          Coding statement
+          <input
+            value={props.draft.problem.statement}
+            disabled={props.disabled}
+            onChange={(event) =>
+              props.onChange({
+                ...props.draft,
+                problem: {
+                  ...props.draft.problem,
+                  statement: event.target.value,
+                },
+              })
+            }
+          />
+        </label>
+        <label>
+          Coding time limit
+          <input
+            value={props.draft.limits.timeLimitMs}
+            disabled={props.disabled}
+            onChange={(event) =>
+              props.onChange({
+                ...props.draft,
+                limits: {
+                  ...props.draft.limits,
+                  timeLimitMs: event.target.value,
+                },
+              })
+            }
+          />
+        </label>
+      </section>
+    );
+  },
 }));
 
 vi.mock("next/navigation", () => ({
@@ -190,42 +244,6 @@ vi.mock(
     },
   }),
 );
-vi.mock(
-  "@/components/learning/console/courses/[course]/assessments/[assessmentId]/coding-definition/coding-definition-editor",
-  () => ({
-    CodingDefinitionEditor: ({
-      embedded,
-      onSaved,
-    }: {
-      embedded?: boolean;
-      onSaved?: (content: Record<string, unknown>) => void;
-    }) => (
-      <button
-        type="button"
-        data-testid="coding-definition-editor"
-        data-embedded={String(embedded)}
-        onClick={() =>
-          onSaved?.({
-            Type: "coding-assignment",
-            Version: 1,
-            ExerciseType: "standard-io",
-            Environment: { Language: "cpp" },
-            Data: { Files: {} },
-            Tests: { Public: [], Private: [] },
-            Grading: { MaxScore: 100 },
-          })
-        }
-      >
-        Coding assignment editor
-      </button>
-    ),
-  }),
-);
-vi.mock("@/components/learning/authoring/coding-assignment-preview", () => ({
-  CodingAssignmentPreview: () => (
-    <div data-testid="coding-assignment-preview">Coding assignment preview</div>
-  ),
-}));
 vi.mock("@monaco-editor/react", () => ({
   DiffEditor: (props: {
     language: string;
@@ -360,6 +378,7 @@ describe("LessonAuthoringWorkspace", () => {
     mocks.codeEditorProps = undefined;
     mocks.quizEditorModes = [];
     mocks.diffEditorProps = undefined;
+    mocks.codingSurfaceProps = undefined;
     Object.defineProperty(window, "matchMedia", {
       configurable: true,
       value: vi.fn().mockReturnValue({ matches: true }),
@@ -438,7 +457,7 @@ describe("LessonAuthoringWorkspace", () => {
   });
 
   function renderWorkspace(
-    draft = initialDraft,
+    draft: AuthoringDraft = initialDraft,
     options: {
       activeItem?: typeof item;
       curriculum?: (typeof item)[];
@@ -460,6 +479,547 @@ describe("LessonAuthoringWorkspace", () => {
       />,
     );
   }
+
+  function currentCodingDraft(
+    document: CodingAuthoringDraft = parseCodingAuthoringDraft(
+      codingDraftFixtures.function,
+    ),
+  ): AuthoringDraft {
+    return {
+      ...initialDraft,
+      payload: {
+        ...initialDraft.payload,
+        type: "Code",
+        body: null,
+        lessonFormat: null,
+        jsonBody: { ...document },
+      },
+    };
+  }
+
+  async function saveWithKeyboard() {
+    await act(async () => {
+      fireEvent.keyDown(window, { key: "s", ctrlKey: true });
+      await Promise.resolve();
+    });
+  }
+
+  it.each(["function", "standard-io"] as const)(
+    "UX04-C: mounts the current %s authoring surface without the old IDE form or a second preview",
+    (family) => {
+      const document = parseCodingAuthoringDraft(codingDraftFixtures[family]);
+      renderWorkspace(currentCodingDraft(document));
+      expect(
+        screen.getByTestId("coding-authoring-surface"),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByTestId("coding-definition-editor"),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "preview", exact: true }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: "split", exact: true }),
+      ).not.toBeInTheDocument();
+      expect(mocks.codingSurfaceProps?.draft).toEqual(document);
+      expect(mocks.codingSurfaceProps?.contextKey).toContain("lesson-1");
+      expect(mocks.saveDraft).not.toHaveBeenCalled();
+    },
+  );
+
+  it("UX04-C: saves incomplete buffers through the single revisioned lesson writer", async () => {
+    renderWorkspace(currentCodingDraft());
+    fireEvent.change(screen.getByLabelText("Coding time limit"), {
+      target: { value: "not finished" },
+    });
+    expect(
+      screen.getByText("Unsaved changes", { exact: true }),
+    ).toBeInTheDocument();
+    await saveWithKeyboard();
+    expect(mocks.saveDraft).toHaveBeenCalledExactlyOnceWith(
+      "course-1",
+      "lesson-1",
+      1,
+      expect.objectContaining({
+        type: "Code",
+        jsonBody: expect.objectContaining({
+          type: "coding-authoring-draft",
+          limits: expect.objectContaining({ timeLimitMs: "not finished" }),
+        }),
+      }),
+    );
+    expect(screen.getByLabelText("Coding time limit")).toHaveValue(
+      "not finished",
+    );
+    expect(screen.getByText("Saved", { exact: true })).toBeInTheDocument();
+  });
+
+  it("UX04-C: keeps edits made during a save unsaved after the earlier exact acknowledgement", async () => {
+    const initial = currentCodingDraft();
+    let complete: (
+      result: AuthoringActionResult<AuthoringDraft>,
+    ) => void = () => {
+      throw new Error("Missing deferred save");
+    };
+    mocks.saveDraft.mockReturnValueOnce(
+      new Promise<AuthoringActionResult<AuthoringDraft>>((resolve) => {
+        complete = resolve;
+      }),
+    );
+    renderWorkspace(initial);
+    fireEvent.change(screen.getByLabelText("Coding statement"), {
+      target: { value: "First edit" },
+    });
+    await saveWithKeyboard();
+    const sent: AuthoringContentPayload = {
+      ...initial.payload,
+      jsonBody: {
+        ...parseCodingAuthoringDraft(codingDraftFixtures.function),
+        problem: {
+          ...codingDraftFixtures.function.problem,
+          statement: "First edit",
+        },
+      },
+    };
+    fireEvent.change(screen.getByLabelText("Coding statement"), {
+      target: { value: "A newer edit" },
+    });
+    await act(async () =>
+      complete({
+        success: true,
+        data: { ...initial, revision: 2, payload: sent },
+      }),
+    );
+    expect(screen.getByLabelText("Coding statement")).toHaveValue(
+      "A newer edit",
+    );
+    expect(
+      screen.getByText("Unsaved changes", { exact: true }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Saved", { exact: true }),
+    ).not.toBeInTheDocument();
+    await saveWithKeyboard();
+    expect(mocks.saveDraft).toHaveBeenLastCalledWith(
+      "course-1",
+      "lesson-1",
+      2,
+      expect.objectContaining({
+        jsonBody: expect.objectContaining({
+          problem: expect.objectContaining({ statement: "A newer edit" }),
+        }),
+      }),
+    );
+  });
+
+  it("UX04-C: rejects a mismatched save acknowledgement without losing the editable document", async () => {
+    mocks.saveDraft.mockResolvedValueOnce({
+      success: true,
+      data: { ...currentCodingDraft(), revision: 2 },
+    });
+    renderWorkspace(currentCodingDraft());
+    fireEvent.change(screen.getByLabelText("Coding statement"), {
+      target: { value: "Keep this local edit" },
+    });
+    await saveWithKeyboard();
+    expect(screen.getByLabelText("Coding statement")).toHaveValue(
+      "Keep this local edit",
+    );
+    expect(
+      screen.getByText(/acknowledgement does not match/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Saved", { exact: true }),
+    ).not.toBeInTheDocument();
+    await act(async () => vi.advanceTimersByTimeAsync(5000));
+    expect(mocks.saveDraft).toHaveBeenCalledTimes(1);
+  });
+
+  it("UX04-C: locks conflicting writes and restores the latest local copy only after loading the server revision", async () => {
+    const initial = currentCodingDraft();
+    const remoteDocument = parseCodingAuthoringDraft(
+      codingDraftFixtures.function,
+    );
+    remoteDocument.problem.statement = "Remote version";
+    const remote = { ...currentCodingDraft(remoteDocument), revision: 4 };
+    mocks.saveDraft.mockResolvedValueOnce({
+      success: false,
+      status: 409,
+      error: "Concurrent coding edit",
+    });
+    mocks.getDraft.mockResolvedValueOnce({ success: true, data: remote });
+    renderWorkspace(initial);
+    fireEvent.change(screen.getByLabelText("Coding statement"), {
+      target: { value: "First local edit" },
+    });
+    await saveWithKeyboard();
+    fireEvent.change(screen.getByLabelText("Coding statement"), {
+      target: { value: "Latest local edit" },
+    });
+    await saveWithKeyboard();
+    expect(mocks.saveDraft).toHaveBeenCalledTimes(1);
+    await act(async () =>
+      fireEvent.click(screen.getByRole("button", { name: "Load latest" })),
+    );
+    expect(screen.getByLabelText("Coding statement")).toHaveValue(
+      "Remote version",
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Restore my changes" }));
+    expect(screen.getByLabelText("Coding statement")).toHaveValue(
+      "Latest local edit",
+    );
+    await saveWithKeyboard();
+    expect(mocks.saveDraft).toHaveBeenLastCalledWith(
+      "course-1",
+      "lesson-1",
+      4,
+      expect.objectContaining({
+        jsonBody: expect.objectContaining({
+          problem: expect.objectContaining({ statement: "Latest local edit" }),
+        }),
+      }),
+    );
+  });
+
+  it("UX04-C: compiles and acknowledges the exact current wire definition before publication", async () => {
+    let stored = currentCodingDraft();
+    mocks.saveDraft.mockImplementation(
+      async (
+        _courseId: string,
+        _contentId: string,
+        revision: number,
+        payload: AuthoringContentPayload,
+      ) => {
+        stored = {
+          ...stored,
+          revision: revision + 1,
+          payload: structuredClone(payload),
+        };
+        return { success: true, data: stored };
+      },
+    );
+    mocks.publishDraft.mockImplementation(
+      async (_courseId: string, _contentId: string, revision: number) => ({
+        success: true,
+        data: {
+          draft: { ...stored, revision: revision + 1, basePublishedVersion: 4 },
+          publishedContent: { slug: stored.payload.slug },
+        },
+      }),
+    );
+    renderWorkspace(currentCodingDraft());
+    await act(async () =>
+      fireEvent.click(screen.getByRole("button", { name: "Publish changes" })),
+    );
+    expect(mocks.saveDraft).toHaveBeenCalledExactlyOnceWith(
+      "course-1",
+      "lesson-1",
+      1,
+      expect.objectContaining({
+        jsonBody: expect.objectContaining({
+          Type: "coding-assignment",
+          Execution: expect.objectContaining({
+            EntryPoint: { Path: "/home/user/main.cpp", Symbol: "sum" },
+          }),
+          Grading: { MaxScore: 100 },
+          ValidationSolutions: [
+            {
+              Id: "reference",
+              Name: "Reference",
+              Role: "reference",
+              Files: [
+                {
+                  FileId: "main-file",
+                  Path: "/home/user/main.cpp",
+                  Content:
+                    codingDraftFixtures.function.validationSolutions[0]!
+                      .files[0]!.content,
+                },
+              ],
+            },
+          ],
+        }),
+      }),
+    );
+    expect(mocks.publishDraft).toHaveBeenCalledExactlyOnceWith(
+      "course-1",
+      "lesson-1",
+      2,
+    );
+    expect(screen.getByLabelText("Coding statement")).toHaveValue(
+      "Return the sum of two integers.",
+    );
+    expect(screen.getByText("Saved", { exact: true })).toBeInTheDocument();
+  });
+
+  it("UX04-C: refuses publication of incomplete coding data without writing it as executable content", async () => {
+    renderWorkspace(
+      currentCodingDraft(
+        parseCodingAuthoringDraft(codingDraftFixtures["standard-io"]),
+      ),
+    );
+    await act(async () =>
+      fireEvent.click(screen.getByRole("button", { name: "Publish changes" })),
+    );
+    expect(mocks.publishDraft).not.toHaveBeenCalled();
+    expect(mocks.saveDraft).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Coding time limit")).toHaveValue("");
+    expect(
+      screen.getAllByRole("status").some((element) => element.textContent),
+    ).toBe(true);
+  });
+
+  it("UX04-C: rejects obsolete test data without an adoption workflow or old-editor fallback", () => {
+    renderWorkspace({
+      ...currentCodingDraft(),
+      payload: {
+        ...currentCodingDraft().payload,
+        jsonBody: { Type: "coding-assignment", Version: 1 },
+      },
+    });
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "current authoring contract",
+    );
+    expect(
+      screen.queryByTestId("coding-authoring-surface"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("coding-definition-editor"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", {
+        name: /adopt|migrate|review configuration/i,
+      }),
+    ).not.toBeInTheDocument();
+    expect(mocks.saveDraft).not.toHaveBeenCalled();
+  });
+
+  it("UX04-C: leaves conflicting writes locked when loading the server draft fails", async () => {
+    mocks.saveDraft.mockResolvedValueOnce({
+      success: false,
+      status: 409,
+      error: "Concurrent edit",
+    });
+    mocks.getDraft.mockResolvedValueOnce({
+      success: false,
+      status: 503,
+      error: "Draft unavailable",
+    });
+    renderWorkspace(currentCodingDraft());
+    fireEvent.change(screen.getByLabelText("Coding statement"), {
+      target: { value: "Keep the local draft" },
+    });
+    await saveWithKeyboard();
+    await act(async () =>
+      fireEvent.click(screen.getByRole("button", { name: "Load latest" })),
+    );
+    await saveWithKeyboard();
+    expect(mocks.saveDraft).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText("Coding statement")).toHaveValue(
+      "Keep the local draft",
+    );
+    expect(screen.getByText("Draft unavailable")).toBeInTheDocument();
+  });
+
+  it("UX04-C: rejects a loaded draft from another lesson scope without overwriting local input", async () => {
+    mocks.saveDraft.mockResolvedValueOnce({
+      success: false,
+      status: 409,
+      error: "Concurrent edit",
+    });
+    mocks.getDraft.mockResolvedValueOnce({
+      success: true,
+      data: {
+        ...currentCodingDraft(),
+        programId: "another-course",
+        revision: 4,
+      },
+    });
+    renderWorkspace(currentCodingDraft());
+    fireEvent.change(screen.getByLabelText("Coding statement"), {
+      target: { value: "Scoped local draft" },
+    });
+    await saveWithKeyboard();
+    await act(async () =>
+      fireEvent.click(screen.getByRole("button", { name: "Load latest" })),
+    );
+    expect(screen.getByLabelText("Coding statement")).toHaveValue(
+      "Scoped local draft",
+    );
+    expect(
+      screen.getByText(/loaded coding draft does not match/),
+    ).toBeInTheDocument();
+    await saveWithKeyboard();
+    expect(mocks.saveDraft).toHaveBeenCalledTimes(1);
+  });
+
+  it("UX04-C: does not publish an older candidate when lesson metadata changes during its save", async () => {
+    const initial = currentCodingDraft();
+    let finish: (
+      result: AuthoringActionResult<AuthoringDraft>,
+    ) => void = () => {
+      throw new Error("Missing deferred save");
+    };
+    let sent: AuthoringContentPayload | null = null;
+    mocks.saveDraft.mockImplementationOnce(
+      (
+        _courseId: string,
+        _contentId: string,
+        _revision: number,
+        payload: AuthoringContentPayload,
+      ) => {
+        sent = structuredClone(payload);
+        return new Promise<AuthoringActionResult<AuthoringDraft>>((resolve) => {
+          finish = resolve;
+        });
+      },
+    );
+    renderWorkspace(initial);
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: "Publish changes" }));
+      await Promise.resolve();
+    });
+    fireEvent.change(screen.getByRole("textbox", { name: "Lesson title" }), {
+      target: { value: "A newer title" },
+    });
+    const payload = sent;
+    if (!payload) throw new Error("Publication never prepared its save");
+    await act(async () =>
+      finish({ success: true, data: { ...initial, revision: 2, payload } }),
+    );
+    expect(mocks.publishDraft).not.toHaveBeenCalled();
+    expect(screen.getByRole("textbox", { name: "Lesson title" })).toHaveValue(
+      "A newer title",
+    );
+    expect(screen.getByLabelText("Coding statement")).toHaveValue(
+      "Return the sum of two integers.",
+    );
+    expect(
+      screen.getByText(/changed during publication preparation/),
+    ).toBeInTheDocument();
+  });
+
+  it("UX04-C: preserves metadata edited while the official publication acknowledgement is pending", async () => {
+    let stored = currentCodingDraft();
+    let finish: (result: {
+      success: true;
+      data: { draft: AuthoringDraft; publishedContent: { slug: string } };
+    }) => void = () => {
+      throw new Error("Missing deferred publication");
+    };
+    mocks.saveDraft.mockImplementation(
+      async (
+        _courseId: string,
+        _contentId: string,
+        revision: number,
+        payload: AuthoringContentPayload,
+      ) => {
+        stored = {
+          ...stored,
+          revision: revision + 1,
+          payload: structuredClone(payload),
+        };
+        return { success: true, data: stored };
+      },
+    );
+    mocks.publishDraft.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finish = resolve;
+      }),
+    );
+    renderWorkspace(currentCodingDraft());
+    await act(async () =>
+      fireEvent.click(screen.getByRole("button", { name: "Publish changes" })),
+    );
+    expect(mocks.publishDraft).toHaveBeenCalledExactlyOnceWith(
+      "course-1",
+      "lesson-1",
+      2,
+    );
+    fireEvent.change(screen.getByRole("textbox", { name: "Lesson title" }), {
+      target: { value: "Keep this newer title" },
+    });
+    await saveWithKeyboard();
+    expect(mocks.saveDraft).toHaveBeenCalledTimes(1);
+    const published = {
+      ...stored,
+      revision: 3,
+      basePublishedVersion: 4,
+    };
+    await act(async () =>
+      finish({
+        success: true,
+        data: {
+          draft: published,
+          publishedContent: { slug: stored.payload.slug },
+        },
+      }),
+    );
+    expect(screen.getByRole("textbox", { name: "Lesson title" })).toHaveValue(
+      "Keep this newer title",
+    );
+    expect(
+      screen.getByText("Unsaved changes", { exact: true }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Saved", { exact: true }),
+    ).not.toBeInTheDocument();
+    await saveWithKeyboard();
+    expect(mocks.saveDraft).toHaveBeenLastCalledWith(
+      "course-1",
+      "lesson-1",
+      3,
+      expect.objectContaining({ title: "Keep this newer title" }),
+    );
+  });
+
+  it("UX04-C: changing course context cannot revive a previous context through a late save", async () => {
+    const initial = currentCodingDraft();
+    let finish: (
+      result: AuthoringActionResult<AuthoringDraft>,
+    ) => void = () => {
+      throw new Error("Missing deferred save");
+    };
+    mocks.saveDraft.mockReturnValueOnce(
+      new Promise<AuthoringActionResult<AuthoringDraft>>((resolve) => {
+        finish = resolve;
+      }),
+    );
+    const view = renderWorkspace(initial);
+    fireEvent.change(screen.getByLabelText("Coding statement"), {
+      target: { value: "Old course edit" },
+    });
+    await saveWithKeyboard();
+    const next = parseCodingAuthoringDraft(codingDraftFixtures.function);
+    next.problem.statement = "New course exercise";
+    view.rerender(
+      <LessonAuthoringWorkspace
+        courseId="course-2"
+        courseSlug="new-course"
+        courseTitle="New course"
+        item={item}
+        curriculum={[item]}
+        initialDraft={{ ...currentCodingDraft(next), programId: "course-2" }}
+      />,
+    );
+    await act(async () =>
+      finish({
+        success: true,
+        data: {
+          ...initial,
+          revision: 2,
+          payload: { ...initial.payload, title: "Old course" },
+        },
+      }),
+    );
+    expect(screen.getByLabelText("Coding statement")).toHaveValue(
+      "New course exercise",
+    );
+    expect(
+      screen.queryByText(/acknowledgement does not match/),
+    ).not.toBeInTheDocument();
+    expect(mocks.saveDraft).toHaveBeenCalledTimes(1);
+  });
 
   it("autosaves edits with the current draft revision", async () => {
     renderWorkspace();
@@ -893,7 +1453,9 @@ describe("LessonAuthoringWorkspace", () => {
       },
     } as never);
 
-    fireEvent.click(screen.getByRole("button", { name: "External link editor" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "External link editor" }),
+    );
     unmount();
 
     const video = renderWorkspace({
@@ -1071,49 +1633,11 @@ describe("LessonAuthoringWorkspace", () => {
     expect(mocks.saveDraft).not.toHaveBeenCalled();
   });
 
-  it("uses the coding assignment authoring and learner preview for Code content", () => {
-    const codingAssignment = {
-      Type: "coding-assignment",
-      Version: 1,
-      ExerciseType: "standard-io",
-      Environment: {
-        Language: "cpp",
-        Tools: "clang",
-        AllowStudentCreateFiles: false,
-      },
-      Data: { Files: {} },
-      Tests: { Public: [], Private: [] },
-      Grading: { MaxScore: 100 },
-    };
-    renderWorkspace(
-      {
-        ...initialDraft,
-        payload: {
-          ...initialDraft.payload,
-          type: "Code",
-          lessonFormat: null,
-          body: null,
-          jsonBody: codingAssignment,
-        },
-      } as never,
-      {
-        activeItem: { ...item, type: "Code" } as never,
-        linkedAssessment: {
-          id: "assessment-1",
-          slug: "code-assessment",
-          title: "Code assessment",
-        },
-        initialCodingAssignment: codingAssignment,
-      },
-    );
-
-    expect(screen.getByTestId("coding-definition-editor")).toHaveAttribute(
-      "data-embedded",
-      "true",
-    );
+  it("uses the current coding authoring tasks in the full available course area", () => {
+    renderWorkspace(currentCodingDraft());
     expect(
       screen
-        .getByTestId("coding-definition-editor")
+        .getByTestId("coding-authoring-surface")
         .closest('[data-authoring-editor-layout="wide"]'),
     ).toHaveClass("w-full", "max-w-none");
     expect(
@@ -1129,12 +1653,13 @@ describe("LessonAuthoringWorkspace", () => {
       screen.queryByTestId("coding-assignment-preview"),
     ).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /preview/i }));
-    expect(screen.getByTestId("coding-assignment-preview")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "preview", exact: true }),
+    ).not.toBeInTheDocument();
     expect(screen.queryByTestId("learner-renderer")).not.toBeInTheDocument();
   });
 
-  it("opens the coding editor before the content-owned assessment exists and refreshes after save", () => {
+  it("opens an empty current coding draft before assessment creation without a refresh on save", async () => {
     renderWorkspace(
       {
         ...initialDraft,
@@ -1153,20 +1678,20 @@ describe("LessonAuthoringWorkspace", () => {
       },
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /preview/i }));
-    expect(
-      screen.getByText(/save the coding assignment to preview/i),
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Coding statement")).toHaveValue("");
     expect(screen.queryByTestId("learner-renderer")).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole("button", { name: /editor/i }));
-    fireEvent.click(screen.getByTestId("coding-definition-editor"));
-    expect(mocks.refresh).toHaveBeenCalled();
-    fireEvent.click(screen.getByRole("button", { name: /preview/i }));
-    expect(screen.getByTestId("coding-assignment-preview")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Coding statement"), {
+      target: { value: "New exercise" },
+    });
+    await saveWithKeyboard();
+    expect(mocks.saveDraft).toHaveBeenCalledTimes(1);
+    expect(mocks.refresh).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Coding statement")).toHaveValue(
+      "New exercise",
+    );
   });
 
-  it("opens the coding editor when the content tree is Code but a legacy draft still says Lesson", () => {
+  it("does not adopt or save obsolete Code test data whose draft still declares Lesson", async () => {
     renderWorkspace(
       {
         ...initialDraft,
@@ -1185,12 +1710,17 @@ describe("LessonAuthoringWorkspace", () => {
       },
     );
 
-    expect(screen.getByTestId("coding-definition-editor")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "current authoring contract",
+    );
     expect(
-      screen
-        .getByTestId("coding-definition-editor")
-        .closest('[data-authoring-editor-layout="wide"]'),
-    ).toBeInTheDocument();
+      screen.queryByTestId("coding-authoring-surface"),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByTestId("coding-definition-editor"),
+    ).not.toBeInTheDocument();
+    await saveWithKeyboard();
+    expect(mocks.saveDraft).not.toHaveBeenCalled();
     expect(
       screen.queryByRole("textbox", { name: "Lesson body" }),
     ).not.toBeInTheDocument();
@@ -1289,7 +1819,10 @@ describe("LessonAuthoringWorkspace", () => {
       await Promise.resolve();
     });
 
-    expect(mocks.deleteAssessment).toHaveBeenCalledWith("course-1", "assessment-1");
+    expect(mocks.deleteAssessment).toHaveBeenCalledWith(
+      "course-1",
+      "assessment-1",
+    );
   });
 
   it("restores a recently deleted assessment instead of creating a new one", async () => {
@@ -1297,7 +1830,11 @@ describe("LessonAuthoringWorkspace", () => {
       Type: "coding-assignment",
       Version: 1,
       ExerciseType: "standard-io",
-      Environment: { Language: "cpp", Tools: "", AllowStudentCreateFiles: false },
+      Environment: {
+        Language: "cpp",
+        Tools: "",
+        AllowStudentCreateFiles: false,
+      },
       Data: { Files: {} },
       Tests: { Public: [{}], Private: [{}] },
       Grading: { MaxScore: 100 },
@@ -1345,15 +1882,20 @@ describe("LessonAuthoringWorkspace", () => {
   });
 
   it("renders the coding test summary for an auto-graded Code item", () => {
-    const assignment = {
-      Type: "coding-assignment",
-      Version: 1,
-      ExerciseType: "standard-io",
-      Environment: { Language: "cpp", Tools: "", AllowStudentCreateFiles: false },
-      Data: { Files: {} },
-      Tests: { Public: [{}], Private: [{}, {}] },
-      Grading: { MaxScore: 100 },
-    } as never;
+    const document = parseCodingAuthoringDraft(
+      codingDraftFixtures["standard-io"],
+    );
+    document.tests = ["public", "private", "private"].map(
+      (visibility, index) => ({
+        id: `case-${index}`,
+        name: `Case ${index + 1}`,
+        kind: "stdio",
+        visibility: visibility === "public" ? "public" : "private",
+        weightUnits: "100",
+        stdin: "",
+        expected: { stdout: "", stderr: null, exitCode: "" },
+      }),
+    );
     renderWorkspace(
       {
         ...initialDraft,
@@ -1362,7 +1904,7 @@ describe("LessonAuthoringWorkspace", () => {
           type: "Code",
           lessonFormat: null,
           body: null,
-          jsonBody: null,
+          jsonBody: { ...document },
         },
       } as never,
       {
@@ -1373,7 +1915,7 @@ describe("LessonAuthoringWorkspace", () => {
           title: "Test",
           reviewMethods: 12,
         } as never,
-        initialCodingAssignment: assignment,
+        initialCodingAssignment: null,
       },
     );
 
@@ -2295,7 +2837,9 @@ describe("LessonAuthoringWorkspace", () => {
     await user.click(screen.getByRole("button", { name: "Open Copilot" }));
     const mode = screen.getByRole("combobox", { name: "Proposal application" });
     await user.click(mode);
-    await user.click(await screen.findByRole("option", { name: "Insert at cursor" }));
+    await user.click(
+      await screen.findByRole("option", { name: "Insert at cursor" }),
+    );
     const prompt = screen.getByRole("textbox", { name: "Ask Copilot" });
     await user.type(prompt, "Add a note");
     fireEvent.keyDown(prompt, { key: "Enter", shiftKey: true });

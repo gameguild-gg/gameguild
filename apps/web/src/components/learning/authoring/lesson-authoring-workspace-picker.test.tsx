@@ -5,8 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   assetsProviderProps: undefined as
-    | { repository?: unknown; scope?: unknown }
-    | undefined,
+    { repository?: unknown; scope?: unknown } | undefined,
 }));
 
 vi.mock("next/navigation", () => ({
@@ -79,14 +78,8 @@ vi.mock(
     QuizContentEditor: () => <div />,
   }),
 );
-vi.mock(
-  "@/components/learning/console/courses/[course]/assessments/[assessmentId]/coding-definition/coding-definition-editor",
-  () => ({
-    CodingDefinitionEditor: () => <div />,
-  }),
-);
-vi.mock("@/components/learning/authoring/coding-assignment-preview", () => ({
-  CodingAssignmentPreview: () => <div />,
+vi.mock("@game-guild/coding-surface", () => ({
+  CodingAuthoringSurface: () => <div />,
 }));
 vi.mock("@monaco-editor/react", () => ({
   DiffEditor: () => <div />,

@@ -6,14 +6,19 @@ import { LessonContentEditor } from "@/components/learning/console/courses/[cour
 import { LessonVideoEditor } from "@/components/learning/console/courses/[course]/content/[contentId]/lesson-video-editor";
 import { LessonExternalLinkEditor } from "@/components/learning/console/courses/[course]/content/[contentId]/lesson-external-link-editor";
 import { QuizContentEditor } from "@/components/learning/console/courses/[course]/content/[contentId]/quiz-content-editor";
-import { CodingDefinitionEditor } from "@/components/learning/console/courses/[course]/assessments/[assessmentId]/coding-definition/coding-definition-editor";
-import { CodingAssignmentPreview } from "@/components/learning/authoring/coding-assignment-preview";
+import { CodingAuthoringSurface } from "@game-guild/coding-surface";
 import {
-  AssetPickerDialog,
-  AssetsProvider,
-} from "@game-guild/assets/react";
+  assertLearningCodingSaveAcknowledgement,
+  prepareLearningCodingPublication,
+  readLearningCodingDocument,
+} from "@/lib/coding-assignment/learning-authoring-document";
+import { AssetPickerDialog, AssetsProvider } from "@game-guild/assets/react";
 import type { AssetRecord } from "@game-guild/assets";
-import type { CodingAssignmentContent } from "@/lib/coding-assignment/types";
+import {
+  narrowCodingAssignmentContent,
+  type CodingAssignmentContent,
+} from "@/lib/coding-assignment/types";
+import { EMCEPTION_MANIFEST_URL } from "@/lib/emception/manifest-url";
 import {
   createAssessment,
   deleteAssessment,
@@ -206,7 +211,7 @@ function bodyForPreview(payload: AuthoringContentPayload) {
   return payload.body ?? "";
 }
 
-function parseStreamFrame(frame: string): unknown | null {
+function parseStreamFrame(frame: string): unknown {
   const data = frame
     .split("\n")
     .filter((line) => line.startsWith("data:"))
@@ -220,7 +225,16 @@ function parseStreamFrame(frame: string): unknown | null {
   }
 }
 
-export function LessonAuthoringWorkspace({
+export function LessonAuthoringWorkspace(props: LessonAuthoringWorkspaceProps) {
+  return (
+    <ReadyLessonAuthoringWorkspace
+      key={`${props.courseId}:${props.item.id}`}
+      {...props}
+    />
+  );
+}
+
+function ReadyLessonAuthoringWorkspace({
   courseId,
   courseSlug,
   courseTitle,
@@ -263,6 +277,7 @@ export function LessonAuthoringWorkspace({
   const [saveError, setSaveError] = useState<string | null>(null);
   const [conflictBackup, setConflictBackup] =
     useState<AuthoringContentPayload | null>(null);
+  const [loadingLatest, setLoadingLatest] = useState(false);
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
   const [mobileLeftOpen, setMobileLeftOpen] = useState(false);
@@ -287,6 +302,10 @@ export function LessonAuthoringWorkspace({
     JSON.stringify(initialDraft.payload),
   );
   const revisionRef = useRef(initialDraft.revision);
+  const basePublishedVersionRef = useRef(initialDraft.basePublishedVersion);
+  const codingConflictRef = useRef(false);
+  const publicationInFlightRef = useRef(false);
+  const mountedRef = useRef(false);
   const payloadRef = useRef(initialDraft.payload);
   const cursorOffsetRef = useRef<number | undefined>(undefined);
   const streamAbortRef = useRef<AbortController | null>(null);
@@ -309,6 +328,41 @@ export function LessonAuthoringWorkspace({
   const currentPayloadJson = JSON.stringify(payload);
   const isDirty = savedSnapshot !== currentPayloadJson;
   const activeRunStorageKey = `authoring-ai-run:${courseId}:${item.id}`;
+  const codingDocument = useMemo(() => {
+    if (!isCode) return { draft: null, error: null };
+    try {
+      if (payload.type !== "Code")
+        throw new TypeError(
+          "Coding content does not match the current authoring contract.",
+        );
+      return {
+        draft: readLearningCodingDocument({
+          document: payload.jsonBody,
+          publishedAssignment: codingAssignment,
+        }),
+        error: null,
+      };
+    } catch (error: unknown) {
+      return {
+        draft: null,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Unable to open the coding exercise.",
+      };
+    }
+  }, [isCode, payload.type, payload.jsonBody, codingAssignment]);
+
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    basePublishedVersionRef.current = draft.basePublishedVersion;
+  }, [draft.basePublishedVersion]);
 
   useEffect(() => () => streamAbortRef.current?.abort(), []);
 
@@ -317,35 +371,71 @@ export function LessonAuthoringWorkspace({
   }, [payload]);
 
   const persist = useCallback(
-    async (nextPayload = payloadRef.current) => {
+    async (
+      nextPayload = payloadRef.current,
+      intent: "save" | "prepare-publication" = "save",
+    ) => {
+      if (
+        isCode &&
+        (codingConflictRef.current ||
+          loadingLatest ||
+          (publicationInFlightRef.current && intent !== "prepare-publication"))
+      )
+        return null;
       if (saveInFlightRef.current) return saveInFlightRef.current;
+      const sent = isCode ? structuredClone(nextPayload) : nextPayload;
       setSaveStatus("saving");
       setSaveError(null);
       const revision = revisionRef.current;
-      const operation = prepareAuthoringAssets(
-        nextPayload,
-        assetRepository,
-        assetScope,
-      )
-        .then(() =>
-          saveAuthoringDraft(courseId, item.id, revision, nextPayload),
-        )
-        .then((result) => {
+      const basePublishedVersion = basePublishedVersionRef.current;
+      const operation = Promise.resolve().then(async () => {
+        try {
+          if (isCode) {
+            if (sent.type !== "Code")
+              throw new TypeError(
+                "Coding content does not match the current authoring contract.",
+              );
+            readLearningCodingDocument({
+              document: sent.jsonBody,
+              publishedAssignment: codingAssignment,
+            });
+          }
+          await prepareAuthoringAssets(sent, assetRepository, assetScope);
+          if (!mountedRef.current) return null;
+          const result = await saveAuthoringDraft(
+            courseId,
+            item.id,
+            revision,
+            sent,
+          );
+          if (!mountedRef.current) return null;
           if (!result.success) {
             if (result.status === 409) {
-              setConflictBackup(nextPayload);
+              if (isCode) codingConflictRef.current = true;
+              setConflictBackup(
+                isCode ? structuredClone(payloadRef.current) : sent,
+              );
               setSaveStatus("conflict");
             } else setSaveStatus("offline");
             setSaveError(result.error);
             return null;
           }
+          if (isCode)
+            assertLearningCodingSaveAcknowledgement(result.data, {
+              programId: courseId,
+              contentId: item.id,
+              revision,
+              basePublishedVersion,
+              payload: sent,
+            });
           revisionRef.current = result.data.revision;
-          setSavedSnapshot(JSON.stringify(nextPayload));
+          basePublishedVersionRef.current = result.data.basePublishedVersion;
+          setSavedSnapshot(JSON.stringify(sent));
           setDraft(result.data);
           setSaveStatus("saved");
           return result.data;
-        })
-        .catch((error: unknown) => {
+        } catch (error: unknown) {
+          if (!mountedRef.current) return null;
           setSaveStatus("offline");
           setSaveError(
             error instanceof Error
@@ -353,34 +443,81 @@ export function LessonAuthoringWorkspace({
               : "Unable to save this draft.",
           );
           return null;
-        })
-        .finally(() => {
+        } finally {
           saveInFlightRef.current = null;
-        });
+        }
+      });
       saveInFlightRef.current = operation;
       return operation;
     },
-    [assetRepository, assetScope, courseId, item.id],
+    [
+      assetRepository,
+      assetScope,
+      courseId,
+      item.id,
+      isCode,
+      codingAssignment,
+      loadingLatest,
+    ],
   );
 
   const loadLatestDraft = async () => {
-    const result = await getAuthoringDraft(courseId, item.id);
-    if (!result.success) {
-      setSaveError(result.error);
-      return;
+    if (loadingLatest || saveInFlightRef.current) return;
+    const local = structuredClone(payloadRef.current);
+    if (isCode) setConflictBackup(local);
+    setLoadingLatest(true);
+    try {
+      const result = await getAuthoringDraft(courseId, item.id);
+      if (!mountedRef.current) return;
+      if (!result.success) {
+        setSaveError(result.error);
+        return;
+      }
+      if (isCode) {
+        if (JSON.stringify(payloadRef.current) !== JSON.stringify(local))
+          throw new Error(
+            "The coding draft changed while loading. Your local changes were preserved.",
+          );
+        if (
+          result.data.programId !== courseId ||
+          result.data.contentId !== item.id ||
+          !Number.isSafeInteger(result.data.revision) ||
+          result.data.revision < revisionRef.current ||
+          !Number.isSafeInteger(result.data.basePublishedVersion) ||
+          result.data.basePublishedVersion < basePublishedVersionRef.current ||
+          result.data.payload.type !== "Code"
+        ) {
+          throw new Error(
+            "The loaded coding draft does not match the lesson and revision.",
+          );
+        }
+        readLearningCodingDocument({
+          document: result.data.payload.jsonBody,
+          publishedAssignment: null,
+        });
+        codingConflictRef.current = false;
+      }
+      setDraft(result.data);
+      setPayload(result.data.payload);
+      payloadRef.current = result.data.payload;
+      revisionRef.current = result.data.revision;
+      basePublishedVersionRef.current = result.data.basePublishedVersion;
+      setSavedSnapshot(JSON.stringify(result.data.payload));
+      setSaveStatus("saved");
+      setSaveError(null);
+    } catch (error: unknown) {
+      if (mountedRef.current)
+        setSaveError(
+          error instanceof Error ? error.message : "Unable to load this draft.",
+        );
+    } finally {
+      if (mountedRef.current) setLoadingLatest(false);
     }
-    setDraft(result.data);
-    setPayload(result.data.payload);
-    payloadRef.current = result.data.payload;
-    revisionRef.current = result.data.revision;
-    setSavedSnapshot(JSON.stringify(result.data.payload));
-    setSaveStatus("saved");
-    setSaveError(null);
   };
 
   const restoreConflictCopy = () => {
-    // This action is rendered only while a conflict backup exists.
-    const backup = conflictBackup as AuthoringContentPayload;
+    const backup = conflictBackup;
+    if (!backup || loadingLatest || saveInFlightRef.current) return;
     setPayload(backup);
     payloadRef.current = backup;
     setConflictBackup(null);
@@ -390,9 +527,25 @@ export function LessonAuthoringWorkspace({
 
   useEffect(() => {
     if (!isDirty || !payload.title.trim() || saveStatus === "conflict") return;
+    if (
+      isCode &&
+      (isPublishing ||
+        loadingLatest ||
+        saveStatus === "offline" ||
+        codingConflictRef.current)
+    )
+      return;
     const timer = window.setTimeout(() => void persist(payload), 1200);
     return () => window.clearTimeout(timer);
-  }, [isDirty, payload, persist, saveStatus]);
+  }, [
+    isDirty,
+    payload,
+    persist,
+    saveStatus,
+    isCode,
+    isPublishing,
+    loadingLatest,
+  ]);
 
   useEffect(() => {
     if (!isDirty) return;
@@ -490,55 +643,119 @@ export function LessonAuthoringWorkspace({
   };
 
   const handlePublish = async () => {
+    if (isCode && publicationInFlightRef.current) return;
+    if (isCode) publicationInFlightRef.current = true;
     setIsPublishing(true);
     setSaveError(null);
-    const savedDraft = isDirty ? await persist() : draft;
-    if (!savedDraft) {
-      setIsPublishing(false);
-      return;
-    }
     try {
+      let savedDraft: AuthoringDraft | null;
+      if (isCode) {
+        if (codingConflictRef.current || loadingLatest) return;
+        const authored = structuredClone(payloadRef.current);
+        const candidate = prepareLearningCodingPublication(
+          {
+            document: authored.jsonBody,
+            publishedAssignment: codingAssignment,
+          },
+          authored,
+          {
+            MaxScore: codingAssignment?.Grading.MaxScore ?? 100,
+          },
+        );
+        const pendingSave = saveInFlightRef.current;
+        if (pendingSave && !(await pendingSave)) return;
+        if (!mountedRef.current) return;
+        if (JSON.stringify(payloadRef.current) !== JSON.stringify(authored))
+          throw new Error(
+            "The coding exercise changed before publication. Save the latest changes and try again.",
+          );
+        savedDraft = await persist(candidate, "prepare-publication");
+        if (!savedDraft || !mountedRef.current) return;
+        if (JSON.stringify(payloadRef.current) !== JSON.stringify(authored))
+          throw new Error(
+            "The coding exercise changed during publication preparation. Your latest changes were preserved.",
+          );
+        setPayload(savedDraft.payload);
+        payloadRef.current = savedDraft.payload;
+      } else {
+        savedDraft = isDirty ? await persist() : draft;
+      }
+      if (!savedDraft) return;
       await prepareAuthoringAssets(
-        payloadRef.current,
+        isCode ? savedDraft.payload : payloadRef.current,
         assetRepository,
         assetScope,
       );
-    } catch (error) {
+      if (!mountedRef.current) return;
+      if (
+        isCode &&
+        JSON.stringify(payloadRef.current) !==
+          JSON.stringify(savedDraft.payload)
+      )
+        throw new Error(
+          "The coding lesson changed before publication. Your latest changes were preserved.",
+        );
+      const result = await publishAuthoringDraft(
+        courseId,
+        item.id,
+        savedDraft.revision,
+      );
+      if (!mountedRef.current) return;
+      if (result.success) {
+        const publishedDraft = result.data.draft;
+        if (isCode) {
+          assertLearningCodingSaveAcknowledgement(publishedDraft, {
+            programId: courseId,
+            contentId: item.id,
+            revision: savedDraft.revision,
+            basePublishedVersion: savedDraft.basePublishedVersion + 1,
+            payload: savedDraft.payload,
+          });
+          setCodingAssignment(
+            narrowCodingAssignmentContent(publishedDraft.payload.jsonBody),
+          );
+        }
+        setDraft(publishedDraft);
+        if (
+          !isCode ||
+          JSON.stringify(payloadRef.current) ===
+            JSON.stringify(savedDraft.payload)
+        ) {
+          setPayload(publishedDraft.payload);
+          payloadRef.current = publishedDraft.payload;
+        }
+        revisionRef.current = publishedDraft.revision;
+        basePublishedVersionRef.current = publishedDraft.basePublishedVersion;
+        setSavedSnapshot(JSON.stringify(publishedDraft.payload));
+        setSaveStatus("saved");
+        const publishedSlug = result.data.publishedContent.slug;
+        if (publishedSlug !== item.slug) {
+          router.replace(
+            `${learningBase}/courses/${encodeURIComponent(courseSlug)}/content/${encodeURIComponent(publishedSlug)}`,
+          );
+        } else router.refresh();
+      } else {
+        if (isCode && result.status === 409) {
+          codingConflictRef.current = true;
+          setConflictBackup(structuredClone(payloadRef.current));
+        }
+        setSaveError(result.error);
+        setSaveStatus(result.status === 409 ? "conflict" : "offline");
+      }
+    } catch (error: unknown) {
+      if (!mountedRef.current) return;
       setSaveError(
         error instanceof Error
           ? error.message
-          : "Lesson assets are not ready to publish.",
+          : isCode
+            ? "Unable to publish this lesson."
+            : "Lesson assets are not ready to publish.",
       );
       setSaveStatus("offline");
-      setIsPublishing(false);
-      return;
+    } finally {
+      publicationInFlightRef.current = false;
+      if (mountedRef.current) setIsPublishing(false);
     }
-    const result = await publishAuthoringDraft(
-      courseId,
-      item.id,
-      savedDraft.revision,
-    );
-    if (result.success) {
-      const publishedDraft = result.data.draft;
-      setDraft(publishedDraft);
-      setPayload(publishedDraft.payload);
-      payloadRef.current = publishedDraft.payload;
-      revisionRef.current = publishedDraft.revision;
-      setSavedSnapshot(JSON.stringify(publishedDraft.payload));
-      setSaveStatus("saved");
-      const publishedSlug = result.data.publishedContent.slug;
-      if (publishedSlug !== item.slug) {
-        router.replace(
-          `${learningBase}/courses/${encodeURIComponent(courseSlug)}/content/${encodeURIComponent(publishedSlug)}`,
-        );
-      } else {
-        router.refresh();
-      }
-    } else {
-      setSaveError(result.error);
-      setSaveStatus(result.status === 409 ? "conflict" : "offline");
-    }
-    setIsPublishing(false);
   };
 
   const GRADED_CONTENT_TYPES: ReadonlySet<string> = new Set([
@@ -546,9 +763,7 @@ export function LessonAuthoringWorkspace({
     "Project",
     "Code",
   ]);
-  const isGradedType = GRADED_CONTENT_TYPES.has(
-    itemType ?? "",
-  );
+  const isGradedType = GRADED_CONTENT_TYPES.has(itemType ?? "");
   const isAutomatedReview =
     activeReviewMethods != null
       ? hasReviewMethod(activeReviewMethods, "AutomatedReview")
@@ -880,23 +1095,32 @@ export function LessonAuthoringWorkspace({
   };
 
   const renderEditor = () => {
-    if (isCode)
+    if (isCode) {
+      if (!codingDocument.draft)
+        return (
+          <p role="alert" className="text-sm text-destructive">
+            {codingDocument.error}
+          </p>
+        );
       return (
-        <CodingDefinitionEditor
-          courseId={courseSlug}
-          assessmentId={linkedAssessment?.id ?? item.id}
-          assessmentSlug={linkedAssessment?.slug ?? payload.slug}
-          programId={courseId}
-          contentId={item.id}
-          assessmentTitle={linkedAssessment?.title ?? payload.title}
-          initialContent={codingAssignment}
-          embedded
-          onSaved={(content) => {
-            setCodingAssignment(content);
-            router.refresh();
+        <CodingAuthoringSurface
+          contextKey={`${courseId}:${item.id}`}
+          draft={codingDocument.draft}
+          createId={(kind) => `${kind}-${crypto.randomUUID()}`}
+          manifestUrl={EMCEPTION_MANIFEST_URL}
+          disabled={isPublishing || loadingLatest}
+          onChange={(next) => {
+            if (isPublishing || loadingLatest) return;
+            const nextPayload = {
+              ...payloadRef.current,
+              jsonBody: { ...next },
+            };
+            payloadRef.current = nextPayload;
+            setPayload(nextPayload);
           }}
         />
       );
+    }
     if (isQuiz)
       return (
         <QuizContentEditor
@@ -988,13 +1212,7 @@ export function LessonAuthoringWorkspace({
           </p>
         ) : null}
         <Separator className="my-7" />
-        {isCode && codingAssignment ? (
-          <CodingAssignmentPreview assignment={codingAssignment} />
-        ) : isCode ? (
-          <div className="flex min-h-80 items-center justify-center rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-            Save the coding assignment to preview the student experience.
-          </div>
-        ) : isQuiz ? (
+        {isQuiz ? (
           <QuizContentEditor
             initialContent={payload.jsonBody}
             onChange={() => undefined}
@@ -1059,53 +1277,59 @@ export function LessonAuthoringWorkspace({
               {saveStatus === "saving" ? (
                 <Loader2 className="mr-1 inline size-3 animate-spin" />
               ) : null}
-              {statusCopy[saveStatus]}
+              {isCode && isDirty && saveStatus === "saved"
+                ? "Unsaved changes"
+                : statusCopy[saveStatus]}
             </span>
           </div>
         </div>
-        <Select
-          items={[
-            { value: "editor", label: "Editor" },
-            { value: "preview", label: "Preview" },
-          ]}
-          value={mode === "preview" ? "preview" : "editor"}
-          onValueChange={(value) => setMode(value as "editor" | "preview")}
-        >
-          <SelectTrigger
-            aria-label="Editor view"
-            size="sm"
-            className="w-24 lg:hidden"
-          >
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectGroup>
-              <SelectItem value="editor">Editor</SelectItem>
-              <SelectItem value="preview">Preview</SelectItem>
-            </SelectGroup>
-          </SelectContent>
-        </Select>
-        <div className="hidden items-center rounded-md border bg-muted/25 p-0.5 lg:flex">
-          {(["editor", "split", "preview"] as EditorMode[]).map((value) => (
-            <Button
-              key={value}
-              aria-label={value}
-              variant={mode === value ? "secondary" : "ghost"}
-              size="sm"
-              className="h-7 capitalize"
-              onClick={() => setMode(value)}
+        {!isCode ? (
+          <>
+            <Select
+              items={[
+                { value: "editor", label: "Editor" },
+                { value: "preview", label: "Preview" },
+              ]}
+              value={mode === "preview" ? "preview" : "editor"}
+              onValueChange={(value) => setMode(value as "editor" | "preview")}
             >
-              {value === "split" ? (
-                <SplitSquareHorizontal />
-              ) : value === "preview" ? (
-                <Play />
-              ) : (
-                <FileCode2 />
-              )}
-              <span className="hidden xl:inline">{value}</span>
-            </Button>
-          ))}
-        </div>
+              <SelectTrigger
+                aria-label="Editor view"
+                size="sm"
+                className="w-24 lg:hidden"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="editor">Editor</SelectItem>
+                  <SelectItem value="preview">Preview</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+            <div className="hidden items-center rounded-md border bg-muted/25 p-0.5 lg:flex">
+              {(["editor", "split", "preview"] as EditorMode[]).map((value) => (
+                <Button
+                  key={value}
+                  aria-label={value}
+                  variant={mode === value ? "secondary" : "ghost"}
+                  size="sm"
+                  className="h-7 capitalize"
+                  onClick={() => setMode(value)}
+                >
+                  {value === "split" ? (
+                    <SplitSquareHorizontal />
+                  ) : value === "preview" ? (
+                    <Play />
+                  ) : (
+                    <FileCode2 />
+                  )}
+                  <span className="hidden xl:inline">{value}</span>
+                </Button>
+              ))}
+            </div>
+          </>
+        ) : null}
         <Tooltip>
           <TooltipTrigger
             render={
@@ -1201,6 +1425,7 @@ export function LessonAuthoringWorkspace({
               <Button
                 variant="ghost"
                 size="xs"
+                disabled={loadingLatest || isPublishing}
                 onClick={() => void loadLatestDraft()}
               >
                 <RotateCcw /> Load latest
@@ -1314,7 +1539,9 @@ export function LessonAuthoringWorkspace({
         ) : null}
 
         <div className="min-w-0 flex-1">
-          {mode === "split" ? (
+          {isCode ? (
+            editorPanel
+          ) : mode === "split" ? (
             <div className="grid h-full min-h-0 grid-cols-1 2xl:grid-cols-2">
               <div className="min-h-0 border-r">{editorPanel}</div>
               <div className="hidden min-h-0 2xl:block">{previewPanel}</div>
@@ -1387,13 +1614,20 @@ export function LessonAuthoringWorkspace({
                             )
                           }
                         >
-                          <SelectTrigger id="authoring-visibility" className="w-full">
+                          <SelectTrigger
+                            id="authoring-visibility"
+                            className="w-full"
+                          >
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectGroup>
-                              <SelectItem value="Public">Enrolled students</SelectItem>
-                              <SelectItem value="MembersOnly">Members only</SelectItem>
+                              <SelectItem value="Public">
+                                Enrolled students
+                              </SelectItem>
+                              <SelectItem value="MembersOnly">
+                                Members only
+                              </SelectItem>
                               <SelectItem value="Private">Private</SelectItem>
                             </SelectGroup>
                           </SelectContent>
@@ -1441,19 +1675,25 @@ export function LessonAuthoringWorkspace({
                         </p>
                       )}
                       {gradedError && (
-                        <p className="text-sm text-destructive">{gradedError}</p>
+                        <p className="text-sm text-destructive">
+                          {gradedError}
+                        </p>
                       )}
                       {isCode && gradedChecked && isAutomatedReview && (
                         <div className="space-y-1 text-sm text-muted-foreground">
                           <p className="font-medium">Coding tests</p>
                           <p>
-                            Language: {codingAssignment?.Environment.Language}
+                            Language:{" "}
+                            {codingDocument.draft?.environment.language ??
+                              "Unavailable"}
                           </p>
                           <p>
                             Test cases:{" "}
-                            {(codingAssignment?.Tests.Public.length ?? 0) +
-                              (codingAssignment?.Tests.Private.length ?? 0)}{" "}
-                            ({codingAssignment?.Tests.Public.length ?? 0} public)
+                            {codingDocument.draft?.tests.length ?? 0} (
+                            {codingDocument.draft?.tests.filter(
+                              (test) => test.visibility === "public",
+                            ).length ?? 0}{" "}
+                            public)
                           </p>
                           <p>
                             Passing score: {codingAssignment?.Grading.MaxScore}
@@ -1468,9 +1708,9 @@ export function LessonAuthoringWorkspace({
                           <AlertDialogHeader>
                             <AlertDialogTitle>Remove grading?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              This soft-deletes the linked assessment.
-                              Existing submissions are preserved. Toggle Graded
-                              back on to restore it.
+                              This soft-deletes the linked assessment. Existing
+                              submissions are preserved. Toggle Graded back on
+                              to restore it.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -1690,7 +1930,9 @@ export function LessonAuthoringWorkspace({
                         { value: "InsertAtCursor", label: "Insert at cursor" },
                       ]}
                       value={proposalMode}
-                      onValueChange={(value) => setProposalMode(value as AiProposalKind)}
+                      onValueChange={(value) =>
+                        setProposalMode(value as AiProposalKind)
+                      }
                     >
                       <SelectTrigger
                         aria-label="Proposal application"
@@ -1700,8 +1942,12 @@ export function LessonAuthoringWorkspace({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectGroup>
-                          <SelectItem value="ReplaceDocument">Replace document</SelectItem>
-                          <SelectItem value="InsertAtCursor">Insert at cursor</SelectItem>
+                          <SelectItem value="ReplaceDocument">
+                            Replace document
+                          </SelectItem>
+                          <SelectItem value="InsertAtCursor">
+                            Insert at cursor
+                          </SelectItem>
                         </SelectGroup>
                       </SelectContent>
                     </Select>
