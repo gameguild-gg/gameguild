@@ -1186,7 +1186,8 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
 ## `CS-ADR-045`. Candidate-bound exercise checks and isolated solving preview
 
 - Date: 2026-11-23. Status: owned UX04-B implementation and terminal gates
-  pass; required native I/O completion remains open after an OS-headroom refusal.
+  pass; the unchanged complete native proof subsequently passes on 2026-11-24
+  with sufficient OS headroom (`exercise-check-6gYJ2l`).
   CS-ADR-046 supplies the separately authorized precise start signal. The
   current ledger records failed and passing evidence separately.
   Host cutover and whole-phase/human acceptance are separate.
@@ -1248,9 +1249,10 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
 ## `CS-ADR-046`. Optional native program-start acknowledgement
 
 - Date: 2026-11-23. Status: explicitly authorized and implemented; contract,
-  Node compatibility and real I/O reference controls pass. Full native
-  acceptance remains open after an OS-headroom refusal; no failed report is
-  promoted. Standalone program/official consumer timing stays separately open.
+  Node compatibility and unchanged full native proof pass. The latter is
+  `exercise-check-6gYJ2l` on 2026-11-24 with sufficient OS headroom; no earlier
+  failed report is promoted. Standalone program/official consumer timing stays
+  separately open, as do human and whole-phase acceptance.
 - The public compile/link/run stage predates native artifact loading and
   WebAssembly compilation. It cannot delimit the student's execution budget.
   Keep that existing stage contract unchanged and add an optional typed
@@ -1280,6 +1282,75 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   diagnostics without suppressing or opportunistically repairing other debt.
 - Rationale and compatibility scope:
   [optional program start](./EMCEPTION-PROGRAM-START-RATIONALE.md).
+
+## `CS-ADR-047`. Learning document preparation before host cutover
+
+- Date: 2026-11-24. Status: C1 preparation implemented and tested; C2 authorized
+  on the current contract. User rejected the proposed older-data adoption flow.
+- The existing lesson coordinator stays the only writer. A pure host adapter
+  reads the accepted incomplete draft, prepares complete coding wire JSON for
+  the existing publication boundary and checks exact save acknowledgements.
+  These functions do not install a second session/store or direct upsert.
+- Reads clone data and write nothing. A malformed draft cannot fall back to an
+  older published assignment. Explicit current configuration roundtrips through
+  the existing domain compiler/inverse wire mapping, preserving IDs, protected
+  solutions, host metadata and host-supplied grading configuration.
+- Publication requires the source document and surrounding lesson payload to
+  agree. An independent failing stale-source test precedes the guard. Exact
+  save acknowledgement requires course/content, next revision, publication base
+  and equal JSON structure; insertion order is not semantic inequality.
+- The earlier proposal to review/adopt old configuration was unnecessary: the
+  user confirmed that the screenshot and records were implementation testing,
+  not retained production coding-surface data. Do not implement that proposal,
+  preserve an old editor for it, introduce a legacy decoder or add a V2 schema.
+  Current incomplete drafts and current configured published documents are the
+  only accepted inputs. Unsupported test data remains explicit, never silently
+  converted/reset. This scope decision does not authorize deleting records,
+  historical migrations, published revisions or submitted history.
+- Contract compilation preceded RED/minimal behavior. Closing evidence is
+  211 passing host cases across ten exact files, strict web types/changed-file
+  lint and unchanged full surface regressions. No actual-host persistence,
+  persona/API, human acceptance, schema, SDK/IDE/UI or official result is claimed.
+- C2 is implemented below; C3 actual-host save/reopen/recovery/layout remains
+  required, preserving one preview owner.
+
+## `CS-ADR-048`. Current-contract Learning authoring composition
+
+- Date: 2026-11-24. Status: implemented; terminal closing audit passed,
+  actual-host/human acceptance pending. Continues CS-ADR-047, without legacy
+  adoption or an old-editor fallback, as explicitly instructed by the user.
+- Learning mounts the public controlled `CodingAuthoringSurface` over the
+  current document adapter. Its existing lesson coordinator is the only writer;
+  incomplete drafts save through existing revisioned actions, while publication
+  compiles and acknowledges the exact complete wire candidate before using the
+  existing authorized publication action. No direct published-definition upsert.
+- Saved requires matching scope, next revision, publication base and sent JSON.
+  Pending saves retain later edits as Unsaved. Conflict locks survive failed or
+  wrong-scope reloads; the latest local copy can be restored only explicitly.
+  Switching course/content unmounts the previous owner and rejects late effects.
+- The Code host removes its generic split/full-definition preview. The surface's
+  Validate exercise task owns isolated redacted learner preview; it does not
+  submit, grade or release. Other lesson/Quiz compositions remain intact.
+- Both assessment coding-definition pages use one shared server route, existing
+  authorized assessment/content reads and a locale-aware canonical-editor
+  redirect. Missing/inaccessible/unlinked/non-Code records fail closed. Old
+  grading-owned form modules are removed only after all production consumers
+  move. Historical test retirement and replacements are in the consumer map;
+  protected Emception source, UI, aliases and unrelated consumers are unchanged.
+- Auditor reproduced and fixed two independent publication races: an official
+  acknowledgement could overwrite newer metadata, and a save could race the
+  publication. One publication intent now excludes other writes until settled;
+  later edits survive and use the new acknowledged revision. RED artifacts are
+  retained, not converted into historical green evidence.
+- No schema, migration, backend, generated client, dependency, runtime/SDK,
+  compiler, IDE, auth implementation or launcher change. No stored configuration
+  is automatically upgraded, reset or deleted. C3 must still prove real UI/API
+  save/reopen/recovery and constrained layouts; component mocks cannot close it.
+- Terminal evidence: 208 web, 294 surface, 130 domain, 16 adapter and 27
+  preserved-UI cases, all selected suites passing without required skips;
+  strict owned package/web types and lint pass. Historical retired cases are
+  separately counted in the consumer map. The ledger records exact commands,
+  reports, resource headroom and remaining actual-host/human obligations.
 
 ## Modelo para novas decisoes
 

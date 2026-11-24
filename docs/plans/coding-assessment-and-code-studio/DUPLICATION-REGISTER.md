@@ -1,6 +1,7 @@
 # Registro de duplicacoes entre coding-surface e Emception UI
 
-Status: baseline funcional das partes 1 a 3; refundacao 3.6 planejada; documento vivo.
+Status: historical part-1/3 baseline plus ongoing part-3.6 refoundation;
+UX04-C/C2 removes the superseded owned Learning form overlap on 2026-11-24.
 
 Data: 2026-11-06.
 
@@ -292,13 +293,17 @@ oracles are separate from program/test/graphics controls. No upstream source is
 copied and this fixture cannot satisfy official grading. Owner: coding/grading;
 CS-ADR-044. Keep the independent assertions if test scaffolding later converges.
 
-UX04-A also temporarily overlaps the host's `standard-test-editor.tsx`,
+UX04-A temporarily overlapped the host's `standard-test-editor.tsx`,
 `functional-test-editor.tsx` and file-policy controls with the new owned
-`authoring-tests.tsx`/`authoring-starter.tsx`. These are independent views over
-the canonical draft, not copied Emception UI or a second persisted model. Host
-forms stay functional until UX04-C migrates their consumers, then only the
-superseded grading-owned forms can be removed with regression proof. No
-automatic upstream convergence, source deletion or matching-policy change.
+`authoring-tests.tsx`/`authoring-starter.tsx`. UX04-C/C2 now installs the public
+controlled authoring surface through the one Learning writer and redirects both
+owned definition routes to it. After zero-consumer proof, only those superseded
+owned forms, their old preview and associated presentation tests are removed.
+The [consumer map](./03-coding-surface/CONSUMER-MAP.md#ux04-c-consumer-cutover-and-test-retirement---2026-11-24)
+records the 35 retired cases, replacement coverage and remaining graphics/binary
+workflow limitations. CS-ADR-048 records the decision. This closes that owned
+form overlap; it does not remove or merge Emception UI/runtime code, consolidate
+SDK copies, change matching policy or claim real-host/human acceptance.
 
 `DUP-PL-021`: `apps/web/scripts/coding-surface-exercise-validation-e2e.mjs`
 reuses the owned authoring/workbench loopback, local-Monaco, asset preflight and

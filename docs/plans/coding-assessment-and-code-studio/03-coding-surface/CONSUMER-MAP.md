@@ -1,36 +1,67 @@
 # Coding surface consumer map
 
-Status: consumidores de grading migrados e validados sobre o commit-base
-`41932100b2031c0ad78d7c02545a73addc6364b3`.
+Status: UX04-C/C2 current-contract Learning integration implemented on
+2026-11-24; closing terminal audit passed. Actual-host save/reopen and human
+acceptance are pending. The earlier part-3 baseline was
+`41932100b2031c0ad78d7c02545a73addc6364b3`; it is not refoundation acceptance.
 
-Este mapa separa consumidores pertencentes ao fluxo de grading daqueles que
-devem continuar em `@game-guild/emception-ui`. Um path encontrado por busca nao
-e automaticamente autorizado a migrar. Cada linha precisa de ownership,
-destino e teste de regressao confirmados.
+This map distinguishes grading-owned consumers from the preserved independent
+Emception UI. Finding a path does not authorize migrating it. Confirm ownership,
+destination and regression evidence for each consumer.
 
-Status permitidos: `investigar`, `preservar`, `pronto para migrar`, `migrando`,
-`migrado` e `validado`.
+## Current grading consumers
 
-## Consumidores de grading candidatos
-
-| Fluxo | Path atual | Modo | Dependencia atual | Destino esperado | Estado | Regressao obrigatoria |
+| Flow | Current path | Mode | Dependency | Destination | Status | Required regression |
 | --- | --- | --- | --- | --- | --- | --- |
-| definicao de coding assessment | `apps/web/src/components/learning/console/courses/[course]/assessments/[assessmentId]/coding-definition/coding-definition-editor.tsx` | `author` | `@game-guild/coding-surface` e bridge do host | `coding-surface` | validado | roundtrip de draft, tipo explicito e expectativas privadas |
-| preview de coding no authoring | `apps/web/src/components/learning/authoring/coding-assignment-preview.tsx` | `author-test` | `@game-guild/coding-surface` | `coding-surface` | validado | preview sem attempt, gradebook ou release |
-| atividade learner | `apps/web/src/components/learning/coding-activity-client.tsx` | `learner` | `@game-guild/coding-surface` e delivery redigida | `coding-surface` | validado | public data, storage namespaced, submit oficial e refresh |
-| assessment grader de code | `apps/web/src/components/learning/assessment-grading/assessment-grader.tsx` | `grader` | `@game-guild/coding-surface` e snapshot do host | `coding-surface` | validado | snapshot, evidencias e review autorizada |
-| painel code do SpeedGrader | `apps/web/src/app/[locale]/(speedgrader)/speedgrader/assessments/[assessmentId]/code-grader-panel.tsx` | `grader` | reusa o assessment grader migrado | `coding-surface` por composicao migrada | validado | code e itens nao-code permanecem funcionais |
+| Instructor tasks | `apps/web/src/components/learning/authoring/lesson-authoring-workspace.tsx` | controlled author | public `CodingAuthoringSurface` and pure document/wire adapters | existing revisioned Learning writer | C2 implemented; C3 pending | incomplete buffers, exact acknowledgements, later edits, conflict/reload, publication, context replacement |
+| Console/workspace definition links | `apps/web/src/components/learning/authoring/coding-authoring-route.ts` and the two route reexports | authorized redirect | existing assessment/content queries and locale-aware navigation | canonical workspace content editor | C2 implemented; actual browser redirect pending | inaccessible/missing/unlinked/non-Code records, query failure, encoding, locale, no old form |
+| Learner preview | `packages/features/coding-surface/src/authoring-learner-preview.tsx` | isolated learner preview | public-only projection and shared solving surface | one owner in Validate exercise | UX04-B native gate passed | no private data/storage/academic commands; current draft reflected |
+| Learner activity | `apps/web/src/components/learning/coding-activity-client.tsx` | learner | public surface and redacted delivery | existing official submission ports | adjacent component regressions pass; full refoundation acceptance pending | public data, scoped scratch, frozen submission, official acknowledgement |
+| Assessment grader | `apps/web/src/components/learning/assessment-grading/assessment-grader.tsx` | grader | public surface and host snapshot | existing authorized review ports | adjacent component regressions pass; full refoundation acceptance pending | immutable submission, authorized evidence/review, non-Code regressions |
+| SpeedGrader code panel | `apps/web/src/app/[locale]/(speedgrader)/speedgrader/assessments/[assessmentId]/code-grader-panel.tsx` | grader | reuses the assessment grader | preserved host composition | unchanged | Code and non-Code flows remain functional |
 
-Os sete arquivos de teste focados desses fluxos e da bridge somam 77 testes
-verdes. O browser cycle integral permanece no lane `coding`: sua fixture deve
-emitir `ExerciseType` canonico e sua execucao exige o artifact Toolchain schema
-2 exato.
+The prior seven-file/77-test baseline is historical. Current exact selections,
+counts and evidence are recorded in the implementation ledger. The full
+official browser cycle is a separate gate requiring its current contract,
+personas and exact Toolchain schema-2 artifact; no component pass substitutes.
+
+## UX04-C consumer cutover and test retirement - 2026-11-24
+
+`CS-ADR-048` replaces only owned Learning composition. Source/architecture tests
+require both definition pages to reexport the authorized shared route and reject
+remaining production imports of the retired forms. No Emception UI/runtime
+source, persisted content, submission or historical migration is removed.
+
+Retired components: `coding-definition-editor.tsx`, `standard-test-editor.tsx`,
+`functional-test-editor.tsx` and `coding-assignment-preview.tsx`. The three
+associated presentation test files contained **35 historical cases**. Their
+removal is explicit, not a passing run of those cases and not evidence that all
+previous presentation behavior remains a requirement.
+
+| Historical concern | Current replacement oracle / intentional change |
+| --- | --- |
+| Direct definition upsert, C++ demo on mount and valid-only 30-second save | `lesson-authoring-workspace.test.tsx` and `learning-authoring-document.test.ts`: blank non-demo exercise, incomplete revisioned draft, no write on mount, exact acknowledgement, conflict lock and explicit publication; the old save protocol is intentionally retired |
+| Source edits, file policy/rename, learner-created files and protected code | `authoring-surface.test.tsx`, `authoring-model.test.ts` and domain draft tests: offline controlled files, explicit policy, protected replacements bound by ID, lossless cancelled transformations; no IDE-controller polling or sync requirement |
+| Standard I/O expectations and function parameter/result fields | `authoring-surface.test.tsx`, domain draft/compiler tests, `coding-publication.test.ts`: family-specific typed values, complete groups, missing versus empty output, explicit weights and private buckets; no historical coercions or mixed-family fallback |
+| Negative weights, malformed identifiers, empty cases and definition size | domain draft/schema/compiler tests plus publication negatives: incomplete input remains editable/saveable, executable publication fails with field errors; aggregate UTF-8 and file-count budgets remain tested |
+| Concurrent save/API failure | host tests and pure exact-ack tests: single writer, wrong-body/scope/revision rejection, failed reload remains locked, latest local backup, later edits preserved, no write racing publication |
+| Missing content link and Back routing | `coding-authoring-route.test.ts`: fail closed before canonical redirect; existing Learning curriculum navigation supplies the return path |
+| Full-definition author-test preview | `authoring-validation.test.tsx` and UX04-B native evidence: protected exercise checks are separate from a redacted learner preview; no duplicate full/private editor mounted by the host |
+| Allegro preset seeds, graphics execution and binary asset editing | not promoted by this cutover. Current capabilities remain explicitly bounded; binary content is represented by the domain, but these retired presentation tests do not prove a binary authoring workflow or graphics runtime acceptance. Existing post-04 findings and separate runtime gates remain authoritative |
+
+The historical `coding-definition-authoring-browser-e2e.mjs` script still
+describes an older dashboard route/direct-PUT/demo UI. It was not run and is not
+current C3 acceptance. Update its owned browser flow as a separate C3 deliverable
+before claiming real-host save/reopen coverage; do not resurrect old UI to make
+its selectors pass or replace instructor behavior with SystemAdmin.
 
 ## Refoundation inventory - 2026-11-19
 
 Baseline: `723eeeb84589cfb23b0def630ee46ead02890acc`. The validation states
 above are historical implementation evidence, not acceptance of the new UX.
 None of these consumers was cut over to the refounded product in `CODE-UX-01`.
+The table is a historical inventory of that date; the current C2 dispositions
+above supersede its old host-form entries, not its preserved upstream boundaries.
 
 | Consumer / shared boundary | Observed current behavior | Refoundation disposition |
 | --- | --- | --- |
@@ -48,6 +79,7 @@ None of these consumers was cut over to the refounded product in `CODE-UX-01`.
 | `graphics-session.ts` / `graphics-session-types.ts` and lazy runtime whenDisposed in coding-surface | UX03-B local diagnostic canvas session, immutable public source/candidate, lazy boot, bounded channels/time, explicit stop/disposal completion | not wired into production; five real SDL cycles prove pixels/input/framing, but EMC-GAP-003 keeps cleanup acceptance open; the paired browser harness is test orchestration, not another runtime or human fixture CLI |
 | `coding/src/native-function-support.ts`, surface `execution-plan.ts` and configured official grading wrapper | shared pure native scalar call/startup/ABI composition; C++ consumes the unchanged public harness, C emits its existing report grammar | CS-ADR-036; generated files outside submitted workspace, public/private scopes and cleanup tested; production real scalar/receipt parity remains required; no core, IDE or retained UI edit |
 | `learning-draft-persistence.ts` in the web host | new tested bridge through existing Learning actions; not installed in the production editor | lesson coordinator supplies revision-bound metadata and owns the only save loop; no direct published upsert |
+| `learning-authoring-document.ts` in the web host | C1 tested read-only current-draft preparation, complete-candidate wire compilation and exact lesson/revision/body acknowledgement checks | C2 retains the single lesson writer; user explicitly rejected legacy adoption, old-editor fallback and migration UI for disposable implementation test data |
 | `authoring-surface.tsx`, typed draft views/helpers and offline Monaco in coding-surface | UX04-A controlled Problem/Environment/Starter/Tests over the existing incomplete draft; no runtime or host import | new task views have local contract/unit/browser proof; reference/wrong validation is UX04-B and host persistence/form migration is UX04-C; do not claim the console consumer has switched yet |
 | `authoring-validation.tsx`, `exercise-preparation.ts` and `exercise-validation.ts` | UX04-B protected reference/incorrect source copies, candidate-bound checks and strict learner-only preview through the shared solving component | exact evidence/status in the current ledger; local checks use no academic commands or author storage; host persistence/form migration remains UX04-C; upstream runtime/IDE/UI unchanged |
 | Coding JSON DTOs, `coding-surface-bridge.ts` and both backend learner projections | WB-B adds explicit frozen environment/limits/entry/toolchain and inverse draft publication; legacy absence remains absent; references excluded from learner/official student execution | consume these tested ports in the later production cutover; current client/backend closing evidence is recorded separately in the ledger |

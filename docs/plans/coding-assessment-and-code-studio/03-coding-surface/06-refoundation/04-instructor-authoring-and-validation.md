@@ -2,14 +2,20 @@
 
 Status: independent UX04-A package task views implemented and locally validated
 and committed as `d087071dcc` on 2026-11-23 (CS-ADR-044). UX04-B owned
-implementation, terminal and offline-preview gates pass; required native I/O
-acceptance remains open after an OS-headroom refusal. The authorized optional
-program-start correction passes compatibility and real reference controls,
-not the complete native gate (CS-ADR-045/046).
-UX04-C has not started; whole `CODE-UX-04` acceptance remains open. Final phase
+implementation, terminal, offline-preview and unchanged six-case native gates
+pass after restoring OS headroom (`exercise-check-6gYJ2l`, 2026-11-24).
+Checkpoint `b20894e38b` includes the authorized optional program-start correction
+and compatibility controls (CS-ADR-045/046); prior failures stay recorded.
+UX04-C's C1 document/publication/acknowledgement preparation passes its scoped
+terminal gates. The user rejected legacy adoption: older screenshots were only
+implementation testing. C2 installs the current controlled task surface in
+Learning and consolidates both definition routes, without old-editor fallback.
+Its terminal closing audit passes with 208 host cases, strict types/lint and
+package/retained-UI regressions. C3 actual-host/human proof and whole
+`CODE-UX-04` acceptance remain open. Final phase
 entry/acceptance still depends on `CODE-UX-03`; advancing an independent row
 does not waive its runtime or human gates. See the single implementation ledger
-for the Stop & Ask, failed proofs and next action; do not cut over host forms.
+for failed proofs, scoped migration boundaries and next action.
 
 ## Invariants and boundaries
 
@@ -41,13 +47,34 @@ implementation -> Quality gate; see [QUALITY-GATES.md](./QUALITY-GATES.md).
 | UX04-B | prepare and validate correct/wrong solutions; faithful learner preview | candidate-bound validation and redacted preview ports with isolated scratch | reference passes, wrong solution fails, edits stale results; non-default preview reflects draft without private canary | validation preparation/results and shared solving preview | G-SURFACE + G-WEB + G-RUNTIME for CS-REF-05/19 |
 | UX04-C | save/reopen, change impact, conflict recovery and constrained layouts | existing persistence/status ports and lossless transformation intents | save failure is not Saved; cancel preserves input; keyboard/focus and task controls survive panel changes | real persistence/recovery integration and adaptive authoring composition | G-SURFACE + G-WEB + focused G-RUNTIME for CS-REF-01/02/08; instructor walkthrough |
 
+### UX04-C execution checkpoints
+
+1. **C1, document preparation:** typed read-only adapters reopen incomplete
+   drafts, compile complete publication candidates and validate exact host
+   acknowledgements. Contract compilation precedes independent RED and minimal
+   behavior. Gate: G-WEB, including `learning-authoring-document-contracts.test.ts`,
+   `learning-authoring-document.test.ts`, existing publication/persistence tests
+   and the six-consumer baseline; strict changed-file lint and web types.
+2. **C2, controlled Learning composition:** bind the task surface to the one
+   existing lesson coordinator, not the direct published upsert. Older stored
+   test assignments do not create a compatibility obligation. The user confirmed
+   the screenshot was disposable implementation testing. Do not add adoption,
+   an old-editor fallback or a legacy decoder; accept the current contract and
+   show unsupported data explicitly without deleting or silently resetting it.
+3. **C3, acceptance:** prove actual-host save/reopen, failures, conflict recovery,
+   panel/focus/layout behavior and removal of superseded owned forms after all
+   their consumers migrate. Component mocks alone cannot close this checkpoint
+   or the separate human/official grading gates.
+
 ## Work
 
-UX04-A exposes `CodingAuthoringSurface` over the existing incomplete draft; its
-actual-component proof is not the Learning production cutover. The existing host
-forms remain until UX04-B/C supply exercise validation and acknowledged host
-persistence. Their removal and final save/reopen/learner-preview walkthrough are
-still required, not silently dropped because package tests pass.
+UX04-A exposes `CodingAuthoringSurface` over the existing incomplete draft.
+UX04-B supplies local exercise checks and a redacted learner preview. UX04-C/C2
+now installs it through the existing Learning writer and redirects both owned
+definition routes to that editor. Superseded owned forms are removed only after
+zero-consumer/replacement-test controls. The C3 actual-host
+save/reopen/recovery/layout and human walkthrough remain required, not silently
+dropped because package tests pass.
 
 1. Implement a dedicated authoring surface with a simple exercise-family
    selector and task views: Problem, Environment, Starter code, Tests, Validate

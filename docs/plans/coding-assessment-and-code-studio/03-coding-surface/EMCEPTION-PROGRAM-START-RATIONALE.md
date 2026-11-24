@@ -85,9 +85,16 @@ owned preview RED proves the early clock and missing-start failures; all
 18 focused runner controls then pass, including active-program cancellation,
 output and cleanup budgets. The required six-case real browser proof remains
 the closing oracle, with its outcome recorded in the ledger, not inferred here.
+The unchanged full proof subsequently passes all six cases in
+`runtime/exercise-check-6gYJ2l` on 2026-11-24, including both-family correct,
+incorrect and redacted-preview execution, cancellation and broken compilation.
+It retains the five-second program limit. Peak owned RSS is 6897 MiB and
+minimum OS headroom 10429 MiB, with no PSI/OOM or forced stop. Earlier failed
+reports stay failed; cold-family success does not prove a warmed memory plateau.
 
 Strict SDK lint is not clean: seven errors and seven warnings already exist
-in the touched upstream files. An unsuppressed comparison against `HEAD`
+in the touched upstream files. An unsuppressed comparison against the then-HEAD
+`d087071dcc`
 produces identical diagnostics and no new findings; new tests are lint-clean.
 Do not present this as a passing strict upstream lint gate or repair unrelated
 upstream declarations under this authorization. Their disposition remains in

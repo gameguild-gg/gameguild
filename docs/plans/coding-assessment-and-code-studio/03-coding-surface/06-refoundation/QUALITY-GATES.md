@@ -125,6 +125,33 @@ less strict substitute. Record explicit paths, not an unexpanded placeholder.
 If the generated client changes, use its official generator, then run its
 existing typecheck/build. Do not hand-edit it or suppress integration errors.
 
+UX04-C/C2 additionally requires the current controlled host/document and both
+authorized definition-route contracts. The retired console form tests are not
+part of this selection; their 35 historical cases and replacement mapping are
+explicit in [the consumer map](../CONSUMER-MAP.md#ux04-c-consumer-cutover-and-test-retirement---2026-11-24).
+Run this focused closing group with one worker:
+
+```bash
+pnpm --filter @game-guild/web exec vitest run \
+  src/components/learning/authoring/lesson-authoring-workspace.test.tsx \
+  src/components/learning/authoring/lesson-authoring-workspace-picker.test.tsx \
+  src/components/learning/authoring/coding-authoring-route-contracts.test.ts \
+  src/components/learning/authoring/coding-authoring-route.test.ts \
+  src/lib/coding-assignment/learning-authoring-document-contracts.test.ts \
+  src/lib/coding-assignment/learning-authoring-document.test.ts \
+  src/lib/coding-assignment/coding-publication.test.ts \
+  src/lib/coding-assignment/learning-draft-persistence.test.ts \
+  src/lib/coding-assignment/coding-surface-bridge.test.ts \
+  src/components/learning/coding-activity-client.test.tsx \
+  'src/app/[locale]/learn/courses/[slug]/activities/[activityId]/coding-activity.test.tsx' \
+  src/components/learning/assessment-grading/assessment-grader.test.tsx \
+  --maxWorkers=1
+```
+
+This collaborator-level gate cannot satisfy C3 actual-host persistence or human
+acceptance. The historical `coding-definition-authoring-browser-e2e.mjs` needs
+an explicit current-model flow before it can supply C3 evidence.
+
 If the workspace's bulk-suppression ledger obstructs a scoped audit with stale
 entries, do not add waivers or ignore unpruned status. Use the same existing
 configuration with `--suppressions-location` pointing to an explicitly empty

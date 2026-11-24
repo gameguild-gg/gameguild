@@ -41,10 +41,18 @@ pass. CS-ADR-045 adds candidate-bound correct/incorrect solution checks and a
 strict redacted preview through the actual solver. UX04-B terminal/offline
 gates pass. The user-authorized CS-ADR-046 optional start acknowledgement fixes
 the observed premature preparation clock, with compatibility and real I/O
-reference proof. The complete native run was then stopped for OS RAM headroom;
-the ledger retains the failure. UX04-B is partial, not accepted. These views
-are not yet installed in the Learning host. UX04-C save/reopen/conflict cutover
-has not started; whole phase/runtime/human gates remain open.
+reference proof. After sufficient OS headroom became available, the unchanged
+complete native proof passes all six cases (`exercise-check-6gYJ2l`, 2026-11-24);
+the ledger retains the earlier failures. UX04-B's scoped local obligation is
+closed. UX04-C document/publication and acknowledgement adapters are now consumed
+by the Learning lesson coordinator, which mounts the controlled teacher tasks.
+Both owned definition routes redirect to that single authoring composition;
+the old owned forms and duplicate full-definition preview are retired.
+The user explicitly rejected
+legacy adoption because the earlier screenshot was implementation testing;
+continue on the current contract, without an old-editor fallback or migration UI.
+Whole phase, actual-host save/reopen/recovery/layout, official runtime and human
+gates remain open. Terminal component evidence is not actual API acceptance.
 
 Updated: 2026-11-24.
 

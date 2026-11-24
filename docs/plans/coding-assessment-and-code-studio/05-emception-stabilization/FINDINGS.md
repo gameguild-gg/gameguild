@@ -38,7 +38,7 @@ incorrect release or overlapping/leaked active execution block the affected
 | `CS-RUNTIME-GRAPHICS` / partial | coding-surface owner; public SDL canvas renders, but native WASI execution does not execute the required callbacks; local port is not production/official graphics acceptance | 5.2: use only public canvas lifecycle, preserve explicit unavailable official combinations and prove affected host UI before enabling; no invented visual judge |
 | `CS-RUNTIME-REPEATED-EXECUTION` / unverified | coding-surface/runtime owners; cold contexts and five offline editor cycles do not prove five repeated native executions in one live context | 5.3: unchanged ownership checks plus warmed memory/listener plateau, repeated run/cancel/context switch/unmount, OS-headroom measurements; classify any actual leak before repair |
 | `CS-RUNTIME-CAPABILITY-MATRIX` / unverified | coding-surface owner; the full family/language/environment/output matrix is not certified by the bounded C++/WASI and SDL proofs | 5.0 inventory, then 5.1/5.2/5.3: actual checks for each offered combination; unverified options remain unavailable, not silently converted to WASI |
-| `CS-RUNTIME-PROGRAM-START-BUDGET` / partial, native completion resource-blocked | coding budget consumers with Emception SDK owner; the public run-stage signal precedes artifact loading/WASM compilation; local test accounting now uses the authorized precise acknowledgement | CS-ADR-046 passes unit/type/compatibility and real I/O reference controls; finish the unchanged part 03 proof after OS headroom permits; standalone program and official budget consumers retain their part 03/04 timing/parity gates; 5.1 retains regressions afterward, without deferring core obligations |
+| `CS-RUNTIME-PROGRAM-START-BUDGET` / partial, local native proof passed | coding budget consumers with Emception SDK owner; the public run-stage signal precedes artifact loading/WASM compilation; local test accounting now uses the authorized precise acknowledgement | CS-ADR-046 passes unit/type/compatibility and the unchanged full native proof `exercise-check-6gYJ2l`; standalone program and official budget consumers retain their part 03/04 timing/parity gates; 5.1 retains regressions afterward, without deferring core obligations |
 | `CS-EMCEPTION-STRICT-LINT` / open | Emception SDK owner; seven pre-existing errors plus seven warnings keep strict lint of the now-touched SDK/type files nonzero; exact HEAD comparison proves no introduced finding | 5.0 reconcile against current upstream, then 5.3 owner-approved minimal cleanup and exact strict lint/type/runtime regressions; do not suppress or call historical debt warning-clean |
 
 ### Original evidence and constraints
@@ -69,7 +69,9 @@ incorrect release or overlapping/leaked active execution block the affected
   I/O incorrect-solution preparation, after the function and I/O reference
   controls pass: 7537 MiB owned peak, 4574 MiB minimum available, 4772 MiB
   reserve, 816 MiB paging, no OOM. This is a resource refusal, not proof of a
-  leak or a passing complete proof. More available RAM is requested; do not
+  leak or a passing complete proof. With sufficient headroom, the unchanged
+  complete rerun `runtime/exercise-check-6gYJ2l` passes: 6897 MiB owned peak,
+  10429 MiB minimum available, no PSI/OOM and 83 MiB system paging. Do not
   reduce the reserve or infer a warmed compiler plateau from cold contexts.
 - Capability matrix: the new program port currently proves one C++/WASI source
   plus headers/assets; the test/official paths have separate scalar C/C++
@@ -87,8 +89,9 @@ incorrect release or overlapping/leaked active execution block the affected
   precise start acknowledgement. User explicitly approved CS-ADR-046; its
   optional SDK callback and owned consumer pass the independent contract/Node
   tests, including default behavior and actual constructor ordering. The
-  real I/O reference now passes in `runtime/exercise-check-sQbj1J`; full native
-  completion is resource-blocked, not accepted. Neither the standalone
+  real I/O reference passes in `runtime/exercise-check-sQbj1J`; after its
+  resource refusal, the unchanged full proof passes in
+  `runtime/exercise-check-6gYJ2l`. Neither the standalone
   `program-session.ts` nor the official-worker budget consumer was changed.
   Parts 03/04 must independently close those timing/parity gates before claiming
   complete execution/core grading. Preserve that obligation, not just the local

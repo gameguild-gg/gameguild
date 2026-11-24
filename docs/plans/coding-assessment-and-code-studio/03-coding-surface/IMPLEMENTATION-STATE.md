@@ -5,7 +5,192 @@ Last updated: 2026-11-24.
 Only the first active continuation is current. Later continuation sections
 retain historical evidence and do not authorize restarting earlier work.
 
-## Active continuation: UX04-B exercise checks and learner preview - 2026-11-23
+## Active continuation: UX04-C / C3 actual-host acceptance - 2026-11-24
+
+- Entry: user requested separate commits, then continuation. C1 document
+  adapters are `4b032f019f`; C2 Learning composition, authorized route
+  consolidation and owned-form retirement are `48689823d1`. Documentation is
+  committed separately. No push or merge is requested.
+- Stage: specification/contract before browser implementation. Acceptance IDs
+  `CS-REF-01/02/08` require both exercise families on the actual Next/API host:
+  edit incomplete fields, save/reopen exact content, preserve local work on a
+  real revision conflict, explicitly recover, navigate task/panel controls and
+  inspect desktop/mobile layouts. Existing native reference/wrong/preview proof
+  remains separate; form editing must start no compiler or academic command.
+- Scope: the owned historical `coding-definition-authoring-browser-e2e.mjs`,
+  narrowly scoped typed browser contracts/support/tests, any demonstrated owned
+  host defect and its failing regression, current gates/state/ADRs. Reuse
+  existing public API, declared Playwright/Node tooling and local stack support.
+  No schema/migration, platform/auth change, SDK/IDE/UI, dependency, launcher,
+  generated client, old-data adoption or second persistence loop.
+- Persona: isolated non-admin Member who owns the test course. Administrative
+  preparation, if required, does not replace instructor assertions. Use only
+  unique owned synthetic resources; no database/reset of existing scenarios.
+  Preserve sanitized evidence without credentials, cookies or private solutions.
+- Resources: sequential checks, one browser/compiler owner, at least two CPUs
+  free, available-memory/PSI guard and OS reserve. Do not start the historical
+  all-in-one official coding cycle as a substitute for this focused gate.
+- Next: validate the browser proof's typed scenario/evidence contract, write
+  independently expected cases, then execute against the real local host.
+  No C3, human, whole-phase or official grading acceptance is claimed yet.
+
+## Previous continuation: UX04-C Learning integration - 2026-11-24
+
+- Entry: requested checkpoint `b20894e38b`, committed without push. The unchanged
+  default six-case native proof now passes in `runtime/exercise-check-6gYJ2l`:
+  both families accept their reference, detect the incorrect solution and run
+  public-only learner preview. Cancellation, broken compilation, stale checks,
+  focus, private-canary exclusion and desktop/mobile layout controls pass.
+  Required IDs/counts and zero academic requests were independently checked.
+- Resources: `exercise-native-checkpoint-resources.json`, exit 0, peak owned
+  RSS 6897 MiB, minimum available 10429 MiB versus reserve 4772 MiB, no PSI/OOM,
+  83 MiB system paging, 262.5 s, CPUs 0-3. One compiler at a time, none retained.
+  Inspected both-family desktop and mobile captures. This closes the scoped
+  UX04-B native obligation, not host persistence, human or official grading.
+  Earlier failed reports and upstream strict-lint debt remain recorded below.
+- Specification: install the controlled teacher tasks in Learning, retaining
+  the lesson coordinator as the only writer. Save incomplete author-only JSON
+  with its revision; require the exact body/revision acknowledgement. Compile
+  a complete candidate into the existing coding wire contract only for the
+  existing authorized publication path. Never publish author-only JSON.
+- Allowed files: owned Learning coding document adapters/components and their
+  tests, the lesson coordinator and affected tests, scoped browser fixtures,
+  current plans/state/ADRs. No API/schema/migration, platform, SDK/IDE/UI,
+  dependency, launcher or generated-client change in this continuation.
+- Atomic order: C1 document/publication and ack contracts -> independent RED
+  -> pure adapters; C2 real controlled host composition and sole save loop ->
+  regression/negative tests; C3 actual-host save/reopen/conflict/layout proof.
+  Every step runs strict applicable types/lint/tests. No local fixture claims
+  real persona/API acceptance. Migrate both owned definition routes before
+  retiring their forms; do not claim whole CODE-UX-04 acceptance.
+- Preview has one owner: use the surface's isolated learner-preview action,
+  not an additional full-definition editor mounted in the host split view.
+  Unsupported/malformed stored assignments fail visibly without overwrite,
+  silent defaulting, destructive reset or compatibility schema.
+- Current stage: C1 adapters and C2 controlled Learning composition implemented.
+  The user explicitly
+  resolved the Stop & Ask: the earlier screenshot/configuration was disposable
+  implementation testing, not a compatibility requirement. Do not build a
+  legacy adoption/review flow, decoder, V2 contract or old-editor fallback.
+  Accept current draft/current explicitly configured published documents only;
+  unsupported test data stays a visible error, without automatic deletion or
+  reinterpretation. This does not authorize deleting migrations or history.
+  The production lesson coordinator now mounts `CodingAuthoringSurface`; both
+  assessment definition routes redirect to that canonical editor after their
+  existing authorized queries. Superseded owned forms are removed; the
+  preserved Emception UI and SDK are unchanged. C2's closing terminal audit
+  passes; C3 actual-host browser/API and human acceptance remain pending.
+  Standalone Run program and official timing/parity remain part 03/04
+  obligations; the UX04-B pass does not certify those consumers.
+
+### C2 surgical consumer boundary
+
+- Implementation: controlled tasks in `lesson-authoring-workspace.tsx` with its
+  existing server actions and incomplete-draft compiler. Contract compilation
+  preceded nine independent host RED controls. The actual host now owns the
+  single save queue, exact acknowledgements, conflict lock, latest local backup,
+  guarded reload and complete-candidate publication. Draft buffers do not need
+  to be executable to save. Code uses only the surface's redacted learner
+  preview, not the host's old full-definition split/preview composition.
+- Both owned definition routes, console and workspace, now share
+  `coding-authoring-route.ts`. Existing authorized assessment/content queries
+  precede a locale-aware redirect to the canonical content editor. Negative
+  controls cover absent/inaccessible records, absent link, wrong format, error
+  propagation, route encoding, locale and retired-form source consumers.
+  No new endpoint, auth decision, compatibility branch or upstream source.
+- Allowed extension: those two route files, the shared owned redirect and its
+  contract/behavior tests, obsolete owned form removal after zero-consumer
+  proof, affected regression selections and consumer/state records. Retiring
+  presentation tests requires explicit replacement mapping; do not hide failing
+  current-model requirements or remove unrelated tests.
+- Retirement: four obsolete owned components and their three presentation test
+  files (35 historical cases) are removed only after their production consumers
+  move. The [consumer map](./CONSUMER-MAP.md#ux04-c-consumer-cutover-and-test-retirement---2026-11-24)
+  records replacement coverage and deliberately changed behavior, including
+  the fact that historical Allegro/binary-editor controls are not proof of
+  current graphics acceptance. No data, migration, IDE or upstream UI is removed.
+- Auditor reproduced two publication races: a pending official acknowledgement
+  overwrote a newer title, and Ctrl+S could issue a concurrent draft write.
+  Independent RED artifacts are `ux04c-late-publication-red.json` and
+  `ux04c-publication-save-race-red.json`. The coordinator now retains later
+  edits as Unsaved, advances only the exact acknowledged revision, and excludes
+  other save intents while preparing/publishing. Whole coordinator suite:
+  `ux04c-publication-races-green.json`, 84 passing cases, no skips/failures.
+- The final current-contract negative also attempts Ctrl+S on a Code item whose
+  incompatible test draft declares Lesson. The visible error alone was not
+  enough: `ux04c-obsolete-draft-save-red.json` proved an unintended write. The
+  same current-type requirement now guards the writer before assets/API work;
+  it refuses that write without adopting, resetting or deleting the document.
+- Closing terminal evidence, all exit 0 with no required skips:
+  `ux04c-current-contract-final-host.json`, 12 files/208 cases; unchanged surface
+  `ux04c-installed-surface-regressions.json`, 23/294; domain
+  `ux04c-installed-domain-regressions.json`, 9/130; adapter
+  `ux04c-installed-adapter-regressions.json`, 2/16. Exact web selection is in
+  G-WEB. Preserved `@game-guild/emception-ui test`: 7 suites/27 cases. The 35
+  retired historical form cases are not included or claimed as executed.
+- Strict full web types pass with the OS guard, CPUs 0-3, 6144-MiB V8 maximum
+  (not a reservation): `ux04c-current-contract-types-resources.json`, peak owned
+  RSS 1740 MiB, minimum available 13744 MiB versus 4772 MiB reserve, no PSI/OOM,
+  1 MiB paging, 8.0 s. All three owned package typechecks and unsuppressed
+  package lint pass. The eleven changed/new web files pass the existing web
+  ESLint configuration with `--no-inline-config --max-warnings=0` and the
+  explicitly empty evidence suppression ledger; no new waiver. Its one
+  redundant `unknown | null` diagnostic was corrected to `unknown`, preserving
+  behavior. The previously recorded upstream SDK lint debt is unchanged.
+- Prettier uses the existing double-quote/80-column style for the three host
+  files and route reexports, and the configured style for the six new adapter/
+  route files. Formatting and `git diff --check` pass. G-DOC checks 59 documents,
+  262 local links, 12 atomic tables/36 rows, with no failures.
+- Current actual-host preflight: no listener on 3000/8080 and no Docker
+  containers running. No app/database reset or alternate authentication was
+  used. Do not call C3 passed using collaborator mocks, the old historical
+  browser script or UX04-B's isolated native proof. Next: C3 specification and
+  contract/test for current UI save/reopen/recovery/layout on the
+  authenticated local host, preserving the existing runtime/human gates.
+
+### UX04-C / C1 evidence and handoff
+
+- Preparation paths: `apps/web/src/lib/coding-assignment/learning-authoring-document.ts`
+  and its contract/behavior tests. C1 originally introduced only pure
+  preparation; C2 now imports them in the existing production lesson coordinator.
+  There is still no second save loop, endpoint or store.
+- Contracts passed the full strict web typecheck and two type fixtures before
+  behavior. `ux04c-documents-red.json` retains eight intended missing-behavior
+  failures with twelve negative controls passing. The sandbox's earlier pnpm
+  cache refusal is infrastructure, not product RED.
+- The adapter clones incomplete buffers, creates an empty non-demo exercise,
+  reads explicitly configured published data without writing it and compiles
+  only complete candidates into the existing wire contract. Private solutions
+  remain author-only. Host metadata and academic MaxScore are not invented.
+  Missing versus intentional empty I/O expectations remain distinct.
+- The exact save guard requires matching course/content, next revision,
+  unchanged publication base and sent JSON content, independent of property
+  insertion order. Wrong-body, wrong-scope and malformed acknowledgements are
+  not Saved. The lesson coordinator must freeze its sent payload when adopting
+  this guard; these pure functions do not enforce a host writer by themselves.
+- Auditor independently reproduced a valid-but-stale publication candidate:
+  `ux04c-stale-publication-red.json`, one intended failure. Preparation now
+  requires the source document to match the surrounding payload before it can
+  compile; do not publish a stale document with newer lesson metadata.
+- Closing `ux04c-host-regressions.json`: exactly ten files, 211 passing tests,
+  no failures/skips, including 24 new contract/behavior cases, the prior six
+  consumer files, publication and draft persistence. These use existing API
+  collaborators; they are not real-host/persona/API acceptance.
+- Changed-file ESLint passes with `--no-inline-config --max-warnings=0`, the
+  existing web configuration and explicitly empty suppression ledger. Prettier
+  and `git diff --check` pass. Full web strict types pass under the OS guard
+  (`ux04c-final-types.json`): peak 1727 MiB, minimum available 14683 MiB,
+  reserve 4772 MiB, no PSI/OOM, 1 MiB paging, 7.5 s, CPUs 0-3.
+- Full unchanged surface regressions pass again: 23 files/294 tests, no
+  failures/skips (`ux04c-surface-regressions.json`), strict package types/lint.
+  Existing jsdom canvas notices remain visible; they are not native evidence.
+  G-DOC: 59 documents, 259 local links, 12 atomic tables/36 rows, no failures.
+- Commit `b20894e38b` records the requested prior block. C1 is now committed as
+  `4b032f019f` and C2 as `48689823d1`, without push. The later user
+  decision rejects the unnecessary older-data adoption proposal. C2 now installs
+  the current task surface; C3 must still prove real save/reopen/conflict/layout.
+
+## Previous continuation: UX04-B exercise checks and learner preview - 2026-11-23
 
 - Entry: `d087071dcc`, clean tree. UX04-A is committed; no push. Continue only
   UX04-B, not host persistence cutover or whole phase acceptance.
