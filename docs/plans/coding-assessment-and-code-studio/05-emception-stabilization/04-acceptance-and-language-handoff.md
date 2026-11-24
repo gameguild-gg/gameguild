@@ -14,6 +14,10 @@ Inherit the [coordinator](../05-emception-stabilization-and-polish.md).
 
 - Reconcile all entries against parts 03/04, including findings discovered after
   this plan was written. A matching ID and source link are mandatory.
+- Close CS-ADR-050's explicitly deferred global offline investigation with
+  confirmed ownership, any authorized correction and the unchanged error-free
+  eight-case C3 proof. Do not lose the exception at handoff or rewrite the
+  original nonzero report as passing evidence.
 - Confirmed defects in retained/offered behavior are fixed and regressions pass.
   No arbitrary score, empty success, required skip, permissive fallback,
   broadened timeout or altered oracle substitutes for a correction.

@@ -1358,8 +1358,9 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   implemented and regression-tested; the strict changed-source full-solution
   build and 302 current API architecture/security tests pass. Actual-host
   publication/reopen proves version agreement for both families. C3 acceptance
-  remains blocked by uncaught offline Server Action fetch errors, not by the
-  repaired publication invariant.
+  remains nonpassing for uncaught offline Server Action fetch errors, not the
+  repaired publication invariant. CS-ADR-050 subsequently defers investigation
+  of that external/global finding to part 05 without rewriting the result.
 - The first actual Next/API authoring proof accepted the function draft but
   rejected a successful publication: base version advanced from 1 to 3, not 2.
   A UI assumption about one entity write is not an authoritative version check.
@@ -1417,6 +1418,36 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   authorization; investigate ownership before changing them. Human acceptance
   and dependent gates stay open.
 - Affects: UX04-C/C3 and the owned Learning publication acknowledgement only.
+
+## `CS-ADR-050`. Defer global preference offline investigation to part 05
+
+- Date: 2026-11-24. Status: accepted by explicit user instruction to record the
+  findings and investigate them in part 05; no repair is authorized now.
+- Context: `host-authoring-AvKD2P` completes all eight real-host functional
+  cases, including both families' publication/reopen and offline save/retry,
+  but correctly exits 1 for three uncaught Server Action fetch errors during
+  the offline control. Global theme, accessibility and editor preference
+  synchronizers lack rejection handling and are candidate roots, not a proven
+  mapping of each recorded stack. They are outside the owned coding scope.
+- Decision: preserve `CS-HOST-OFFLINE-PREFERENCES` as open with investigation
+  explicitly deferred to part 05. `CODE-POL-00` must reproduce, attribute and
+  agree repair ownership; `CODE-POL-03` must validate any approved consumer
+  correction. Retain the report, stacks, screenshots and unchanged C3 arbiter.
+  The user chose postponement, not permission to modify other owners' code.
+- Consequences: independent core work in parts 03/04 may continue with this
+  named exception in its dependency/handoff records. C3 is not green and no
+  final acceptance is invented. No new skips, filters, relaxed assertions or
+  timing workaround may conceal the failure. Human acceptance and all other
+  gates remain required; no official grading, privacy, authorization, frozen
+  submission, release or active-worker safety defect is deferred by analogy.
+- Closure: a minimal independent reproducer confirms the actual owner/root;
+  an explicitly scoped repair passes its own unit/negative controls and the
+  unchanged complete eight-case C3 proof with zero uncaught browser errors.
+  Part 05 acceptance must reconcile the exception instead of dropping it.
+- Affects: the scheduling disposition of this global offline finding only,
+  part 03's next action, parts 03/04's explicit exception record, and part 05's
+  inventory/consumer regressions. No implementation, schema, dependency,
+  launcher, authentication, Emception or UI change is part of this decision.
 
 ## Modelo para novas decisoes
 

@@ -42,10 +42,17 @@ incorrect release or overlapping/leaked active execution block the affected
 | `CS-EMCEPTION-STRICT-LINT` / open | Emception SDK owner; seven pre-existing errors plus seven warnings keep strict lint of the now-touched SDK/type files nonzero; exact HEAD comparison proves no introduced finding | 5.0 reconcile against current upstream, then 5.3 owner-approved minimal cleanup and exact strict lint/type/runtime regressions; do not suppress or call historical debt warning-clean |
 | `CS-EMCEPTION-DYNAMIC-IMPORT` / open, consumer impact unverified | Emception browser owner with coding integration owner; Turbopack repeatedly warns that the public browser `node-tool.js` dynamic `import(entryUrl)` cannot be statically resolved while mounting the authoring route | 5.0 reconcile the existing warning against upstream, then owner-approved bundler/runtime proof in 5.3; no bundler downgrade, private alias or upstream patch authorized by recording it |
 | `CS-HOST-PROTECTED-CODING-READ` / unverified | Learning host/access owners; real non-admin course-owner authoring triggers server-side `/coding-assignment/full` requests returning 403, while the current draft/publication route succeeds | diagnose the protected read's caller, actor/tenant/policy and actual consumer impact; no relaxed authorization or assumption that null means absent data. Any required private-data read failure blocks its affected gate now, not after 04 |
+| `CS-HOST-OFFLINE-PREFERENCES` / open; investigation explicitly deferred | global web preference owners; the real C3 offline control records uncaught Server Action fetch errors, although all eight functional authoring cases complete | user-approved CS-ADR-050: investigate in 5.0, agree owner/scope, then any approved consumer correction and unchanged full C3 regression in 5.3; retain exit 1 and do not declare C3 passed |
 
-### Current C3 host blocker, not a post-04 deferral
+### User-deferred global offline investigation
 
-`CS-HOST-OFFLINE-PREFERENCES` remains **open**. On 2026-11-24,
+`CS-HOST-OFFLINE-PREFERENCES` remains **open**, with investigation explicitly
+deferred to part 05 by the user on 2026-11-24 (CS-ADR-050). This replaces the
+earlier instruction to wait for an immediate ownership decision; it does not
+change the failed report. Independent core work in parts 03/04 may continue
+with the named exception carried in its handoff, without a clean C3 claim.
+
+Evidence: on 2026-11-24,
 `host-authoring-AvKD2P/report.json` completes all eight authoring functional
 cases but correctly exits 1 for three uncaught `TypeError: Failed to fetch`
 observations in Next's `fetchServerAction` during the browser-offline control.
@@ -57,12 +64,21 @@ Owner boundary: global web preference synchronization, outside coding/grading.
 Source audit finds missing rejection handling in `ThemeSyncInitializer`,
 `AccessibilitySyncInitializer` and `EditorPreferencesSyncInitializer`. Those
 are candidate roots, not a proven one-to-one mapping of each anonymous stack;
-an independent reproducer is required before a repair. User authorization was
-requested before any change to these components; none was modified. This
-register does not grant that authorization or move the current C3 obligation
-to part 05. Required oracle: actual offline save/retry and all eight required
-cases with zero uncaught browser errors, plus isolated regressions for every
-component the responsible owner changes.
+an independent reproducer is required before a repair. The user chose to
+postpone investigation, not authorize changes to these components; none was
+modified. Triage at 5.0 must determine the exact rejected action/caller, compare
+current upstream behavior, assign the responsible owner and record any later
+repair approval. Keep separate controls for initial loading, connection loss,
+restored connectivity and unmount; no swallowed failure or overwrite of
+existing preferences is acceptable.
+
+Required 5.3 closure oracle: actual offline save/retry and all eight required
+C3 cases with zero uncaught browser errors, plus isolated unit/negative
+regressions for every confirmed owner component changed. Diagnose the cause
+before choosing a correction. Part 05 final acceptance must reconcile this
+exception. Any newly demonstrated grading, privacy, authorization or worker
+safety defect still blocks its affected core gate immediately; the deferral
+cannot be generalized to those failures.
 
 The same ignored `c3-current-dev.log` retains the dynamic-import warnings and
 protected-read 403 responses above. Earlier ledgers already note upstream

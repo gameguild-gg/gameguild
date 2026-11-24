@@ -2,6 +2,11 @@
 
 Status: planned. Gate: `CODE-UX-05`. Depends on `CODE-UX-04`.
 
+Specific entry exception: CS-ADR-050 allows independent core preparation while
+the global preference offline finding awaits part 05 investigation. Carry the
+exception explicitly; it neither closes C3 nor waives human acceptance, other
+entry requirements or any learner/grading/security gate in this subplan.
+
 ## Invariants and boundaries
 
 Apply [GOVERNANCE.md](./GOVERNANCE.md). Surface owns solving/inspection views

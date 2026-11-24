@@ -186,6 +186,15 @@ dispositions in its [register](../../05-emception-stabilization/FINDINGS.md),
 and part 03 implementation/evidence in its existing ledger. This does not expand
 the protected-path exceptions above or move a blocking core defect into debt.
 
+CS-ADR-050 records the user's specific deferral of global preference offline
+investigation to part 05. Carry that named exception when continuing independent
+parts 03/04 core work or handing it off; the C3 technical result stays nonpassing
+until its unchanged error-free oracle passes. This scheduling decision changes
+no test, human-acceptance requirement, repair ownership or core privacy/grading/
+authorization/release/worker-safety gate. Do not ask again whether to fix those
+global components now; investigation is scheduled for 5.0 with any later repair
+subject to its actual owner's approval.
+
 ## Negative constraints
 
 - No new explicit/implicit `any`, unvalidated unsafe casts or double assertions

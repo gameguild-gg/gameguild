@@ -20,8 +20,10 @@ retain historical evidence and do not authorize restarting earlier work.
   now pass. Real publication/reopen proves matching persisted versions for both
   families. C3 remains nonpassing: all eight functional cases complete, but
   offline testing records uncaught browser Server Action fetch failures.
-  Preserve that blocker; neither eight completed cases nor passing API tests
-  substitutes for a clean browser gate or human acceptance.
+  The user explicitly deferred investigation of this external/global finding
+  to part 05 (CS-ADR-050). Preserve the failed technical result while continuing
+  independent core work in parts 03/04; neither eight completed cases nor
+  passing API tests substitutes for a clean browser gate or human acceptance.
   Acceptance IDs
   `CS-REF-01/02/08` require both exercise families on the actual Next/API host:
   edit incomplete fields, save/reopen exact content, preserve local work on a
@@ -244,11 +246,15 @@ retain historical evidence and do not authorize restarting earlier work.
   unhandled initializations in the global theme/accessibility/editor preference
   synchronizers, outside the owned coding scope. Their missing rejection paths
   are a candidate cause, not a proven mapping of each anonymous browser stack
-  to one initializer. User scope approval/owner diagnosis is required before
-  changing those components; do not infer a fix from timing or ignore their
-  errors. `CS-HOST-OFFLINE-PREFERENCES` remains a current C3 blocker, not a
-  deferred passing case. The scoped context-selector correction has real RED
-  and subsequent passing context evidence.
+  to one initializer. The user subsequently chose to defer investigation to
+  part 05, not to alter these components now (CS-ADR-050). Triage belongs to
+  `CODE-POL-00`; any confirmed owner-approved consumer repair and C3 regression
+  belong to `CODE-POL-03`. The finding remains open and C3 remains nonpassing;
+  this explicit scheduling exception permits independent core work in parts
+  03/04, not a filtered error, fabricated pass or waived safety requirement.
+  The scoped context-selector correction has real RED and subsequent passing
+  context evidence. No further global-code approval is needed merely to record
+  or honor the deferral; a later repair still needs its actual owner's scope.
 - Other observations remain visible in the
   [findings register](../05-emception-stabilization/FINDINGS.md): repeated
   pre-existing dynamic-import warnings from the Emception browser's
@@ -321,14 +327,14 @@ retain historical evidence and do not authorize restarting earlier work.
   no failures. Prettier passes for all ten exact changed source/config/test
   files, respecting the two host files' existing style; `git diff --check`
   passes. The browser proof remains nonzero for the recorded core defect.
-- Next: resolve the external/offline ownership decision and independently
-  diagnose the uncaught Server Action rejection before any authorized repair.
-  Rerun the unchanged eight-case/error-free C3 gate after the actual cause is
-  fixed; retain both failed reports. Human instructor acceptance is separate
-  and remains pending. Do not waive errors, silently repair old test data or
-  advance dependent UX05 as though C3 passed. No additional full API build is
-  required merely to repeat its successful compilation. No whole-phase or
-  official grading acceptance is claimed.
+- Next: continue the independent core sequence in parts 03/04 with the explicit
+  CS-ADR-050 exception attached, rather than waiting for or repairing global
+  preference synchronization now. Carry `CS-HOST-OFFLINE-PREFERENCES` into
+  part 05's triage and preserved-consumer proof. After an owner-approved
+  correction, rerun the unchanged eight-case/error-free C3 gate and retain
+  both failed reports. Human acceptance, all other entry requirements and
+  core grading/security gates remain independently required. No whole-phase,
+  clean C3 or official grading acceptance is claimed by this deferral.
 
 ## Previous continuation: UX04-C Learning integration - 2026-11-24
 

@@ -1,6 +1,6 @@
 # Part 05 execution state
 
-Updated: 2026-11-23.
+Updated: 2026-11-24.
 
 ## Current checkpoint
 
@@ -12,14 +12,22 @@ Updated: 2026-11-23.
   does not replace that next action.
 - Finding dispositions live only in [FINDINGS.md](./FINDINGS.md). Source
   evidence/history stays linked, not deleted or copied into passing results.
-- Current edit scope: planning Markdown only, roadmap/link updates and numbering.
+- User scheduling decision (CS-ADR-050): investigate
+  `CS-HOST-OFFLINE-PREFERENCES` in this phase, not during current coding work.
+  All eight C3 functional cases complete, but uncaught offline browser errors
+  retain the report's exit 1. Parts 03/04 may continue independent core work
+  with this specific exception recorded, not a fabricated clean C3 result.
+  Investigate/attribute in `POL00-A/B`; scope any confirmed owner repair and
+  full C3 regression through `POL03-B`. No global source edit is approved now.
+- Current edit scope: planning Markdown only, the explicit offline-finding
+  deferral, owning subplans and consistent dependency/handoff records.
   No code, tests, runtime artifacts, dependency, schema or upstream edit.
 - Phase execution commands/results: none. Documentation audit results are
   recorded separately below; they cannot prove runtime or official grading.
 
 | Gate | State | Required evidence |
 | --- | --- | --- |
-| `CODE-POL-00` | waiting for entry | accepted parts 03/04, reconciled complete inventory and scoped owner decisions |
+| `CODE-POL-00` | waiting for entry | accepted parts 03/04 core handoff, explicit CS-ADR-050 exception, reconciled complete inventory and scoped owner decisions |
 | `CODE-POL-01` | not started | execution/capability contract and independent native regressions |
 | `CODE-POL-02` | not started | approved graphical correction and original five-cycle proof |
 | `CODE-POL-03` | not started | repeated-execution plateau, compatibility and affected UX |
@@ -28,9 +36,12 @@ Updated: 2026-11-23.
 ## Next exact action
 
 Continue parts 03/04. At their handoff, reconcile every Emception-related finding
-into this register, preserving any earlier blocking core status. Once entry is
-actually accepted, start [5.0](./00-findings-and-owner-triage.md): capture HEAD,
-worktree, offered capabilities, evidence availability and owner approvals.
+and the specifically deferred global offline investigation into this register,
+preserving any earlier blocking core status and the technical C3 failure. Once
+core entry is actually accepted with the explicit exception, start
+[5.0](./00-findings-and-owner-triage.md): capture HEAD, worktree, offered
+capabilities, evidence availability and owner approvals. Reproduce the offline
+exception before assuming which preference synchronizer caused it.
 Do not start an SDL artifact fix, interpreter expansion or IDE redesign now.
 
 ## Handoff record required per atomic row
@@ -42,6 +53,12 @@ next action. Replace stale active instructions compactly; retain historical
 evidence and original failed reports by link.
 
 ## Documentation validation
+
+Deferral update on 2026-11-24: the existing plan audit returns 0 for 59 documents,
+263 local links and 12 atomic tables/36 rows, with zero failures;
+`git diff --check` returns 0. All 13 changed paths are planning Markdown. No
+application/runtime test, source repair, service startup or test-result
+reclassification was performed for this scheduling-only request.
 
 Documentation-only checks on 2026-11-23, using installed Node 24.16.0 and
 declared remark/GFM parsers:

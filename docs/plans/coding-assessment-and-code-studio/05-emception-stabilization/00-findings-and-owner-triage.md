@@ -3,6 +3,9 @@
 Status: planned. Gate: `CODE-POL-00`.
 Prerequisite: accepted part 04, not merely passing local execution.
 Inherit the [coordinator](../05-emception-stabilization-and-polish.md).
+The core handoff must explicitly carry CS-ADR-050's deferred global offline
+investigation and the nonpassing C3 report; that exception is not a passing
+test or a deferral of core grading/security failures.
 
 ## Atomic execution
 
@@ -29,6 +32,14 @@ Inherit the [coordinator](../05-emception-stabilization-and-polish.md).
 5. Review the unavailable RAM/compound features and optional preparation/file/
    assistance proposals. An explicit defer is valid for a new capability, not
    for a defect in retained behavior. Link any later product plan and owner.
+6. Investigate the user-deferred `CS-HOST-OFFLINE-PREFERENCES`: reproduce the
+   rejected Server Action during loading/offline/reconnect/unmount, confirm the
+   actual caller, and assign global-web ownership before any code edit. Theme,
+   accessibility and editor synchronizers are candidate roots, not established
+   causes. Record the original C3 failure, exact repair authorization and
+   isolated negative controls for handoff to 5.3. Reconcile the dynamic-import
+   warning and protected-read 403 separately; no permission relaxation follows
+   from the offline deferral.
 
 ## Exit
 

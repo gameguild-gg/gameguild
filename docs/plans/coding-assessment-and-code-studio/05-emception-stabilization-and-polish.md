@@ -1,7 +1,7 @@
 # Part 05. Emception integration stabilization and polishing
 
 Status: planned; execution waits for accepted parts 03 and 04.
-Updated: 2026-11-23. Scheduling decision: CS-ADR-043.
+Updated: 2026-11-24. Scheduling decisions: CS-ADR-043/050.
 
 ## Invariants and boundaries
 
@@ -62,6 +62,14 @@ consolidated; update the [duplication register](./DUPLICATION-REGISTER.md).
 - Part 03 has its required UX/runtime acceptance; part 04 has actual official
   `function` and `standard-io` evidence, including wrong/error/access controls,
   review, release and learner refresh. Local-only proofs do not satisfy entry.
+- Named scheduling exception (CS-ADR-050): the user deferred investigation of
+  global preference offline errors to this phase. Carry the nonpassing C3
+  report explicitly through parts 03/04's core handoff, rather than requiring
+  its repair before 5.0 can investigate it. This permits independent core
+  continuation, not clean C3/final acceptance or a broader grading/security
+  waiver. Triage/ownership is 5.0; any approved consumer fix and unchanged C3
+  regression is 5.3; reconcile closure at 5.4. No global-code edit is authorized
+  merely by this scheduling decision.
 - Carry the reconciled commit, source/artifact hashes, offered capability matrix
   and all limitations from the part 04 handoff into the finding register.
 - This phase fixes and polishes the retained scope. It is not language expansion,

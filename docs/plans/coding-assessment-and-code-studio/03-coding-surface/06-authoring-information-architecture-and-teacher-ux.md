@@ -62,9 +62,12 @@ check or launcher default was changed. Current API architecture/security
 execution passes all 302 selected cases. The C3 rerun proves both-family
 publication/reopen and completes all eight functional cases, but uncaught
 offline Server Action fetch errors keep the error-free gate nonpassing.
-Their external/global ownership needs diagnosis and approval; do not suppress
-them to advance UX05. Human acceptance and broader phase/runtime gates remain
-open. Neither compilation, old failed evidence nor a stale binary closes them.
+The user explicitly deferred that external/global investigation to part 05
+(CS-ADR-050). Independent core work, including scoped UX05 preparation, may
+continue with this exception recorded; do not suppress errors or call C3 green.
+Human acceptance, other entry requirements and broader phase/runtime gates
+remain open. Neither compilation, old failed evidence nor a stale binary
+closes them.
 
 Updated: 2026-11-24.
 

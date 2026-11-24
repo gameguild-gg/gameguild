@@ -7,7 +7,9 @@ tested; the changed-source strict full-solution build now passes. Current API
 architecture/security passes all 302 selected cases. All eight C3 functional
 cases complete, including publication/reopen, but uncaught offline browser
 errors keep the error-free gate nonpassing (CS-ADR-049). Human acceptance
-remains pending. The earlier part-3 baseline was
+remains pending. The user deferred the external/global offline investigation
+to part 05 (CS-ADR-050), allowing independent core work with the exception
+recorded, without declaring C3 green. The earlier part-3 baseline was
 `41932100b2031c0ad78d7c02545a73addc6364b3`; it is not refoundation acceptance.
 
 This map distinguishes grading-owned consumers from the preserved independent
@@ -70,7 +72,9 @@ copies match and all 302 selected architecture/security tests pass. Report
 conflict/retry/context and inspected layout captures, but correctly exits 1
 for uncaught Server Action fetch failures during offline testing. Those errors
 must be diagnosed within the approved owner boundary, not filtered away.
-Current C3 and human acceptance remain open. Do not resurrect the old UI,
+Investigation is explicitly deferred to part 05 by CS-ADR-050; independent
+core work may continue with that exception recorded. Current C3 and human
+acceptance remain open. Do not resurrect the old UI,
 weaken an oracle, reuse old binaries or replace instructor behavior with
 SystemAdmin.
 

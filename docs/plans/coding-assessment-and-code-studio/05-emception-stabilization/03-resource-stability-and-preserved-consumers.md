@@ -42,6 +42,19 @@ repeated navigation, focus, keyboard and narrow viewports in affected surfaces.
 New assistance/file-preparation features are separately approved product work,
 not prerequisites invented for this repair.
 
+### Deferred global offline consumer investigation
+
+`POL03-B` also receives `CS-HOST-OFFLINE-PREFERENCES` from 5.0 under the user's
+CS-ADR-050 scheduling decision. Reproduce and confirm the actual global-web
+owner first; recording the finding authorizes no preference, authentication
+or Emception edit. After separately approved minimal repair, prove loading,
+offline rejection, reconnection and unmount without unhandled promises or
+overwriting stored preferences. Run isolated tests of each affected component
+and the unchanged complete real-host C3 gate: all eight functional cases, zero
+uncaught errors, zero compiler/academic requests and successful owned cleanup.
+Preserve `host-authoring-AvKD2P` as failed historical evidence. A filter,
+required skip or timing workaround cannot close this exception.
+
 ## Exit
 
 Repeated-execution oracles and preserved-consumer commands return 0, with

@@ -34,8 +34,10 @@ execution now passes all 302 selected cases. The real-host rerun completes all
 eight functional cases, including both-family publication/reopen, and the
 desktop/mobile captures have been inspected. It still correctly exits 1 for
 uncaught offline Server Action fetch failures; global preference synchronizers
-need owner diagnosis/authorization before alteration. Keep C3 and human
-acceptance open, retain failed reports and the unchanged error-free oracle.
+need owner diagnosis/authorization before alteration. The user explicitly
+deferred investigation to part 05 (CS-ADR-050), allowing independent core
+continuation with the exception recorded. Keep C3 and human acceptance open,
+retain failed reports and the unchanged error-free oracle.
 Do not waive the invariant, reuse an old binary or reclassify the pending proof
 as post-04 polish (CS-ADR-049).
 
