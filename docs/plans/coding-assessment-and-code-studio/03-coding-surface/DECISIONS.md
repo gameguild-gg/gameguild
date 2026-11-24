@@ -1356,8 +1356,10 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
 
 - Date: 2026-11-24. Status: owned web guard and authorized backend correction
   implemented and regression-tested; the strict changed-source full-solution
-  build passes. Actual-host acceptance awaits current API architecture/security
-  execution and the C3 rerun.
+  build and 302 current API architecture/security tests pass. Actual-host
+  publication/reopen proves version agreement for both families. C3 acceptance
+  remains blocked by uncaught offline Server Action fetch errors, not by the
+  repaired publication invariant.
 - The first actual Next/API authoring proof accepted the function draft but
   rejected a successful publication: base version advanced from 1 to 3, not 2.
   A UI assumption about one entity write is not an authoritative version check.
@@ -1378,7 +1380,8 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   reject stale/mismatched version, scope, slug, revision and payload. Contract
   compilation preceded two intended RED failures; the final 12-file/227-case
   host selection passes. The retained C3 publication report fails truthfully;
-  the corrected backend has not yet been proven on the actual host.
+  later actual-host proof of the corrected backend is recorded below, without
+  rewriting that earlier failed report.
 - The user subsequently authorized the backend correction ("realize a
   correção"). Stage Code assessment changes without the premature `SaveChanges`,
   following the Quiz publication participant. The allowed production edit is
@@ -1403,8 +1406,16 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   and all configured checks. Current API/CodeAdapter DLL copies were verified
   identical across host/test outputs; no new kernel OOM or compiler remained.
   No launcher or default resource policy changed. This closes the build gate,
-  not architecture/security execution, actual-host C3 or human acceptance;
-  earlier interrupted/failed reports retain their outcomes.
+  not browser or human acceptance; earlier interrupted/failed reports retain
+  their outcomes. The subsequent 302 selected current API architecture/security
+  tests pass with zero skips. Real report `host-authoring-AvKD2P` passes both
+  families' publication/reopen plus all eight functional cases, but exits 1 for
+  uncaught offline browser errors. Its context-selector fix follows the
+  published-status button's actual accessible structure, without a product
+  change. Full error stacks and the unchanged error-free completion guard are
+  retained. Global preference synchronizers are outside this correction's
+  authorization; investigate ownership before changing them. Human acceptance
+  and dependent gates stay open.
 - Affects: UX04-C/C3 and the owned Learning publication acknowledgement only.
 
 ## Modelo para novas decisoes

@@ -431,7 +431,7 @@ export async function runAuthoringHostProof(environment: AuthoringHostEnvironmen
     const context = await browser.newContext({ viewport: { width: 1920, height: 1080 } });
     page = await context.newPage();
     await signIn(page, context, environment, instructor);
-    page.on('pageerror', (error) => report.errors.push(`Browser ${error.name}: ${error.message}`));
+    page.on('pageerror', (error) => report.errors.push(`Browser ${error.stack ?? `${error.name}: ${error.message}`}`));
     page.on('request', (request) => {
       const url = new URL(request.url());
       if (/\/emception\/.*\.(?:wasm|wpk|data)(?:\.gz)?$/.test(url.pathname) || /emception.*worker/i.test(url.pathname)) report.compilerRequests++;
@@ -469,7 +469,11 @@ export async function runAuthoringHostProof(environment: AuthoringHostEnvironmen
     await failedSave(context, page, url, lesson.family);
     passed('UX04-C-failed-save');
     for (const target of [...lessons].reverse()) {
-      await page.getByRole('button', { name: target.title, exact: true }).click();
+      await page
+        .getByRole('navigation', { name: 'Course curriculum', exact: true })
+        .getByRole('button')
+        .filter({ has: page.getByText(target.title, { exact: true }) })
+        .click();
       await expect(page.getByLabel('Statement', { exact: true })).toHaveValue(statement(target.family), { timeout: 60_000 });
       await expect(page.getByLabel('Exercise type', { exact: true })).toHaveValue(target.family);
     }

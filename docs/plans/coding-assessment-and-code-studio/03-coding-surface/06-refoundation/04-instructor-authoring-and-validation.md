@@ -30,9 +30,14 @@ reserve, not accepted as green. The subsequent user-authorized OS-managed
 complete strict Debug solution build passed with zero warnings/errors in
 00:25:33.25, including the changed API and test assemblies, without disabling
 checks or changing launcher defaults. Current API architecture/security test
-execution and all eight real-host cases remain required. Do not waive the
-invariant, reuse an old binary or reclassify the pending proof as post-04
-polish (CS-ADR-049).
+execution now passes all 302 selected cases. The real-host rerun completes all
+eight functional cases, including both-family publication/reopen, and the
+desktop/mobile captures have been inspected. It still correctly exits 1 for
+uncaught offline Server Action fetch failures; global preference synchronizers
+need owner diagnosis/authorization before alteration. Keep C3 and human
+acceptance open, retain failed reports and the unchanged error-free oracle.
+Do not waive the invariant, reuse an old binary or reclassify the pending proof
+as post-04 polish (CS-ADR-049).
 
 ## Invariants and boundaries
 

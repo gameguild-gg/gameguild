@@ -4,8 +4,10 @@ Status: UX04-C/C2 current-contract Learning integration implemented on
 2026-11-24; closing terminal audit passed. Both-family actual-host draft save/
 reopen now passes. The Code publication correction is implemented and regression-
 tested; the changed-source strict full-solution build now passes. Current API
-architecture/security execution and remaining C3 proof are pending
-(CS-ADR-049). Human acceptance remains pending. The earlier part-3 baseline was
+architecture/security passes all 302 selected cases. All eight C3 functional
+cases complete, including publication/reopen, but uncaught offline browser
+errors keep the error-free gate nonpassing (CS-ADR-049). Human acceptance
+remains pending. The earlier part-3 baseline was
 `41932100b2031c0ad78d7c02545a73addc6364b3`; it is not refoundation acceptance.
 
 This map distinguishes grading-owned consumers from the preserved independent
@@ -16,7 +18,7 @@ destination and regression evidence for each consumer.
 
 | Flow | Current path | Mode | Dependency | Destination | Status | Required regression |
 | --- | --- | --- | --- | --- | --- | --- |
-| Instructor tasks | `apps/web/src/components/learning/authoring/lesson-authoring-workspace.tsx` | controlled author | public `CodingAuthoringSurface` and pure document/wire adapters | existing revisioned Learning writer | C2 implemented; C3 draft/reopen proven; publication fix tested, rebuilt-host proof pending | incomplete buffers, exact acknowledgements, later edits, conflict/reload, publication, context replacement |
+| Instructor tasks | `apps/web/src/components/learning/authoring/lesson-authoring-workspace.tsx` | controlled author | public `CodingAuthoringSurface` and pure document/wire adapters | existing revisioned Learning writer | C2 implemented; all eight functional C3 cases complete; uncaught offline host errors keep acceptance open | incomplete buffers, exact acknowledgements, later edits, conflict/reload, publication, context replacement |
 | Console/workspace definition links | `apps/web/src/components/learning/authoring/coding-authoring-route.ts` and the two route reexports | authorized redirect | existing assessment/content queries and locale-aware navigation | canonical workspace content editor | C2 implemented; actual browser redirect pending | inaccessible/missing/unlinked/non-Code records, query failure, encoding, locale, no old form |
 | Learner preview | `packages/features/coding-surface/src/authoring-learner-preview.tsx` | isolated learner preview | public-only projection and shared solving surface | one owner in Validate exercise | UX04-B native gate passed | no private data/storage/academic commands; current draft reflected |
 | Learner activity | `apps/web/src/components/learning/coding-activity-client.tsx` | learner | public surface and redacted delivery | existing official submission ports | adjacent component regressions pass; full refoundation acceptance pending | public data, scoped scratch, frozen submission, official acknowledgement |
@@ -63,8 +65,12 @@ fix removes the intermediate save; its final 194 cases pass, plus 541 selected
 neighbor/security cases. API build attempts were resource-stopped, so that old
 failure is not rewritten as success. A subsequent user-authorized OS-managed
 full-solution build passes with zero warnings/errors; current host/test DLL
-copies match. Architecture/security execution, current-host publication/
-recovery/layout and human acceptance remain open. Do not resurrect the old UI,
+copies match and all 302 selected architecture/security tests pass. Report
+`host-authoring-AvKD2P` proves actual publication/reopen for both families,
+conflict/retry/context and inspected layout captures, but correctly exits 1
+for uncaught Server Action fetch failures during offline testing. Those errors
+must be diagnosed within the approved owner boundary, not filtered away.
+Current C3 and human acceptance remain open. Do not resurrect the old UI,
 weaken an oracle, reuse old binaries or replace instructor behavior with
 SystemAdmin.
 

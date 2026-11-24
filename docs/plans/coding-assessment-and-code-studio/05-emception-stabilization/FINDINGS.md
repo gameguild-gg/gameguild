@@ -40,6 +40,35 @@ incorrect release or overlapping/leaked active execution block the affected
 | `CS-RUNTIME-CAPABILITY-MATRIX` / unverified | coding-surface owner; the full family/language/environment/output matrix is not certified by the bounded C++/WASI and SDL proofs | 5.0 inventory, then 5.1/5.2/5.3: actual checks for each offered combination; unverified options remain unavailable, not silently converted to WASI |
 | `CS-RUNTIME-PROGRAM-START-BUDGET` / partial, local native proof passed | coding budget consumers with Emception SDK owner; the public run-stage signal precedes artifact loading/WASM compilation; local test accounting now uses the authorized precise acknowledgement | CS-ADR-046 passes unit/type/compatibility and the unchanged full native proof `exercise-check-6gYJ2l`; standalone program and official budget consumers retain their part 03/04 timing/parity gates; 5.1 retains regressions afterward, without deferring core obligations |
 | `CS-EMCEPTION-STRICT-LINT` / open | Emception SDK owner; seven pre-existing errors plus seven warnings keep strict lint of the now-touched SDK/type files nonzero; exact HEAD comparison proves no introduced finding | 5.0 reconcile against current upstream, then 5.3 owner-approved minimal cleanup and exact strict lint/type/runtime regressions; do not suppress or call historical debt warning-clean |
+| `CS-EMCEPTION-DYNAMIC-IMPORT` / open, consumer impact unverified | Emception browser owner with coding integration owner; Turbopack repeatedly warns that the public browser `node-tool.js` dynamic `import(entryUrl)` cannot be statically resolved while mounting the authoring route | 5.0 reconcile the existing warning against upstream, then owner-approved bundler/runtime proof in 5.3; no bundler downgrade, private alias or upstream patch authorized by recording it |
+| `CS-HOST-PROTECTED-CODING-READ` / unverified | Learning host/access owners; real non-admin course-owner authoring triggers server-side `/coding-assignment/full` requests returning 403, while the current draft/publication route succeeds | diagnose the protected read's caller, actor/tenant/policy and actual consumer impact; no relaxed authorization or assumption that null means absent data. Any required private-data read failure blocks its affected gate now, not after 04 |
+
+### Current C3 host blocker, not a post-04 deferral
+
+`CS-HOST-OFFLINE-PREFERENCES` remains **open**. On 2026-11-24,
+`host-authoring-AvKD2P/report.json` completes all eight authoring functional
+cases but correctly exits 1 for three uncaught `TypeError: Failed to fetch`
+observations in Next's `fetchServerAction` during the browser-offline control.
+The owned save/retry retains and persists the authoring draft;
+no compiler/academic call or cleanup failure is recorded. Do not call this a
+passing C3 run, suppress browser errors or use timing to avoid a real failure.
+
+Owner boundary: global web preference synchronization, outside coding/grading.
+Source audit finds missing rejection handling in `ThemeSyncInitializer`,
+`AccessibilitySyncInitializer` and `EditorPreferencesSyncInitializer`. Those
+are candidate roots, not a proven one-to-one mapping of each anonymous stack;
+an independent reproducer is required before a repair. User authorization was
+requested before any change to these components; none was modified. This
+register does not grant that authorization or move the current C3 obligation
+to part 05. Required oracle: actual offline save/retry and all eight required
+cases with zero uncaught browser errors, plus isolated regressions for every
+component the responsible owner changes.
+
+The same ignored `c3-current-dev.log` retains the dynamic-import warnings and
+protected-read 403 responses above. Earlier ledgers already note upstream
+dynamic-import warnings; this observation is not claimed as a new SDK
+regression. Host publication correctness, warning-clean bundling, protected
+read authorization and human UX acceptance remain distinct claims.
 
 ### Original evidence and constraints
 

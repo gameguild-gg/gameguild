@@ -11,12 +11,17 @@ retain historical evidence and do not authorize restarting earlier work.
   adapters are `4b032f019f`; C2 Learning composition, authorized route
   consolidation and owned-form retirement are `48689823d1`. Documentation
   commit `38325ea554` records that checkpoint. No push or merge is requested.
+- Current continuation checkpoints: `15666e64ab` commits the minimum Code
+  publication correction and its 15 regression cases; `f7ff6b0d92` commits
+  harness provenance and the strict full-build evidence. No push was made.
 - Stage: the user-authorized minimum backend correction is implemented after
   independent RED; all 194 CodeAdapter cases pass. The strict complete Debug
-  solution build now passes with the changed API. The real publication gate
-  stays open until current-host architecture/security tests and the browser
-  prove the remaining acceptance requirements, including matching persisted
-  versions.
+  solution build and all 302 selected current-host architecture/security cases
+  now pass. Real publication/reopen proves matching persisted versions for both
+  families. C3 remains nonpassing: all eight functional cases complete, but
+  offline testing records uncaught browser Server Action fetch failures.
+  Preserve that blocker; neither eight completed cases nor passing API tests
+  substitutes for a clean browser gate or human acceptance.
   Acceptance IDs
   `CS-REF-01/02/08` require both exercise families on the actual Next/API host:
   edit incomplete fields, save/reopen exact content, preserve local work on a
@@ -197,15 +202,78 @@ retain historical evidence and do not authorize restarting earlier work.
   The final CodeAdapter run uses `--no-build --no-restore` only after the
   successful final strict build with the same flags. Resource reports share
   the TRX prefixes. No Authentication/Authorization source change was needed.
-  Current-host `GameGuild.API.UnitTests` architecture/security execution and all
-  eight C3 cases remain pending. The subsequent successful full-solution build
-  compiled their current assemblies; compilation does not run those tests.
+  Current-host `GameGuild.API.UnitTests` architecture/security execution was
+  pending at that checkpoint. Its subsequent 302-case pass and the separate
+  actual-host browser results are recorded below; compilation alone did not
+  run those tests.
 - Harness closing checks: strict isolated browser-driver TypeScript and the
   existing unsuppressed ESLint pass. Four named Node contract cases pass in
   `c3-code-publication-browser-contracts-final.xml`; a sandbox attempt exposed
   only its parent-file wrapper, so that one-case count is not accepted as
   contract evidence. The real-host report now fingerprints the Code participant
   source and both API/CodeAdapter DLLs as well as the existing web sources.
+- Current-host continuation: `c3-current-api-security.trx` passes all 302
+  selected API cases (`FullyQualifiedName~.Architecture.|FullyQualifiedName~.Security.`),
+  zero failures/skips, using the freshly built Debug output with `--no-build
+  --no-restore`. Resource report `c3-current-api-security-resources.json`:
+  peak 2890 MiB, minimum available 13831 MiB, no PSI/new OOM, 94.5 s,
+  CPUs 0-1. The four Node completion-contract tests and strict driver types
+  also pass; the latter peaks at 584 MiB with no PSI/OOM.
+- Fresh C3 report `host-authoring-xex2im` proves both-family draft/reopen and
+  publication/reopen, plus real conflict recovery and offline save/retry. The
+  fixed API versions agree. It remains failed: the context selector expected
+  an exact title-only accessible name, but the curriculum button also includes
+  its published-status icon. Minimal harness correction selects the real
+  curriculum button by its exact child title; no product or oracle change.
+  A separate `Browser TypeError: Failed to fetch` during offline testing is not
+  ignored: the driver now preserves its stack for root-cause diagnosis.
+  No layout/context success is claimed yet; six of eight cases, zero compiler/
+  academic requests and successful fixture cleanup do not close this gate.
+- Corrected-selector rerun `host-authoring-AvKD2P` completes all eight named
+  functional cases, including context replacement and desktop/mobile framing,
+  but correctly exits 1 for three uncaught `TypeError: Failed to fetch`
+  observations from Next's `fetchServerAction` during the offline exercise.
+  It retains the full error stacks, zero compiler/academic requests and zero
+  cleanup failures. No error filter, timeout increase, required skip or relaxed
+  completion contract was added. Eight screenshots were inspected: controls
+  fit the 1920/390-pixel viewports; mobile tasks stack and remain scrollable.
+  This is an agent framing audit, not human approval or a complete visual audit
+  of every internal scroll position.
+- Offline boundary: the owned save handler catches rejected actions, retains
+  edits and explicitly retries successfully. Source audit additionally finds
+  unhandled initializations in the global theme/accessibility/editor preference
+  synchronizers, outside the owned coding scope. Their missing rejection paths
+  are a candidate cause, not a proven mapping of each anonymous browser stack
+  to one initializer. User scope approval/owner diagnosis is required before
+  changing those components; do not infer a fix from timing or ignore their
+  errors. `CS-HOST-OFFLINE-PREFERENCES` remains a current C3 blocker, not a
+  deferred passing case. The scoped context-selector correction has real RED
+  and subsequent passing context evidence.
+- Other observations remain visible in the
+  [findings register](../05-emception-stabilization/FINDINGS.md): repeated
+  pre-existing dynamic-import warnings from the Emception browser's
+  `node-tool.js` (`CS-EMCEPTION-DYNAMIC-IMPORT`) and server-side requests to the
+  protected coding full-definition endpoint returning 403 for this Member
+  (`CS-HOST-PROTECTED-CODING-READ`). Neither was repaired or declared harmless;
+  their scope/consumer impact needs diagnosis. No permission was relaxed and
+  no protected response was exposed to make authoring pass.
+- Current proof resources: `c3-context-browser-resources.json`, exit 1,
+  peak 2729 MiB, minimum available 11127 MiB, no OOM/resource stop, 50.5 s.
+  The first six-case failed attempt remains `c3-current-browser-resources.json`.
+  `c3-current-dev-resources.json` records the explicitly terminated owned
+  supervisor: child exit 0, guard disposition `terminated`, peak 5284 MiB,
+  minimum available 10518 MiB, no new OOM. This intentional service shutdown
+  is not a passing browser result. The five previously stopped containers were
+  restored to stopped without removing volumes. No API/web/compiler or browser
+  from these proofs is intentionally left running.
+- Current closing hygiene: strict isolated driver types, all four Node
+  completion-contract cases, exact-file ESLint with `--no-inline-config`, an
+  explicitly empty suppression map and `--max-warnings=0`, and exact-file
+  Prettier all pass. G-DOC checks 59 documents, 263 local links and 12 atomic
+  tables/36 rows without failures; `git diff --check` passes. The harness still
+  rejects the eight-case report because browser errors remain; none of these
+  lightweight passes reclassifies it. No global settings, authorization,
+  Emception, launcher or production source changed in this continuation.
 - Final hygiene: both changed C# files pass `dotnet format whitespace` in their
   own projects with exact relative `--include`, `--no-restore` and
   `--verify-no-changes`. Referenced projects are not silently counted as checked.
@@ -253,12 +321,14 @@ retain historical evidence and do not authorize restarting earlier work.
   no failures. Prettier passes for all ten exact changed source/config/test
   files, respecting the two host files' existing style; `git diff --check`
   passes. The browser proof remains nonzero for the recorded core defect.
-- Next: execute current API architecture/security gates against the successfully
-  rebuilt assemblies, then rerun all eight real C3 cases and inspect their
-  captures. Preserve the failed reports; do not skip publication or silently
-  repair old test configurations. No additional full build is required merely
-  to repeat this successful compilation. No C3, human, whole-phase or official
-  grading acceptance is claimed.
+- Next: resolve the external/offline ownership decision and independently
+  diagnose the uncaught Server Action rejection before any authorized repair.
+  Rerun the unchanged eight-case/error-free C3 gate after the actual cause is
+  fixed; retain both failed reports. Human instructor acceptance is separate
+  and remains pending. Do not waive errors, silently repair old test data or
+  advance dependent UX05 as though C3 passed. No additional full API build is
+  required merely to repeat its successful compilation. No whole-phase or
+  official grading acceptance is claimed.
 
 ## Previous continuation: UX04-C Learning integration - 2026-11-24
 
