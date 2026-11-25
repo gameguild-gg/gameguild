@@ -1,3 +1,5 @@
+import { resolveCodingHostEnvironment } from './coding-host-environment.mjs';
+
 /** Local-host authoring acceptance, not an academic grading verdict. */
 export const AUTHORING_HOST_CASE_IDS = [
   'UX04-C-function-draft',
@@ -38,11 +40,7 @@ export interface AuthoringHostEvidence {
 export type AuthoringHostVerifier = (evidence: AuthoringHostEvidence) => void;
 
 export function resolveAuthoringHostEnvironment(environment: Readonly<Record<string, string | undefined>>): AuthoringHostEnvironment {
-  if (environment.E2E_RUN !== '1') throw new TypeError('E2E_RUN=1 is required for the authoring host proof.');
-  return {
-    webBaseUrl: localOrigin(environment.PLAYWRIGHT_WEB_BASE_URL ?? 'http://localhost:3000'),
-    apiBaseUrl: localOrigin(environment.API_BASE_URL ?? 'http://localhost:8080'),
-  };
+  return resolveCodingHostEnvironment(environment);
 }
 
 export function assertAuthoringHostEvidence(evidence: AuthoringHostEvidence): void {
@@ -56,20 +54,4 @@ export function assertAuthoringHostEvidence(evidence: AuthoringHostEvidence): vo
   if (evidence.academicBrowserRequests !== 0) throw new TypeError('Authoring issued an academic browser command.');
   if (evidence.errors.length) throw new TypeError('The authoring proof recorded an error.');
   if (evidence.cleanupErrors.length) throw new TypeError('Owned fixture cleanup failed.');
-}
-
-function localOrigin(value: string): string {
-  const url = new URL(value);
-  if (
-    !['http:', 'https:'].includes(url.protocol) ||
-    !(url.hostname === 'localhost' || url.hostname.endsWith('.localhost') || url.hostname === '127.0.0.1' || url.hostname === '[::1]') ||
-    url.username ||
-    url.password ||
-    url.pathname !== '/' ||
-    url.search ||
-    url.hash
-  ) {
-    throw new TypeError('The authoring proof requires an uncredentialed loopback origin.');
-  }
-  return url.origin;
 }

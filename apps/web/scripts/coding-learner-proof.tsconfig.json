@@ -1,0 +1,12 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "allowImportingTsExtensions": true,
+    "incremental": false,
+    "noEmit": true,
+    "strict": true,
+    "types": ["node"]
+  },
+  "include": ["./coding-learner-browser-contracts.mts", "./coding-learner-browser-contracts.test.mjs", "./coding-learner-browser-proof.mts"],
+  "exclude": ["../node_modules", "../test-results"]
+}
