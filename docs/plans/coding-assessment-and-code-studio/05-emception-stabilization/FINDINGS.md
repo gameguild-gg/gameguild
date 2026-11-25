@@ -43,8 +43,36 @@ incorrect release or overlapping/leaked active execution block the affected
 | `CS-EMCEPTION-DYNAMIC-IMPORT` / open, consumer impact unverified | Emception browser owner with coding integration owner; Turbopack repeatedly warns that the public browser `node-tool.js` dynamic `import(entryUrl)` cannot be statically resolved while mounting the authoring route | 5.0 reconcile the existing warning against upstream, then owner-approved bundler/runtime proof in 5.3; no bundler downgrade, private alias or upstream patch authorized by recording it |
 | `CS-HOST-PROTECTED-CODING-READ` / unverified | Learning host/access owners; real non-admin course-owner authoring triggers server-side `/coding-assignment/full` requests returning 403, while the current draft/publication route succeeds | diagnose the protected read's caller, actor/tenant/policy and actual consumer impact; no relaxed authorization or assumption that null means absent data. Any required private-data read failure blocks its affected gate now, not after 04 |
 | `CS-HOST-OFFLINE-PREFERENCES` / open; investigation explicitly deferred | global web preference owners; the real C3 offline control records uncaught Server Action fetch errors, although all eight functional authoring cases complete | user-approved CS-ADR-050: investigate in 5.0, agree owner/scope, then any approved consumer correction and unchanged full C3 regression in 5.3; retain exit 1 and do not declare C3 passed |
+| `CS-HOST-FAST-REFRESH-SUSPENSE` / open, root cause unverified | web host/coding integration owners; real A3 canonical authoring repeatedly reloads with uncaught Suspense-boundary errors before required solving cases finish. It also fails with sufficient OS headroom; a fresh-cache anonymous control does not prove a durable correction | blocks A3 now: independently correlate HMR/navigation and server-render failures before an owner-scoped repair. Keep 5.0/5.3 follow-up and the final A3 regression, but do not defer required core acceptance, filter errors, relax authorization, downgrade Turbopack or edit upstream merely to make this run green |
 | `CS-RUNTIME-WASI-FILES` / unavailable | Emception textual WASI owner; `path_open` explicitly returns ENOENT, so creating files inside a student WASI program is not equivalent to the public compiler workspace's file API. UX05-A2's first file-return observation design failed closed, rather than accepting exit zero as a return | 5.0 inventory/document the console-only native capability; any later filesystem extension requires owner approval and 5.1 lifecycle/security/parity proof. CS-ADR-052 uses an owned framed console record instead; no runtime repair or filesystem support is claimed |
 | `CS-SURFACE-PUBLIC-IDE-BARREL` / open, production impact unverified | coding integration and public Emception IDE export owners; isolated UX05-A2 Vite bundling reports three ineffective dynamic imports because the public IDE barrel statically imports browser components. Editing still starts no compiler or toolchain fetch; the roughly 5.97-MB unminified diagnostic bundle is not a measured Next production payload | 5.0 reconcile the actual public export graph and production bundle; 5.3 may adopt a supported narrower export with owner approval. Preserve public API boundaries and Turbopack; no private path, copied runtime, warning suppression or premature performance claim |
+
+### Current A3 host acceptance blocker
+
+`CS-HOST-FAST-REFRESH-SUSPENSE` is distinct from the user-deferred offline
+preference investigation below. It has no deferral approval. The 2026-11-24
+actual-host proof preserves its failing reports under ignored
+`apps/web/test-results/coding-surface-refoundation/`:
+
+- `host-solving-FzoJLp`: real browser credential authentication succeeds, but
+  canonical authoring reloads with Suspense errors and preview cannot stabilize.
+- `host-solving-7bAXcr`: a fresh-cache run reaches native preview initialization
+  and is interrupted by the unchanged OS reserve, with three failed cleanup
+  obligations. This is neither a full runtime pass nor evidence of a leak.
+- `host-solving-yCHX3G`: a command-only smaller test-server heap still yields
+  Suspense/reload failure, with no resource interruption, 6711 MiB minimum
+  available versus the 4772-MiB reserve, zero OOM kills and successful owned
+  content/course cleanup. Zero of eight required A3 cases completed.
+
+The short fresh-cache anonymous navigation control has no page errors/reloads;
+later authenticated authoring still fails. Do not generalize that control into
+a cache fix or attribute the issue to authentication, the SDK dynamic import,
+protected-read 403s, the owned surface or a Next defect without correlation.
+Retain those as separate hypotheses/findings. Required next oracle: a bounded
+independent reproducer identifying the reload/render source, focused negatives
+for the responsible approved owner change, and the unchanged eight-case A3
+real-host/persona/runtime/layout/cleanup proof. Human approval and UX05-B/C
+remain separate. No global auth, launcher, compiler or IDE edit is authorized.
 
 ### User-deferred global offline investigation
 

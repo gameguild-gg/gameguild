@@ -168,6 +168,29 @@ requests, error observations and owned cleanup before writing a passing report.
 Inspect its actual-host captures separately; no automated result is human
 approval or official grading acceptance.
 
+UX05-A3 reuses the existing activity E2E entry with a typed real-host driver.
+The old optional clicks and runtime mocks no longer certify the refounded
+solver. Its verifier requires all eight named cases, independent enrolled
+Members, zero practice mutations/private leaks/surviving workers, no browser
+errors and successful owned cleanup. CS-ADR-053 separates this proof from
+UX05-B/C and interactive login/human approval.
+
+```bash
+pnpm --filter @game-guild/web exec tsc --project scripts/coding-learner-proof.tsconfig.json --noEmit --pretty false
+node --test --test-concurrency=1 apps/web/scripts/coding-authoring-browser-contracts.test.mjs apps/web/scripts/coding-learner-browser-contracts.test.mjs
+pnpm --filter @game-guild/web exec eslint --no-inline-config --max-warnings=0 --suppressions-location test-results/coding-surface-refoundation/empty-eslint-suppressions.json scripts/coding-host-environment.mjs scripts/coding-authoring-browser-contracts.mts scripts/coding-learner-browser-contracts.mts scripts/coding-learner-browser-contracts.test.mjs scripts/coding-learner-browser-proof.mts scripts/coding-activity-browser-e2e.mjs
+E2E_RUN=1 node apps/web/scripts/coding-activity-browser-e2e.mjs
+```
+
+The lint suppression file must contain an empty object, not a copy of the
+application's historical waivers. Full web strict types remain mandatory; an
+isolated proof config cannot override their failure. The browser entry checks
+the current frozen manifest before provisioning and accepts loopback origins
+only. Test accounts are not deleted; owned content/course cleanup errors and
+their IDs remain in the report. Never claim a clean reset after interruption.
+Use one compiler/browser, supported dev-fast no-build only with verified API
+provenance, and the same resource reserve. Stop test-owned processes afterward.
+
 If the supervisor's API rebuild hits the OS reserve, preserve the interrupted
 build as failed evidence. Its supported dev-fast no-build path may reuse a
 successful local API binary only after verifying its informational commit and

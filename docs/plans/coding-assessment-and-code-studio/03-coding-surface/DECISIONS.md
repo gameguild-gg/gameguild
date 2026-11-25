@@ -1551,6 +1551,45 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   the existing native call/report approach. Retain the failed evidence and
   track filesystem support in part 05; no file-return fallback remains.
 
+## `CS-ADR-053`. Prove solving through the real host without academic effects
+
+- Date: 2026-11-24. Status: harness implemented; actual-host acceptance remains
+  pending until all required cases, error observations and cleanup pass.
+- Decision: replace the obsolete best-effort/mock activity script with one
+  strict typed driver behind the same internal E2E entry. Create an isolated
+  non-admin course owner and two enrolled Members through real public APIs.
+  Prepare both simple doubling families using the current revisioned authoring
+  publication, not a direct-definition shortcut or an admin persona.
+- Browser authentication uses the existing real CSRF/credentials route, as
+  other application suites do, and verifies HttpOnly session cookies plus the
+  exact actor and tenant. It is test setup, not a mock, bypass, MFA change or
+  acceptance of the interactive sign-in form. Credentials stay in memory.
+- The consent/loopback resolver is shared by authoring and solving in a typed
+  JavaScript helper. The application typecheck rejects a direct runtime `.mts`
+  cross-import (TS5097); extracting the existing resolver avoids changing the
+  application's tsconfig or introducing a runtime loader. Independent RED and
+  the unchanged authoring negatives guard this small extraction.
+- Prove public failure/correction, no-oracle observation, explicit mismatch,
+  incomplete input, stale/cancelled runs, preview/actor isolation and real
+  surrounding layouts using actual Monaco/public Emception APIs. Observe
+  protected nonce markers in learner HTML/RSC/JSON, not only visible controls.
+  Observe native workers and require their teardown. No route or runtime mock,
+  private import, alternative executor or forced verdict is permitted.
+- Opening an activity may create its ordinary official frozen attempt. Record
+  that baseline before practice; require the identical authorized academic and
+  authoring state afterward. Local practice cannot create another attempt,
+  submit, review or release. Exact submission/recovery and released feedback
+  remain UX05-B/C, with their own applicable grading protocol and human gates.
+- Every named A3 case must pass exactly once. Browser, privacy, worker and
+  cleanup failures keep the gate nonpassing. Reports include source/DLL/asset
+  hashes and owned fixture IDs, not credentials. Account deletion is not
+  provided; an interrupted data cleanup must remain visible for administrative
+  reconciliation, not trigger a database reset or unguarded cleanup endpoint.
+- Execution preserves Turbopack, supported dev-fast flags, OS headroom and
+  CPU affinity. A temporary test-server heap is an infrastructure constraint,
+  not an exercise budget or launcher change. Retain cache/resource failures;
+  no such attempt satisfies A3. See the shared ledger for actual results.
+
 ## Modelo para novas decisoes
 
 ```text

@@ -5,7 +5,158 @@ Last updated: 2026-11-24.
 Only the first active continuation is current. Later continuation sections
 retain historical evidence and do not authorize restarting earlier work.
 
-## Active continuation: UX05-A2 shared solving and practice execution - 2026-11-24
+## Active continuation: UX05-A3 actual-host solving acceptance - 2026-11-24
+
+- Entry: user requested commits and continuation. A2 is delivered as
+  `8f5bf4f9c3`, `56453ea6ca` and `1e21fc5912`; the worktree is clean at A3
+  entry. No push requested. CS-ADR-050 remains the specific global offline
+  investigation deferral, not a passing C3 result or general waiver.
+- Specification: prove the shared solving composition with a real non-admin
+  course owner and independent actively enrolled Member sessions on local
+  Next/API. Both families use simple doubling exercises. Observe public and
+  personal execution, explicit wrong expectations, incomplete-input errors,
+  stale/cancelled results, redacted independent teacher preview, actor/lesson
+  separation, actual surrounding layouts and native-worker teardown.
+- Academic boundary: the existing learner host may open its ordinary frozen
+  attempt when an activity mounts. Record that baseline separately. Personal
+  execution must not create another attempt, submit a response, grade, review,
+  release or mutate authoring. Compare authorized API state before/after local
+  work. Exact official submission/recovery and released review stay UX05-B/C;
+  A3 cannot alone close the full CS-REF-03/04/14 or human acceptance.
+- Allowed files: typed `coding-learner-browser-contracts.mts`, its independent
+  Node contract tests, `coding-learner-browser-proof.mts` and strict proof
+  tsconfig under the existing `apps/web/scripts` harness; replace only the
+  stale mocked `coding-activity-browser-e2e.mjs` test entry with the real proof;
+  relevant quality-gate/consumer/state/ADR documents. Its historical optional
+  clicks/mocked workers are not current runtime coverage. Reuse public auth/API
+  routes, current toolchain preflight and existing browser/editor helpers.
+  No product, SDK/IDE/UI, API/schema/auth, dependency, launcher or global
+  preference changes are authorized by this test slice.
+- Auditor contract correction: full web types reject a new runtime `.mts`
+  cross-import (TS5097), despite the isolated proof config passing. Extract
+  only the existing consent/loopback environment resolver into the typed
+  `coding-host-environment.mjs` helper shared by both proof contracts, with
+  independent consent/origin negatives and unchanged C3/A3 tests. This narrowly
+  adds that helper and the C3 import/delegation to the allowed files; do not
+  change the application tsconfig, add a runtime loader or weaken checks.
+- Sequence: define/strictly compile the evidence ports and fixtures; record
+  independent RED for missing acceptance validation; implement the minimum
+  verifier/browser driver; run contract tests, exact unsuppressed web lint,
+  full web types, preflight, G-DOC and the real local browser proof, sequentially
+  with one compiler/browser and OS headroom. Keep actual errors and owned
+  cleanup failures; no mocks, forced verdict, required skip or broadened timer.
+- API startup may reuse existing local Debug output only after its
+  informational commit, DLL hashes and managed-source/PDB parity pass. A
+  changed backend requires a real rebuild. Reuse the supported
+  dev-fast no-build/no-watch mode, leave its source unchanged and stop only
+  test-owned processes. No remote access or database reset.
+- Stage: typed driver and scoped terminal gates are implemented/passing.
+  **A3 actual-host acceptance is nonpassing**, not completed or waived. No
+  required A3 browser case completed. Keep UX05-A, B/C, CS-REF-03/04/14 and
+  human acceptance open; do not infer learner-runtime success from API setup.
+- Delivery: `4ed855e3c1` commits the seven harness/helper files separately
+  from this documentation checkpoint. No product acceptance or push is implied.
+- Contract-first evidence: strict contracts compiled before the initial
+  behavioral RED (`ux05-a3-contract-red.xml`). The verifier rejects missing,
+  duplicate or failed cases, mock/admin provenance, mutations, private leaks,
+  surviving workers, browser errors and failed cleanup. Fixture and real-auth
+  scope corrections have their own negative reports. The shared resolver
+  extraction compiled first and then failed exactly three environment tests
+  (`ux05-a3-shared-environment-red.xml`, six pass); its final green has all nine
+  C3/A3 contracts passing, no skips. A full-web TS5097 failure is retained in
+  `ux05-a3-web-types-closing-resources.json`; no application type option changed.
+- Implementation: the existing activity E2E entry now calls a typed real-host
+  proof, not its old optional/mock flow. It provisions unique non-admin owner
+  and enrolled Member identities, both current frozen families through the
+  revisioned authoring/publication API, and real CSRF/browser credential
+  sessions checked against the exact user/tenant. It specifies actual shared
+  preview/learner execution, independent scratch state, unchanged academic and
+  authoring baselines, protected response-marker checks, layouts and native
+  worker drainage. Credentials stay in memory; reports retain owned IDs and
+  source/DLL/manifest hashes. CS-ADR-053 records the boundary. The driver being
+  implemented is not evidence that its real-browser assertions passed.
+- API provenance correction: current API and CodeAdapter DLL hashes are
+  `06c95236289ace5fa2b54202a59969943cdeedef00b6aa9ad30aed065f9a5407` and
+  `7fd6ea1ded5ea04c6eeb9c82ab439b081f9e0353c2296ba33affe2a6fb54b0c5`.
+  These are **not** the old strict-build report's hashes. Their informational
+  version identifies `3278efdda2649f23b71b340a595d063a0a92b265`; managed source
+  and root build-input diff to current HEAD is empty. Embedded PDB checks find
+  no differing physical source for either module; the API's four generated
+  virtual documents are unavailable on disk, not fabricated matches. This is
+  source-verified reuse of a later local build, not a newly executed full API
+  build or proof of byte identity with the historical report.
+- Closing terminal evidence, under ignored
+  `apps/web/test-results/coding-surface-refoundation/`:
+
+| Gate | Actual result | Evidence |
+| --- | --- | --- |
+| Strict proof contracts/driver | exit 0, including typed helper and Node contract tests | `ux05-a3-final-proof-types-resources.json` |
+| Complete current C3/A3 contract group | exit 0; nine tests, zero failures/skips | `ux05-a3-shared-environment-green.xml` |
+| Full strict web types | exit 0 after correcting the owned cross-import; no config waiver | `ux05-a3-web-types-final-resources.json` |
+| Exact web lint without historical suppressions | exit 0; six touched source/test files, zero diagnostics | `ux05-a3-final-lint-resources.json` |
+| Existing preflight controls | exit 0; 26 tests, zero failures/skips | `ux05-a3-preflight-unit-closing.xml` |
+| Current release/served manifest binding | both pass `verifyCodingCycleToolchain`; no artifact rewrite | terminal G-PREFLIGHT check |
+| G-DOC and whitespace | exit 0; 59 documents, 264 links, 12 atomic tables/36 rows; no diff whitespace errors | final terminal audit |
+
+- Retained actual failures: `host-solving-Iv55zn` failed the initial fixture's
+  discriminator ordering (HTTP 500), not the current editor workflow;
+  `host-solving-V4YMP5` failed missing function symbol (HTTP 400) and incomplete
+  cleanup concurrency/idempotency fields. Corrected fixtures retain kind-first
+  wire order, symbol and all current unpublish preconditions. That earlier
+  cleanup failure remains recorded; subsequent success cannot rewrite it.
+  `host-solving-YdAd79` failed interactive sign-in during repeated reloads.
+  The real credential-route setup then authenticated successfully, but
+  `host-solving-FzoJLp` records Suspense errors/reloading in canonical authoring
+  and times out opening preview. Do not call this a proven credential defect
+  or an auth fix; interactive sign-in acceptance remains separate.
+- Cache/resource controls: the old ignored E2E cache was preserved at
+  `/tmp/coding-a3-grading-turbo-cache-20261125T0200`. A fresh cache's short
+  anonymous control has no reload/page error (`ux05-a3-fresh-navigation-*`),
+  but this does **not** prove a durable correction: canonical authoring
+  reloads again in the final run. `host-solving-7bAXcr` reaches actual preview
+  runtime initialization, then both owned guards stop below OS headroom:
+  available 3896 MiB versus a 4772-MiB reserve, zero new OOM kills. Browser
+  peak 3765 MiB and stack peak 7588 MiB are separate concurrent measurements,
+  not an approved total-memory target. API shutdown caused three cleanup
+  failures. The published test course `cs-a284038c`, ID
+  `d650a1da-4c37-4281-88fb-032cb314bcf0`, remains unconfirmed for cleanup and
+  requires administrative reconciliation; no DB reset or credential bypass
+  was performed. Test accounts are intentionally not deleted.
+- Final actual-host control: with the same checks and a command-only
+  2048-MiB Next heap (ordinary test profile used 4096),
+  `host-solving-yCHX3G/report.json` again records Suspense failures and repeated
+  canonical-authoring navigation; Validate exercise cannot stabilize. Exit 1,
+  no required A3 case passed, 31 error entries, zero final runtime workers,
+  successful owned course/content cleanup. Its failure capture is not a
+  usable product-layout proof. The browser guard was not resource-stopped:
+  1879-MiB peak owned RSS, minimum 6711 MiB available, zero new OOM kills.
+  The separate stack peaked at 7314 MiB and was deliberately stopped after
+  cleanup. Neither a smaller heap nor a fresh cache is claimed as a fix.
+- Runtime warnings/protected reads remain visible: the public browser barrel
+  still emits the tracked dynamic-import warning, and owner legacy/full reads
+  return 403 while the current authoring API succeeds. No root-cause link to
+  Suspense/reload is established. Preserve their existing phase-05 findings;
+  do not relax permissions, use private imports, downgrade Turbopack or
+  suppress page errors to advance. The new
+  `CS-HOST-FAST-REFRESH-SUSPENSE` entry blocks A3 now; recording it in part 05
+  is not permission to defer a required core acceptance failure.
+- Execution/handoff: reports identify parent commit `1e21fc5912` plus the
+  then-uncommitted A3 source hashes; they do not claim that the driver was
+  already present in that clean parent commit. All heavy checks ran
+  sequentially on CPUs 0-3, leaving
+  eight CPUs outside affinity. Strict web types' corrected incremental run
+  peaked at 1706 MiB; final lint at 1945 MiB. Test-owned API/Next/Chromium
+  processes were stopped; existing Docker data/services were not reset. No
+  product/Emception/IDE/API/auth/schema/dependency/launcher source changed,
+  no canonical capability status was promoted and no push was made.
+- Next: diagnose the actual host reload with a bounded independent navigation/
+  HMR/server-render reproducer and identify the responsible source before any
+  repair. Re-run the unchanged eight-case A3 proof after an owner-scoped fix;
+  require both families and successful cleanup, then inspect all actual-host
+  captures and seek human approval. Do not begin claiming UX05-B/C acceptance
+  or repeat native attempts under insufficient OS headroom.
+
+## Previous continuation: UX05-A2 shared solving and practice execution - 2026-11-24
 
 - Entry: A1 is committed as `3682f1b2b1`; the user requested continuation.
   The worktree was clean at entry. The later user-requested delivery commits

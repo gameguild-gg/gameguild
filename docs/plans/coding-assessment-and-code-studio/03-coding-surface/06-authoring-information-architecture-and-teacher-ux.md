@@ -79,6 +79,16 @@ scalar controls. A3 authenticated Next/API/persona/human acceptance, exact
 recovery/submission and frozen review/released feedback remain pending. These
 local checks do not close UX05-A, CODE-UX-05 or the CS-ADR-050 exception.
 
+UX05-A3 now has a strict typed real-host driver behind the existing activity
+E2E entry (CS-ADR-053); its contract, type/lint and preflight checks pass.
+Actual acceptance remains nonpassing: canonical authoring repeatedly reloads
+with Suspense-boundary errors before required A3 cases complete, including a
+control with sufficient OS headroom. The shared ledger retains the failed
+fixture/cache/resource attempts, cleanup outcomes and exact diagnostics.
+`CS-HOST-FAST-REFRESH-SUSPENSE` is recorded for owner triage in part 05 but
+blocks A3 now; no deferral, auth/SDK/launcher change, skip or error waiver is
+introduced. UX05-B/C and human acceptance remain open.
+
 Updated: 2026-11-24.
 
 Gate IDs: `CODE-UX-01` through `CODE-UX-06`.

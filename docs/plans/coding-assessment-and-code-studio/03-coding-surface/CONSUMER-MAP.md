@@ -78,6 +78,28 @@ acceptance remain open. Do not resurrect the old UI,
 weaken an oracle, reuse old binaries or replace instructor behavior with
 SystemAdmin.
 
+## UX05-A3 activity proof replacement - 2026-11-24
+
+The historical `coding-activity-browser-e2e.mjs` used optional clicks, worker
+mocks and partial outcomes. It was not real current-model acceptance. The same
+internal test entry now invokes `coding-learner-browser-proof.mts` and the strict
+evidence verifier; it is not a new human CLI or a replacement for the web lab.
+
+| Retired test assumption | Current required oracle |
+| --- | --- |
+| Optional old editor controls and mock workers | shared production solver, actual Monaco/public runtime, wrong/correct public cases, no-oracle personal observation and explicit mismatch for both families |
+| A single signed-in account implies learner access | real non-admin owner plus two independent actively enrolled Member sessions; browser session actor/tenant checked |
+| Local execution is interchangeable with submission | record the ordinary official attempt before practice and require unchanged academic/authoring state afterward; UX05-B/C retain exact submit/recovery/release obligations |
+| Hidden controls demonstrate privacy | nonce checks in learner response bodies and preview DOM, scoped scratch state, independent actor/source checks |
+| A screenshot or process exit proves the layout/lifecycle | actual surrounding 1440/390/320-px views plus worker observations/teardown; inspected captures and human approval remain separate |
+| Best-effort cleanup or missing cases can still pass | all eight required cases exactly once, zero errors/leaks/mutations/workers and successful owned cleanup; failure reports retain fixture IDs without credentials |
+
+The shared consent/loopback helper preserves C3's existing boundary without
+changing the web tsconfig. Commands, actual failures/resource observations and
+the current nonpassing/passing disposition belong in the quality gates and
+single implementation ledger. Do not promote a contract test or isolated A2
+pass to real A3, official grading or human acceptance.
+
 ## Refoundation inventory - 2026-11-19
 
 Baseline: `723eeeb84589cfb23b0def630ee46ead02890acc`. The validation states

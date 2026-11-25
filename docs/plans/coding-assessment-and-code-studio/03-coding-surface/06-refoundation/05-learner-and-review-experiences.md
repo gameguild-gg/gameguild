@@ -2,7 +2,9 @@
 
 Status: in progress; UX05-A1 offline cases and UX05-A2 shared solving/execution
 are implemented, with A2's scoped closing gates passed in the shared ledger.
-Actual host/runtime/persona acceptance (A3), B and C remain open. Gate: `CODE-UX-05`.
+The typed A3 real-host harness and scoped terminal gates are implemented.
+Actual A3 acceptance fails at canonical authoring with Suspense/reload errors;
+no required A3 case completed. B and C remain open. Gate: `CODE-UX-05`.
 Depends on `CODE-UX-04`, with the named entry exception below.
 
 Specific entry exception: CS-ADR-050 allows independent core preparation while
@@ -66,6 +68,16 @@ Boundary decision: [CS-ADR-051](../DECISIONS.md#cs-adr-051-prepare-learner-cases
    current-source host/persona integration using the existing bounded harnesses.
    Keep CS-REF-03/04/14, human approval and official grading distinct. An A1
    component/type pass cannot promote these later gates.
+   CS-ADR-053 now defines the typed driver behind the existing activity E2E
+   entry, real Member browser credentials, the ordinary attempt baseline and
+   strict no-practice-mutation/error/cleanup oracles. The closing contract,
+   type/lint and preflight gates pass, but the last actual run
+   `host-solving-yCHX3G/report.json` is nonpassing due to Suspense/reload errors,
+   even with sufficient OS headroom; owned content/course cleanup succeeds.
+   `CS-HOST-FAST-REFRESH-SUSPENSE` must be diagnosed before A3 can close. Its
+   part-05 registration is not a core-gate deferral or a generalization of
+   CS-ADR-050. Keep prior fixture/resource failures and the exact next action
+   in the single ledger; do not relax a required assertion or skip preview.
 
 ## Work
 
