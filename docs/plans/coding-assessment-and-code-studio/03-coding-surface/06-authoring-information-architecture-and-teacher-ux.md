@@ -70,9 +70,14 @@ remain open. Neither compilation, old failed evidence nor a stale binary
 closes them.
 
 UX05-A1 now prepares isolated learner cases through an offline controlled
-panel and pure public-only model (CS-ADR-051). The existing solving UI is not
-replaced in this slice. Shared execution/composition, actual runtime/persona
-acceptance and official submission/release remain separate pending work.
+panel and pure public-only model (CS-ADR-051). UX05-A2 installs these cases in
+the shared learner/instructor-preview Problem/Code/Cases/Results composition
+and reuses the exclusive local execution owner (CS-ADR-052). Complete scoped
+terminal gates and isolated actual Monaco/WASI proof pass, including no-oracle
+observations, explicit comparisons, 18 desktop/mobile layouts and five native
+scalar controls. A3 authenticated Next/API/persona/human acceptance, exact
+recovery/submission and frozen review/released feedback remain pending. These
+local checks do not close UX05-A, CODE-UX-05 or the CS-ADR-050 exception.
 
 Updated: 2026-11-24.
 

@@ -1487,6 +1487,70 @@ Status permitidos: `proposta`, `aceita`, `substituida` e `rejeitada`.
   recorded with exact commands, provenance and limitations in the ledger.
 - Affects: UX05-A1 preparation and its exported controlled ports only.
 
+## `CS-ADR-052`. Share solving views and observe returns without an oracle
+
+- Date: 2026-11-24. Status: implemented within UX05-A2; closing evidence and
+  acceptance limitations belong in the shared ledger. This is not CODE-UX-05
+  or official grading acceptance.
+- Context: public test reports require an expected answer and do not expose a
+  typed function return. Reusing a sample's expected value for a different
+  personal input would fabricate an oracle, even if its verdict were hidden.
+- Decision: add a local-only practice request/result port to the existing
+  workbench owner. Public requests carry only identity; resolve their inputs
+  and expectations from the strict delivery. Personal requests retain their
+  own explicit optional expectations. Both capture current editable files and
+  use the same public compiler pipeline and bounded runtime lease as previews.
+  No expected data means `observed`, never passed/failed, an estimate or a grade.
+- Native boundary: extend only the owned pure scalar call/return composer in
+  `coding`. Temporary C/C++ source calls the selected ordinary function once
+  and emits a uniquely framed scalar record on the public stderr channel.
+  A complete frame distinguishes an empty string from a call that never
+  returned; strings use validated UTF-8 hex bytes. Remove only that record from
+  observed logs, reject missing/duplicate/malformed frames, and retain unrelated
+  stdout/stderr exactly. Reuse
+  existing ABI/value checks, weak-target failure and weak startup; preserve
+  an existing main. Restore the temporary source with the public workspace
+  overlay. Call/report bytes count against the existing output budget; do not
+  enlarge a published limit to accommodate the transport. No reference answer,
+  new language, private runtime import, compiler
+  flags or protected Emception/IDE/UI change. This follows CS-ADR-036, not an
+  alternative compiler, general judge or official worker implementation.
+- Comparison: validate incomplete integer/decimal/boolean buffers before
+  acquiring a runtime. Preserve invalid text for correction. Compare exact
+  explicit stdout/stderr/exit expectations and typed scalar returns; decimal
+  spellings compare their finite native numeric value, without an invented
+  tolerance. Empty expected output is not a missing expectation. Build,
+  transport, timeout, malformed return and cleanup failures remain errors.
+- Ownership: tests, programs and practice share one exclusive run identity and
+  cancellation/drain barrier. Scope requests/results to the current context;
+  edits mark prior evidence outdated and cancellation rejects late completion.
+  Personal cases never enter captured submissions, persistence or academic ports.
+  A failed teardown remains an error even during intentional cancellation:
+  preserve the contextual Error and AggregateError cause, surface it in state,
+  propagate the same failure through stop and block another acquisition.
+  Disposal aggregates its failed obligations; do not change this existing
+  wrapper contract to satisfy an incorrectly specific test expectation.
+- Presentation: actual learners and the instructor's redacted preview consume
+  the same Problem/Code/Cases/Results layout, existing Monaco/file controller,
+  adjustable problem share and reversible focus mode. Narrow containers show
+  one selected region without unmounting buffers. Private author checks and
+  read-only grading retain their own existing composition.
+- Validation: strict contracts precede behavior; independent RED and negative
+  cases cover observation, explicit comparison, errors, context and teardown.
+  Repeat the complete surface/domain/adapter and web-consumer groups, strict
+  types/lint and trusted worker build. Isolated native/Monaco evidence is not
+  authenticated Next/API, persona, recovery/release or human acceptance. A3,
+  UX05-B/C and the explicit CS-ADR-050 exception remain separate.
+- Evidence-driven correction: the first file-return design compiled and passed
+  mocks but failed the real WASI control (`ux05-a2-browser-WTwIH5`). A focused
+  public-API diagnostic (`ux05-a2-browser-Nl5vrB`) returned no file data, and
+  read-only inspection confirms the textual runtime explicitly stubs
+  `path_open` with ENOENT. Treat filesystem observation as unavailable, not
+  successful or an authorization to change that runtime. Re-specify/compile
+  the owned framing contract and prove it RED before implementing it, following
+  the existing native call/report approach. Retain the failed evidence and
+  track filesystem support in part 05; no file-return fallback remains.
+
 ## Modelo para novas decisoes
 
 ```text

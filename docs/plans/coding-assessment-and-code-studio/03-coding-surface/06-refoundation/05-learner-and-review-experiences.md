@@ -1,8 +1,8 @@
 # 3.6.5. Learner and review experiences
 
-Status: in progress; UX05-A1 offline case preparation is implemented, with
-closing evidence in the shared ledger. Shared solving/execution (A2), actual
-runtime/persona acceptance (A3), B and C remain open. Gate: `CODE-UX-05`.
+Status: in progress; UX05-A1 offline cases and UX05-A2 shared solving/execution
+are implemented, with A2's scoped closing gates passed in the shared ledger.
+Actual host/runtime/persona acceptance (A3), B and C remain open. Gate: `CODE-UX-05`.
 Depends on `CODE-UX-04`, with the named entry exception below.
 
 Specific entry exception: CS-ADR-050 allows independent core preparation while
@@ -52,6 +52,16 @@ Boundary decision: [CS-ADR-051](../DECISIONS.md#cs-adr-051-prepare-learner-cases
    comparison versus no-oracle observation, including typed function input,
    cancellation, errors and stale results. No fabricated expected value,
    private reference solution, alternative executor or academic command.
+   CS-ADR-052 records the owned console-frame contract: the textual WASI
+   runtime explicitly does not support opening result files. Retain the failed
+   file-return evidence, remove that assumption rather than adding a fallback,
+   and use only its supported public channels. Validate record identity,
+   multiplicity, scalar encoding and output budget; preserve unrelated logs.
+   Scoped closure on 2026-11-24: complete package/consumer suites, strict
+   types/lint, trusted worker build and isolated actual Monaco/WASI controls
+   pass. Four UI flows, 18 layouts and five scalar observations are recorded
+   in `ux05-a2-browser-cr11Bq/report.json`; this is not authenticated host,
+   persona, official grading or human acceptance.
 3. **A3, acceptance:** prove actual UI/runtime behavior for both families and
    current-source host/persona integration using the existing bounded harnesses.
    Keep CS-REF-03/04/14, human approval and official grading distinct. An A1

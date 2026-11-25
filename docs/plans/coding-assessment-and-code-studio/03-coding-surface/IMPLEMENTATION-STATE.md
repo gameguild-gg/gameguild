@@ -5,7 +5,133 @@ Last updated: 2026-11-24.
 Only the first active continuation is current. Later continuation sections
 retain historical evidence and do not authorize restarting earlier work.
 
-## Active continuation: UX05-A1 offline learner cases - 2026-11-24
+## Active continuation: UX05-A2 shared solving and practice execution - 2026-11-24
+
+- Entry: A1 is committed as `3682f1b2b1`; the user requested continuation.
+  The worktree was clean at entry. The later user-requested delivery commits
+  are `8f5bf4f9c3` (native observation) and `56453ea6ca` (shared solving and
+  bounded practice); this documentation checkpoint records their evidence.
+  CS-ADR-050 remains an explicit scheduling exception,
+  not a passing C3 result. No upstream, API, dependency or launcher repair.
+- Specification: install the controlled cases in the actual learner and shared
+  instructor-preview composition. Personal runs capture current files once,
+  use the existing exclusive workbench owner and public compiler APIs, and
+  compare only explicit expectations. No oracle means observation, not a pass.
+  Invalid typed inputs remain editable and must fail before runtime acquisition.
+  Cancel/drain and actor/revision/attempt identity reject late results.
+- Contract-first boundary: pure scalar call/return source composition may be
+  extended in the owned coding package, following CS-ADR-036. Return observation
+  is not another test engine or official judge. Reuse the existing preview's
+  bounded runtime lifecycle for public compiler calls; preserve its engine,
+  preparation/program limits, cancellation and teardown oracles.
+- Allowed files: scoped practice execution/result contracts, model/runner/tests,
+  native-function observation contracts/source/tests in `coding`; shared local
+  runtime lifecycle extracted from `preview-runner`; `workbench-session` and
+  its tests; owned learner layout/result views, `CodingSurface`,
+  `CodingWorkbench`, relevant consumer/architecture tests and exports/styles;
+  these trackers/ADRs/consumer map. Existing author/grader behavior stays intact.
+  No edits to `tools/emception`, `emception-ui`, API, migrations, auth, global
+  preferences or generated clients. No persistence of personal cases in A2.
+- Required terminal gates: compile the new contracts/fixtures before behavior;
+  record independent RED; close G-CONTRACT for changed coding contracts,
+  G-SURFACE, the six existing web consumers and full strict web types, exact
+  unsuppressed lint and G-DOC. Browser layout proof is distinct from A3 real
+  runtime/persona/human acceptance. Do not close UX05-A or CODE-UX-05 from A2.
+- Stage: A2 implementation and scoped closing gates pass. CS-ADR-052 records
+  the local observation boundary. This does not close A3, UX05-A/B/C, C3,
+  CODE-UX-05 or official/human acceptance.
+- Contract-first evidence: new ports and fixtures compiled before behavioral
+  implementation (`ux05-a2-contract-types-final-resources.json` and
+  `ux05-a2-domain-contract-types-final-resources.json`). Independent behavioral
+  RED is retained in `ux05-a2-owner-corrected-red.json` (11 missing behaviors),
+  `ux05-a2-runner-red.json` (17), `ux05-a2-views-red.json` (11) and
+  `ux05-a2-composition-red.json` (7). The later console correction repeats that
+  sequence in `ux05-a2-console-contract-red.json` (16) and
+  `ux05-a2-console-runner-red.json` (27). Initial fixture/import, browser-driver
+  polling and test-oracle mistakes are not behavioral RED or product passes.
+- Implementation: one shared learner/instructor-preview Problem/Code/Cases/
+  Results composition retains actual Monaco, file tabs and buffers. Wide
+  containers keep the problem beside the editor; narrow containers show the
+  selected region. The existing owner captures current code once and resolves
+  public cases by identity, or runs validated personal inputs. Missing
+  expectations yield observation; only explicit expectations yield comparison.
+  Incomplete inputs stay editable and fail before acquiring a compiler.
+  Practice never persists a personal case or invokes an academic command.
+- Native correction: the initial file-return design failed the real WASI
+  proof (`ux05-a2-browser-WTwIH5`); `ux05-a2-browser-Nl5vrB` confirms no file
+  bytes, and read-only inspection finds `path_open` explicitly returns ENOENT.
+  Compiler workspace access is not student filesystem support. The owned
+  composer now emits one nonce-framed typed return through the supported
+  console channel, preserving unrelated logs and the existing output budget.
+  Missing/malformed/duplicate records remain errors. No file-return fallback
+  or Emception patch remains. Keep these failed reports and the part-05 entry.
+- Final auditor negative: intentional cancellation originally hid a failed
+  teardown behind a cancelled state. `ux05-a2-cancel-state-red.json` fails that
+  exact assertion (11 pass/1 fail). The correction exposes the cleanup error,
+  retains its AggregateError cause, propagates it through stop and blocks a
+  replacement run; `ux05-a2-cancel-state-green.json` passes all 12. Earlier
+  cleanup-test fixture/oracle errors are retained, not counted as valid RED.
+- Final evidence under ignored
+  `apps/web/test-results/coding-surface-refoundation/`:
+
+| Gate | Actual result | Evidence |
+| --- | --- | --- |
+| Strict types for coding, adapter and surface | exit 0 for all three, including contracts/tests | `ux05-a2-*-types-audited-resources.json` |
+| Complete surface suite | exit 0; 417 tests/32 files, zero failures/skips | `ux05-a2-surface-audited.json` |
+| Complete coding and adapter suites | exit 0; 147/10 files and 16/2 files, zero failures/skips | `ux05-a2-coding-closing.json`, `ux05-a2-grading-adapter-code-closing.json` |
+| Existing six web consumer suites | exit 0; 118 tests/6 files, zero failures/skips; collaborators mocked | `ux05-a2-web-closing.json` |
+| Full strict web types | exit 0; existing command-only 6144-MiB maximum heap, no source/config waiver | `ux05-a2-web-types-audited-resources.json` |
+| Three-package unsuppressed lint | exit 0; zero diagnostics | `ux05-a2-lint-audited-resources.json` |
+| Trusted official worker build | exit 0; strict types, 136 contracts and browser bundle | `ux05-a2-worker-closing-resources.json` |
+| Actual isolated surface/Monaco/WASI | exit 0; four UI flows, 18 desktop/mobile layouts and five scalar controls; zero browser errors/API requests | `ux05-a2-browser-cr11Bq/report.json`, 18 PNGs, `ux05-a2-browser-audited-resources.json` |
+| Formatting and documentation | Prettier passes exact changed source/style files; G-DOC and `git diff --check` pass | final terminal audit |
+
+- Exact commands: `pnpm --filter @game-guild/coding typecheck`,
+  `pnpm --filter @game-guild/grading-adapter-code typecheck`,
+  `pnpm --filter @game-guild/coding-surface typecheck`; each package's complete
+  `test --maxWorkers=1`; `pnpm exec eslint --no-inline-config --max-warnings=0
+  packages/features/coding-surface/src packages/features/coding/src
+  packages/features/grading-adapter-code/src`; `NODE_OPTIONS=--max-old-space-size=6144
+  pnpm --filter @game-guild/web exec tsc --noEmit --pretty false`;
+  `node tools/emception/grading/build.mjs`; and
+  `node /tmp/coding-ux02c-doc-audit.mjs`.
+  The six web test paths/command are unchanged from the A1 evidence below.
+- Native proof: `/tmp/coding-ux05-a2-browser.mjs` uses the current production
+  surface, actual local Monaco and public SDK/artifacts, not editor/runtime
+  mocks. Run with `E2E_RUN=1 node /tmp/coding-ux05-a2-browser.mjs` under the
+  existing OS guard and CPU affinity. Each family proves no-oracle observation
+  and an intentionally wrong explicit expectation. Layouts cover Results/Cases/
+  Code at 1440/390/320 px; representative desktop/mobile captures were inspected.
+  C integer, boolean, float, string and C++ empty-string returns are observed
+  without an oracle. Invalid integer input starts no runtime; public samples
+  stay read-only/unchanged. Owned workers drain and all browser/server processes
+  close. All 22 recorded surface/composer/manifest/SDK source-and-dist hashes
+  match current files. These local ignored fixtures/reports are diagnostics,
+  not a portable CI acceptance harness or the supported human lab.
+- Resource observations: checks ran sequentially on CPUs 0-3, leaving eight
+  CPUs outside affinity. Final native proof: 5248 MiB peak owned RSS, 11058 MiB
+  minimum available versus the 4772-MiB reserve, zero PSI stalls/new OOM kills
+  and 1 MiB measured system paging. Full web types peak at 1789 MiB; the
+  command's maximum heap is not memory allocated in advance. No launcher,
+  execution limit or OS reserve was relaxed.
+- Visible limitations: existing jsdom canvas tests print four unsupported
+  `getContext()` notices. The isolated Vite bundle emits four client-directive
+  and three ineffective-dynamic-import warnings; its approximately 5.97-MB
+  unminified fixture is not a measured Next production payload. These are not
+  suppressed or promoted to warning-free canvas/RSC/performance acceptance.
+  WASI file access and public IDE barrel investigation are tracked in part 05.
+- Audit boundary: no Emception/IDE/UI, API, auth, schema/migration, dependency,
+  generated-client, launcher or global-preference source change. No API/full
+  Next production build was run for this package-only slice; the trusted
+  worker build above is a different gate. No canonical capability status was
+  changed. The delivery commits were explicitly requested; no push was made.
+- Next: UX05-A3 must bring both families into the existing authenticated
+  Next/API/persona harness and preserve CS-REF-03/04/14 plus human approval as
+  separate requirements. UX05-B exact recovery/submission and UX05-C frozen
+  review/released feedback remain open. Carry the CS-ADR-050 exception without
+  treating the global offline failure as fixed.
+
+## Previous continuation: UX05-A1 offline learner cases - 2026-11-24
 
 - Entry: user requested a commit and continuation; `75354c301e` commits the
   explicit part-05 offline-investigation deferral. No push is requested.
