@@ -6,6 +6,7 @@ import type { WorkspaceConfig, WorkspaceFile } from '@gameguild/emception-ide';
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { createCodingEditorFiles, restoreCodingEditorFiles } from './editor-files';
 import { captureCodingSubmission } from './session';
+import { CodingSolvingLayout, type CodingSolvingLayoutProps } from './solving-layout';
 import type { CodingEditorController, CodingSurfaceExtension, CodingSurfaceMode } from './types';
 
 interface CodingWorkbenchProps {
@@ -23,6 +24,7 @@ interface CodingWorkbenchProps {
   readonly extensions: readonly CodingSurfaceExtension[];
   readonly onReady: (controller: CodingEditorController) => void;
   readonly onFilesChange: () => void;
+  readonly solving: Pick<CodingSolvingLayoutProps, 'cases' | 'view' | 'onViewChange'> | null;
 }
 
 /**
@@ -44,7 +46,9 @@ export function CodingWorkbench({
   extensions,
   onReady,
   onFilesChange,
+  solving,
 }: CodingWorkbenchProps) {
+  if ((mode === 'learner') !== (solving !== null)) throw new TypeError('Learner workspaces require the shared solving views.');
   // A mounted attempt owns its workspace. Hosts use replaceFiles when a
   // language/template changes, so object churn in definition must not erase edits.
   const [initial] = useState(() => {
@@ -170,92 +174,124 @@ export function CodingWorkbench({
     ? extensions.map((extension) => <ExtensionSlot key={`${extension.id}:bottom`}>{extension.bottomPanel?.(controller)}</ExtensionSlot>)
     : null;
 
+  const sourceEditor = (
+    <>
+      <div className="gg-coding-toolbar">
+        <div className="gg-coding-runtime-status" data-state="ready">
+          <span className="gg-coding-status-dot" aria-hidden="true" />
+          Editor ready
+        </div>
+        <div className="gg-coding-toolbar-actions">
+          {extensionToolbar}
+          {controls}
+        </div>
+      </div>
+
+      <div className="gg-coding-tabs" role="tablist" aria-label="Source files">
+        {textFiles.map((file) => (
+          <button
+            key={file.path}
+            type="button"
+            role="tab"
+            aria-selected={file.path === activePath}
+            className="gg-coding-file-tab"
+            title={file.path}
+            onClick={() => setActivePath(file.path)}
+          >
+            {file.path.split('/').pop()}
+            {file.readonly ? (
+              <span className="gg-coding-lock" aria-label="read only">
+                lock
+              </span>
+            ) : null}
+          </button>
+        ))}
+        {allowFileCreation && !readOnly ? (
+          <button type="button" className="gg-coding-icon-button" onClick={addFile} title="Add source file" aria-label="Add source file">
+            +
+          </button>
+        ) : null}
+      </div>
+
+      <div className="gg-coding-editor" data-testid="coding-editor">
+        {activeFile?.type === 'text' ? (
+          <Editor
+            path={`coding://${encodeURIComponent(contextKey)}${activeFile.path}`}
+            value={activeFile.content}
+            language={languageForPath(activeFile.path)}
+            theme="vs-dark"
+            onChange={changeActiveFile}
+            options={{
+              automaticLayout: true,
+              fontSize: 14,
+              minimap: { enabled: false },
+              padding: { top: 14 },
+              readOnly: !canEdit,
+              scrollBeyondLastLine: false,
+              tabSize: 2,
+            }}
+          />
+        ) : (
+          <div className="gg-coding-empty" role="status">
+            Select a source file to begin.
+          </div>
+        )}
+      </div>
+    </>
+  );
+  const outputContent = (
+    <>
+      {editorError ? (
+        <p role="alert" className="gg-coding-error">
+          {editorError}
+        </p>
+      ) : null}
+      <div className="gg-coding-result">{result}</div>
+      {extensionBottom}
+    </>
+  );
+
   return (
-    <div className="gg-coding-workbench" data-testid="coding-workbench">
+    <>
       <style>{workbenchStyles}</style>
-      <aside className="gg-coding-brief" aria-label="Exercise details">
-        <div className="gg-coding-section-label">Exercise</div>
-        {details}
-        {extensionFileTools}
-      </aside>
-
-      <section className="gg-coding-workspace" aria-label="Code workspace">
-        <div className="gg-coding-toolbar">
-          <div className="gg-coding-runtime-status" data-state="ready">
-            <span className="gg-coding-status-dot" aria-hidden="true" />
-            Editor ready
-          </div>
-          <div className="gg-coding-toolbar-actions">
-            {extensionToolbar}
-            {controls}
-          </div>
+      {solving ? (
+        <div data-testid="coding-workbench" style={{ height: '100%', minWidth: 0, minHeight: 0 }}>
+          <CodingSolvingLayout
+            {...solving}
+            problem={
+              <>
+                <div className="gg-coding-section-label">Exercise</div>
+                {details}
+                {extensionFileTools}
+              </>
+            }
+            editor={
+              <section className="gg-coding-workspace" aria-label="Code workspace">
+                {sourceEditor}
+              </section>
+            }
+            results={outputContent}
+          />
         </div>
-
-        <div className="gg-coding-tabs" role="tablist" aria-label="Source files">
-          {textFiles.map((file) => (
-            <button
-              key={file.path}
-              type="button"
-              role="tab"
-              aria-selected={file.path === activePath}
-              className="gg-coding-file-tab"
-              title={file.path}
-              onClick={() => setActivePath(file.path)}
-            >
-              {file.path.split('/').pop()}
-              {file.readonly ? (
-                <span className="gg-coding-lock" aria-label="read only">
-                  lock
-                </span>
-              ) : null}
-            </button>
-          ))}
-          {allowFileCreation && !readOnly ? (
-            <button type="button" className="gg-coding-icon-button" onClick={addFile} title="Add source file" aria-label="Add source file">
-              +
-            </button>
-          ) : null}
+      ) : (
+        <div className="gg-coding-workbench" data-testid="coding-workbench">
+          <aside className="gg-coding-brief" aria-label="Exercise details">
+            <div className="gg-coding-section-label">Exercise</div>
+            {details}
+            {extensionFileTools}
+          </aside>
+          <section className="gg-coding-workspace" aria-label="Code workspace">
+            {sourceEditor}
+            <section className="gg-coding-output" aria-label="Execution and test results">
+              <div className="gg-coding-output-header">
+                <strong>Tests and output</strong>
+              </div>
+              {outputContent}
+            </section>
+          </section>
         </div>
-
-        <div className="gg-coding-editor" data-testid="coding-editor">
-          {activeFile?.type === 'text' ? (
-            <Editor
-              path={`coding://${encodeURIComponent(contextKey)}${activeFile.path}`}
-              value={activeFile.content}
-              language={languageForPath(activeFile.path)}
-              theme="vs-dark"
-              onChange={changeActiveFile}
-              options={{
-                automaticLayout: true,
-                fontSize: 14,
-                minimap: { enabled: false },
-                padding: { top: 14 },
-                readOnly: !canEdit,
-                scrollBeyondLastLine: false,
-                tabSize: 2,
-              }}
-            />
-          ) : (
-            <div className="gg-coding-empty" role="status">
-              Select a source file to begin.
-            </div>
-          )}
-        </div>
-
-        <section className="gg-coding-output" aria-label="Execution and test results">
-          <div className="gg-coding-output-header">
-            <strong>Tests and output</strong>
-          </div>
-          {editorError ? (
-            <p role="alert" className="gg-coding-error">
-              {editorError}
-            </p>
-          ) : null}
-          <div className="gg-coding-result">{result}</div>
-          {extensionBottom}
-        </section>
-      </section>
-    </div>
+      )}
+    </>
   );
 }
 

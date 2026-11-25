@@ -8,25 +8,30 @@ import { getCodingSurfaceProfile } from './profile-registry';
 import { codingWorkspaceStorageKey } from './storage';
 import { workspaceConfigFromDefinition } from './workspace';
 import type { CodingEditorController } from './types';
+import { runCodingPractice } from './practice-runner';
+import type { CodingPracticeRunResult } from './practice-run-types';
+import { CodingAuthoringLearnerPreview } from './authoring-learner-preview';
 
-const { runtime } = vi.hoisted(() => ({ runtime: {
-  workspace: {
-    readFile: vi.fn(async () => null),
-    writeFile: vi.fn(async () => undefined),
-    deleteFile: vi.fn(async () => undefined),
-    setBuild: vi.fn(async () => undefined),
+const { runtime } = vi.hoisted(() => ({
+  runtime: {
+    workspace: {
+      readFile: vi.fn(async () => null),
+      writeFile: vi.fn(async () => undefined),
+      deleteFile: vi.fn(async () => undefined),
+      setBuild: vi.fn(async () => undefined),
+    },
+    runTests: vi.fn(async () => ({
+      passed: 1,
+      failed: 1,
+      totalDurationMs: 3,
+      cases: [
+        { name: 'public-pass', passed: true, durationMs: 1 },
+        { name: 'public-fail', passed: false, durationMs: 2, diagnostic: 'expected output' },
+      ],
+    })),
+    dispose: vi.fn(),
   },
-  runTests: vi.fn(async () => ({
-    passed: 1,
-    failed: 1,
-    totalDurationMs: 3,
-    cases: [
-      { name: 'public-pass', passed: true, durationMs: 1 },
-      { name: 'public-fail', passed: false, durationMs: 2, diagnostic: 'expected output' },
-    ],
-  })),
-  dispose: vi.fn(),
-} }));
+}));
 
 vi.mock('@gameguild/emception-browser', () => ({
   createEmception: vi.fn(async () => runtime),
@@ -34,39 +39,32 @@ vi.mock('@gameguild/emception-browser', () => ({
 
 vi.mock('./preview-runner', () => ({
   runCodingPreview: vi.fn(async () => ({
-    scope: 'public', academic: false, report: await runtime.runTests(),
+    scope: 'public',
+    academic: false,
+    report: await runtime.runTests(),
     score: { score: 100, passed: false, feedback: 'Local evidence' },
   })),
 }));
 
+vi.mock('./practice-runner', () => ({ runCodingPractice: vi.fn() }));
+
 vi.mock('@monaco-editor/react', () => ({
-  default: ({ value, onChange, options }: {
-    value?: string;
-    onChange?: (value: string) => void;
-    options?: { readOnly?: boolean };
-  }) => (
-    <textarea
-      data-testid="monaco-editor"
-      value={value}
-      readOnly={options?.readOnly}
-      onChange={(event) => onChange?.(event.target.value)}
-    />
+  default: ({ value, onChange, options }: { value?: string; onChange?: (value: string) => void; options?: { readOnly?: boolean } }) => (
+    <textarea data-testid="monaco-editor" value={value} readOnly={options?.readOnly} onChange={(event) => onChange?.(event.target.value)} />
   ),
 }));
 
 vi.mock('@gameguild/emception-ide', () => {
   const preset = {
-      id: 'cpp', label: 'C++', compile: { tool: 'clang', toolchain: 'cpp', args: [], output: 'main.wasm', sourceDetect: { extensions: ['.cpp'], entryPoint: 'main.cpp' } },
-      run: { type: 'wasi-terminal', tool: 'wasi-run', args: [] }, features: { canvas: false, terminalInput: true, showTestButton: false }, files: {},
+    id: 'cpp',
+    label: 'C++',
+    compile: { tool: 'clang', toolchain: 'cpp', args: [], output: 'main.wasm', sourceDetect: { extensions: ['.cpp'], entryPoint: 'main.cpp' } },
+    run: { type: 'wasi-terminal', tool: 'wasi-run', args: [] },
+    features: { canvas: false, terminalInput: true, showTestButton: false },
+    files: {},
   };
   return {
-    PRESETS: Object.fromEntries([
-      'cpp-terminal',
-      'c-terminal',
-      'cpp-sdl3',
-      'cpp-raylib',
-      'cpp-allegro',
-    ].map((key) => [key, { ...preset, id: key }])),
+    PRESETS: Object.fromEntries(['cpp-terminal', 'c-terminal', 'cpp-sdl3', 'cpp-raylib', 'cpp-allegro'].map((key) => [key, { ...preset, id: key }])),
   };
 });
 
@@ -133,7 +131,11 @@ describe('CodingSurface', () => {
     expect(onReady.mock.calls[0]?.[0]).not.toHaveProperty('api');
     fireEvent.change(screen.getByTestId('monaco-editor'), { target: { value: 'offline edited code' } });
     fireEvent.click(screen.getByRole('button', { name: 'Submit solution' }));
-    await waitFor(() => expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ files: expect.arrayContaining([expect.objectContaining({ content: 'offline edited code' })]) })));
+    await waitFor(() =>
+      expect(onSubmit).toHaveBeenCalledWith(
+        expect.objectContaining({ files: expect.arrayContaining([expect.objectContaining({ content: 'offline edited code' })]) }),
+      ),
+    );
     expect(createEmception).not.toHaveBeenCalled();
   });
 
@@ -183,8 +185,14 @@ describe('CodingSurface', () => {
     initial.path = '/home/user/helpers.cpp';
     initial.content = 'int helper(){return 7;}';
     definition.entryPoint.path = initial.path;
-    definition.files.push({ id: 'program-main', path: '/home/user/program.cpp', encoding: 'text', visibility: 'public',
-      mutable: true, content: 'int helper(); int main(){return helper() == 7 ? 0 : 1;}' });
+    definition.files.push({
+      id: 'program-main',
+      path: '/home/user/program.cpp',
+      encoding: 'text',
+      visibility: 'public',
+      mutable: true,
+      content: 'int helper(); int main(){return helper() == 7 ? 0 : 1;}',
+    });
     render(<CodingSurface mode="author" definition={definition} />);
     expect(screen.getByText('Initial file: /home/user/helpers.cpp')).toBeTruthy();
     expect(screen.getByRole('tab', { name: 'helpers.cpp' }).getAttribute('aria-selected')).toBe('true');
@@ -192,12 +200,167 @@ describe('CodingSurface', () => {
     expect(screen.getByTestId('monaco-editor').getAttribute('readonly')).toBeNull();
     expect(await screen.findByDisplayValue('int helper(){return 7;}')).toBeTruthy();
   });
+
+  it.each(['standard-io', 'function'] as const)('installs the actual shared solving/case views for %s without a second editor', async (family) => {
+    render(<CodingSurface mode="learner" contextKey="actor.revision.attempt" definition={executableDelivery(family)} />);
+    for (const name of ['Problem', 'Code', 'Cases', 'Results']) expect(screen.getByRole('button', { name })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Cases' }));
+    expect(screen.getByRole('tab', { name: 'Public tests' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Add personal case' }));
+    expect(screen.getByRole('tab', { name: 'My cases' }).getAttribute('aria-selected')).toBe('true');
+    fireEvent.click(screen.getByRole('button', { name: 'Code' }));
+    expect(screen.getAllByTestId('monaco-editor')).toHaveLength(1);
+  });
+
+  it('runs personal inputs with current code without an oracle, grade or submission', async () => {
+    vi.mocked(runCodingPractice)
+      .mockReset()
+      .mockImplementationOnce(async (options) => ({ ...practiceObservation(), contextKey: options.contextKey, executionId: options.executionId }));
+    const submit = vi.fn();
+    render(<CodingSurface mode="learner" contextKey="actor.revision.attempt" definition={executableDelivery()} onSubmit={submit} />);
+    fireEvent.change(screen.getByTestId('monaco-editor'), { target: { value: 'EXACT PERSONAL RUN CODE' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Cases' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add personal case' }));
+    fireEvent.change(screen.getByLabelText('Standard input'), { target: { value: 'Ada\n' } });
+    const run = screen.getByRole('button', { name: 'Run selected case' });
+    await waitFor(() => expect(run.getAttribute('disabled')).toBeNull());
+    fireEvent.click(run);
+    expect(await screen.findByText('Output observed')).toBeTruthy();
+    expect(runCodingPractice).toHaveBeenCalledWith(
+      expect.objectContaining({
+        request: expect.objectContaining({
+          source: 'personal',
+          value: expect.objectContaining({ stdin: 'Ada\n', expected: { stdout: null, stderr: null, exitCode: null } }),
+        }),
+        delivery: expect.objectContaining({ files: expect.arrayContaining([expect.objectContaining({ content: 'EXACT PERSONAL RUN CODE' })]) }),
+      }),
+    );
+    expect(submit).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Code' }));
+    fireEvent.change(screen.getByTestId('monaco-editor'), { target: { value: 'later code' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Results' }));
+    expect(await screen.findByText(/Outdated case result/)).toBeTruthy();
+  });
+
+  it('resolves public execution by immutable case identity and keeps samples read-only', async () => {
+    vi.mocked(runCodingPractice)
+      .mockReset()
+      .mockImplementationOnce(async (options) => ({ ...practiceObservation(), contextKey: options.contextKey, executionId: options.executionId }));
+    render(<CodingSurface mode="learner" contextKey="actor.revision.attempt" definition={executableDelivery()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Cases' }));
+    expect(screen.getByLabelText('Standard input').getAttribute('readonly')).not.toBeNull();
+    const run = screen.getByRole('button', { name: 'Run selected case' });
+    await waitFor(() => expect(run.getAttribute('disabled')).toBeNull());
+    fireEvent.click(run);
+    await screen.findByText('Output observed');
+    const request = vi.mocked(runCodingPractice).mock.calls[0]?.[0].request;
+    expect(request).toMatchObject({ source: 'public', id: expect.stringMatching(/^public:/) });
+    expect(request).not.toHaveProperty('value');
+  });
+
+  it('retains incomplete function inputs when execution rejects them and allows correction', async () => {
+    vi.mocked(runCodingPractice).mockReset().mockRejectedValueOnce(new TypeError('Enter a complete 32-bit integer.'));
+    render(<CodingSurface mode="learner" contextKey="actor.revision.attempt" definition={executableDelivery('function')} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Cases' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add personal case' }));
+    fireEvent.change(screen.getByLabelText('left (integer)'), { target: { value: '-' } });
+    const run = screen.getByRole('button', { name: 'Run selected case' });
+    await waitFor(() => expect(run.getAttribute('disabled')).toBeNull());
+    fireEvent.click(run);
+    expect((await screen.findAllByText('Enter a complete 32-bit integer.')).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Cases' }));
+    expect(screen.getByDisplayValue('-')).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('left (integer)'), { target: { value: '2' } });
+    expect(screen.getByDisplayValue('2')).toBeTruthy();
+  });
+
+  it('starts new personal state on actor/revision/attempt change and ignores the old run response', async () => {
+    let finish!: (result: CodingPracticeRunResult) => void;
+    vi.mocked(runCodingPractice)
+      .mockReset()
+      .mockImplementationOnce(
+        () =>
+          new Promise((done) => {
+            finish = done;
+          }),
+      );
+    const definition = executableDelivery();
+    const { rerender } = render(<CodingSurface mode="learner" contextKey="first-actor.revision.attempt" definition={definition} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Cases' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add personal case' }));
+    fireEvent.change(screen.getByLabelText('Standard input'), { target: { value: 'FIRST ACTOR INPUT' } });
+    const run = screen.getByRole('button', { name: 'Run selected case' });
+    await waitFor(() => expect(run.getAttribute('disabled')).toBeNull());
+    fireEvent.click(run);
+    await waitFor(() => expect(runCodingPractice).toHaveBeenCalled());
+    const call = vi.mocked(runCodingPractice).mock.calls[0]![0];
+    rerender(<CodingSurface mode="learner" contextKey="second-actor.revision.attempt" definition={definition} />);
+    expect(call.signal.aborted).toBe(true);
+    finish({ ...practiceObservation(), contextKey: call.contextKey, executionId: call.executionId });
+    fireEvent.click(screen.getByRole('button', { name: 'Cases' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'My cases' }));
+    expect(screen.queryByDisplayValue('FIRST ACTOR INPUT')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Results' }));
+    expect(screen.queryByText('Output observed')).toBeNull();
+  });
+
+  it('uses the same solving/case composition in teacher preview without workspace persistence or submission', async () => {
+    vi.mocked(createEmception).mockClear();
+    const storage = vi.spyOn(Storage.prototype, 'setItem');
+    const ready = vi.fn();
+    render(
+      <CodingAuthoringLearnerPreview
+        contextKey="teacher-preview.revision"
+        delivery={executableDelivery('function')}
+        manifestUrl="/emception/manifest.json"
+        beforeExecution={Promise.resolve()}
+        onReady={ready}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Cases' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add personal case' }));
+    expect(screen.getByLabelText('left (integer)')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Submit solution' })).toBeNull();
+    expect(screen.getAllByTestId('monaco-editor')).toHaveLength(1);
+    expect(createEmception).not.toHaveBeenCalled();
+    expect(storage).not.toHaveBeenCalled();
+    storage.mockRestore();
+  });
+
+  it('does not run or submit behind personal-case deletion, and cancels that dialog on view navigation', async () => {
+    render(<CodingSurface mode="learner" contextKey="actor.revision.attempt" definition={executableDelivery()} onSubmit={vi.fn()} />);
+    const tests = screen.getByRole('button', { name: 'Run public tests' });
+    await waitFor(() => expect(tests.getAttribute('disabled')).toBeNull());
+    fireEvent.click(screen.getByRole('button', { name: 'Cases' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Add personal case' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete personal case' }));
+    expect(screen.getByRole('alertdialog')).toBeTruthy();
+    expect(tests.getAttribute('disabled')).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Run selected case' }).getAttribute('disabled')).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Submit solution' }).getAttribute('disabled')).not.toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Code' }));
+    expect(screen.queryByRole('alertdialog')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Cases' }));
+    expect(screen.getByDisplayValue('Case 1')).toBeTruthy();
+  });
 });
 
-function executableDelivery() {
-  const definition = structuredClone(codingContractFixture.learnerDelivery);
+function executableDelivery(family: 'standard-io' | 'function' = 'standard-io') {
+  const definition = structuredClone(family === 'function' ? codingContractFixture.functionLearnerDelivery : codingContractFixture.learnerDelivery);
   definition.environment = { language: 'cpp', runtime: 'wasi' };
   definition.toolchain = { key: 'cpp-emception', ...CODING_TOOLCHAIN };
   definition.limits = { timeLimitMs: 30_000, outputLimitBytes: 2_000_000, maxFileCount: 16 };
   return definition;
+}
+
+function practiceObservation(): CodingPracticeRunResult {
+  return {
+    contextKey: '',
+    executionId: 1,
+    selection: { source: 'personal', id: 'mine' },
+    case: { id: 'mine', name: 'Personal case', kind: 'stdio', stdin: 'Ada\n', expected: { stdout: null, stderr: null, exitCode: null } },
+    observation: { stdout: 'Hello Ada', stderr: '', exitCode: 0, durationMs: 1, returnValue: null },
+    comparison: { status: 'observed' },
+    academic: false,
+  };
 }

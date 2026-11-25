@@ -8,6 +8,8 @@ export * from './exercise-preparation';
 export * from './learner-practice-types';
 export * from './learner-practice';
 export * from './learner-cases';
+export * from './practice-run-types';
+export * from './practice-runner';
 export * from './coding-surface';
 export * from './execution-plan';
 export * from './graphics-session';

@@ -1,15 +1,17 @@
 import type { CodingProgramInput, CodingProgramSessionFactory, CodingProgramSessionState } from './program-session-types';
 import type { CodingRuntimeSessionFactory } from './runtime-types';
+import type { CodingPracticeExecutionState, CodingPracticeRunRequest, CodingPracticeRunResult } from './practice-run-types';
 import type { CodingEditorController, CodingPreviewResult, CodingSurfaceDefinition, CodingSurfaceMode, CodingSurfaceSession } from './types';
 
 export interface CodingWorkbenchState {
   readonly candidateKey: string;
   readonly executionId: number;
-  readonly operation: 'idle' | 'tests' | 'program' | 'stopping' | 'disposed';
+  readonly operation: 'idle' | 'tests' | 'program' | 'practice' | 'stopping' | 'disposed';
   readonly result: CodingPreviewResult | null;
   readonly stale: boolean;
   readonly programStale: boolean;
   readonly program: CodingProgramSessionState | null;
+  readonly practice: CodingPracticeExecutionState;
   readonly error: string | null;
 }
 
@@ -32,6 +34,8 @@ export interface CodingWorkbenchSession extends CodingSurfaceSession {
   getState(): CodingWorkbenchState;
   subscribe(listener: () => void): () => void;
   runProgram(input: CodingProgramInput): Promise<void>;
+  runPractice(request: CodingPracticeRunRequest): Promise<CodingPracticeRunResult>;
+  invalidatePractice(): Promise<void>;
   writeInput(text: string): void;
   endInput(): void;
   /** Edits invalidate captured results and cancel an older execution. */

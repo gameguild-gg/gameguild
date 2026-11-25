@@ -1,0 +1,258 @@
+.cs-solver {
+  container-type: inline-size;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-width: 0;
+  min-height: 560px;
+  height: 100%;
+  color: var(--foreground, #f4f4f5);
+  background: var(--background, #09090b);
+  letter-spacing: 0;
+}
+.cs-solver-navigation,
+.cs-solver-navigation nav,
+.cs-solver-navigation button,
+.cs-solver-width {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cs-solver-navigation {
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--border, #27272a);
+}
+.cs-solver-navigation nav {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.cs-solver-navigation button {
+  justify-content: center;
+  min-height: 34px;
+  padding: 6px 9px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted-foreground, #a1a1aa);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.cs-solver-navigation button[aria-pressed='true'] {
+  color: var(--foreground, #f4f4f5);
+  background: var(--muted, #27272a);
+}
+.cs-solver-navigation .cs-solver-focus {
+  width: 34px;
+  flex: 0 0 34px;
+}
+.cs-solver-navigation button:focus-visible,
+.cs-solver-width input:focus-visible {
+  outline: 2px solid var(--primary, #38bdf8);
+  outline-offset: 2px;
+}
+.cs-solver-width {
+  margin-inline-start: auto;
+  font-size: 12px;
+  color: var(--muted-foreground, #a1a1aa);
+}
+.cs-solver-width input {
+  width: 92px;
+  accent-color: var(--primary, #38bdf8);
+}
+.cs-solver-panels {
+  min-width: 0;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, var(--coding-problem-share)) minmax(0, 1fr);
+  grid-template-rows: minmax(320px, 1fr) minmax(240px, auto);
+}
+.cs-solver-region {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+}
+.cs-solver-problem {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  border-inline-end: 1px solid var(--border, #27272a);
+  padding: 16px;
+  overflow-wrap: anywhere;
+}
+.cs-solver-code {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  overflow: hidden;
+}
+.cs-solver-cases,
+.cs-solver-results {
+  grid-column: 2;
+  grid-row: 2;
+  max-height: 420px;
+  padding: 12px;
+  border-top: 1px solid var(--border, #27272a);
+}
+.cs-solver [hidden] {
+  display: none;
+}
+.cs-solver .gg-coding-workspace {
+  flex: 1;
+  grid-template-rows: auto auto minmax(260px, 1fr);
+}
+.cs-solver .gg-coding-editor {
+  min-height: 260px;
+}
+.cs-solver .gg-coding-result {
+  padding: 0;
+}
+.cs-solver[data-focused='true'] .cs-solver-panels {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(420px, 1fr);
+}
+.cs-solver[data-focused='true'] .cs-solver-region {
+  display: none;
+}
+.cs-solver[data-focused='true'] .cs-solver-region[data-active='true'] {
+  display: block;
+  grid-column: 1;
+  grid-row: 1;
+  max-height: none;
+}
+.cs-solver[data-focused='true'] .cs-solver-code[data-active='true'] {
+  display: flex;
+}
+.cs-practice-result {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.cs-practice-result header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+}
+.cs-practice-result header strong {
+  flex: 1;
+  min-width: 0;
+}
+.cs-practice-result h3 {
+  margin: 12px 0;
+  font-size: 16px;
+}
+.cs-practice-result h4 {
+  margin: 10px 0 6px;
+  font-size: 12px;
+}
+.cs-practice-result pre {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+}
+.cs-practice-result dl {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 6px 12px;
+  font-size: 12px;
+}
+.cs-practice-result dd {
+  margin: 0;
+  min-width: 0;
+}
+.cs-practice-result > section {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border, #27272a);
+}
+.cs-practice-result[data-outcome='passed'] h3 {
+  color: #4ade80;
+}
+.cs-practice-result[data-outcome='failed'] h3 {
+  color: #fca5a5;
+}
+.cs-practice-stale {
+  color: #facc15;
+}
+.cs-solver-case-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+.cs-solver-case-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.cs-coding-surface .cs-solver-command {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 6px 9px;
+  border: 1px solid var(--border, #27272a);
+  border-radius: 4px;
+  color: inherit;
+  background: var(--card, #18181b);
+  font: inherit;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+}
+.cs-coding-surface .cs-solver-command:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.cs-coding-surface .cs-solver-command:focus-visible {
+  outline: 2px solid var(--primary, #38bdf8);
+  outline-offset: 2px;
+}
+.cs-solver pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+@container (max-width: 850px) {
+  .cs-solver-panels {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(420px, 1fr);
+  }
+  .cs-solver-region {
+    display: none;
+  }
+  .cs-solver-region[data-active='true'] {
+    display: block;
+    grid-column: 1;
+    grid-row: 1;
+    max-height: none;
+  }
+  .cs-solver-code[data-active='true'] {
+    display: flex;
+  }
+  .cs-solver-width {
+    display: none;
+  }
+}
+@container (max-width: 390px) {
+  .cs-solver-navigation {
+    gap: 4px;
+    padding: 6px;
+  }
+  .cs-solver-navigation nav {
+    gap: 0;
+    flex: 1;
+  }
+  .cs-solver-navigation button {
+    gap: 4px;
+    padding: 6px;
+    font-size: 12px;
+  }
+  .cs-solver-navigation nav button svg {
+    display: none;
+  }
+  .cs-solver-problem,
+  .cs-solver-cases,
+  .cs-solver-results {
+    padding: 10px;
+  }
+}

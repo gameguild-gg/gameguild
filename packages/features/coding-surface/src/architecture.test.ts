@@ -51,6 +51,46 @@ describe('coding surface architecture', () => {
     expect(exported).toContain('./learner-practice-types');
     expect(exported).toContain('./learner-practice');
     expect(exported).toContain('./learner-cases');
+    expect(exported).toContain('./practice-run-types');
+    expect(exported).toContain('./practice-runner');
+  });
+
+  it('keeps solving views effect-free and practice behind the existing local runtime lease', () => {
+    const allowed: Record<string, readonly string[]> = {
+      'solving-layout.tsx': ['react', 'lucide-react', './learner-solving.css'],
+      'practice-results.tsx': ['react', './practice-run-types', './learner-solving.css'],
+      'practice-run-types.ts': ['@game-guild/coding', './learner-practice-types', './runtime-types'],
+      'practice-runner.ts': [
+        '@game-guild/coding',
+        'emception/testing',
+        './learner-practice',
+        './learner-practice-types',
+        './local-execution',
+        './practice-run-types',
+        './runtime-capabilities',
+      ],
+      'local-execution.ts': ['@game-guild/coding', '@gameguild/emception-browser', 'emception', './runtime-types', './types', './runtime-session'],
+    };
+    for (const [name, imports] of Object.entries(allowed)) {
+      const source = readFileSync(join(import.meta.dirname, name), 'utf8');
+      const file = ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true);
+      for (const statement of file.statements) {
+        if (ts.isImportDeclaration(statement) && ts.isStringLiteral(statement.moduleSpecifier)) expect(imports).toContain(statement.moduleSpecifier.text);
+      }
+      expect(source).not.toMatch(
+        /\b(?:localStorage|sessionStorage|indexedDB|Worker|fetch|createEmception|validationSolutions|referenceSolution|computeScore)\b/,
+      );
+      expect(source).not.toMatch(/\b(?:submit|release|grantPermission)\s*\(/);
+      if (name.endsWith('.tsx')) expect(source).not.toMatch(/\b(?:compileAndRun|runTests|acquire|dispose)\s*\(/);
+    }
+    const practice = readFileSync(join(import.meta.dirname, 'practice-runner.ts'), 'utf8');
+    expect(practice).toContain('withCodingLocalRuntime');
+    expect(practice).not.toContain('createCodingRuntimeSession');
+    expect(practice).not.toContain('runTests(');
+    const preview = readFileSync(join(import.meta.dirname, 'preview-runner.ts'), 'utf8');
+    expect(preview).toContain('withCodingLocalRuntime');
+    expect(preview).toContain('runTests(');
+    expect(preview).not.toContain('createCodingRuntimeSession');
   });
 
   it('keeps personal case preparation offline and outside academic and author-only state', () => {
@@ -71,7 +111,9 @@ describe('coding surface architecture', () => {
   });
 
   it('keeps authoring views offline and outside academic persistence/execution', () => {
-    const names = readdirSync(import.meta.dirname).filter((name) => /^authoring-(?:model|types|surface|fields|problem|environment|starter|tests)\.(?:ts|tsx)$/.test(name));
+    const names = readdirSync(import.meta.dirname).filter((name) =>
+      /^authoring-(?:model|types|surface|fields|problem|environment|starter|tests)\.(?:ts|tsx)$/.test(name),
+    );
     expect(names).toHaveLength(8);
     for (const name of names) {
       const source = readFileSync(join(import.meta.dirname, name), 'utf8');
@@ -79,8 +121,13 @@ describe('coding surface architecture', () => {
       for (const statement of file.statements) {
         if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) continue;
         const specifier = statement.moduleSpecifier.text;
-        expect(specifier === '@game-guild/coding' || specifier === 'react' || specifier === 'lucide-react'
-          || specifier === '@monaco-editor/react' || specifier.startsWith('./authoring')).toBe(true);
+        expect(
+          specifier === '@game-guild/coding' ||
+            specifier === 'react' ||
+            specifier === 'lucide-react' ||
+            specifier === '@monaco-editor/react' ||
+            specifier.startsWith('./authoring'),
+        ).toBe(true);
       }
       expect(source).not.toMatch(/\b(?:localStorage|sessionStorage|indexedDB|createEmception|new\s+Worker|fetch)\b/);
       expect(source).not.toMatch(/\b(?:submit|release|grantPermission|runTests|compileAndRun)\s*\(/);
@@ -145,7 +192,15 @@ describe('coding surface architecture', () => {
       const file = ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true);
       for (const statement of file.statements) {
         if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) continue;
-        expect(['@game-guild/coding', '@gameguild/emception-browser', 'emception', './graphics-session-types', './runtime-capabilities', './runtime-session', './runtime-types']).toContain(statement.moduleSpecifier.text);
+        expect([
+          '@game-guild/coding',
+          '@gameguild/emception-browser',
+          'emception',
+          './graphics-session-types',
+          './runtime-capabilities',
+          './runtime-session',
+          './runtime-types',
+        ]).toContain(statement.moduleSpecifier.text);
       }
       expect(source).not.toMatch(/\b(?:fetch|import|submit|release|runTests|compileAndRun)\s*\(/);
       expect(source).not.toMatch(/\b(?:localStorage|sessionStorage|indexedDB|new\s+Worker)\b/);
@@ -158,7 +213,15 @@ describe('coding surface architecture', () => {
       const file = ts.createSourceFile(name, source, ts.ScriptTarget.Latest, true);
       for (const statement of file.statements) {
         if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier)) continue;
-        expect(['@game-guild/coding', '@gameguild/emception-browser', 'emception', './program-session-types', './runtime-capabilities', './runtime-session', './runtime-types']).toContain(statement.moduleSpecifier.text);
+        expect([
+          '@game-guild/coding',
+          '@gameguild/emception-browser',
+          'emception',
+          './program-session-types',
+          './runtime-capabilities',
+          './runtime-session',
+          './runtime-types',
+        ]).toContain(statement.moduleSpecifier.text);
       }
       expect(source).not.toMatch(/\b(?:submit|release|runTests|new\s+Worker)\s*\(/);
       expect(source).not.toMatch(/\b(?:localStorage|sessionStorage|indexedDB)\b/);

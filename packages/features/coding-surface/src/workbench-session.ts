@@ -6,6 +6,7 @@ import {
   type CodingLearnerDelivery,
 } from '@game-guild/coding';
 import { runCodingPreview } from './preview-runner';
+import { runCodingPractice } from './practice-runner';
 import { createCodingProgramSession } from './program-session';
 import type { CodingProgramSession } from './program-session-types';
 import { captureCodingSubmission } from './session';
@@ -30,6 +31,7 @@ export function createCodingWorkbenchSession(options: CodingWorkbenchSessionOpti
     stale: false,
     programStale: false,
     program: null,
+    practice: { status: 'idle' },
     error: null,
   };
   let active: WorkbenchRun | null = null;
@@ -75,15 +77,23 @@ export function createCodingWorkbenchSession(options: CodingWorkbenchSessionOpti
   }
 
   function start<T>(
-    operation: 'tests' | 'program',
+    operation: 'tests' | 'program' | 'practice',
     execute: (run: WorkbenchRun, snapshot: CodingSurfaceDefinition) => Promise<T>,
     signal?: AbortSignal,
+    practiceName?: string,
   ): Promise<T> {
     assertOpen();
     if (active) return Promise.reject(new Error('A coding execution is already active.'));
     const run: WorkbenchRun = { abort: new AbortController(), task: Promise.resolve() };
     active = run;
-    state = { ...state, executionId: state.executionId + 1, operation, error: null, ...(operation === 'program' ? { programStale: false } : {}) };
+    state = {
+      ...state,
+      executionId: state.executionId + 1,
+      operation,
+      error: null,
+      ...(operation === 'program' ? { programStale: false } : {}),
+      ...(operation === 'practice' ? { practice: { status: 'running' as const, name: practiceName ?? 'Selected case' } } : {}),
+    };
     emit();
     const cancel = () => {
       void stop().catch((error) => {
@@ -115,8 +125,22 @@ export function createCodingWorkbenchSession(options: CodingWorkbenchSessionOpti
         return execute(run, snapshot);
       })
       .catch((error: unknown) => {
-        if (error instanceof AggregateError) cleanupFailure = new Error(`Coding cleanup failed: ${message(error)}`, { cause: error });
-        if (!run.abort.signal.aborted && !disposed) state = { ...state, error: message(error) };
+        if (error instanceof AggregateError) {
+          cleanupFailure = new Error(`Coding cleanup failed: ${message(error)}`, { cause: error });
+          state = {
+            ...state,
+            error: cleanupFailure.message,
+            ...(operation === 'practice'
+              ? { practice: { status: 'error' as const, name: practiceName ?? 'Selected case', message: cleanupFailure.message } }
+              : {}),
+          };
+        }
+        if (!run.abort.signal.aborted && !disposed)
+          state = {
+            ...state,
+            error: message(error),
+            ...(operation === 'practice' ? { practice: { status: 'error' as const, name: practiceName ?? 'Selected case', message: message(error) } } : {}),
+          };
         throw error;
       })
       .finally(async () => {
@@ -139,6 +163,9 @@ export function createCodingWorkbenchSession(options: CodingWorkbenchSessionOpti
           }
         }
         if (active === run) active = null;
+        if (operation === 'practice' && run.abort.signal.aborted && state.practice.status === 'running') {
+          state = { ...state, practice: { status: 'cancelled', name: state.practice.name } };
+        }
         state = { ...state, operation: disposed ? 'disposed' : 'idle' };
         emit();
         if (cleanupFailure) throw cleanupFailure;
@@ -221,6 +248,38 @@ export function createCodingWorkbenchSession(options: CodingWorkbenchSessionOpti
         assertCurrent(run);
       });
     },
+    async runPractice(request) {
+      assertOpen();
+      if (options.mode !== 'learner') throw new Error('Personal cases require a learner solving context.');
+      if (request.contextKey !== options.candidateKey) throw new Error('Practice execution context changed.');
+      const capturedRequest = structuredClone(request);
+      return start(
+        'practice',
+        async (run, snapshot) => {
+          const result = await runCodingPractice({
+            contextKey: options.candidateKey,
+            executionId: state.executionId,
+            delivery: publicProjection(snapshot),
+            request: capturedRequest,
+            manifestUrl: options.manifestUrl,
+            signal: run.abort.signal,
+            createRuntime: options.createRuntime,
+          });
+          assertCurrent(run);
+          if (result.contextKey !== options.candidateKey || result.executionId !== state.executionId) throw new Error('Practice result context changed.');
+          state = { ...state, practice: { status: 'completed', result, stale: false } };
+          return result;
+        },
+        undefined,
+        capturedRequest.source === 'personal' ? capturedRequest.value.name : 'Public case',
+      );
+    },
+    async invalidatePractice() {
+      assertOpen();
+      if (state.practice.status === 'completed') state = { ...state, practice: { ...state.practice, stale: true } };
+      emit();
+      if (active && (state.operation === 'practice' || state.operation === 'stopping')) await stop();
+    },
     writeInput(text) {
       assertOpen();
       if (!active?.program) throw new Error('No interactive program is active.');
@@ -233,7 +292,12 @@ export function createCodingWorkbenchSession(options: CodingWorkbenchSessionOpti
     },
     async invalidate() {
       assertOpen();
-      state = { ...state, stale: true, programStale: true };
+      state = {
+        ...state,
+        stale: true,
+        programStale: true,
+        practice: state.practice.status === 'completed' ? { ...state.practice, stale: true } : state.practice,
+      };
       emit();
       await stop();
     },
