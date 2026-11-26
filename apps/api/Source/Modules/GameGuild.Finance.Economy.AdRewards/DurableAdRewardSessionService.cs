@@ -148,13 +148,13 @@ public sealed class DurableAdRewardSessionService : IDurableAdRewardSessionServi
             UpdatedAt = claims.IssuedAt,
             Version = 1
         });
-        _db.Set<AdRewardTimelineRow>().Add(new AdRewardTimelineRow
+        _db.Set<EconomyEventRow>().Add(new EconomyEventRow
         {
             Id = Guid.NewGuid(),
-            TimelineKind = AdRewardTimelineKind.SessionEvent,
+            StreamKind = EconomyEventStreamKind.AdRewardSessionEvent,
             SessionId = claims.SessionId,
             Sequence = 1,
-            State = DurableAdRewardSessionState.Issued,
+            Kind = (int)DurableAdRewardSessionState.Issued,
             EvidenceHash = requestHash,
             OccurredAt = claims.IssuedAt
         });

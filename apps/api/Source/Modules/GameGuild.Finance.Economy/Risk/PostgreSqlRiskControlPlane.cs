@@ -725,16 +725,17 @@ public sealed class PostgreSqlRiskReviewStore : IRiskReviewStore
         var reviewIds = pageRows.Select(row => row.Id).ToArray();
         var approvalEvents = reviewIds.Length == 0
             ? []
-            : await _db.Set<EconomyRiskReviewEventRow>().AsNoTracking()
-                .Where(row => reviewIds.Contains(row.RiskReviewCaseId) &&
-                              (row.Kind == RiskReviewEventKind.ApprovalRecorded ||
-                               row.Kind == RiskReviewEventKind.Approved))
+            : await _db.Set<EconomyEventRow>().AsNoTracking()
+                .Where(row => row.StreamKind == EconomyEventStreamKind.RiskReview &&
+                              reviewIds.Contains(row.RiskReviewCaseId!.Value) &&
+                              (row.Kind == (int)RiskReviewEventKind.ApprovalRecorded ||
+                               row.Kind == (int)RiskReviewEventKind.Approved))
                 .OrderBy(row => row.Sequence)
                 .ToArrayAsync(cancellationToken);
         var items = pageRows.Select(row => Map(
             row,
             approvalEvents.Where(item => item.RiskReviewCaseId == row.Id)
-                .Select(item => item.ActorId).ToArray())).ToArray();
+                .Select(item => item.ActorId!.Value).ToArray())).ToArray();
         var nextCursor = rows.Length > limit && pageRows.Length > 0
             ? EncodeCursor(pageRows[^1].SubmittedAt, pageRows[^1].Id)
             : null;
@@ -793,10 +794,10 @@ public sealed class PostgreSqlRiskReviewStore : IRiskReviewStore
             Status = RiskReviewStatus.Pending, SubmittedAt = submittedAt, RequiredApprovals = requiredApprovals
         };
         _db.Set<EconomyRiskReviewCaseRow>().Add(row);
-        _db.Set<EconomyRiskReviewEventRow>().Add(new EconomyRiskReviewEventRow
+        _db.Set<EconomyEventRow>().Add(new EconomyEventRow
         {
-            Id = Guid.NewGuid(), RiskReviewCaseId = reviewId, Sequence = 1,
-            Kind = RiskReviewEventKind.Submitted, ActorId = submittedBy,
+            Id = Guid.NewGuid(), StreamKind = EconomyEventStreamKind.RiskReview, RiskReviewCaseId = reviewId,
+            Sequence = 1, Kind = (int)RiskReviewEventKind.Submitted, ActorId = submittedBy,
             EvidenceHashes = JsonSerializer.Serialize(evidenceHashes.Select(value => value.Trim()).ToArray()),
             OccurredAt = submittedAt
         });
@@ -853,14 +854,16 @@ public sealed class PostgreSqlRiskReviewStore : IRiskReviewStore
         CancellationToken cancellationToken)
     {
         _ = await CurrentAsync(tenantId, reviewId, cancellationToken);
-        var rows = await _db.Set<EconomyRiskReviewEventRow>().AsNoTracking()
-            .Where(row => row.RiskReviewCaseId == reviewId)
+        var rows = await _db.Set<EconomyEventRow>().AsNoTracking()
+            .Where(row => row.StreamKind == EconomyEventStreamKind.RiskReview && row.RiskReviewCaseId == reviewId)
             .OrderBy(row => row.Sequence)
             .ToArrayAsync(cancellationToken);
+        // The kind-shape check on economy_events makes the review case, kind,
+        // actor and evidence hashes non-null for every risk-review event.
         return rows.Select(row => new RiskReviewEvent(
-            row.Sequence, row.RiskReviewCaseId, row.Kind, row.ActorId,
-            JsonSerializer.Deserialize<string[]>(row.EvidenceHashes) ?? [], row.Resolution,
-            row.DecisionCode, row.OccurredAt)).ToArray();
+            row.Sequence, row.RiskReviewCaseId!.Value, (RiskReviewEventKind)row.Kind!.Value, row.ActorId!.Value,
+            JsonSerializer.Deserialize<string[]>(row.EvidenceHashes!) ?? [], row.Resolution,
+            (RiskManualDecisionCode?)row.DecisionCode, row.OccurredAt)).ToArray();
     }
 
     private async ValueTask<RiskReviewCase> ResolveAsync(
@@ -907,8 +910,8 @@ public sealed class PostgreSqlRiskReviewStore : IRiskReviewStore
                 throw new InvalidOperationException("A reviewer cannot approve the same case twice.");
             }
 
-            var sequence = await _db.Set<EconomyRiskReviewEventRow>()
-            .Where(item => item.RiskReviewCaseId == reviewId)
+            var sequence = await _db.Set<EconomyEventRow>()
+            .Where(item => item.StreamKind == EconomyEventStreamKind.RiskReview && item.RiskReviewCaseId == reviewId)
             .MaxAsync(item => item.Sequence, cancellationToken) + 1;
 
         RiskReviewEventKind eventKind;
@@ -934,11 +937,12 @@ public sealed class PostgreSqlRiskReviewStore : IRiskReviewStore
             row.Resolution = resolution.Trim();
         }
 
-        _db.Set<EconomyRiskReviewEventRow>().Add(new EconomyRiskReviewEventRow
+        _db.Set<EconomyEventRow>().Add(new EconomyEventRow
         {
-            Id = Guid.NewGuid(), RiskReviewCaseId = reviewId, Sequence = sequence, Kind = eventKind,
+            Id = Guid.NewGuid(), StreamKind = EconomyEventStreamKind.RiskReview, RiskReviewCaseId = reviewId,
+            Sequence = sequence, Kind = (int)eventKind,
             ActorId = actorId, EvidenceHashes = "[]", Resolution = resolution.Trim(),
-            DecisionCode = decisionCode, OccurredAt = occurredAt
+            DecisionCode = (int)decisionCode, OccurredAt = occurredAt
         });
         await _db.SaveChangesAsync(cancellationToken);
         return Map(row, approvers);
@@ -946,11 +950,12 @@ public sealed class PostgreSqlRiskReviewStore : IRiskReviewStore
     }
 
     private async Task<IReadOnlyList<Guid>> ApprovalActorsAsync(Guid reviewId, CancellationToken cancellationToken) =>
-        await _db.Set<EconomyRiskReviewEventRow>().AsNoTracking()
-            .Where(row => row.RiskReviewCaseId == reviewId &&
-                          (row.Kind == RiskReviewEventKind.ApprovalRecorded || row.Kind == RiskReviewEventKind.Approved))
+        await _db.Set<EconomyEventRow>().AsNoTracking()
+            .Where(row => row.StreamKind == EconomyEventStreamKind.RiskReview && row.RiskReviewCaseId == reviewId &&
+                          (row.Kind == (int)RiskReviewEventKind.ApprovalRecorded ||
+                           row.Kind == (int)RiskReviewEventKind.Approved))
             .OrderBy(row => row.Sequence)
-            .Select(row => row.ActorId)
+            .Select(row => row.ActorId!.Value)
             .ToArrayAsync(cancellationToken);
 
     private static RiskReviewCase Map(EconomyRiskReviewCaseRow row, IReadOnlyList<Guid> approvers) => new(

@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.Finance.Economy.Bounties.Persistence;
 using GameGuild.Finance.Economy.Contracts;
+using GameGuild.Finance.Economy.Persistence;
 using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -40,11 +41,16 @@ public sealed class DurableBountyExpirationWorkflowTests
             row.Status == BountyStatus.Expired && row.Version == 2);
         rows.Single(row => row.Id == future.Id).Status.Should().Be(BountyStatus.Open);
         rows.Single(row => row.Id == claimed.Id).Status.Should().Be(BountyStatus.Claimed);
-        var events = await context.Set<BountyExpirationEventRow>().AsNoTracking()
+        // #1092 Tier 2.5: expirations are rows of the unified event ledger; the
+        // former RecordedAt is the row's OccurredAt and the record is the first
+        // entry of the bounty's stream.
+        var events = await context.Set<EconomyEventRow>().AsNoTracking()
+            .Where(row => row.StreamKind == EconomyEventStreamKind.BountyExpiration)
             .OrderBy(row => row.ExpiresAt).ToArrayAsync();
         events.Should().HaveCount(2);
         events.Select(row => row.BountyId).Should().Equal(oldest.Id, next.Id);
-        events.Should().OnlyContain(row => row.RecordedAt == Now && row.BountyVersion == 2);
+        events.Should().OnlyContain(row =>
+            row.OccurredAt == Now && row.BountyVersion == 2 && row.Sequence == 1);
     }
 
     [Fact]

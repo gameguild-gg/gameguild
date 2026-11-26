@@ -54,24 +54,39 @@ The Economy family does **not** use the platform integration-outbox rail (`gameg
 - `economy_compliance_inbox` — provider-event dedupe for compliance/KYC evidence (`PostgreSqlComplianceEvidenceStore.cs:193-230`; status `Published/Duplicate` mapping into KYC at `API:/Core/Integration/EconomyKycEvidenceStore.cs:22-27`).
 - `economy_ad_reward_provider_proof_inbox` — ad-network provider proof dedupe (`AdRewards:/Persistence/AdRewardsModelConfiguration.cs:318-329`), consumed by the report/proof pipeline (`AdRewards:/AdRewardProviderAdapters.cs`).
 
-## 3. The 10 per-aggregate event/audit streams
+## 3. The per-aggregate event/audit streams (`economy_events`)
 
-The streams #1092 §2.3-Tier-2.1 proposes folding into one `economy_events` table, each already declaring the target unique `(Parent, Sequence)` shape:
+The streams #1092 §2.3-Tier-2.1 proposed folding into one `economy_events`
+table are folded (migration `20261126143143_ConsolidateEconomyEventLedger`).
+Every stream is a row of the ledger discriminated by `StreamKind`
+(`EconomyEventStreamKind`, `Core:/Persistence/EconomyEventRow.cs`). Each keeps
+its former parent column, its unique `(Parent, Sequence)` stream as a
+kind-filtered partial index, and its write site — including the appends that
+happen inside SECURITY DEFINER writer functions, which were retargeted in the
+same migration without adding a statement to any writer. The kind-shape check
+(`ck_economy_events_stream_shape`) forces every column of every other stream to
+NULL on a row, and the `deny_immutable_event_mutation` trigger rejects UPDATE
+and DELETE for exactly the streams whose tables did: 1, 4, 5, 7 and 11.
 
-| # | Table | Parent aggregate | Written at | Read at |
+| StreamKind | Stream (former table) | Parent aggregate | Written at | Read at |
 |---|-------|------------------|-----------|---------|
-| 1 | `economy_source_stamp_events` | source stamp | every funding transition (`Core:/Funding/HardCoinFundingLifecycle.cs:254-273`; writer fns insert the first event, `Migration:`) | funding claim re-hydration, ledger queries |
-| 2 | `economy_hold_events` | hold | hold lifecycle changes — e.g. refund-drain release inside `post_marketplace_refund_v1` (`Migration:`) | hold audit endpoint (`EconomyComplianceHoldAdministrationController.cs:68`) |
-| 3 | `economy_wallet_debt_events` | wallet debt | provider-reversal debt accrual (`Core:/Funding/PostgreSqlProviderReversalGateway.cs`) | debt queries |
-| 4 | `economy_provider_dispute_events` | provider dispute | dispute lifecycle (`Core:/Funding/ProviderDisputeWorkflow.cs`) | dispute views |
-| 5 | `economy_risk_review_events` | risk review case | case transitions (`Core:/Risk/RiskReviewLedger.cs`) | `GET risk-reviews/{id}/audit` (`EconomyRiskReviewAdministrationController.cs:64`) |
-| 6 | `economy_compliance_hold_events` | compliance hold | hold placement/release (`Core:/Risk/PostgreSqlComplianceHoldStore.cs`) | hold audit |
-| 7 | `economy_legacy_cutover_audit` | legacy cutover batch | cutover propose/approve/rollback (`Core:/Operations/LegacyEconomyShadowMigration.cs`) | migration batch views |
-| 8 | `economy_marketplace_events` | marketplace settlement | inside the settlement/refund writer functions (`Migration:`; unique `(SettlementId, Sequence)` index) | settlement audit |
-| 9 | `economy_ad_reward_session_events` + `economy_ad_reward_playback_milestones` | ad session | milestone recorder (`AdRewards:/DurableAdRewardCompletionService.cs:244`) + lifecycle | session status reads (`DurableAdRewardSessionReader.cs`) |
-| 10 | `economy_admin_withdrawal_audit_events` | treasury run | every run transition (`Treasury:/DurableAdminWithdrawalWorkflow.cs` `audit.Append` calls) | hash-chain verified `Audit` view (`DurableAdminWithdrawalApplicationService.cs:312-317`) — **the one stream with chain columns (`PreviousHash/Hash`)**, flagged by #1092 as the possible exception to the unified table |
+| 1 | source stamp events (`economy_source_stamp_events`) | source stamp | every funding transition (`Core:/Funding/HardCoinFundingLifecycle.cs:254-273`; writer fns insert the first event, `Migration:`) | funding claim re-hydration, ledger queries |
+| 2 | provider dispute events (`economy_provider_dispute_events`) | provider dispute | dispute lifecycle (`Core:/Funding/ProviderDisputeWorkflow.cs`) | dispute views |
+| 3 | wallet debt events (`economy_wallet_debt_events`) | wallet debt | provider-reversal debt accrual (`Core:/Funding/PostgreSqlProviderReversalGateway.cs`) | debt queries |
+| 4 | hold events (`economy_hold_events`) | hold | hold lifecycle changes — e.g. refund-drain release inside `post_marketplace_refund_v1` (`Migration:`) | hold audit endpoint (`EconomyComplianceHoldAdministrationController.cs:68`) |
+| 5 | risk review events (`economy_risk_review_events`) | risk review case | case transitions (`Core:/Risk/RiskReviewLedger.cs`) | `GET risk-reviews/{id}/audit` (`EconomyRiskReviewAdministrationController.cs:64`) |
+| 6 | compliance hold events (`economy_compliance_hold_events`) | compliance hold | hold placement/release (`Core:/Risk/PostgreSqlComplianceHoldStore.cs`) | hold audit |
+| 7 | legacy cutover audit (`economy_legacy_cutover_audit`) | legacy cutover batch | cutover propose/approve/rollback (`Core:/Operations/LegacyEconomyShadowMigration.cs`) | migration batch views |
+| 8 | marketplace events (`economy_marketplace_events`) | marketplace settlement | inside the settlement/refund writer functions (`Migration:`; unique `(SettlementId, Sequence)` index) | settlement audit |
+| 9 and 10 | ad-reward session events and playback milestones (`economy_ad_reward_session_timeline`, which Tier 1.5 had built from `economy_ad_reward_session_events` + `economy_ad_reward_playback_milestones`) | ad session | milestone recorder (`AdRewards:/DurableAdRewardCompletionService.cs:244`) + lifecycle | session status reads (`DurableAdRewardSessionReader.cs`) — **the two streams are numbered independently** (a milestone and the "Issued" event are both Sequence 1), so each kind keeps its own `(SessionId, Sequence)` index |
+| 11 | admin withdrawal audit events (`economy_admin_withdrawal_audit_events`) | treasury run | every run transition (`Treasury:/DurableAdminWithdrawalWorkflow.cs` `audit.Append` calls) | hash-chain verified `Audit` view (`DurableAdminWithdrawalApplicationService.cs:312-317`) — **the one stream with chain columns (`PreviousHash`/`Hash`)**, which #1092 flagged as the possible exception to the unified table; the chain columns stayed on the ledger row, unique per `(RunId, Sequence)` and on `Hash` |
+| 12 | bounty expiration events (`economy_bounty_expiration_events`) | bounty | worker (`Bounties:/DurableBountyExpirationWorkflow.cs`) | one row per bounty: the first entry of the bounty's stream, where `RecordedAt` is the row's `OccurredAt` |
 
-Plus the bounty expiry stream `economy_bounty_expiration_events` (worker, `Bounties:/DurableBountyExpirationWorkflow.cs:72-79`) — the "+1" #1092 Tier-2.5 folds into the same unified ledger, and `economy_risk_audit_evidence` (Tier-3.3) which carries the same shape.
+Two legacy keys were not `Id` and are not read back through it: provider
+dispute events were keyed by `ProviderEventId` (kept as a column, unique per
+kind) and admin withdrawal audit entries by `(RunId, Sequence)` (kept as the
+kind's unique stream); both received fresh ledger ids. `economy_risk_audit_evidence`
+(Tier-3.3) carries the same shape and is the next candidate to fold in.
 
 ## 4. Delivery posture summary
 

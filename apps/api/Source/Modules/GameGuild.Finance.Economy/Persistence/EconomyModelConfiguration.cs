@@ -129,18 +129,185 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 .HasDatabaseName("ux_economy_source_stamps_provider_reference");
         });
 
-        modelBuilder.Entity<EconomySourceStampEventRow>(builder =>
+        // #1092 Tier 2.1 — the per-aggregate event and audit streams merged
+        // behind StreamKind. Every stream keeps its former ordering and
+        // replay guarantees as a kind-filtered partial unique index, and the
+        // kind-shape check binds each kind to its own subject and payload
+        // columns. The SECURITY DEFINER funding, reversal and marketplace
+        // writers append to this table; the kind predicate must ride along
+        // on every read.
+        modelBuilder.Entity<EconomyEventRow>(builder =>
         {
-            builder.ToTable("economy_source_stamp_events", table =>
-                table.HasCheckConstraint("ck_economy_source_stamp_events_sequence_positive", "\"Sequence\" > 0"));
+            builder.ToTable("economy_events", table =>
+            {
+                table.HasCheckConstraint("ck_economy_events_sequence", "\"Sequence\" > 0");
+                table.HasCheckConstraint(
+                    "ck_economy_events_values",
+                    "(\"StreamKind\" <> 2 OR \"CumulativeDisputedHardUnits\" > 0) AND " +
+                    "(\"StreamKind\" <> 3 OR (\"DeltaHardUnits\" <> 0 AND \"OutstandingHardUnits\" >= 0)) AND " +
+                    "(\"StreamKind\" <> 7 OR \"Kind\" BETWEEN 1 AND 4) AND " +
+                    "(\"StreamKind\" <> 9 OR \"Kind\" BETWEEN 1 AND 7) AND " +
+                    "(\"StreamKind\" <> 10 OR \"Percentage\" BETWEEN 0 AND 100) AND " +
+                    "(\"StreamKind\" <> 12 OR (\"BountyVersion\" > 1 AND \"OccurredAt\" >= \"ExpiresAt\"))");
+                table.HasCheckConstraint(
+                    "ck_economy_events_stream_shape",
+                    // 1 — source stamp: state in Kind, single evidence hash.
+                    "(\"StreamKind\" = 1 AND \"SourceStampId\" IS NOT NULL AND \"Kind\" IS NOT NULL AND \"EvidenceHash\" IS NOT NULL AND " +
+                    "\"TenantId\" IS NULL AND \"KindText\" IS NULL AND \"ActorId\" IS NULL AND \"ProviderEventId\" IS NULL AND \"ProviderDisputeReference\" IS NULL AND \"Status\" IS NULL AND \"CumulativeDisputedHardUnits\" IS NULL AND \"RequestHash\" IS NULL AND \"DebtWalletId\" IS NULL AND \"DeltaHardUnits\" IS NULL AND \"OutstandingHardUnits\" IS NULL AND \"HoldId\" IS NULL AND \"RiskReviewCaseId\" IS NULL AND \"EvidenceHashes\" IS NULL AND \"Resolution\" IS NULL AND \"DecisionCode\" IS NULL AND \"ComplianceHoldId\" IS NULL AND \"LegacyCutoverTenantId\" IS NULL AND \"BatchId\" IS NULL AND \"Reason\" IS NULL AND \"ReauthenticationHash\" IS NULL AND \"SettlementId\" IS NULL AND \"SessionId\" IS NULL AND \"Percentage\" IS NULL AND \"RunId\" IS NULL AND \"Evidence\" IS NULL AND \"PreviousHash\" IS NULL AND \"Hash\" IS NULL AND \"BountyId\" IS NULL AND \"ExpiresAt\" IS NULL AND \"BountyVersion\" IS NULL) OR " +
+                    // 2 — provider dispute: replay key is the provider event id.
+                    "(\"StreamKind\" = 2 AND \"ProviderEventId\" IS NOT NULL AND \"ProviderDisputeReference\" IS NOT NULL AND \"SourceStampId\" IS NOT NULL AND \"Status\" IS NOT NULL AND \"CumulativeDisputedHardUnits\" IS NOT NULL AND \"RequestHash\" IS NOT NULL AND " +
+                    "\"TenantId\" IS NULL AND \"Kind\" IS NULL AND \"KindText\" IS NULL AND \"ActorId\" IS NULL AND \"EvidenceHash\" IS NULL AND \"DebtWalletId\" IS NULL AND \"DeltaHardUnits\" IS NULL AND \"OutstandingHardUnits\" IS NULL AND \"HoldId\" IS NULL AND \"RiskReviewCaseId\" IS NULL AND \"EvidenceHashes\" IS NULL AND \"Resolution\" IS NULL AND \"DecisionCode\" IS NULL AND \"ComplianceHoldId\" IS NULL AND \"LegacyCutoverTenantId\" IS NULL AND \"BatchId\" IS NULL AND \"Reason\" IS NULL AND \"ReauthenticationHash\" IS NULL AND \"SettlementId\" IS NULL AND \"SessionId\" IS NULL AND \"Percentage\" IS NULL AND \"RunId\" IS NULL AND \"Evidence\" IS NULL AND \"PreviousHash\" IS NULL AND \"Hash\" IS NULL AND \"BountyId\" IS NULL AND \"ExpiresAt\" IS NULL AND \"BountyVersion\" IS NULL) OR " +
+                    // 3 — wallet debt: signed movement and running balance.
+                    "(\"StreamKind\" = 3 AND \"DebtWalletId\" IS NOT NULL AND \"SourceStampId\" IS NOT NULL AND \"DeltaHardUnits\" IS NOT NULL AND \"OutstandingHardUnits\" IS NOT NULL AND " +
+                    "\"TenantId\" IS NULL AND \"Kind\" IS NULL AND \"KindText\" IS NULL AND \"ActorId\" IS NULL AND \"EvidenceHash\" IS NULL AND \"ProviderEventId\" IS NULL AND \"ProviderDisputeReference\" IS NULL AND \"Status\" IS NULL AND \"CumulativeDisputedHardUnits\" IS NULL AND \"RequestHash\" IS NULL AND \"HoldId\" IS NULL AND \"RiskReviewCaseId\" IS NULL AND \"EvidenceHashes\" IS NULL AND \"Resolution\" IS NULL AND \"DecisionCode\" IS NULL AND \"ComplianceHoldId\" IS NULL AND \"LegacyCutoverTenantId\" IS NULL AND \"BatchId\" IS NULL AND \"Reason\" IS NULL AND \"ReauthenticationHash\" IS NULL AND \"SettlementId\" IS NULL AND \"SessionId\" IS NULL AND \"Percentage\" IS NULL AND \"RunId\" IS NULL AND \"Evidence\" IS NULL AND \"PreviousHash\" IS NULL AND \"Hash\" IS NULL AND \"BountyId\" IS NULL AND \"ExpiresAt\" IS NULL AND \"BountyVersion\" IS NULL) OR " +
+                    // 4 — funding hold: integer kind, acting user, evidence hash.
+                    "(\"StreamKind\" = 4 AND \"HoldId\" IS NOT NULL AND \"Kind\" IS NOT NULL AND \"ActorId\" IS NOT NULL AND \"EvidenceHash\" IS NOT NULL AND " +
+                    "\"TenantId\" IS NULL AND \"KindText\" IS NULL AND \"SourceStampId\" IS NULL AND \"ProviderEventId\" IS NULL AND \"ProviderDisputeReference\" IS NULL AND \"Status\" IS NULL AND \"CumulativeDisputedHardUnits\" IS NULL AND \"RequestHash\" IS NULL AND \"DebtWalletId\" IS NULL AND \"DeltaHardUnits\" IS NULL AND \"OutstandingHardUnits\" IS NULL AND \"RiskReviewCaseId\" IS NULL AND \"EvidenceHashes\" IS NULL AND \"Resolution\" IS NULL AND \"DecisionCode\" IS NULL AND \"ComplianceHoldId\" IS NULL AND \"LegacyCutoverTenantId\" IS NULL AND \"BatchId\" IS NULL AND \"Reason\" IS NULL AND \"ReauthenticationHash\" IS NULL AND \"SettlementId\" IS NULL AND \"SessionId\" IS NULL AND \"Percentage\" IS NULL AND \"RunId\" IS NULL AND \"Evidence\" IS NULL AND \"PreviousHash\" IS NULL AND \"Hash\" IS NULL AND \"BountyId\" IS NULL AND \"ExpiresAt\" IS NULL AND \"BountyVersion\" IS NULL) OR " +
+                    // 5 — risk review: evidence hashes are a JSON array; the
+                    // resolution and decision code are optional.
+                    "(\"StreamKind\" = 5 AND \"RiskReviewCaseId\" IS NOT NULL AND \"Kind\" IS NOT NULL AND \"ActorId\" IS NOT NULL AND \"EvidenceHashes\" IS NOT NULL AND " +
+                    "\"TenantId\" IS NULL AND \"KindText\" IS NULL AND \"EvidenceHash\" IS NULL AND \"SourceStampId\" IS NULL AND \"ProviderEventId\" IS NULL AND \"ProviderDisputeReference\" IS NULL AND \"Status\" IS NULL AND \"CumulativeDisputedHardUnits\" IS NULL AND \"RequestHash\" IS NULL AND \"DebtWalletId\" IS NULL AND \"DeltaHardUnits\" IS NULL AND \"OutstandingHardUnits\" IS NULL AND \"HoldId\" IS NULL AND \"ComplianceHoldId\" IS NULL AND \"LegacyCutoverTenantId\" IS NULL AND \"BatchId\" IS NULL AND \"Reason\" IS NULL AND \"ReauthenticationHash\" IS NULL AND \"SettlementId\" IS NULL AND \"SessionId\" IS NULL AND \"Percentage\" IS NULL AND \"RunId\" IS NULL AND \"Evidence\" IS NULL AND \"PreviousHash\" IS NULL AND \"Hash\" IS NULL AND \"BountyId\" IS NULL AND \"ExpiresAt\" IS NULL AND \"BountyVersion\" IS NULL) OR " +
+                    // 6 — compliance hold: text kind; (hold, kind, actor) is
+                    // unique so an actor records each step once.
+                    "(\"StreamKind\" = 6 AND \"ComplianceHoldId\" IS NOT NULL AND \"KindText\" IS NOT NULL AND \"ActorId\" IS NOT NULL AND \"EvidenceHash\" IS NOT NULL AND " +
+                    "\"TenantId\" IS NULL AND \"Kind\" IS NULL AND \"SourceStampId\" IS NULL AND \"ProviderEventId\" IS NULL AND \"ProviderDisputeReference\" IS NULL AND \"Status\" IS NULL AND \"CumulativeDisputedHardUnits\" IS NULL AND \"RequestHash\" IS NULL AND \"DebtWalletId\" IS NULL AND \"DeltaHardUnits\" IS NULL AND \"OutstandingHardUnits\" IS NULL AND \"HoldId\" IS NULL AND \"RiskReviewCaseId\" IS NULL AND \"EvidenceHashes\" IS NULL AND \"Resolution\" IS NULL AND \"DecisionCode\" IS NULL AND \"LegacyCutoverTenantId\" IS NULL AND \"BatchId\" IS NULL AND \"Reason\" IS NULL AND \"ReauthenticationHash\" IS NULL AND \"SettlementId\" IS NULL AND \"SessionId\" IS NULL AND \"Percentage\" IS NULL AND \"RunId\" IS NULL AND \"Evidence\" IS NULL AND \"PreviousHash\" IS NULL AND \"Hash\" IS NULL AND \"BountyId\" IS NULL AND \"ExpiresAt\" IS NULL AND \"BountyVersion\" IS NULL) OR " +
+                    // 7 — legacy cutover audit: the cutover is addressed by its
+                    // tenant key.
+                    "(\"StreamKind\" = 7 AND \"LegacyCutoverTenantId\" IS NOT NULL AND \"BatchId\" IS NOT NULL AND \"Kind\" IS NOT NULL AND \"ActorId\" IS NOT NULL AND \"Reason\" IS NOT NULL AND \"ReauthenticationHash\" IS NOT NULL AND \"EvidenceHash\" IS NOT NULL AND " +
+                    "\"TenantId\" IS NULL AND \"KindText\" IS NULL AND \"SourceStampId\" IS NULL AND \"ProviderEventId\" IS NULL AND \"ProviderDisputeReference\" IS NULL AND \"Status\" IS NULL AND \"CumulativeDisputedHardUnits\" IS NULL AND \"RequestHash\" IS NULL AND \"DebtWalletId\" IS NULL AND \"DeltaHardUnits\" IS NULL AND \"OutstandingHardUnits\" IS NULL AND \"HoldId\" IS NULL AND \"RiskReviewCaseId\" IS NULL AND \"EvidenceHashes\" IS NULL AND \"Resolution\" IS NULL AND \"DecisionCode\" IS NULL AND \"ComplianceHoldId\" IS NULL AND \"SettlementId\" IS NULL AND \"SessionId\" IS NULL AND \"Percentage\" IS NULL AND \"RunId\" IS NULL AND \"Evidence\" IS NULL AND \"PreviousHash\" IS NULL AND \"Hash\" IS NULL AND \"BountyId\" IS NULL AND \"ExpiresAt\" IS NULL AND \"BountyVersion\" IS NULL) OR " +
+                    // 8 — marketplace settlement: text kind, tenant scoped.
+                    "(\"StreamKind\" = 8 AND \"TenantId\" IS NOT NULL AND \"SettlementId\" IS NOT NULL AND \"KindText\" IS NOT NULL AND \"EvidenceHash\" IS NOT NULL AND " +
+                    "\"Kind\" IS NULL AND \"ActorId\" IS NULL AND \"SourceStampId\" IS NULL AND \"ProviderEventId\" IS NULL AND \"ProviderDisputeReference\" IS NULL AND \"Status\" IS NULL AND \"CumulativeDisputedHardUnits\" IS NULL AND \"RequestHash\" IS NULL AND \"DebtWalletId\" IS NULL AND \"DeltaHardUnits\" IS NULL AND \"OutstandingHardUnits\" IS NULL AND \"HoldId\" IS NULL AND \"RiskReviewCaseId\" IS NULL AND \"EvidenceHashes\" IS NULL AND \"Resolution\" IS NULL AND \"DecisionCode\" IS NULL AND \"ComplianceHoldId\" IS NULL AND \"LegacyCutoverTenantId\" IS NULL AND \"BatchId\" IS NULL AND \"Reason\" IS NULL AND \"ReauthenticationHash\" IS NULL AND \"SessionId\" IS NULL AND \"Percentage\" IS NULL AND \"RunId\" IS NULL AND \"Evidence\" IS NULL AND \"PreviousHash\" IS NULL AND \"Hash\" IS NULL AND \"BountyId\" IS NULL AND \"ExpiresAt\" IS NULL AND \"BountyVersion\" IS NULL) OR " +
+                    // 9 — ad-reward session lifecycle event (former TimelineKind 1).
+                    "(\"StreamKind\" = 9 AND \"SessionId\" IS NOT NULL AND \"Kind\" IS NOT NULL AND \"EvidenceHash\" IS NOT NULL AND " +
+                    "\"TenantId\" IS NULL AND \"KindText\" IS NULL AND \"ActorId\" IS NULL AND \"SourceStampId\" IS NULL AND \"ProviderEventId\" IS NULL AND \"ProviderDisputeReference\" IS NULL AND \"Status\" IS NULL AND \"CumulativeDisputedHardUnits\" IS NULL AND \"RequestHash\" IS NULL AND \"DebtWalletId\" IS NULL AND \"DeltaHardUnits\" IS NULL AND \"OutstandingHardUnits\" IS NULL AND \"HoldId\" IS NULL AND \"RiskReviewCaseId\" IS NULL AND \"EvidenceHashes\" IS NULL AND \"Resolution\" IS NULL AND \"DecisionCode\" IS NULL AND \"ComplianceHoldId\" IS NULL AND \"LegacyCutoverTenantId\" IS NULL AND \"BatchId\" IS NULL AND \"Reason\" IS NULL AND \"ReauthenticationHash\" IS NULL AND \"SettlementId\" IS NULL AND \"Percentage\" IS NULL AND \"RunId\" IS NULL AND \"Evidence\" IS NULL AND \"PreviousHash\" IS NULL AND \"Hash\" IS NULL AND \"BountyId\" IS NULL AND \"ExpiresAt\" IS NULL AND \"BountyVersion\" IS NULL) OR " +
+                    // 10 — ad-reward playback milestone (former TimelineKind 2).
+                    "(\"StreamKind\" = 10 AND \"SessionId\" IS NOT NULL AND \"Percentage\" IS NOT NULL AND \"EvidenceHash\" IS NOT NULL AND " +
+                    "\"TenantId\" IS NULL AND \"Kind\" IS NULL AND \"KindText\" IS NULL AND \"ActorId\" IS NULL AND \"SourceStampId\" IS NULL AND \"ProviderEventId\" IS NULL AND \"ProviderDisputeReference\" IS NULL AND \"Status\" IS NULL AND \"CumulativeDisputedHardUnits\" IS NULL AND \"RequestHash\" IS NULL AND \"DebtWalletId\" IS NULL AND \"DeltaHardUnits\" IS NULL AND \"OutstandingHardUnits\" IS NULL AND \"HoldId\" IS NULL AND \"RiskReviewCaseId\" IS NULL AND \"EvidenceHashes\" IS NULL AND \"Resolution\" IS NULL AND \"DecisionCode\" IS NULL AND \"ComplianceHoldId\" IS NULL AND \"LegacyCutoverTenantId\" IS NULL AND \"BatchId\" IS NULL AND \"Reason\" IS NULL AND \"ReauthenticationHash\" IS NULL AND \"SettlementId\" IS NULL AND \"RunId\" IS NULL AND \"Evidence\" IS NULL AND \"PreviousHash\" IS NULL AND \"Hash\" IS NULL AND \"BountyId\" IS NULL AND \"ExpiresAt\" IS NULL AND \"BountyVersion\" IS NULL) OR " +
+                    // 11 — admin withdrawal audit: a tenant-scoped hash chain;
+                    // the acting user is optional.
+                    "(\"StreamKind\" = 11 AND \"TenantId\" IS NOT NULL AND \"RunId\" IS NOT NULL AND \"KindText\" IS NOT NULL AND \"Evidence\" IS NOT NULL AND \"PreviousHash\" IS NOT NULL AND \"Hash\" IS NOT NULL AND " +
+                    "\"Kind\" IS NULL AND \"EvidenceHash\" IS NULL AND \"SourceStampId\" IS NULL AND \"ProviderEventId\" IS NULL AND \"ProviderDisputeReference\" IS NULL AND \"Status\" IS NULL AND \"CumulativeDisputedHardUnits\" IS NULL AND \"RequestHash\" IS NULL AND \"DebtWalletId\" IS NULL AND \"DeltaHardUnits\" IS NULL AND \"OutstandingHardUnits\" IS NULL AND \"HoldId\" IS NULL AND \"RiskReviewCaseId\" IS NULL AND \"EvidenceHashes\" IS NULL AND \"Resolution\" IS NULL AND \"DecisionCode\" IS NULL AND \"ComplianceHoldId\" IS NULL AND \"LegacyCutoverTenantId\" IS NULL AND \"BatchId\" IS NULL AND \"Reason\" IS NULL AND \"ReauthenticationHash\" IS NULL AND \"SettlementId\" IS NULL AND \"SessionId\" IS NULL AND \"Percentage\" IS NULL AND \"BountyId\" IS NULL AND \"ExpiresAt\" IS NULL AND \"BountyVersion\" IS NULL) OR " +
+                    // 12 — bounty expiration: one record per bounty.
+                    "(\"StreamKind\" = 12 AND \"BountyId\" IS NOT NULL AND \"ExpiresAt\" IS NOT NULL AND \"BountyVersion\" IS NOT NULL AND " +
+                    "\"TenantId\" IS NULL AND \"Kind\" IS NULL AND \"KindText\" IS NULL AND \"ActorId\" IS NULL AND \"EvidenceHash\" IS NULL AND \"SourceStampId\" IS NULL AND \"ProviderEventId\" IS NULL AND \"ProviderDisputeReference\" IS NULL AND \"Status\" IS NULL AND \"CumulativeDisputedHardUnits\" IS NULL AND \"RequestHash\" IS NULL AND \"DebtWalletId\" IS NULL AND \"DeltaHardUnits\" IS NULL AND \"OutstandingHardUnits\" IS NULL AND \"HoldId\" IS NULL AND \"RiskReviewCaseId\" IS NULL AND \"EvidenceHashes\" IS NULL AND \"Resolution\" IS NULL AND \"DecisionCode\" IS NULL AND \"ComplianceHoldId\" IS NULL AND \"LegacyCutoverTenantId\" IS NULL AND \"BatchId\" IS NULL AND \"Reason\" IS NULL AND \"ReauthenticationHash\" IS NULL AND \"SettlementId\" IS NULL AND \"SessionId\" IS NULL AND \"Percentage\" IS NULL AND \"RunId\" IS NULL AND \"Evidence\" IS NULL AND \"PreviousHash\" IS NULL AND \"Hash\" IS NULL)");
+            });
             builder.HasKey(row => row.Id);
+            builder.Property(row => row.Id).ValueGeneratedNever();
+            builder.Property(row => row.ProviderEventId).HasMaxLength(256);
+            builder.Property(row => row.ProviderDisputeReference).HasMaxLength(256);
+            builder.Property(row => row.RequestHash).HasMaxLength(128);
             builder.Property(row => row.EvidenceHash).HasMaxLength(128);
+            builder.Property(row => row.EvidenceHashes).HasColumnType("jsonb");
+            builder.Property(row => row.KindText).HasMaxLength(100);
+            builder.Property(row => row.Reason).HasMaxLength(500);
+            builder.Property(row => row.ReauthenticationHash).HasMaxLength(128);
+            builder.Property(row => row.Evidence).HasColumnType("text");
+            builder.Property(row => row.PreviousHash).HasMaxLength(128);
+            builder.Property(row => row.Hash).HasMaxLength(128);
+
             builder.HasIndex(row => new { row.SourceStampId, row.Sequence })
                 .IsUnique()
-                .HasDatabaseName("ux_economy_source_stamp_events_source_sequence");
+                .HasFilter("\"StreamKind\" = 1")
+                .HasDatabaseName("ux_economy_events_source_stamp_sequence");
+            builder.HasIndex(row => row.ProviderEventId)
+                .IsUnique()
+                .HasFilter("\"StreamKind\" = 2")
+                .HasDatabaseName("ux_economy_events_provider_event");
+            builder.HasIndex(row => new { row.ProviderDisputeReference, row.Sequence })
+                .IsUnique()
+                .HasFilter("\"StreamKind\" = 2")
+                .HasDatabaseName("ux_economy_events_dispute_sequence");
+            builder.HasIndex(row => new { row.DebtWalletId, row.Sequence })
+                .IsUnique()
+                .HasFilter("\"StreamKind\" = 3")
+                .HasDatabaseName("ux_economy_events_debt_sequence");
+            builder.HasIndex(row => new { row.HoldId, row.Sequence })
+                .IsUnique()
+                .HasFilter("\"StreamKind\" = 4")
+                .HasDatabaseName("ux_economy_events_hold_sequence");
+            builder.HasIndex(row => new { row.RiskReviewCaseId, row.Sequence })
+                .IsUnique()
+                .HasFilter("\"StreamKind\" = 5")
+                .HasDatabaseName("ux_economy_events_review_case_sequence");
+            builder.HasIndex(row => new { row.ComplianceHoldId, row.Sequence })
+                .IsUnique()
+                .HasFilter("\"StreamKind\" = 6")
+                .HasDatabaseName("ux_economy_events_compliance_hold_sequence");
+            builder.HasIndex(row => new { row.ComplianceHoldId, row.KindText, row.ActorId })
+                .IsUnique()
+                .HasFilter("\"StreamKind\" = 6")
+                .HasDatabaseName("ux_economy_events_compliance_hold_kind_actor");
+            builder.HasIndex(row => new { row.LegacyCutoverTenantId, row.Sequence })
+                .IsUnique()
+                .HasFilter("\"StreamKind\" = 7")
+                .HasDatabaseName("ux_economy_events_legacy_cutover_sequence");
+            builder.HasIndex(row => new { row.SettlementId, row.Sequence })
+                .IsUnique()
+                .HasFilter("\"StreamKind\" = 8")
+                .HasDatabaseName("ux_economy_events_settlement_sequence");
+            // Session events (9) and playback milestones (10) number their
+            // sequences independently per session — a milestone and the
+            // "Issued" session event are both Sequence = 1 — so each kind
+            // keeps its own unique stream, as the legacy (TimelineKind,
+            // SessionId, Sequence) index did. Both index the same columns, so
+            // they carry distinct model names: an unnamed HasIndex on the same
+            // properties reconfigures the first index instead of adding one.
+            builder.HasIndex(row => new { row.SessionId, row.Sequence }, "EconomyEventAdRewardSessionSequence")
+                .IsUnique()
+                .HasFilter("\"StreamKind\" = 9")
+                .HasDatabaseName("ux_economy_events_ad_reward_session_sequence");
+            builder.HasIndex(row => new { row.SessionId, row.Sequence }, "EconomyEventAdRewardMilestoneSequence")
+                .IsUnique()
+                .HasFilter("\"StreamKind\" = 10")
+                .HasDatabaseName("ux_economy_events_ad_reward_milestone_sequence");
+            builder.HasIndex(row => new { row.RunId, row.Sequence })
+                .IsUnique()
+                .HasFilter("\"StreamKind\" = 11")
+                .HasDatabaseName("ux_economy_events_admin_withdrawal_sequence");
+            builder.HasIndex(row => row.Hash)
+                .IsUnique()
+                .HasFilter("\"StreamKind\" = 11")
+                .HasDatabaseName("ux_economy_events_admin_withdrawal_hash");
+            builder.HasIndex(row => row.BountyId)
+                .IsUnique()
+                .HasFilter("\"StreamKind\" = 12")
+                .HasDatabaseName("ux_economy_events_bounty_expiration");
+            builder.HasIndex(row => row.SourceStampId)
+                .HasDatabaseName("ix_economy_events_source_stamp");
+            builder.HasIndex(row => row.SessionId)
+                .HasDatabaseName("ix_economy_events_session");
+            builder.HasIndex(row => new { row.OccurredAt, row.Id })
+                .HasFilter("\"StreamKind\" = 12")
+                .HasDatabaseName("ix_economy_events_bounty_expiration_recorded");
+
             builder.HasOne<EconomySourceStampRow>()
                 .WithMany()
                 .HasForeignKey(row => row.SourceStampId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomyProviderDisputeRow>()
+                .WithMany()
+                .HasForeignKey(row => row.ProviderDisputeReference)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomyWalletDebtRow>()
+                .WithMany()
+                .HasForeignKey(row => row.DebtWalletId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomyHoldRow>()
+                .WithMany()
+                .HasForeignKey(row => row.HoldId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomyRiskReviewCaseRow>()
+                .WithMany()
+                .HasForeignKey(row => row.RiskReviewCaseId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomyComplianceHoldRow>()
+                .WithMany()
+                .HasForeignKey(row => row.ComplianceHoldId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomyLegacyCutoverRow>()
+                .WithMany()
+                .HasForeignKey(row => row.LegacyCutoverTenantId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }
@@ -253,34 +420,6 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<EconomyProviderDisputeEventRow>(builder =>
-        {
-            builder.ToTable("economy_provider_dispute_events", table =>
-            {
-                table.HasCheckConstraint(
-                    "ck_economy_provider_dispute_events_sequence_positive",
-                    "\"ProviderSequence\" > 0");
-                table.HasCheckConstraint(
-                    "ck_economy_provider_dispute_events_amount_positive",
-                    "\"CumulativeDisputedHardUnits\" > 0");
-            });
-            builder.HasKey(row => row.ProviderEventId);
-            builder.Property(row => row.ProviderEventId).HasMaxLength(256);
-            builder.Property(row => row.ProviderDisputeReference).HasMaxLength(256);
-            builder.Property(row => row.RequestHash).HasMaxLength(128);
-            builder.HasIndex(row => new { row.ProviderDisputeReference, row.ProviderSequence })
-                .IsUnique()
-                .HasDatabaseName("ux_economy_provider_dispute_events_dispute_sequence");
-            builder.HasOne<EconomyProviderDisputeRow>()
-                .WithMany()
-                .HasForeignKey(row => row.ProviderDisputeReference)
-                .OnDelete(DeleteBehavior.Restrict);
-            builder.HasOne<EconomySourceStampRow>()
-                .WithMany()
-                .HasForeignKey(row => row.SourceStampId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
-
         modelBuilder.Entity<EconomyDisputeFragmentFreezeRow>(builder =>
         {
             builder.ToTable("economy_dispute_fragment_freezes", table =>
@@ -355,30 +494,8 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<EconomyWalletDebtEventRow>(builder =>
-        {
-            builder.ToTable("economy_wallet_debt_events", table =>
-            {
-                table.HasCheckConstraint(
-                    "ck_economy_wallet_debt_events_sequence_positive",
-                    "\"Sequence\" > 0");
-                table.HasCheckConstraint(
-                    "ck_economy_wallet_debt_events_delta_nonzero",
-                    "\"DeltaHardUnits\" <> 0 AND \"OutstandingHardUnits\" >= 0");
-            });
-            builder.HasKey(row => row.Id);
-            builder.HasIndex(row => new { row.WalletId, row.Sequence })
-                .IsUnique()
-                .HasDatabaseName("ux_economy_wallet_debt_events_wallet_sequence");
-            builder.HasOne<EconomyWalletDebtRow>()
-                .WithMany()
-                .HasForeignKey(row => row.WalletId)
-                .OnDelete(DeleteBehavior.Restrict);
-            builder.HasOne<EconomySourceStampRow>()
-                .WithMany()
-                .HasForeignKey(row => row.SourceStampId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
+        // economy_wallet_debt_events merged into economy_events (#1092 Tier 2.1,
+        // StreamKind = 3) — see the EconomyEventRow configuration above.
     }
 
     private static void ConfigurePostings(ModelBuilder modelBuilder)
@@ -1139,20 +1256,8 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<EconomyHoldEventRow>(builder =>
-        {
-            builder.ToTable("economy_hold_events", table =>
-                table.HasCheckConstraint("ck_economy_hold_events_sequence_positive", "\"Sequence\" > 0"));
-            builder.HasKey(row => row.Id);
-            builder.Property(row => row.EvidenceHash).HasMaxLength(128);
-            builder.HasIndex(row => new { row.HoldId, row.Sequence })
-                .IsUnique()
-                .HasDatabaseName("ux_economy_hold_events_hold_sequence");
-            builder.HasOne<EconomyHoldRow>()
-                .WithMany()
-                .HasForeignKey(row => row.HoldId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
+        // economy_hold_events merged into economy_events (#1092 Tier 2.1,
+        // StreamKind = 4) — see the EconomyEventRow configuration above.
 
         modelBuilder.Entity<EconomyRiskReviewCaseRow>(builder =>
         {
@@ -1179,20 +1284,8 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<EconomyRiskReviewEventRow>(builder =>
-        {
-            builder.ToTable("economy_risk_review_events", table =>
-                table.HasCheckConstraint("ck_economy_risk_review_events_sequence_positive", "\"Sequence\" > 0"));
-            builder.HasKey(row => row.Id);
-            builder.Property(row => row.EvidenceHashes).HasColumnType("jsonb");
-            builder.HasIndex(row => new { row.RiskReviewCaseId, row.Sequence })
-                .IsUnique()
-                .HasDatabaseName("ux_economy_risk_review_events_case_sequence");
-            builder.HasOne<EconomyRiskReviewCaseRow>()
-                .WithMany()
-                .HasForeignKey(row => row.RiskReviewCaseId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
+        // economy_risk_review_events merged into economy_events (#1092 Tier 2.1,
+        // StreamKind = 5) — see the EconomyEventRow configuration above.
 
         modelBuilder.Entity<EconomyRiskAuditEvidenceRow>(builder =>
         {
@@ -1395,21 +1488,8 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<EconomyLegacyCutoverAuditRow>(builder =>
-        {
-            builder.ToTable("economy_legacy_cutover_audit", table =>
-            {
-                table.HasCheckConstraint("ck_economy_legacy_cutover_audit_sequence", "\"Sequence\" > 0");
-                table.HasCheckConstraint("ck_economy_legacy_cutover_audit_state", "\"State\" BETWEEN 1 AND 4");
-            });
-            builder.HasKey(row => row.Id);
-            builder.Property(row => row.Reason).HasMaxLength(500);
-            builder.Property(row => row.ReauthenticationHash).HasMaxLength(128);
-            builder.Property(row => row.EvidenceHash).HasMaxLength(128);
-            builder.HasIndex(row => new { row.TenantId, row.Sequence }).IsUnique();
-            builder.HasOne<EconomyLegacyCutoverRow>().WithMany().HasForeignKey(row => row.TenantId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
+        // economy_legacy_cutover_audit merged into economy_events (#1092 Tier 2.1,
+        // StreamKind = 7) — see the EconomyEventRow configuration above.
     }
 
     private static void ConfigureControlPlane(ModelBuilder modelBuilder)
@@ -1669,20 +1749,8 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             builder.HasIndex(row => new { row.TenantId, row.SubjectHash, row.ExpiresAt });
         });
 
-        modelBuilder.Entity<EconomyComplianceHoldEventRow>(builder =>
-        {
-            builder.ToTable("economy_compliance_hold_events", table =>
-                table.HasCheckConstraint(
-                    "ck_economy_compliance_hold_events_sequence",
-                    "\"Sequence\" > 0"));
-            builder.HasKey(row => row.Id);
-            builder.Property(row => row.Kind).HasMaxLength(50);
-            builder.Property(row => row.EvidenceHash).HasMaxLength(128);
-            builder.HasIndex(row => new { row.HoldId, row.Sequence }).IsUnique();
-            builder.HasIndex(row => new { row.HoldId, row.Kind, row.ActorId }).IsUnique();
-            builder.HasOne<EconomyComplianceHoldRow>().WithMany().HasForeignKey(row => row.HoldId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
+        // economy_compliance_hold_events merged into economy_events (#1092 Tier
+        // 2.1, StreamKind = 6) — see the EconomyEventRow configuration above.
 
         modelBuilder.Entity<EconomyCustodyObservationRow>(builder =>
         {

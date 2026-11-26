@@ -1,3 +1,4 @@
+using System.Text.RegularExpressions;
 using FluentAssertions;
 using GameGuild.Finance.Economy.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -19,7 +20,6 @@ public sealed class EconomyPersistenceModelTests
         "economy_capability_receipts",
         "economy_chain_head",
         "economy_compliance_evidence",
-        "economy_compliance_hold_events",
         "economy_compliance_holds",
         "economy_credit_lots",
         "economy_custody_observations",
@@ -30,10 +30,10 @@ public sealed class EconomyPersistenceModelTests
         "economy_entity_graph_edges",
         "economy_entity_graph_nodes",
         "economy_entry_allocations",
+        "economy_events",
         "economy_external_anchors",
         "economy_fragment_root_ranges",
         "economy_funding_claims",
-        "economy_hold_events",
         "economy_holds",
         "economy_idempotency_records",
         "economy_inbox",
@@ -41,7 +41,6 @@ public sealed class EconomyPersistenceModelTests
         "economy_journal_lines",
         "economy_journal_verification_checkpoints",
         "economy_kill_switches",
-        "economy_legacy_cutover_audit",
         "economy_legacy_cutovers",
         "economy_legacy_shadow_batches",
         "economy_legacy_shadow_wallets",
@@ -53,7 +52,6 @@ public sealed class EconomyPersistenceModelTests
         "economy_projection_generations",
         "economy_projection_reconciliation_events",
         "economy_protected_change_cooldowns",
-        "economy_provider_dispute_events",
         "economy_provider_disputes",
         "economy_provider_events",
         "economy_provider_fact_allocations",
@@ -66,15 +64,12 @@ public sealed class EconomyPersistenceModelTests
         "economy_risk_counters",
         "economy_risk_decisions",
         "economy_risk_review_cases",
-        "economy_risk_review_events",
         "economy_root_reversal_states",
         "economy_self_service_transfer_intents",
-        "economy_source_stamp_events",
         "economy_source_stamps",
         "economy_top_up_intents",
         "economy_unit_consumptions",
         "economy_wallet_balance_projections",
-        "economy_wallet_debt_events",
         "economy_wallet_debts",
         "economy_wallet_projection_generations",
         "economy_wallets",
@@ -105,7 +100,7 @@ public sealed class EconomyPersistenceModelTests
         "ux_economy_custody_observations_provider_asset_version",
         "ux_economy_dispatch_snapshots_hash",
         "ux_economy_dispute_fragment_ranges_freeze_interval",
-        "ux_economy_provider_dispute_events_dispute_sequence",
+        "ux_economy_events_dispute_sequence",
         "ux_economy_provider_disputes_active_source",
         "ux_economy_entry_allocations_line_parent",
         "ux_economy_entity_graph_edges_pair_version",
@@ -137,17 +132,27 @@ public sealed class EconomyPersistenceModelTests
         "ux_economy_unit_consumptions_risk_decision",
         "ux_economy_unit_consumptions_posting",
         "ux_economy_risk_review_cases_tenant_decision",
-        "ux_economy_risk_review_events_case_sequence",
+        "ux_economy_events_review_case_sequence",
         "ux_economy_self_service_transfer_intents_actor_key",
-        "ux_economy_hold_events_hold_sequence",
+        "ux_economy_events_hold_sequence",
         "ux_economy_root_reversal_states_root_epoch",
-        "ux_economy_source_stamp_events_source_sequence",
+        "ux_economy_events_source_stamp_sequence",
         "ux_economy_source_stamps_internal_leg",
         "ux_economy_source_stamps_provider_reference",
         "ux_economy_top_up_intents_actor_key",
         "ux_economy_top_up_intents_payment",
         "ux_economy_top_up_intents_provider_object",
-        "ux_economy_wallet_debt_events_wallet_sequence",
+        "ux_economy_events_debt_sequence",
+        "ux_economy_events_provider_event",
+        "ux_economy_events_compliance_hold_sequence",
+        "ux_economy_events_compliance_hold_kind_actor",
+        "ux_economy_events_legacy_cutover_sequence",
+        "ux_economy_events_settlement_sequence",
+        "ux_economy_events_ad_reward_session_sequence",
+        "ux_economy_events_ad_reward_milestone_sequence",
+        "ux_economy_events_admin_withdrawal_sequence",
+        "ux_economy_events_admin_withdrawal_hash",
+        "ux_economy_events_bounty_expiration",
         "ux_economy_worker_leases_name"
     ];
 
@@ -199,12 +204,12 @@ public sealed class EconomyPersistenceModelTests
             "ck_economy_funding_claims_lifecycle",
             "ck_economy_funding_claims_provider_reversal_bounds",
             "ck_economy_funding_claims_version_positive",
-            "ck_economy_hold_events_sequence_positive",
+            "ck_economy_events_sequence",
+            "ck_economy_events_values",
+            "ck_economy_events_stream_shape",
             "ck_economy_holds_amount_positive",
             "ck_economy_holds_state_timestamp",
             "ck_economy_journal_lines_amount_positive",
-            "ck_economy_legacy_cutover_audit_sequence",
-            "ck_economy_legacy_cutover_audit_state",
             "ck_economy_legacy_cutovers_epoch",
             "ck_economy_legacy_cutovers_state",
             "ck_economy_legacy_shadow_batches_counts",
@@ -221,8 +226,6 @@ public sealed class EconomyPersistenceModelTests
             "ck_economy_posting_groups_source_requirement",
             "ck_economy_posting_groups_template_state",
             "ck_economy_projection_events_sequence_nonnegative",
-            "ck_economy_provider_dispute_events_amount_positive",
-            "ck_economy_provider_dispute_events_sequence_positive",
             "ck_economy_provider_disputes_amount_partition",
             "ck_economy_provider_disputes_lifecycle",
             "ck_economy_provider_disputes_sequence_positive",
@@ -254,15 +257,11 @@ public sealed class EconomyPersistenceModelTests
             "ck_economy_risk_decisions_versions_positive",
             "ck_economy_risk_review_cases_approvals",
             "ck_economy_risk_review_cases_state",
-            "ck_economy_risk_review_events_sequence_positive",
             "ck_economy_root_reversal_states_cumulative_bounds",
             "ck_economy_root_reversal_states_epoch_nonnegative",
-            "ck_economy_source_stamp_events_sequence_positive",
             "ck_economy_top_up_intents_amount_positive",
             "ck_economy_top_up_intents_provider_binding",
             "ck_economy_top_up_intents_version_positive",
-            "ck_economy_wallet_debt_events_delta_nonzero",
-            "ck_economy_wallet_debt_events_sequence_positive",
             "ck_economy_wallet_debts_nonnegative",
             "ck_economy_wallet_debts_version_positive"
         ]);
@@ -433,17 +432,26 @@ public sealed class EconomyPersistenceModelTests
             "ReversalIdempotencyKey",
             "UpdatedAt",
             "Version");
+        // #1092 Tier 2.1: dispute events (StreamKind 2) and wallet debt events
+        // (StreamKind 3) are rows of the unified event ledger.
         AssertProperties(
             model,
-            "economy_provider_dispute_events",
+            "economy_events",
+            "Id",
+            "StreamKind",
+            "Sequence",
             "ProviderEventId",
             "ProviderDisputeReference",
             "SourceStampId",
-            "ProviderSequence",
             "Status",
             "CumulativeDisputedHardUnits",
             "RequestHash",
+            "DebtWalletId",
+            "DeltaHardUnits",
+            "OutstandingHardUnits",
             "OccurredAt");
+        AssertUniqueIndex(model, "economy_events", "ux_economy_events_dispute_sequence", "ProviderDisputeReference", "Sequence");
+        AssertUniqueIndex(model, "economy_events", "ux_economy_events_debt_sequence", "DebtWalletId", "Sequence");
         AssertProperties(
             model,
             "economy_dispute_fragment_freezes",
@@ -466,21 +474,169 @@ public sealed class EconomyPersistenceModelTests
             "EndExclusive",
             "ReversalEpoch");
         AssertProperties(model, "economy_wallet_debts", "WalletId", "OutstandingHardUnits", "UpdatedAt", "Version");
-        AssertProperties(
-            model,
-            "economy_wallet_debt_events",
-            "Id",
-            "WalletId",
-            "SourceStampId",
-            "Sequence",
-            "DeltaHardUnits",
-            "OutstandingHardUnits",
-            "OccurredAt");
 
         model.GetEntityTypes().Single(entity => entity.GetTableName() == "economy_provider_disputes")
             .FindProperty("Version")!.IsConcurrencyToken.Should().BeTrue();
         model.GetEntityTypes().Single(entity => entity.GetTableName() == "economy_wallet_debts")
             .FindProperty("Version")!.IsConcurrencyToken.Should().BeTrue();
+    }
+
+    [Fact]
+    public void EventLedgerKeepsOneKindScopedUniqueStreamPerEventFamily()
+    {
+        using var context = CreateContext();
+        var model = context.Model;
+        var ledger = model.GetEntityTypes().Single(entity => entity.GetTableName() == "economy_events");
+
+        // One flat row for every event family: a single primary key and no
+        // inheritance discriminator.
+        ledger.FindPrimaryKey()!.Properties.Select(property => property.Name).Should().Equal("Id");
+        ledger.FindDiscriminatorProperty().Should().BeNull();
+        foreach (var shared in new[] { "StreamKind", "Sequence", "OccurredAt" })
+        {
+            ledger.FindProperty(shared)!.IsNullable.Should().BeFalse();
+        }
+
+        AssertUniqueIndex(model, "economy_events", "ux_economy_events_source_stamp_sequence", "SourceStampId", "Sequence");
+        AssertUniqueIndex(model, "economy_events", "ux_economy_events_provider_event", "ProviderEventId");
+        AssertUniqueIndex(model, "economy_events", "ux_economy_events_debt_sequence", "DebtWalletId", "Sequence");
+        AssertUniqueIndex(model, "economy_events", "ux_economy_events_hold_sequence", "HoldId", "Sequence");
+        AssertUniqueIndex(model, "economy_events", "ux_economy_events_review_case_sequence", "RiskReviewCaseId", "Sequence");
+        AssertUniqueIndex(model, "economy_events", "ux_economy_events_compliance_hold_sequence", "ComplianceHoldId", "Sequence");
+        AssertUniqueIndex(model, "economy_events", "ux_economy_events_compliance_hold_kind_actor", "ComplianceHoldId", "KindText", "ActorId");
+        AssertUniqueIndex(model, "economy_events", "ux_economy_events_legacy_cutover_sequence", "LegacyCutoverTenantId", "Sequence");
+        AssertUniqueIndex(model, "economy_events", "ux_economy_events_settlement_sequence", "SettlementId", "Sequence");
+        // Session events and playback milestones are both numbered from 1 per
+        // session, so they must stay separate unique streams.
+        AssertUniqueIndex(model, "economy_events", "ux_economy_events_ad_reward_session_sequence", "SessionId", "Sequence");
+        AssertUniqueIndex(model, "economy_events", "ux_economy_events_ad_reward_milestone_sequence", "SessionId", "Sequence");
+        AssertUniqueIndex(model, "economy_events", "ux_economy_events_admin_withdrawal_sequence", "RunId", "Sequence");
+        AssertUniqueIndex(model, "economy_events", "ux_economy_events_admin_withdrawal_hash", "Hash");
+        AssertUniqueIndex(model, "economy_events", "ux_economy_events_bounty_expiration", "BountyId");
+
+        // No unique index may compare rows across two event families.
+        ledger.GetIndexes().Where(index => index.IsUnique)
+            .Should().OnlyContain(index =>
+                index.GetFilter()!.StartsWith("\"StreamKind\" = ", StringComparison.Ordinal));
+
+        AssertFilteredUniqueIndex(ledger, "ux_economy_events_ad_reward_session_sequence", "\"StreamKind\" = 9", "SessionId", "Sequence");
+        AssertFilteredUniqueIndex(ledger, "ux_economy_events_ad_reward_milestone_sequence", "\"StreamKind\" = 10", "SessionId", "Sequence");
+        AssertFilteredUniqueIndex(ledger, "ux_economy_events_bounty_expiration", "\"StreamKind\" = 12", "BountyId");
+        AssertFilteredUniqueIndex(ledger, "ux_economy_events_provider_event", "\"StreamKind\" = 2", "ProviderEventId");
+
+        ledger.GetForeignKeys()
+            .Select(foreignKey => (
+                Column: foreignKey.Properties.Single().Name,
+                Principal: foreignKey.PrincipalEntityType.GetTableName(),
+                foreignKey.DeleteBehavior))
+            .Should().BeEquivalentTo(
+            [
+                ("SourceStampId", "economy_source_stamps", DeleteBehavior.Restrict),
+                ("ProviderDisputeReference", "economy_provider_disputes", DeleteBehavior.Restrict),
+                ("DebtWalletId", "economy_wallet_debts", DeleteBehavior.Restrict),
+                ("HoldId", "economy_holds", DeleteBehavior.Restrict),
+                ("RiskReviewCaseId", "economy_risk_review_cases", DeleteBehavior.Restrict),
+                ("ComplianceHoldId", "economy_compliance_holds", DeleteBehavior.Restrict),
+                ("LegacyCutoverTenantId", "economy_legacy_cutovers", DeleteBehavior.Restrict)
+            ]);
+    }
+
+    [Fact]
+    public void EventLedgerShapeConstraintCoversEveryStreamKindCompletely()
+    {
+        using var context = CreateContext();
+        var ledger = context.GetService<IDesignTimeModel>().Model.GetEntityTypes()
+            .Single(entity => entity.GetTableName() == "economy_events");
+        var shape = ledger.GetCheckConstraints()
+            .Single(constraint => constraint.Name == "ck_economy_events_stream_shape")
+            .Sql;
+
+        // The columns the event families do not share. Id, StreamKind,
+        // Sequence and OccurredAt are common to every row and never branch.
+        var streamColumns = ledger.GetProperties()
+            .Select(property => property.Name)
+            .Where(name => name is not ("Id" or "StreamKind" or "Sequence" or "OccurredAt"))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+        var requiredByKind = new Dictionary<EconomyEventStreamKind, string[]>
+        {
+            [EconomyEventStreamKind.SourceStamp] = ["SourceStampId", "Kind", "EvidenceHash"],
+            [EconomyEventStreamKind.ProviderDispute] =
+                ["ProviderEventId", "ProviderDisputeReference", "SourceStampId", "Status", "CumulativeDisputedHardUnits", "RequestHash"],
+            [EconomyEventStreamKind.WalletDebt] = ["DebtWalletId", "SourceStampId", "DeltaHardUnits", "OutstandingHardUnits"],
+            [EconomyEventStreamKind.FundingHold] = ["HoldId", "Kind", "ActorId", "EvidenceHash"],
+            [EconomyEventStreamKind.RiskReview] = ["RiskReviewCaseId", "Kind", "ActorId", "EvidenceHashes"],
+            [EconomyEventStreamKind.ComplianceHold] = ["ComplianceHoldId", "KindText", "ActorId", "EvidenceHash"],
+            [EconomyEventStreamKind.LegacyCutover] =
+                ["LegacyCutoverTenantId", "BatchId", "Kind", "ActorId", "Reason", "ReauthenticationHash", "EvidenceHash"],
+            [EconomyEventStreamKind.MarketplaceSettlement] = ["TenantId", "SettlementId", "KindText", "EvidenceHash"],
+            [EconomyEventStreamKind.AdRewardSessionEvent] = ["SessionId", "Kind", "EvidenceHash"],
+            [EconomyEventStreamKind.AdRewardPlaybackMilestone] = ["SessionId", "Percentage", "EvidenceHash"],
+            [EconomyEventStreamKind.AdminWithdrawalAudit] = ["TenantId", "RunId", "KindText", "Evidence", "PreviousHash", "Hash"],
+            [EconomyEventStreamKind.BountyExpiration] = ["BountyId", "ExpiresAt", "BountyVersion"]
+        };
+        var optionalByKind = new Dictionary<EconomyEventStreamKind, string[]>
+        {
+            [EconomyEventStreamKind.RiskReview] = ["Resolution", "DecisionCode"],
+            [EconomyEventStreamKind.AdminWithdrawalAudit] = ["ActorId"]
+        };
+
+        requiredByKind.Keys.Should().BeEquivalentTo(Enum.GetValues<EconomyEventStreamKind>());
+        shape.Should().StartWith("(\"StreamKind\" = 1 AND ");
+        var branches = shape.Split([") OR ("], StringSplitOptions.None);
+        branches.Should().HaveCount(requiredByKind.Count);
+
+        foreach (var (kind, required) in requiredByKind)
+        {
+            var optional = optionalByKind.GetValueOrDefault(kind) ?? [];
+            var branch = branches.Single(candidate =>
+                candidate.StartsWith($"(\"StreamKind\" = {(int)kind} AND ", StringComparison.Ordinal) ||
+                candidate.StartsWith($"\"StreamKind\" = {(int)kind} AND ", StringComparison.Ordinal));
+            var mentioned = Regex.Matches(branch, "\"([A-Za-z]+)\" IS (NOT )?NULL")
+                .Select(match => (Column: match.Groups[1].Value, Required: match.Groups[2].Length > 0))
+                .ToArray();
+            var because = $"stream {(int)kind} must constrain every stream column exactly once";
+
+            // Sorted joins (not set comparison) so a duplicated or missing column fails.
+            // Optional columns are, by design, absent from the branch: a shape
+            // constraint can neither require nor forbid them.
+            Join(mentioned.Select(item => item.Column))
+                .Should().Be(Join(streamColumns.Except(optional)), because);
+            Join(mentioned.Where(item => item.Required).Select(item => item.Column))
+                .Should().Be(Join(required), because);
+            Join(mentioned.Where(item => !item.Required).Select(item => item.Column))
+                .Should().Be(Join(streamColumns.Except(required).Except(optional)), because);
+        }
+
+        static string Join(IEnumerable<string> columns) =>
+            string.Join(" ", columns.Order(StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void EventLedgerCarriesTheValueRulesOfEveryLegacyEventTable()
+    {
+        using var context = CreateContext();
+        // The design-time check-constraint interface declares Name and Sql as
+        // nullable; the model always stores both.
+        var constraints = context.GetService<IDesignTimeModel>().Model.GetEntityTypes()
+            .Single(entity => entity.GetTableName() == "economy_events")
+            .GetCheckConstraints()
+            .ToDictionary(constraint => constraint.Name!, constraint => constraint.Sql!);
+
+        constraints["ck_economy_events_sequence"].Should().Be("\"Sequence\" > 0");
+        // One clause per stream that had a value rule before the merge.
+        foreach (var clause in new[]
+                 {
+                     "(\"StreamKind\" <> 2 OR \"CumulativeDisputedHardUnits\" > 0)",
+                     "(\"StreamKind\" <> 3 OR (\"DeltaHardUnits\" <> 0 AND \"OutstandingHardUnits\" >= 0))",
+                     "(\"StreamKind\" <> 7 OR \"Kind\" BETWEEN 1 AND 4)",
+                     "(\"StreamKind\" <> 9 OR \"Kind\" BETWEEN 1 AND 7)",
+                     "(\"StreamKind\" <> 10 OR \"Percentage\" BETWEEN 0 AND 100)",
+                     "(\"StreamKind\" <> 12 OR (\"BountyVersion\" > 1 AND \"OccurredAt\" >= \"ExpiresAt\"))"
+                 })
+        {
+            constraints["ck_economy_events_values"].Should().Contain(clause);
+        }
     }
 
     [Fact]
@@ -644,6 +800,19 @@ public sealed class EconomyPersistenceModelTests
         var index = entity.GetIndexes().Single(candidate => candidate.GetDatabaseName() == indexName);
 
         index.IsUnique.Should().BeTrue();
+        index.Properties.Select(property => property.Name).Should().Equal(properties);
+    }
+
+    private static void AssertFilteredUniqueIndex(
+        IReadOnlyEntityType entity,
+        string indexName,
+        string filter,
+        params string[] properties)
+    {
+        var index = entity.GetIndexes().Single(candidate => candidate.GetDatabaseName() == indexName);
+
+        index.IsUnique.Should().BeTrue();
+        index.GetFilter().Should().Be(filter);
         index.Properties.Select(property => property.Name).Should().Equal(properties);
     }
 

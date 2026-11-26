@@ -263,17 +263,19 @@ public sealed class PostgreSqlComplianceHoldAdministrationStore(
         CancellationToken cancellationToken)
     {
         _ = await CurrentAsync(tenantId, holdId, cancellationToken);
-        return await _db.Set<EconomyComplianceHoldEventRow>().AsNoTracking()
-            .Where(row => row.HoldId == holdId)
+        var events = await _db.Set<EconomyEventRow>().AsNoTracking()
+            .Where(row => row.StreamKind == EconomyEventStreamKind.ComplianceHold && row.ComplianceHoldId == holdId)
             .OrderBy(row => row.Sequence)
-            .Select(row => new ComplianceHoldEvent(
-                row.Sequence,
-                row.HoldId,
-                row.Kind,
-                row.ActorId,
-                row.EvidenceHash,
-                row.OccurredAt))
-            .ToArrayAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
+        // The kind-shape check on economy_events makes the hold, kind, actor
+        // and evidence hash non-null for every compliance-hold event.
+        return events.Select(row => new ComplianceHoldEvent(
+            checked((int)row.Sequence),
+            row.ComplianceHoldId!.Value,
+            row.KindText!,
+            row.ActorId!.Value,
+            row.EvidenceHash!,
+            row.OccurredAt)).ToArray();
     }
 
     public async ValueTask<ComplianceHoldAdministrationState> ProposeReleaseAsync(
@@ -369,10 +371,11 @@ public sealed class PostgreSqlComplianceHoldAdministrationStore(
                         nameof(approvedAt));
                 }
 
-                var approvalQuery = _db.Set<EconomyComplianceHoldEventRow>()
+                var approvalQuery = _db.Set<EconomyEventRow>()
                     .Where(item =>
-                        item.HoldId == holdId &&
-                        item.Kind == ComplianceHoldEventKinds.ReleaseApproved);
+                        item.StreamKind == EconomyEventStreamKind.ComplianceHold &&
+                        item.ComplianceHoldId == holdId &&
+                        item.KindText == ComplianceHoldEventKinds.ReleaseApproved);
                 if (await approvalQuery.AnyAsync(item => item.ActorId == actorId, token))
                 {
                     throw new InvalidOperationException(
@@ -463,21 +466,22 @@ public sealed class PostgreSqlComplianceHoldAdministrationStore(
         DateTimeOffset occurredAt,
         CancellationToken cancellationToken)
     {
-        var persistedSequence = await _db.Set<EconomyComplianceHoldEventRow>()
-            .Where(item => item.HoldId == holdId)
+        var persistedSequence = await _db.Set<EconomyEventRow>()
+            .Where(item => item.StreamKind == EconomyEventStreamKind.ComplianceHold && item.ComplianceHoldId == holdId)
             .MaxAsync(item => item.Sequence, cancellationToken) + 1;
-        var localSequence = _db.Set<EconomyComplianceHoldEventRow>().Local
-            .Where(item => item.HoldId == holdId)
+        var localSequence = _db.Set<EconomyEventRow>().Local
+            .Where(item => item.StreamKind == EconomyEventStreamKind.ComplianceHold && item.ComplianceHoldId == holdId)
             .Select(item => item.Sequence + 1)
             .DefaultIfEmpty(persistedSequence)
             .Max();
         var sequence = Math.Max(persistedSequence, localSequence);
-        _db.Set<EconomyComplianceHoldEventRow>().Add(new EconomyComplianceHoldEventRow
+        _db.Set<EconomyEventRow>().Add(new EconomyEventRow
         {
             Id = Guid.NewGuid(),
-            HoldId = holdId,
+            StreamKind = EconomyEventStreamKind.ComplianceHold,
+            ComplianceHoldId = holdId,
             Sequence = sequence,
-            Kind = kind,
+            KindText = kind,
             ActorId = actorId,
             EvidenceHash = evidenceHash.Trim(),
             OccurredAt = occurredAt
@@ -488,12 +492,13 @@ public sealed class PostgreSqlComplianceHoldAdministrationStore(
         EconomyComplianceHoldRow row,
         CancellationToken cancellationToken)
     {
-        var approvers = await _db.Set<EconomyComplianceHoldEventRow>().AsNoTracking()
+        var approvers = await _db.Set<EconomyEventRow>().AsNoTracking()
             .Where(item =>
-                item.HoldId == row.Id &&
-                item.Kind == ComplianceHoldEventKinds.ReleaseApproved)
+                item.StreamKind == EconomyEventStreamKind.ComplianceHold &&
+                item.ComplianceHoldId == row.Id &&
+                item.KindText == ComplianceHoldEventKinds.ReleaseApproved)
             .OrderBy(item => item.Sequence)
-            .Select(item => item.ActorId)
+            .Select(item => item.ActorId!.Value)
             .ToArrayAsync(cancellationToken);
         var hold = new ComplianceHold(
             row.Id,

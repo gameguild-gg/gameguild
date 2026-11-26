@@ -7561,28 +7561,6 @@ Table "economy_ad_reward_provider_batch_claims" {
   }
 }
 
-Table "economy_ad_reward_session_timeline" {
-  "Id" uuid [not null]
-  "TimelineKind" integer [not null]
-  "SessionId" uuid [not null]
-  "Sequence" bigint [not null]
-  "State" integer
-  "Percentage" integer
-  "EvidenceHash" "character varying(128)" [not null]
-  "OccurredAt" timestamp [not null]
-
-  Checks {
-    `("TimelineKind" = 1 AND "State" BETWEEN 1 AND 7 AND "Percentage" IS NULL) OR ("TimelineKind" = 2 AND "Percentage" BETWEEN 0 AND 100 AND "State" IS NULL)` [name: 'ck_economy_ad_reward_session_timeline_kind']
-    `"Sequence" > 0` [name: 'ck_economy_ad_reward_session_timeline_sequence']
-  }
-
-  Indexes {
-    Id [pk, name: "PK_economy_ad_reward_session_timeline"]
-    SessionId [name: "IX_economy_ad_reward_session_timeline_SessionId"]
-    (TimelineKind, SessionId, Sequence) [unique, name: "ux_economy_ad_reward_session_timeline_kind_session_sequence"]
-  }
-}
-
 Table "economy_bounty_escrow_fragments" {
   "Id" uuid [not null]
   "BountyId" uuid [not null]
@@ -7604,25 +7582,6 @@ Table "economy_bounty_escrow_fragments" {
     Id [pk, name: "PK_economy_bounty_escrow_fragments"]
     (BountyId, ParentLotId) [unique, name: "IX_economy_bounty_escrow_fragments_BountyId_ParentLotId"]
     (BountyId, EscrowLotId) [unique, name: "ux_economy_bounty_escrow_fragments_bounty_escrow_lot"]
-  }
-}
-
-Table "economy_bounty_expiration_events" {
-  "Id" uuid [not null]
-  "BountyId" uuid [not null]
-  "ExpiresAt" timestamp [not null]
-  "RecordedAt" timestamp [not null]
-  "BountyVersion" bigint [not null]
-
-  Checks {
-    `"RecordedAt" >= "ExpiresAt"` [name: 'ck_economy_bounty_expiration_events_time']
-    `"BountyVersion" > 1` [name: 'ck_economy_bounty_expiration_events_version']
-  }
-
-  Indexes {
-    Id [pk, name: "PK_economy_bounty_expiration_events"]
-    BountyId [unique, name: "IX_economy_bounty_expiration_events_BountyId"]
-    (RecordedAt, Id) [name: "IX_economy_bounty_expiration_events_RecordedAt_Id"]
   }
 }
 
@@ -7653,26 +7612,6 @@ Table "economy_bounty_terminal_events" {
     Id [pk, name: "PK_economy_bounty_terminal_events"]
     BountyId [unique, name: "IX_economy_bounty_terminal_events_BountyId"]
     IdempotencyKey [unique, name: "IX_economy_bounty_terminal_events_IdempotencyKey"]
-  }
-}
-
-Table "economy_compliance_hold_events" {
-  "Id" uuid [not null]
-  "HoldId" uuid [not null]
-  "Sequence" integer [not null]
-  "Kind" "character varying(50)" [not null]
-  "ActorId" uuid [not null]
-  "EvidenceHash" "character varying(128)" [not null]
-  "OccurredAt" timestamp [not null]
-
-  Checks {
-    `"Sequence" > 0` [name: 'ck_economy_compliance_hold_events_sequence']
-  }
-
-  Indexes {
-    Id [pk, name: "PK_economy_compliance_hold_events"]
-    (HoldId, Kind, ActorId) [unique, name: "IX_economy_compliance_hold_events_HoldId_Kind_ActorId"]
-    (HoldId, Sequence) [unique, name: "IX_economy_compliance_hold_events_HoldId_Sequence"]
   }
 }
 
@@ -7743,25 +7682,6 @@ Table "economy_legacy_cutovers" {
   Indexes {
     TenantId [pk, name: "PK_economy_legacy_cutovers"]
     BatchId [unique, name: "IX_economy_legacy_cutovers_BatchId"]
-  }
-}
-
-Table "economy_marketplace_events" {
-  "Id" uuid [not null]
-  "TenantId" uuid [not null]
-  "SettlementId" uuid [not null]
-  "Sequence" bigint [not null]
-  "EventKind" "character varying(100)" [not null]
-  "EvidenceHash" "character varying(128)" [not null]
-  "OccurredAt" timestamp [not null]
-
-  Checks {
-    `"Sequence" > 0` [name: 'ck_economy_marketplace_events_sequence']
-  }
-
-  Indexes {
-    Id [pk, name: "PK_economy_marketplace_events"]
-    (SettlementId, Sequence) [unique, name: "IX_economy_marketplace_events_SettlementId_Sequence"]
   }
 }
 
@@ -7851,27 +7771,6 @@ Table "economy_marketplace_settlement_credits" {
     CreditLotId [unique, name: "IX_economy_marketplace_settlement_credits_CreditLotId"]
     SettlementId [name: "IX_economy_marketplace_settlement_credits_SettlementId"]
     SourceStampId [unique, name: "IX_economy_marketplace_settlement_credits_SourceStampId"]
-  }
-}
-
-Table "economy_admin_withdrawal_audit_events" {
-  "RunId" uuid [not null]
-  "Sequence" bigint [not null]
-  "TenantId" uuid [not null]
-  "Kind" "character varying(100)" [not null]
-  "ActorId" uuid
-  "Evidence" text [not null]
-  "OccurredAt" timestamp [not null]
-  "PreviousHash" "character varying(128)" [not null]
-  "Hash" "character varying(128)" [not null]
-
-  Checks {
-    `"Sequence" > 0` [name: 'ck_economy_admin_withdrawal_audit_events_sequence']
-  }
-
-  Indexes {
-    (RunId, Sequence) [pk, name: "PK_economy_admin_withdrawal_audit_events"]
-    Hash [unique, name: "ux_economy_admin_withdrawal_audit_events_hash"]
   }
 }
 
@@ -7984,24 +7883,6 @@ Table "economy_root_reversal_states" {
   Indexes {
     RootSourceStampId [pk, name: "PK_economy_root_reversal_states"]
     (RootSourceStampId, Epoch) [unique, name: "ux_economy_root_reversal_states_root_epoch"]
-  }
-}
-
-Table "economy_source_stamp_events" {
-  "Id" uuid [not null]
-  "SourceStampId" uuid [not null]
-  "Sequence" bigint [not null]
-  "State" integer [not null]
-  "EvidenceHash" "character varying(128)" [not null]
-  "OccurredAt" timestamp [not null]
-
-  Checks {
-    `"Sequence" > 0` [name: 'ck_economy_source_stamp_events_sequence_positive']
-  }
-
-  Indexes {
-    Id [pk, name: "PK_economy_source_stamp_events"]
-    (SourceStampId, Sequence) [unique, name: "ux_economy_source_stamp_events_source_sequence"]
   }
 }
 
@@ -10094,29 +9975,6 @@ Table "CollectiveAttemptDraftChanges" {
   }
 }
 
-Table "economy_legacy_cutover_audit" {
-  "Id" uuid [not null]
-  "TenantId" uuid [not null]
-  "BatchId" uuid [not null]
-  "Sequence" bigint [not null]
-  "State" integer [not null]
-  "ActorId" uuid [not null]
-  "Reason" "character varying(500)" [not null]
-  "ReauthenticationHash" "character varying(128)" [not null]
-  "EvidenceHash" "character varying(128)" [not null]
-  "RecordedAt" timestamp [not null]
-
-  Checks {
-    `"Sequence" > 0` [name: 'ck_economy_legacy_cutover_audit_sequence']
-    `"State" BETWEEN 1 AND 4` [name: 'ck_economy_legacy_cutover_audit_state']
-  }
-
-  Indexes {
-    Id [pk, name: "PK_economy_legacy_cutover_audit"]
-    (TenantId, Sequence) [unique, name: "IX_economy_legacy_cutover_audit_TenantId_Sequence"]
-  }
-}
-
 Table "economy_marketplace_refund_debts" {
   "Id" uuid [not null]
   "TenantId" uuid [not null]
@@ -10369,25 +10227,6 @@ Table "economy_lot_lineage_edges" {
   }
 }
 
-Table "economy_hold_events" {
-  "Id" uuid [not null]
-  "HoldId" uuid [not null]
-  "Sequence" bigint [not null]
-  "Kind" integer [not null]
-  "ActorId" uuid [not null]
-  "EvidenceHash" "character varying(128)" [not null]
-  "OccurredAt" timestamp [not null]
-
-  Checks {
-    `"Sequence" > 0` [name: 'ck_economy_hold_events_sequence_positive']
-  }
-
-  Indexes {
-    Id [pk, name: "PK_economy_hold_events"]
-    (HoldId, Sequence) [unique, name: "ux_economy_hold_events_hold_sequence"]
-  }
-}
-
 Table "economy_dispute_fragment_freezes" {
   "Id" uuid [not null]
   "ProviderDisputeReference" "character varying(256)" [not null]
@@ -10411,28 +10250,6 @@ Table "economy_dispute_fragment_freezes" {
     ProviderDisputeReference [name: "IX_economy_dispute_fragment_freezes_ProviderDisputeReference"]
     (RootSourceStampId, Status) [name: "ix_economy_dispute_fragment_freezes_root_status"]
     WalletId [name: "IX_economy_dispute_fragment_freezes_WalletId"]
-  }
-}
-
-Table "economy_provider_dispute_events" {
-  "ProviderEventId" "character varying(256)" [not null]
-  "ProviderDisputeReference" "character varying(256)" [not null]
-  "SourceStampId" uuid [not null]
-  "ProviderSequence" bigint [not null]
-  "Status" integer [not null]
-  "CumulativeDisputedHardUnits" bigint [not null]
-  "RequestHash" "character varying(128)" [not null]
-  "OccurredAt" timestamp [not null]
-
-  Checks {
-    `"CumulativeDisputedHardUnits" > 0` [name: 'ck_economy_provider_dispute_events_amount_positive']
-    `"ProviderSequence" > 0` [name: 'ck_economy_provider_dispute_events_sequence_positive']
-  }
-
-  Indexes {
-    ProviderEventId [pk, name: "PK_economy_provider_dispute_events"]
-    SourceStampId [name: "IX_economy_provider_dispute_events_SourceStampId"]
-    (ProviderDisputeReference, ProviderSequence) [unique, name: "ux_economy_provider_dispute_events_dispute_sequence"]
   }
 }
 
@@ -10536,27 +10353,6 @@ Table "economy_risk_review_cases" {
     AppealOf [name: "IX_economy_risk_review_cases_AppealOf"]
     RiskDecisionId [name: "IX_economy_risk_review_cases_RiskDecisionId"]
     (TenantId, RiskDecisionId) [unique, name: "ux_economy_risk_review_cases_tenant_decision"]
-  }
-}
-
-Table "economy_wallet_debt_events" {
-  "Id" uuid [not null]
-  "WalletId" uuid [not null]
-  "SourceStampId" uuid [not null]
-  "Sequence" bigint [not null]
-  "DeltaHardUnits" bigint [not null]
-  "OutstandingHardUnits" bigint [not null]
-  "OccurredAt" timestamp [not null]
-
-  Checks {
-    `"DeltaHardUnits" <> 0 AND "OutstandingHardUnits" >= 0` [name: 'ck_economy_wallet_debt_events_delta_nonzero']
-    `"Sequence" > 0` [name: 'ck_economy_wallet_debt_events_sequence_positive']
-  }
-
-  Indexes {
-    Id [pk, name: "PK_economy_wallet_debt_events"]
-    SourceStampId [name: "IX_economy_wallet_debt_events_SourceStampId"]
-    (WalletId, Sequence) [unique, name: "ux_economy_wallet_debt_events_wallet_sequence"]
   }
 }
 
@@ -11658,24 +11454,72 @@ Table "economy_unit_consumptions" {
   }
 }
 
-Table "economy_risk_review_events" {
+Table "economy_events" {
   "Id" uuid [not null]
-  "RiskReviewCaseId" uuid [not null]
+  "StreamKind" integer [not null]
   "Sequence" bigint [not null]
-  "Kind" integer [not null]
-  "ActorId" uuid [not null]
-  "EvidenceHashes" jsonb [not null]
+  "TenantId" uuid
+  "Kind" integer
+  "KindText" "character varying(100)"
+  "ActorId" uuid
+  "EvidenceHash" "character varying(128)"
+  "OccurredAt" timestamp [not null]
+  "SourceStampId" uuid
+  "ProviderEventId" "character varying(256)"
+  "ProviderDisputeReference" "character varying(256)"
+  "Status" integer
+  "CumulativeDisputedHardUnits" bigint
+  "RequestHash" "character varying(128)"
+  "DebtWalletId" uuid
+  "DeltaHardUnits" bigint
+  "OutstandingHardUnits" bigint
+  "HoldId" uuid
+  "RiskReviewCaseId" uuid
+  "EvidenceHashes" jsonb
   "Resolution" text
   "DecisionCode" integer
-  "OccurredAt" timestamp [not null]
+  "ComplianceHoldId" uuid
+  "LegacyCutoverTenantId" uuid
+  "BatchId" uuid
+  "Reason" "character varying(500)"
+  "ReauthenticationHash" "character varying(128)"
+  "SettlementId" uuid
+  "SessionId" uuid
+  "Percentage" integer
+  "RunId" uuid
+  "Evidence" text
+  "PreviousHash" "character varying(128)"
+  "Hash" "character varying(128)"
+  "BountyId" uuid
+  "ExpiresAt" timestamp
+  "BountyVersion" bigint
 
   Checks {
-    `"Sequence" > 0` [name: 'ck_economy_risk_review_events_sequence_positive']
+    `"Sequence" > 0` [name: 'ck_economy_events_sequence']
+    `("StreamKind" = 1 AND "SourceStampId" IS NOT NULL AND "Kind" IS NOT NULL AND "EvidenceHash" IS NOT NULL AND "TenantId" IS NULL AND "KindText" IS NULL AND "ActorId" IS NULL AND "ProviderEventId" IS NULL AND "ProviderDisputeReference" IS NULL AND "Status" IS NULL AND "CumulativeDisputedHardUnits" IS NULL AND "RequestHash" IS NULL AND "DebtWalletId" IS NULL AND "DeltaHardUnits" IS NULL AND "OutstandingHardUnits" IS NULL AND "HoldId" IS NULL AND "RiskReviewCaseId" IS NULL AND "EvidenceHashes" IS NULL AND "Resolution" IS NULL AND "DecisionCode" IS NULL AND "ComplianceHoldId" IS NULL AND "LegacyCutoverTenantId" IS NULL AND "BatchId" IS NULL AND "Reason" IS NULL AND "ReauthenticationHash" IS NULL AND "SettlementId" IS NULL AND "SessionId" IS NULL AND "Percentage" IS NULL AND "RunId" IS NULL AND "Evidence" IS NULL AND "PreviousHash" IS NULL AND "Hash" IS NULL AND "BountyId" IS NULL AND "ExpiresAt" IS NULL AND "BountyVersion" IS NULL) OR ("StreamKind" = 2 AND "ProviderEventId" IS NOT NULL AND "ProviderDisputeReference" IS NOT NULL AND "SourceStampId" IS NOT NULL AND "Status" IS NOT NULL AND "CumulativeDisputedHardUnits" IS NOT NULL AND "RequestHash" IS NOT NULL AND "TenantId" IS NULL AND "Kind" IS NULL AND "KindText" IS NULL AND "ActorId" IS NULL AND "EvidenceHash" IS NULL AND "DebtWalletId" IS NULL AND "DeltaHardUnits" IS NULL AND "OutstandingHardUnits" IS NULL AND "HoldId" IS NULL AND "RiskReviewCaseId" IS NULL AND "EvidenceHashes" IS NULL AND "Resolution" IS NULL AND "DecisionCode" IS NULL AND "ComplianceHoldId" IS NULL AND "LegacyCutoverTenantId" IS NULL AND "BatchId" IS NULL AND "Reason" IS NULL AND "ReauthenticationHash" IS NULL AND "SettlementId" IS NULL AND "SessionId" IS NULL AND "Percentage" IS NULL AND "RunId" IS NULL AND "Evidence" IS NULL AND "PreviousHash" IS NULL AND "Hash" IS NULL AND "BountyId" IS NULL AND "ExpiresAt" IS NULL AND "BountyVersion" IS NULL) OR ("StreamKind" = 3 AND "DebtWalletId" IS NOT NULL AND "SourceStampId" IS NOT NULL AND "DeltaHardUnits" IS NOT NULL AND "OutstandingHardUnits" IS NOT NULL AND "TenantId" IS NULL AND "Kind" IS NULL AND "KindText" IS NULL AND "ActorId" IS NULL AND "EvidenceHash" IS NULL AND "ProviderEventId" IS NULL AND "ProviderDisputeReference" IS NULL AND "Status" IS NULL AND "CumulativeDisputedHardUnits" IS NULL AND "RequestHash" IS NULL AND "HoldId" IS NULL AND "RiskReviewCaseId" IS NULL AND "EvidenceHashes" IS NULL AND "Resolution" IS NULL AND "DecisionCode" IS NULL AND "ComplianceHoldId" IS NULL AND "LegacyCutoverTenantId" IS NULL AND "BatchId" IS NULL AND "Reason" IS NULL AND "ReauthenticationHash" IS NULL AND "SettlementId" IS NULL AND "SessionId" IS NULL AND "Percentage" IS NULL AND "RunId" IS NULL AND "Evidence" IS NULL AND "PreviousHash" IS NULL AND "Hash" IS NULL AND "BountyId" IS NULL AND "ExpiresAt" IS NULL AND "BountyVersion" IS NULL) OR ("StreamKind" = 4 AND "HoldId" IS NOT NULL AND "Kind" IS NOT NULL AND "ActorId" IS NOT NULL AND "EvidenceHash" IS NOT NULL AND "TenantId" IS NULL AND "KindText" IS NULL AND "SourceStampId" IS NULL AND "ProviderEventId" IS NULL AND "ProviderDisputeReference" IS NULL AND "Status" IS NULL AND "CumulativeDisputedHardUnits" IS NULL AND "RequestHash" IS NULL AND "DebtWalletId" IS NULL AND "DeltaHardUnits" IS NULL AND "OutstandingHardUnits" IS NULL AND "RiskReviewCaseId" IS NULL AND "EvidenceHashes" IS NULL AND "Resolution" IS NULL AND "DecisionCode" IS NULL AND "ComplianceHoldId" IS NULL AND "LegacyCutoverTenantId" IS NULL AND "BatchId" IS NULL AND "Reason" IS NULL AND "ReauthenticationHash" IS NULL AND "SettlementId" IS NULL AND "SessionId" IS NULL AND "Percentage" IS NULL AND "RunId" IS NULL AND "Evidence" IS NULL AND "PreviousHash" IS NULL AND "Hash" IS NULL AND "BountyId" IS NULL AND "ExpiresAt" IS NULL AND "BountyVersion" IS NULL) OR ("StreamKind" = 5 AND "RiskReviewCaseId" IS NOT NULL AND "Kind" IS NOT NULL AND "ActorId" IS NOT NULL AND "EvidenceHashes" IS NOT NULL AND "TenantId" IS NULL AND "KindText" IS NULL AND "EvidenceHash" IS NULL AND "SourceStampId" IS NULL AND "ProviderEventId" IS NULL AND "ProviderDisputeReference" IS NULL AND "Status" IS NULL AND "CumulativeDisputedHardUnits" IS NULL AND "RequestHash" IS NULL AND "DebtWalletId" IS NULL AND "DeltaHardUnits" IS NULL AND "OutstandingHardUnits" IS NULL AND "HoldId" IS NULL AND "ComplianceHoldId" IS NULL AND "LegacyCutoverTenantId" IS NULL AND "BatchId" IS NULL AND "Reason" IS NULL AND "ReauthenticationHash" IS NULL AND "SettlementId" IS NULL AND "SessionId" IS NULL AND "Percentage" IS NULL AND "RunId" IS NULL AND "Evidence" IS NULL AND "PreviousHash" IS NULL AND "Hash" IS NULL AND "BountyId" IS NULL AND "ExpiresAt" IS NULL AND "BountyVersion" IS NULL) OR ("StreamKind" = 6 AND "ComplianceHoldId" IS NOT NULL AND "KindText" IS NOT NULL AND "ActorId" IS NOT NULL AND "EvidenceHash" IS NOT NULL AND "TenantId" IS NULL AND "Kind" IS NULL AND "SourceStampId" IS NULL AND "ProviderEventId" IS NULL AND "ProviderDisputeReference" IS NULL AND "Status" IS NULL AND "CumulativeDisputedHardUnits" IS NULL AND "RequestHash" IS NULL AND "DebtWalletId" IS NULL AND "DeltaHardUnits" IS NULL AND "OutstandingHardUnits" IS NULL AND "HoldId" IS NULL AND "RiskReviewCaseId" IS NULL AND "EvidenceHashes" IS NULL AND "Resolution" IS NULL AND "DecisionCode" IS NULL AND "LegacyCutoverTenantId" IS NULL AND "BatchId" IS NULL AND "Reason" IS NULL AND "ReauthenticationHash" IS NULL AND "SettlementId" IS NULL AND "SessionId" IS NULL AND "Percentage" IS NULL AND "RunId" IS NULL AND "Evidence" IS NULL AND "PreviousHash" IS NULL AND "Hash" IS NULL AND "BountyId" IS NULL AND "ExpiresAt" IS NULL AND "BountyVersion" IS NULL) OR ("StreamKind" = 7 AND "LegacyCutoverTenantId" IS NOT NULL AND "BatchId" IS NOT NULL AND "Kind" IS NOT NULL AND "ActorId" IS NOT NULL AND "Reason" IS NOT NULL AND "ReauthenticationHash" IS NOT NULL AND "EvidenceHash" IS NOT NULL AND "TenantId" IS NULL AND "KindText" IS NULL AND "SourceStampId" IS NULL AND "ProviderEventId" IS NULL AND "ProviderDisputeReference" IS NULL AND "Status" IS NULL AND "CumulativeDisputedHardUnits" IS NULL AND "RequestHash" IS NULL AND "DebtWalletId" IS NULL AND "DeltaHardUnits" IS NULL AND "OutstandingHardUnits" IS NULL AND "HoldId" IS NULL AND "RiskReviewCaseId" IS NULL AND "EvidenceHashes" IS NULL AND "Resolution" IS NULL AND "DecisionCode" IS NULL AND "ComplianceHoldId" IS NULL AND "SettlementId" IS NULL AND "SessionId" IS NULL AND "Percentage" IS NULL AND "RunId" IS NULL AND "Evidence" IS NULL AND "PreviousHash" IS NULL AND "Hash" IS NULL AND "BountyId" IS NULL AND "ExpiresAt" IS NULL AND "BountyVersion" IS NULL) OR ("StreamKind" = 8 AND "TenantId" IS NOT NULL AND "SettlementId" IS NOT NULL AND "KindText" IS NOT NULL AND "EvidenceHash" IS NOT NULL AND "Kind" IS NULL AND "ActorId" IS NULL AND "SourceStampId" IS NULL AND "ProviderEventId" IS NULL AND "ProviderDisputeReference" IS NULL AND "Status" IS NULL AND "CumulativeDisputedHardUnits" IS NULL AND "RequestHash" IS NULL AND "DebtWalletId" IS NULL AND "DeltaHardUnits" IS NULL AND "OutstandingHardUnits" IS NULL AND "HoldId" IS NULL AND "RiskReviewCaseId" IS NULL AND "EvidenceHashes" IS NULL AND "Resolution" IS NULL AND "DecisionCode" IS NULL AND "ComplianceHoldId" IS NULL AND "LegacyCutoverTenantId" IS NULL AND "BatchId" IS NULL AND "Reason" IS NULL AND "ReauthenticationHash" IS NULL AND "SessionId" IS NULL AND "Percentage" IS NULL AND "RunId" IS NULL AND "Evidence" IS NULL AND "PreviousHash" IS NULL AND "Hash" IS NULL AND "BountyId" IS NULL AND "ExpiresAt" IS NULL AND "BountyVersion" IS NULL) OR ("StreamKind" = 9 AND "SessionId" IS NOT NULL AND "Kind" IS NOT NULL AND "EvidenceHash" IS NOT NULL AND "TenantId" IS NULL AND "KindText" IS NULL AND "ActorId" IS NULL AND "SourceStampId" IS NULL AND "ProviderEventId" IS NULL AND "ProviderDisputeReference" IS NULL AND "Status" IS NULL AND "CumulativeDisputedHardUnits" IS NULL AND "RequestHash" IS NULL AND "DebtWalletId" IS NULL AND "DeltaHardUnits" IS NULL AND "OutstandingHardUnits" IS NULL AND "HoldId" IS NULL AND "RiskReviewCaseId" IS NULL AND "EvidenceHashes" IS NULL AND "Resolution" IS NULL AND "DecisionCode" IS NULL AND "ComplianceHoldId" IS NULL AND "LegacyCutoverTenantId" IS NULL AND "BatchId" IS NULL AND "Reason" IS NULL AND "ReauthenticationHash" IS NULL AND "SettlementId" IS NULL AND "Percentage" IS NULL AND "RunId" IS NULL AND "Evidence" IS NULL AND "PreviousHash" IS NULL AND "Hash" IS NULL AND "BountyId" IS NULL AND "ExpiresAt" IS NULL AND "BountyVersion" IS NULL) OR ("StreamKind" = 10 AND "SessionId" IS NOT NULL AND "Percentage" IS NOT NULL AND "EvidenceHash" IS NOT NULL AND "TenantId" IS NULL AND "Kind" IS NULL AND "KindText" IS NULL AND "ActorId" IS NULL AND "SourceStampId" IS NULL AND "ProviderEventId" IS NULL AND "ProviderDisputeReference" IS NULL AND "Status" IS NULL AND "CumulativeDisputedHardUnits" IS NULL AND "RequestHash" IS NULL AND "DebtWalletId" IS NULL AND "DeltaHardUnits" IS NULL AND "OutstandingHardUnits" IS NULL AND "HoldId" IS NULL AND "RiskReviewCaseId" IS NULL AND "EvidenceHashes" IS NULL AND "Resolution" IS NULL AND "DecisionCode" IS NULL AND "ComplianceHoldId" IS NULL AND "LegacyCutoverTenantId" IS NULL AND "BatchId" IS NULL AND "Reason" IS NULL AND "ReauthenticationHash" IS NULL AND "SettlementId" IS NULL AND "RunId" IS NULL AND "Evidence" IS NULL AND "PreviousHash" IS NULL AND "Hash" IS NULL AND "BountyId" IS NULL AND "ExpiresAt" IS NULL AND "BountyVersion" IS NULL) OR ("StreamKind" = 11 AND "TenantId" IS NOT NULL AND "RunId" IS NOT NULL AND "KindText" IS NOT NULL AND "Evidence" IS NOT NULL AND "PreviousHash" IS NOT NULL AND "Hash" IS NOT NULL AND "Kind" IS NULL AND "EvidenceHash" IS NULL AND "SourceStampId" IS NULL AND "ProviderEventId" IS NULL AND "ProviderDisputeReference" IS NULL AND "Status" IS NULL AND "CumulativeDisputedHardUnits" IS NULL AND "RequestHash" IS NULL AND "DebtWalletId" IS NULL AND "DeltaHardUnits" IS NULL AND "OutstandingHardUnits" IS NULL AND "HoldId" IS NULL AND "RiskReviewCaseId" IS NULL AND "EvidenceHashes" IS NULL AND "Resolution" IS NULL AND "DecisionCode" IS NULL AND "ComplianceHoldId" IS NULL AND "LegacyCutoverTenantId" IS NULL AND "BatchId" IS NULL AND "Reason" IS NULL AND "ReauthenticationHash" IS NULL AND "SettlementId" IS NULL AND "SessionId" IS NULL AND "Percentage" IS NULL AND "BountyId" IS NULL AND "ExpiresAt" IS NULL AND "BountyVersion" IS NULL) OR ("StreamKind" = 12 AND "BountyId" IS NOT NULL AND "ExpiresAt" IS NOT NULL AND "BountyVersion" IS NOT NULL AND "TenantId" IS NULL AND "Kind" IS NULL AND "KindText" IS NULL AND "ActorId" IS NULL AND "EvidenceHash" IS NULL AND "SourceStampId" IS NULL AND "ProviderEventId" IS NULL AND "ProviderDisputeReference" IS NULL AND "Status" IS NULL AND "CumulativeDisputedHardUnits" IS NULL AND "RequestHash" IS NULL AND "DebtWalletId" IS NULL AND "DeltaHardUnits" IS NULL AND "OutstandingHardUnits" IS NULL AND "HoldId" IS NULL AND "RiskReviewCaseId" IS NULL AND "EvidenceHashes" IS NULL AND "Resolution" IS NULL AND "DecisionCode" IS NULL AND "ComplianceHoldId" IS NULL AND "LegacyCutoverTenantId" IS NULL AND "BatchId" IS NULL AND "Reason" IS NULL AND "ReauthenticationHash" IS NULL AND "SettlementId" IS NULL AND "SessionId" IS NULL AND "Percentage" IS NULL AND "RunId" IS NULL AND "Evidence" IS NULL AND "PreviousHash" IS NULL AND "Hash" IS NULL)` [name: 'ck_economy_events_stream_shape']
+    `("StreamKind" <> 2 OR "CumulativeDisputedHardUnits" > 0) AND ("StreamKind" <> 3 OR ("DeltaHardUnits" <> 0 AND "OutstandingHardUnits" >= 0)) AND ("StreamKind" <> 7 OR "Kind" BETWEEN 1 AND 4) AND ("StreamKind" <> 9 OR "Kind" BETWEEN 1 AND 7) AND ("StreamKind" <> 10 OR "Percentage" BETWEEN 0 AND 100) AND ("StreamKind" <> 12 OR ("BountyVersion" > 1 AND "OccurredAt" >= "ExpiresAt"))` [name: 'ck_economy_events_values']
   }
 
   Indexes {
-    Id [pk, name: "PK_economy_risk_review_events"]
-    (RiskReviewCaseId, Sequence) [unique, name: "ux_economy_risk_review_events_case_sequence"]
+    Id [pk, name: "PK_economy_events"]
+    (OccurredAt, Id) [name: "ix_economy_events_bounty_expiration_recorded"]
+    SessionId [name: "ix_economy_events_session"]
+    SourceStampId [name: "ix_economy_events_source_stamp"]
+    (SessionId, Sequence) [unique, name: "ux_economy_events_ad_reward_milestone_sequence"]
+    (SessionId, Sequence) [unique, name: "ux_economy_events_ad_reward_session_sequence"]
+    Hash [unique, name: "ux_economy_events_admin_withdrawal_hash"]
+    (RunId, Sequence) [unique, name: "ux_economy_events_admin_withdrawal_sequence"]
+    BountyId [unique, name: "ux_economy_events_bounty_expiration"]
+    (ComplianceHoldId, KindText, ActorId) [unique, name: "ux_economy_events_compliance_hold_kind_actor"]
+    (ComplianceHoldId, Sequence) [unique, name: "ux_economy_events_compliance_hold_sequence"]
+    (DebtWalletId, Sequence) [unique, name: "ux_economy_events_debt_sequence"]
+    (ProviderDisputeReference, Sequence) [unique, name: "ux_economy_events_dispute_sequence"]
+    (HoldId, Sequence) [unique, name: "ux_economy_events_hold_sequence"]
+    (LegacyCutoverTenantId, Sequence) [unique, name: "ux_economy_events_legacy_cutover_sequence"]
+    ProviderEventId [unique, name: "ux_economy_events_provider_event"]
+    (RiskReviewCaseId, Sequence) [unique, name: "ux_economy_events_review_case_sequence"]
+    (SettlementId, Sequence) [unique, name: "ux_economy_events_settlement_sequence"]
+    (SourceStampId, Sequence) [unique, name: "ux_economy_events_source_stamp_sequence"]
   }
 }
 
@@ -12960,15 +12804,9 @@ Ref "FK_economy_ad_reward_provider_batch_claims_economy_ad_provider~":"economy_a
 
 Ref "FK_economy_ad_reward_provider_batch_claims_economy_ad_reward_s~":"economy_ad_reward_sessions"."Id" <? "economy_ad_reward_provider_batch_claims"."SessionId" [delete: restrict]
 
-Ref "FK_economy_ad_reward_session_timeline_economy_ad_reward_sessio~":"economy_ad_reward_sessions"."Id" <? "economy_ad_reward_session_timeline"."SessionId" [delete: restrict]
-
 Ref "FK_economy_bounty_escrow_fragments_economy_bounties_BountyId":"economy_bounties"."Id" <? "economy_bounty_escrow_fragments"."BountyId" [delete: restrict]
 
-Ref "FK_economy_bounty_expiration_events_economy_bounties_BountyId":"economy_bounties"."Id" <? "economy_bounty_expiration_events"."BountyId" [delete: restrict]
-
 Ref "FK_economy_bounty_terminal_events_economy_bounties_BountyId":"economy_bounties"."Id" <? "economy_bounty_terminal_events"."BountyId" [delete: restrict]
-
-Ref "FK_economy_compliance_hold_events_economy_compliance_holds_Hol~":"economy_compliance_holds"."Id" <? "economy_compliance_hold_events"."HoldId" [delete: restrict]
 
 Ref "FK_economy_entity_graph_edges_economy_entity_graph_nodes_LeftN~":"economy_entity_graph_nodes"."Id" <? "economy_entity_graph_edges"."LeftNodeId" [delete: restrict]
 
@@ -12978,15 +12816,11 @@ Ref "FK_economy_anchor_verifications_economy_external_anchors_Exter~":"economy_e
 
 Ref "FK_economy_legacy_cutovers_economy_legacy_shadow_batches_Batch~":"economy_legacy_shadow_batches"."Id" <? "economy_legacy_cutovers"."BatchId" [delete: restrict]
 
-Ref "FK_economy_marketplace_events_economy_marketplace_settlements_~":"economy_marketplace_settlements"."Id" <? "economy_marketplace_events"."SettlementId" [delete: restrict]
-
 Ref "FK_economy_marketplace_funding_fragments_economy_marketplace_s~":"economy_marketplace_settlements"."Id" <? "economy_marketplace_funding_fragments"."SettlementId" [delete: restrict]
 
 Ref "FK_economy_marketplace_refunds_economy_marketplace_settlements~":"economy_marketplace_settlements"."Id" <? "economy_marketplace_refunds"."SettlementId" [delete: restrict]
 
 Ref "FK_economy_marketplace_settlement_credits_economy_marketplace_~":"economy_marketplace_settlements"."Id" <? "economy_marketplace_settlement_credits"."SettlementId" [delete: restrict]
-
-Ref "FK_economy_admin_withdrawal_audit_events_economy_operations_Ru~":"economy_operations"."Id" <? "economy_admin_withdrawal_audit_events"."RunId" [delete: restrict]
 
 Ref "FK_economy_payout_authorization_evidence_economy_operations_Op~":"economy_operations"."Id" <? "economy_payout_authorization_evidence"."OperationId" [delete: restrict]
 
@@ -12999,8 +12833,6 @@ Ref "FK_economy_reserve_asset_allocations_economy_reserve_heads_Res~":"economy_r
 Ref "FK_economy_posting_groups_economy_source_stamps_SourceStampId":"economy_source_stamps"."Id" ?<? "economy_posting_groups"."SourceStampId" [delete: restrict]
 
 Ref "FK_economy_root_reversal_states_economy_source_stamps_RootSour~":"economy_source_stamps"."Id" <? "economy_root_reversal_states"."RootSourceStampId" [delete: restrict]
-
-Ref "FK_economy_source_stamp_events_economy_source_stamps_SourceSta~":"economy_source_stamps"."Id" <? "economy_source_stamp_events"."SourceStampId" [delete: restrict]
 
 Ref "FK_economy_accounts_economy_wallets_WalletId":"economy_wallets"."Id" ?<? "economy_accounts"."WalletId" [delete: restrict]
 
@@ -13248,8 +13080,6 @@ Ref "FK_AssessmentSubmissionParticipants_AssessmentSubmissions_Subm~":"Assessmen
 
 Ref "FK_CollectiveAttemptDraftChanges_AssessmentSubmissions_Submiss~":"AssessmentSubmissions"."Id" <? "CollectiveAttemptDraftChanges"."SubmissionId" [delete: cascade]
 
-Ref "FK_economy_legacy_cutover_audit_economy_legacy_cutovers_Tenant~":"economy_legacy_cutovers"."TenantId" <? "economy_legacy_cutover_audit"."TenantId" [delete: restrict]
-
 Ref "FK_economy_marketplace_refund_debts_economy_marketplace_refund~":"economy_marketplace_refunds"."Id" <? "economy_marketplace_refund_debts"."RefundId" [delete: restrict]
 
 Ref "FK_economy_marketplace_refund_debts_economy_marketplace_settle~":"economy_marketplace_settlements"."Id" <? "economy_marketplace_refund_debts"."SettlementId" [delete: restrict]
@@ -13290,8 +13120,6 @@ Ref "FK_economy_lot_lineage_edges_economy_credit_lots_ChildLotId":"economy_credi
 
 Ref "FK_economy_lot_lineage_edges_economy_credit_lots_ParentLotId":"economy_credit_lots"."Id" <? "economy_lot_lineage_edges"."ParentLotId" [delete: restrict]
 
-Ref "FK_economy_hold_events_economy_holds_HoldId":"economy_holds"."Id" <? "economy_hold_events"."HoldId" [delete: restrict]
-
 Ref "FK_economy_dispute_fragment_freezes_economy_credit_lots_Credit~":"economy_credit_lots"."Id" <? "economy_dispute_fragment_freezes"."CreditLotId" [delete: restrict]
 
 Ref "FK_economy_dispute_fragment_freezes_economy_provider_disputes_~":"economy_provider_disputes"."ProviderDisputeReference" <? "economy_dispute_fragment_freezes"."ProviderDisputeReference" [delete: restrict]
@@ -13299,10 +13127,6 @@ Ref "FK_economy_dispute_fragment_freezes_economy_provider_disputes_~":"economy_p
 Ref "FK_economy_dispute_fragment_freezes_economy_source_stamps_Root~":"economy_source_stamps"."Id" <? "economy_dispute_fragment_freezes"."RootSourceStampId" [delete: restrict]
 
 Ref "FK_economy_dispute_fragment_freezes_economy_wallets_WalletId":"economy_wallets"."Id" <? "economy_dispute_fragment_freezes"."WalletId" [delete: restrict]
-
-Ref "FK_economy_provider_dispute_events_economy_provider_disputes_P~":"economy_provider_disputes"."ProviderDisputeReference" <? "economy_provider_dispute_events"."ProviderDisputeReference" [delete: restrict]
-
-Ref "FK_economy_provider_dispute_events_economy_source_stamps_Sourc~":"economy_source_stamps"."Id" <? "economy_provider_dispute_events"."SourceStampId" [delete: restrict]
 
 Ref "FK_economy_capability_receipts_economy_risk_decisions_RiskDeci~":"economy_risk_decisions"."Id" <? "economy_capability_receipts"."RiskDecisionId" [delete: restrict]
 
@@ -13315,10 +13139,6 @@ Ref "FK_economy_risk_counter_reservations_economy_risk_decisions_Ri~":"economy_r
 Ref "FK_economy_risk_review_cases_economy_risk_decisions_RiskDecisi~":"economy_risk_decisions"."Id" <? "economy_risk_review_cases"."RiskDecisionId" [delete: restrict]
 
 Ref "FK_economy_risk_review_cases_economy_risk_review_cases_AppealOf":"economy_risk_review_cases"."Id" ?<? "economy_risk_review_cases"."AppealOf" [delete: restrict]
-
-Ref "FK_economy_wallet_debt_events_economy_source_stamps_SourceStam~":"economy_source_stamps"."Id" <? "economy_wallet_debt_events"."SourceStampId" [delete: restrict]
-
-Ref "FK_economy_wallet_debt_events_economy_wallet_debts_WalletId":"economy_wallet_debts"."WalletId" <? "economy_wallet_debt_events"."WalletId" [delete: restrict]
 
 Ref "FK_launch_pad_participant_registrations_Users_UserId":"Users"."Id" <? "launch_pad_participant_registrations"."UserId" [delete: restrict]
 
@@ -13482,7 +13302,27 @@ Ref "FK_economy_unit_consumptions_economy_posting_groups_PostingGro~":"economy_p
 
 Ref "FK_economy_unit_consumptions_economy_risk_decisions_RiskDecisi~":"economy_risk_decisions"."Id" ?<? "economy_unit_consumptions"."RiskDecisionId" [delete: restrict]
 
-Ref "FK_economy_risk_review_events_economy_risk_review_cases_RiskRe~":"economy_risk_review_cases"."Id" <? "economy_risk_review_events"."RiskReviewCaseId" [delete: restrict]
+Ref "FK_economy_events_economy_ad_reward_sessions_SessionId":"economy_ad_reward_sessions"."Id" ?<? "economy_events"."SessionId" [delete: restrict]
+
+Ref "FK_economy_events_economy_bounties_BountyId":"economy_bounties"."Id" ?<? "economy_events"."BountyId" [delete: restrict]
+
+Ref "FK_economy_events_economy_compliance_holds_ComplianceHoldId":"economy_compliance_holds"."Id" ?<? "economy_events"."ComplianceHoldId" [delete: restrict]
+
+Ref "FK_economy_events_economy_holds_HoldId":"economy_holds"."Id" ?<? "economy_events"."HoldId" [delete: restrict]
+
+Ref "FK_economy_events_economy_legacy_cutovers_LegacyCutoverTenantId":"economy_legacy_cutovers"."TenantId" ?<? "economy_events"."LegacyCutoverTenantId" [delete: restrict]
+
+Ref "FK_economy_events_economy_marketplace_settlements_SettlementId":"economy_marketplace_settlements"."Id" ?<? "economy_events"."SettlementId" [delete: restrict]
+
+Ref "FK_economy_events_economy_operations_RunId":"economy_operations"."Id" ?<? "economy_events"."RunId" [delete: restrict]
+
+Ref "FK_economy_events_economy_provider_disputes_ProviderDisputeRef~":"economy_provider_disputes"."ProviderDisputeReference" ?<? "economy_events"."ProviderDisputeReference" [delete: restrict]
+
+Ref "FK_economy_events_economy_risk_review_cases_RiskReviewCaseId":"economy_risk_review_cases"."Id" ?<? "economy_events"."RiskReviewCaseId" [delete: restrict]
+
+Ref "FK_economy_events_economy_source_stamps_SourceStampId":"economy_source_stamps"."Id" ?<? "economy_events"."SourceStampId" [delete: restrict]
+
+Ref "FK_economy_events_economy_wallet_debts_DebtWalletId":"economy_wallet_debts"."WalletId" ?<? "economy_events"."DebtWalletId" [delete: restrict]
 
 Ref "FK_product_pricing_versions_product_pricing_ProductPricingId":"product_pricing"."Id" <? "product_pricing_versions"."ProductPricingId" [delete: cascade]
 

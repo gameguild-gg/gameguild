@@ -18,7 +18,7 @@ public sealed class BountiesPersistenceModelTests
         entities.Select(entity => entity.GetTableName()).Should().BeEquivalentTo(
             "economy_bounties",
             "economy_bounty_escrow_fragments",
-            "economy_bounty_expiration_events",
+            "economy_events",
             "economy_bounty_terminal_events");
 
         Entity(entities, "economy_bounties").GetIndexes()
@@ -27,9 +27,19 @@ public sealed class BountiesPersistenceModelTests
         Entity(entities, "economy_bounty_terminal_events").GetIndexes()
             .Should().Contain(index => index.IsUnique &&
                 index.Properties.Select(property => property.Name).SequenceEqual(new[] { "BountyId" }));
-        Entity(entities, "economy_bounty_expiration_events").GetIndexes()
-            .Should().Contain(index => index.IsUnique &&
-                index.Properties.Select(property => property.Name).SequenceEqual(new[] { "BountyId" }));
+        // #1092 Tier 2.5: bounty expirations are rows of the unified event ledger,
+        // one per bounty; this module re-asserts it and binds each one to its
+        // bounty. The jsonb facet must be re-asserted too: contexts built from
+        // this configuration alone run against the migrated template schema,
+        // where the column is jsonb.
+        var ledger = Entity(entities, "economy_events");
+        ledger.FindProperty("EvidenceHashes")!.GetColumnType().Should().Be("jsonb");
+        ledger.GetForeignKeys().Should().Contain(foreignKey =>
+            foreignKey.Properties.Select(property => property.Name).SequenceEqual(new[] { "BountyId" }) &&
+            foreignKey.PrincipalEntityType.GetTableName() == "economy_bounties" &&
+            foreignKey.DeleteBehavior == DeleteBehavior.Restrict);
+        ledger.GetIndexes().Should().Contain(index => index.IsUnique && index.GetFilter() == "\"StreamKind\" = 12" &&
+            index.Properties.Select(property => property.Name).SequenceEqual(new[] { "BountyId" }));
         Entity(entities, "economy_bounty_escrow_fragments").GetCheckConstraints()
             .Should().Contain(constraint => constraint.Name == "ck_economy_bounty_escrow_fragments_amount_positive");
         Entity(entities, "economy_bounty_escrow_fragments").FindProperty("Provenance")!

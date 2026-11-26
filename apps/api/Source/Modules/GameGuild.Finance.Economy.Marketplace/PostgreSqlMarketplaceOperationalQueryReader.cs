@@ -71,10 +71,11 @@ public sealed class PostgreSqlMarketplaceOperationalQueryReader : IMarketplaceOp
                           row.SettlementId == settlementId)
             .OrderBy(row => row.Currency)
             .ToArrayAsync(cancellationToken);
-        var events = await _db.Set<MarketplaceEventRow>().AsNoTracking()
-            .Where(row => row.SettlementId == settlementId && row.TenantId == tenantId)
+        var events = await _db.Set<EconomyEventRow>().AsNoTracking()
+            .Where(row => row.StreamKind == EconomyEventStreamKind.MarketplaceSettlement &&
+                          row.SettlementId == settlementId && row.TenantId == tenantId)
             .OrderBy(row => row.Sequence)
-            .ToArrayAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
         var refunds = await _db.Set<MarketplaceRefundRow>().AsNoTracking()
             .Where(row => row.SettlementId == settlementId && row.TenantId == tenantId)
             .OrderBy(row => row.RefundedAt)
@@ -91,8 +92,10 @@ public sealed class PostgreSqlMarketplaceOperationalQueryReader : IMarketplaceOp
             Array.AsReadOnly(legs.Select(row => new MarketplaceSettlementLegOperationalStatus(
                 row.Currency, row.Units, row.SellerUnits!.Value, row.PlatformFeeUnits!.Value,
                 row.RefundedUnits!.Value)).ToArray()),
+            // The kind-shape check on economy_events makes the kind and
+            // evidence hash non-null for every marketplace settlement event.
             Array.AsReadOnly(events.Select(row => new MarketplaceEventOperationalStatus(
-                row.Id, row.Sequence, row.EventKind, row.EvidenceHash, row.OccurredAt)).ToArray()),
+                row.Id, row.Sequence, row.KindText!, row.EvidenceHash!, row.OccurredAt)).ToArray()),
             Array.AsReadOnly(refunds.Select(MapRefund).ToArray()),
             Array.AsReadOnly(outbox.Select(MapOutbox).ToArray()));
     }

@@ -67,10 +67,13 @@ public sealed class HardCoinFundingPostgreSqlRaceTests : IAsyncLifetime
             .CountAsync(row => row.SourceStampId == fixture.SourceId);
         var roots = await observer.Set<EconomyCreditLotRow>()
             .CountAsync(row => row.RootSourceStampId == fixture.SourceId);
-        var terminalEvents = await observer.Set<EconomySourceStampEventRow>()
-            .Where(row => row.SourceStampId == fixture.SourceId && row.Sequence == 2)
+        // #1092 Tier 2.1: source-stamp events are rows of the unified event
+        // ledger (the former State is the row's Kind).
+        var terminalEvents = await observer.Set<EconomyEventRow>()
+            .Where(row => row.StreamKind == EconomyEventStreamKind.SourceStamp &&
+                          row.SourceStampId == fixture.SourceId && row.Sequence == 2)
             .ToArrayAsync();
-        terminalEvents.Should().ContainSingle().Which.State.Should().Be(persisted.State);
+        terminalEvents.Should().ContainSingle().Which.Kind.Should().Be((int)persisted.State);
         if (persisted.State == SourceConfirmationState.Confirmed)
         {
             postings.Should().Be(1);
@@ -287,15 +290,16 @@ public sealed class HardCoinFundingPostgreSqlRaceTests : IAsyncLifetime
         Version = 1
     };
 
-    private static EconomySourceStampEventRow Event(
+    private static EconomyEventRow Event(
         Guid sourceId,
         SourceConfirmationState state,
         DateTimeOffset occurredAt) => new()
     {
         Id = Guid.NewGuid(),
+        StreamKind = EconomyEventStreamKind.SourceStamp,
         SourceStampId = sourceId,
         Sequence = 2,
-        State = state,
+        Kind = (int)state,
         EvidenceHash = new string(state == SourceConfirmationState.Confirmed ? 'b' : 'c', 64),
         OccurredAt = occurredAt
     };

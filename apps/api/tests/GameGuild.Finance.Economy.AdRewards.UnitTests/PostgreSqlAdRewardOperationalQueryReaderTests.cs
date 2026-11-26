@@ -69,15 +69,18 @@ public sealed class PostgreSqlAdRewardOperationalQueryReaderTests
         await context.Database.EnsureCreatedAsync();
         var session = Session(TenantId, 1);
         context.Set<AdRewardSessionRow>().Add(session);
-        context.Set<AdRewardTimelineRow>().Add(new AdRewardTimelineRow
+        // #1092 Tier 2.1: the session timeline is part of the unified event
+        // ledger. Milestones and session events are numbered independently, so
+        // both rows below legitimately carry Sequence = 1.
+        context.Set<EconomyEventRow>().Add(new EconomyEventRow
         {
-            Id = Guid.NewGuid(), TimelineKind = AdRewardTimelineKind.PlaybackMilestone, SessionId = session.Id, Sequence = 1, Percentage = 25,
-            OccurredAt = Now, EvidenceHash = "milestone-evidence"
+            Id = Guid.NewGuid(), StreamKind = EconomyEventStreamKind.AdRewardPlaybackMilestone, SessionId = session.Id, Sequence = 1,
+            Percentage = 25, OccurredAt = Now, EvidenceHash = "milestone-evidence"
         });
-        context.Set<AdRewardTimelineRow>().Add(new AdRewardTimelineRow
+        context.Set<EconomyEventRow>().Add(new EconomyEventRow
         {
-            Id = Guid.NewGuid(), TimelineKind = AdRewardTimelineKind.SessionEvent, SessionId = session.Id, Sequence = 1,
-            State = DurableAdRewardSessionState.Deferred, EvidenceHash = "event-evidence", OccurredAt = Now
+            Id = Guid.NewGuid(), StreamKind = EconomyEventStreamKind.AdRewardSessionEvent, SessionId = session.Id, Sequence = 1,
+            Kind = (int)DurableAdRewardSessionState.Deferred, EvidenceHash = "event-evidence", OccurredAt = Now
         });
         context.Set<AdRewardCompletionRow>().Add(new AdRewardCompletionRow
         {

@@ -1,5 +1,6 @@
 using FluentAssertions;
 using GameGuild.Finance.Economy.AdRewards.Persistence;
+using GameGuild.Finance.Economy.Persistence;
 using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -34,8 +35,11 @@ public sealed class DurableAdRewardReportServiceTests
         (await fixture.Context.Set<AdRewardSessionRow>().SingleAsync()).State
             .Should().Be(DurableAdRewardSessionState.Verified);
         (await fixture.Context.Set<AdRewardProviderBatchClaimRow>().CountAsync()).Should().Be(1);
-        (await fixture.Context.Set<AdRewardTimelineRow>().SingleAsync()).State
-            .Should().Be(DurableAdRewardSessionState.Verified);
+        // #1092 Tier 2.1: session events are rows of the unified event ledger;
+        // the former State is the row's Kind.
+        var sessionEvent = await fixture.Context.Set<EconomyEventRow>()
+            .SingleAsync(row => row.StreamKind == EconomyEventStreamKind.AdRewardSessionEvent);
+        ((DurableAdRewardSessionState)(sessionEvent.Kind ?? 0)).Should().Be(DurableAdRewardSessionState.Verified);
 
         fixture.Context.ChangeTracker.Clear();
         var replay = await service.ImportAsync(request);

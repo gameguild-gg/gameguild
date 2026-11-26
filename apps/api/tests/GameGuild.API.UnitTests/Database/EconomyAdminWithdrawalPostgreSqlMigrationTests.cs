@@ -75,10 +75,12 @@ public sealed class EconomyAdminWithdrawalPostgreSqlMigrationTests
             """);
         auditRows.Should().Be(1);
 
+        // #1092 Tier 2.1: the audit entries are rows of the unified event ledger;
+        // the kind-scoped immutability trigger still rejects a direct rewrite.
         var directAuditUpdate = await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsRoleAsync(
             connection,
             "gameguild_economy_writer",
-            $"UPDATE public.economy_admin_withdrawal_audit_events SET \"Evidence\" = 'rewritten' WHERE \"RunId\" = '{RunId}';"));
+            $"UPDATE public.economy_events SET \"Evidence\" = 'rewritten' WHERE \"StreamKind\" = 11 AND \"RunId\" = '{RunId}';"));
         directAuditUpdate.SqlState.Should().Be(PostgresErrorCodes.InsufficientPrivilege);
 
         await ExecuteAsRoleAsync(connection, "gameguild_economy_writer", $"""

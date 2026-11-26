@@ -129,12 +129,15 @@ public sealed class PostgreSqlHardCoinFundingGatewayTests
             .Should().Be(1);
         (await ScalarAsync<int>(connection, $"SELECT \"State\" FROM public.economy_source_stamps WHERE \"Id\" = '{source.Value}';"))
             .Should().Be(1, "the immutable provider source is evidenced by an append-only confirmation event, not a mutable source update");
+        // #1092 Tier 2.1: the confirmation event is a row of the unified event
+        // ledger, appended by the retargeted SECURITY DEFINER writer.
         (await ScalarAsync<long>(connection, $"""
             SELECT count(*)
-            FROM public.economy_source_stamp_events
-            WHERE "SourceStampId" = '{source.Value}'
+            FROM public.economy_events
+            WHERE "StreamKind" = 1
+              AND "SourceStampId" = '{source.Value}'
               AND "Sequence" = 2
-              AND "State" = 2;
+              AND "Kind" = 2;
             """))
             .Should().Be(1);
     }

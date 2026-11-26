@@ -1,6 +1,7 @@
 using System.Globalization;
 using GameGuild.Finance.Economy.AdRewards.Persistence;
 using GameGuild.Finance.Economy.Operations;
+using GameGuild.Finance.Economy.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Finance.Economy.AdRewards;
@@ -71,25 +72,27 @@ public sealed class PostgreSqlAdRewardOperationalQueryReader : IAdRewardOperatio
             return null;
         }
 
-        var milestones = await _db.Set<AdRewardTimelineRow>().AsNoTracking()
-            .Where(row => row.TimelineKind == AdRewardTimelineKind.PlaybackMilestone &&
+        var milestones = await _db.Set<EconomyEventRow>().AsNoTracking()
+            .Where(row => row.StreamKind == EconomyEventStreamKind.AdRewardPlaybackMilestone &&
                           row.SessionId == sessionId)
             .OrderBy(row => row.Sequence)
-            .ToArrayAsync(cancellationToken);
-        var events = await _db.Set<AdRewardTimelineRow>().AsNoTracking()
-            .Where(row => row.TimelineKind == AdRewardTimelineKind.SessionEvent &&
+            .ToListAsync(cancellationToken);
+        var events = await _db.Set<EconomyEventRow>().AsNoTracking()
+            .Where(row => row.StreamKind == EconomyEventStreamKind.AdRewardSessionEvent &&
                           row.SessionId == sessionId)
             .OrderBy(row => row.Sequence)
-            .ToArrayAsync(cancellationToken);
+            .ToListAsync(cancellationToken);
         var completion = await _db.Set<AdRewardCompletionRow>().AsNoTracking()
             .SingleOrDefaultAsync(row => row.SessionId == sessionId && row.TenantId == tenantId,
                 cancellationToken);
+        // The kind-shape check on economy_events makes the state, percentage
+        // and evidence hash non-null for their respective timeline kinds.
         return new AdRewardSessionOperationalDetails(
             MapSession(session),
             Array.AsReadOnly(milestones.Select(row => new AdRewardMilestoneOperationalStatus(
-                row.Id, (int)row.Sequence, row.Percentage!.Value, row.OccurredAt, row.EvidenceHash)).ToArray()),
+                row.Id, (int)row.Sequence, row.Percentage!.Value, row.OccurredAt, row.EvidenceHash!)).ToArray()),
             Array.AsReadOnly(events.Select(row => new AdRewardSessionEventOperationalStatus(
-                row.Id, row.Sequence, row.State!.Value, row.EvidenceHash, row.OccurredAt)).ToArray()),
+                row.Id, row.Sequence, (DurableAdRewardSessionState)row.Kind!.Value, row.EvidenceHash!, row.OccurredAt)).ToArray()),
             completion is null
                 ? null
                 : new AdRewardCompletionOperationalStatus(

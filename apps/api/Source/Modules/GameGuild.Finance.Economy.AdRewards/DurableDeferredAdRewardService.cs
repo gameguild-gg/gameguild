@@ -303,13 +303,13 @@ public sealed class DurableDeferredAdRewardService : IDurableDeferredAdRewardSer
         session.State = DurableAdRewardSessionState.Posted;
         session.UpdatedAt = request.ConfirmedAt;
         session.Version++;
-        _db.Set<AdRewardTimelineRow>().Add(new AdRewardTimelineRow
+        _db.Set<EconomyEventRow>().Add(new EconomyEventRow
         {
             Id = Guid.NewGuid(),
-            TimelineKind = AdRewardTimelineKind.SessionEvent,
+            StreamKind = EconomyEventStreamKind.AdRewardSessionEvent,
             SessionId = session.Id,
             Sequence = 4,
-            State = DurableAdRewardSessionState.Posted,
+            Kind = (int)DurableAdRewardSessionState.Posted,
             EvidenceHash = receipt?.ReceiptHash ?? Hash(request.IdempotencyKey.Value),
             OccurredAt = request.ConfirmedAt
         });

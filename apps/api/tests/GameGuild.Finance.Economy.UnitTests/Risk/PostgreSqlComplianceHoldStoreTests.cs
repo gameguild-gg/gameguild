@@ -42,7 +42,9 @@ public sealed class PostgreSqlComplianceHoldStoreTests
         released.Should().Be(releaseReplay);
         released.IsActive(Now.AddMinutes(1)).Should().BeFalse();
         (await store.IsActiveAsync(activation.Scope, Now.AddMinutes(1), CancellationToken.None)).Should().BeFalse();
-        (await context.Set<EconomyComplianceHoldEventRow>().CountAsync()).Should().Be(2);
+        // #1092 Tier 2.1: hold events are rows of the unified event ledger.
+        (await context.Set<EconomyEventRow>()
+            .CountAsync(row => row.StreamKind == EconomyEventStreamKind.ComplianceHold)).Should().Be(2);
     }
 
     [Fact]

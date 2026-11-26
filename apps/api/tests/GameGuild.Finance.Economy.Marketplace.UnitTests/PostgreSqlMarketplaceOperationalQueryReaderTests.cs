@@ -73,10 +73,13 @@ public sealed class PostgreSqlMarketplaceOperationalQueryReaderTests
             PlatformFeeUnits = 10,
             RefundedUnits = 0
         });
-        context.Set<MarketplaceEventRow>().Add(new MarketplaceEventRow
+        // #1092 Tier 2.1: settlement events are rows of the unified event ledger
+        // (the former EventKind is the row's KindText).
+        context.Set<EconomyEventRow>().Add(new EconomyEventRow
         {
-            Id = Guid.NewGuid(), TenantId = TenantId, SettlementId = settlement.Id,
-            Sequence = 1, EventKind = "Settled", EvidenceHash = "event-evidence", OccurredAt = Now
+            Id = Guid.NewGuid(), StreamKind = EconomyEventStreamKind.MarketplaceSettlement,
+            TenantId = TenantId, SettlementId = settlement.Id,
+            Sequence = 1, KindText = "Settled", EvidenceHash = "event-evidence", OccurredAt = Now
         });
         context.Set<MarketplaceRefundRow>().Add(refund);
         context.Set<EconomyOutboxRow>().Add(outbox);

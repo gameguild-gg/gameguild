@@ -112,9 +112,10 @@ public sealed class PostgreSqlComplianceHoldStore : IComplianceHoldStore
             ActivatedBy = activation.ActorId, ActivatedAt = activation.ActivatedAt, ExpiresAt = activation.ExpiresAt
         };
         _db.Set<EconomyComplianceHoldRow>().Add(row);
-        _db.Set<EconomyComplianceHoldEventRow>().Add(new EconomyComplianceHoldEventRow
+        _db.Set<EconomyEventRow>().Add(new EconomyEventRow
         {
-            Id = Guid.NewGuid(), HoldId = row.Id, Sequence = 1, Kind = "Activated",
+            Id = Guid.NewGuid(), StreamKind = EconomyEventStreamKind.ComplianceHold, ComplianceHoldId = row.Id,
+            Sequence = 1, KindText = "Activated",
             ActorId = activation.ActorId, EvidenceHash = activation.EvidenceHash.Trim(),
             OccurredAt = activation.ActivatedAt
         });
@@ -149,8 +150,9 @@ public sealed class PostgreSqlComplianceHoldStore : IComplianceHoldStore
             ?? throw new KeyNotFoundException("Compliance hold was not found.");
         if (row.ReleasedAt is not null)
         {
-            var releaseEvent = await _db.Set<EconomyComplianceHoldEventRow>().AsNoTracking()
-                .SingleAsync(item => item.HoldId == holdId && item.Kind == "Released", cancellationToken);
+            var releaseEvent = await _db.Set<EconomyEventRow>().AsNoTracking()
+                .SingleAsync(item => item.StreamKind == EconomyEventStreamKind.ComplianceHold &&
+                                     item.ComplianceHoldId == holdId && item.KindText == "Released", cancellationToken);
             if (row.ReleasedBy != actorId || releaseEvent.EvidenceHash != evidenceHash.Trim())
                 {
                     throw new InvalidOperationException("Compliance hold release was replayed with different inputs.");
@@ -163,14 +165,15 @@ public sealed class PostgreSqlComplianceHoldStore : IComplianceHoldStore
                 throw new ArgumentException("Hold release cannot predate activation.", nameof(releasedAt));
             }
 
-            var sequence = await _db.Set<EconomyComplianceHoldEventRow>()
-            .Where(item => item.HoldId == holdId)
+            var sequence = await _db.Set<EconomyEventRow>()
+            .Where(item => item.StreamKind == EconomyEventStreamKind.ComplianceHold && item.ComplianceHoldId == holdId)
             .MaxAsync(item => item.Sequence, cancellationToken) + 1;
         row.ReleasedBy = actorId;
         row.ReleasedAt = releasedAt;
-        _db.Set<EconomyComplianceHoldEventRow>().Add(new EconomyComplianceHoldEventRow
+        _db.Set<EconomyEventRow>().Add(new EconomyEventRow
         {
-            Id = Guid.NewGuid(), HoldId = row.Id, Sequence = sequence, Kind = "Released",
+            Id = Guid.NewGuid(), StreamKind = EconomyEventStreamKind.ComplianceHold, ComplianceHoldId = row.Id,
+            Sequence = sequence, KindText = "Released",
             ActorId = actorId, EvidenceHash = evidenceHash.Trim(), OccurredAt = releasedAt
         });
         await _db.SaveChangesAsync(cancellationToken);
