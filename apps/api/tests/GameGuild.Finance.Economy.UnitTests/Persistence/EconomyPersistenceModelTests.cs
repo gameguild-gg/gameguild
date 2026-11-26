@@ -616,10 +616,12 @@ public sealed class EconomyPersistenceModelTests
     public void EventLedgerCarriesTheValueRulesOfEveryLegacyEventTable()
     {
         using var context = CreateContext();
+        // The design-time check-constraint interface declares Name and Sql as
+        // nullable; the model always stores both.
         var constraints = context.GetService<IDesignTimeModel>().Model.GetEntityTypes()
             .Single(entity => entity.GetTableName() == "economy_events")
             .GetCheckConstraints()
-            .ToDictionary(constraint => constraint.Name, constraint => constraint.Sql);
+            .ToDictionary(constraint => constraint.Name!, constraint => constraint.Sql!);
 
         constraints["ck_economy_events_sequence"].Should().Be("\"Sequence\" > 0");
         // One clause per stream that had a value rule before the merge.
