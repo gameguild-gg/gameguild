@@ -22,7 +22,7 @@ public sealed class MarketplacePersistenceModelTests
             "economy_marketplace_settlement_credits",
             "economy_marketplace_refunds",
             "economy_marketplace_refund_debts",
-            "economy_marketplace_events",
+            "economy_events",
             "economy_outbox");
 
         Entity(entities, "economy_marketplace_settlements").GetIndexes()
@@ -46,6 +46,20 @@ public sealed class MarketplacePersistenceModelTests
                 index.Properties.Select(property => property.Name).SequenceEqual(new[] { "SettlementId", "Currency" }));
         Entity(entities, "economy_marketplace_refunds").GetCheckConstraints()
             .Should().Contain(constraint => constraint.Name == "ck_economy_marketplace_refunds_quantity");
+        // #1092 Tier 2.1: settlement events are rows of the unified event ledger;
+        // this module re-asserts it and binds each one to its settlement. The
+        // jsonb facet must be re-asserted too: contexts built from this
+        // configuration alone run against the migrated template schema, where
+        // the column is jsonb.
+        var ledger = Entity(entities, "economy_events");
+        ledger.FindProperty("EvidenceHashes")!.GetColumnType().Should().Be("jsonb");
+        ledger.GetForeignKeys().Should().Contain(foreignKey =>
+            foreignKey.Properties.Select(property => property.Name).SequenceEqual(new[] { "SettlementId" }) &&
+            foreignKey.PrincipalEntityType.GetTableName() == "economy_marketplace_settlements" &&
+            foreignKey.DeleteBehavior == DeleteBehavior.Restrict);
+        ledger.GetIndexes().Should().Contain(index => index.IsUnique && index.GetFilter() == "\"StreamKind\" = 8" &&
+            index.Properties.Select(property => property.Name)
+                .SequenceEqual(new[] { "SettlementId", "Sequence" }));
     }
 
     [Fact]

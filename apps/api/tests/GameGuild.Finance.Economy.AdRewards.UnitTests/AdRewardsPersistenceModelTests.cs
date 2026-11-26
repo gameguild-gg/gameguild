@@ -17,7 +17,7 @@ public sealed class AdRewardsPersistenceModelTests
         entities.Select(entity => entity.GetTableName()).Should().BeEquivalentTo(
             "economy_policy_versions",
             "economy_ad_reward_sessions",
-            "economy_ad_reward_session_timeline",
+            "economy_events",
             "economy_inbox",
             "economy_ad_reward_pending_claims",
             "economy_unit_consumptions",
@@ -28,12 +28,29 @@ public sealed class AdRewardsPersistenceModelTests
             "economy_ad_reward_provider_batch_claims",
             "economy_ad_reward_reconciliations");
 
-        // #1092 Tier 1.5: session events and playback milestones merged behind
-        // TimelineKind; each kind keeps its own (SessionId, Sequence) stream.
-        Entity(entities, "economy_ad_reward_session_timeline").GetIndexes()
-            .Should().Contain(index => index.IsUnique &&
-                index.Properties.Select(property => property.Name)
-                    .SequenceEqual(new[] { "TimelineKind", "SessionId", "Sequence" }));
+        // #1092 Tier 2.1: session events and playback milestones are rows of the
+        // unified event ledger; this module re-asserts it and binds each row to
+        // its session. The jsonb facet must be re-asserted too: contexts built
+        // from this configuration alone run against the migrated template
+        // schema, where the column is jsonb.
+        var ledger = Entity(entities, "economy_events");
+        ledger.FindProperty("EvidenceHashes")!.GetColumnType().Should().Be("jsonb");
+        ledger.GetForeignKeys().Should().Contain(foreignKey =>
+            foreignKey.Properties.Select(property => property.Name).SequenceEqual(new[] { "SessionId" }) &&
+            foreignKey.PrincipalEntityType.GetTableName() == "economy_ad_reward_sessions" &&
+            foreignKey.DeleteBehavior == DeleteBehavior.Restrict);
+
+        // Session events and playback milestones are both numbered from 1 per
+        // session, so each kind keeps its own unique (SessionId, Sequence)
+        // stream — as the legacy (TimelineKind, SessionId, Sequence) index did.
+        ledger.GetIndexes().Should().Contain(index => index.IsUnique &&
+            index.GetFilter() == "\"StreamKind\" = 9" &&
+            index.Properties.Select(property => property.Name)
+                .SequenceEqual(new[] { "SessionId", "Sequence" }));
+        ledger.GetIndexes().Should().Contain(index => index.IsUnique &&
+            index.GetFilter() == "\"StreamKind\" = 10" &&
+            index.Properties.Select(property => property.Name)
+                .SequenceEqual(new[] { "SessionId", "Sequence" }));
 
         Entity(entities, "economy_ad_reward_completions").GetIndexes()
             .Should().Contain(index => index.IsUnique &&

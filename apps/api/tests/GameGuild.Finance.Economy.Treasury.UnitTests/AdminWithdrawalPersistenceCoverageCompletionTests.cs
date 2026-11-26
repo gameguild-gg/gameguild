@@ -13,7 +13,8 @@ public sealed class AdminWithdrawalPersistenceCoverageCompletionTests
         var tenantId = Guid.NewGuid();
         var view = new AdminWithdrawalAuditView(runId, true, []);
         var providerRow = new EconomyProviderEventRow { TenantId = tenantId };
-        var auditRow = new AdminWithdrawalAuditEventRow { TenantId = tenantId };
+        // #1092 Tier 2.1: the audit entry is a row of the unified event ledger.
+        var auditRow = new EconomyEventRow { StreamKind = EconomyEventStreamKind.AdminWithdrawalAudit, TenantId = tenantId };
 
         view.RunId.Should().Be(runId);
         providerRow.TenantId.Should().Be(tenantId);

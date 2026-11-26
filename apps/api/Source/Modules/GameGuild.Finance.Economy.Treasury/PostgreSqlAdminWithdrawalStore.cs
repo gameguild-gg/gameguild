@@ -13,19 +13,6 @@ namespace GameGuild.Finance.Economy.Treasury;
 // and re-points the run bindings (provider events, dispatch outbox, audit
 // chain) at the merged table.
 
-internal sealed class AdminWithdrawalAuditEventRow
-{
-    public Guid TenantId { get; set; }
-    public Guid RunId { get; set; }
-    public long Sequence { get; set; }
-    public string Kind { get; set; } = string.Empty;
-    public Guid? ActorId { get; set; }
-    public string Evidence { get; set; } = string.Empty;
-    public DateTimeOffset OccurredAt { get; set; }
-    public string PreviousHash { get; set; } = string.Empty;
-    public string Hash { get; set; } = string.Empty;
-}
-
 public sealed class TreasuryModelConfiguration : IModelConfiguration
 {
     public void Configure(ModelBuilder modelBuilder)
@@ -64,19 +51,38 @@ public sealed class TreasuryModelConfiguration : IModelConfiguration
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<AdminWithdrawalAuditEventRow>(builder =>
+        // #1092 Tier 2.1: economy_admin_withdrawal_audit_events merged into the
+        // shared economy_events table (StreamKind = 11 = AdminWithdrawalAudit).
+        // The Treasury module re-asserts the unified table with its column
+        // facets and the run binding of its audit entries, so contexts
+        // composing only this configuration (the PostgreSQL fixtures reuse the
+        // migrated template schema) address the unified ledger instead of the
+        // CLR-name convention table and type the jsonb column as the template
+        // does. The per-run sequence uniqueness and the unique chain hash are
+        // the partial indexes declared with the unified registration in the
+        // Economy module and re-asserted here.
+        modelBuilder.Entity<EconomyEventRow>(builder =>
         {
-            builder.ToTable("economy_admin_withdrawal_audit_events", table =>
-                table.HasCheckConstraint(
-                    "ck_economy_admin_withdrawal_audit_events_sequence",
-                    "\"Sequence\" > 0"));
-            builder.HasKey(row => new { row.RunId, row.Sequence });
-            builder.Property(row => row.Kind).HasMaxLength(100);
-            builder.Property(row => row.Evidence).HasColumnType("text");
+            builder.ToTable("economy_events");
+            builder.HasKey(row => row.Id);
+            builder.Property(row => row.ProviderEventId).HasMaxLength(256);
+            builder.Property(row => row.ProviderDisputeReference).HasMaxLength(256);
+            builder.Property(row => row.RequestHash).HasMaxLength(128);
+            builder.Property(row => row.EvidenceHash).HasMaxLength(128);
+            builder.Property(row => row.EvidenceHashes).HasColumnType("jsonb");
+            builder.Property(row => row.KindText).HasMaxLength(100);
+            builder.Property(row => row.Reason).HasMaxLength(500);
+            builder.Property(row => row.ReauthenticationHash).HasMaxLength(128);
             builder.Property(row => row.PreviousHash).HasMaxLength(128);
             builder.Property(row => row.Hash).HasMaxLength(128);
-            builder.HasIndex(row => row.Hash).IsUnique()
-                .HasDatabaseName("ux_economy_admin_withdrawal_audit_events_hash");
+            builder.HasIndex(row => new { row.RunId, row.Sequence })
+                .IsUnique()
+                .HasFilter("\"StreamKind\" = 11")
+                .HasDatabaseName("ux_economy_events_admin_withdrawal_sequence");
+            builder.HasIndex(row => row.Hash)
+                .IsUnique()
+                .HasFilter("\"StreamKind\" = 11")
+                .HasDatabaseName("ux_economy_events_admin_withdrawal_hash");
             builder.HasOne<EconomyOperationRow>()
                 .WithMany()
                 .HasForeignKey(row => row.RunId)
@@ -506,20 +512,23 @@ public sealed class PostgreSqlAdminWithdrawalAuditTrail : IAdminWithdrawalAuditT
             throw new ArgumentException("Tenant ID is required.", nameof(tenantId));
         }
 
-        return _db.Set<AdminWithdrawalAuditEventRow>()
+        // The kind-shape check on economy_events makes the run, kind, evidence
+        // and chain hashes non-null for every admin-withdrawal audit entry.
+        return _db.Set<EconomyEventRow>()
             .AsNoTracking()
-            .Where(item => item.TenantId == tenantId && item.RunId == runId)
+            .Where(item => item.StreamKind == EconomyEventStreamKind.AdminWithdrawalAudit &&
+                           item.TenantId == tenantId && item.RunId == runId)
             .AsEnumerable()
             .OrderBy(item => item.Sequence)
             .Select(item => new AdminWithdrawalAuditEvent(
-                item.RunId,
+                item.RunId!.Value,
                 item.Sequence,
-                item.Kind,
+                item.KindText!,
                 item.ActorId,
-                item.Evidence,
+                item.Evidence!,
                 item.OccurredAt,
-                item.PreviousHash,
-                item.Hash))
+                item.PreviousHash!,
+                item.Hash!))
             .ToArray();
     }
 

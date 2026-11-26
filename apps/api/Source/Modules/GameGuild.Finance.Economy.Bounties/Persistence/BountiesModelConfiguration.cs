@@ -1,4 +1,5 @@
 using GameGuild.Finance.Economy.Contracts;
+using GameGuild.Finance.Economy.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace GameGuild.Finance.Economy.Bounties.Persistence;
@@ -54,15 +55,6 @@ internal sealed class BountyTerminalEventRow
     public long FirstJournalSequence { get; set; }
     public string OutputLots { get; set; } = "[]";
     public DateTimeOffset OccurredAt { get; set; }
-}
-
-internal sealed class BountyExpirationEventRow
-{
-    public Guid Id { get; set; }
-    public Guid BountyId { get; set; }
-    public DateTimeOffset ExpiresAt { get; set; }
-    public DateTimeOffset RecordedAt { get; set; }
-    public long BountyVersion { get; set; }
 }
 
 public sealed class BountiesModelConfiguration : IModelConfiguration
@@ -127,22 +119,37 @@ public sealed class BountiesModelConfiguration : IModelConfiguration
             builder.HasOne<BountyRow>().WithOne().HasForeignKey<BountyTerminalEventRow>(row => row.BountyId).OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<BountyExpirationEventRow>(builder =>
+        // #1092 Tier 2.5: economy_bounty_expiration_events merged into the
+        // shared economy_events ledger (StreamKind = 12 = BountyExpiration).
+        // The Bounties module re-asserts the unified table with its column
+        // facets and the bounty binding of its expiration records, so contexts
+        // composing only this configuration (the PostgreSQL fixtures reuse the
+        // migrated template schema) address the unified ledger instead of the
+        // CLR-name convention table and type the jsonb column as the template
+        // does. One record per bounty is the partial unique index declared with
+        // the unified registration in the Economy module and re-asserted here.
+        modelBuilder.Entity<EconomyEventRow>(builder =>
         {
-            builder.ToTable("economy_bounty_expiration_events", table =>
-            {
-                table.HasCheckConstraint(
-                    "ck_economy_bounty_expiration_events_version",
-                    "\"BountyVersion\" > 1");
-                table.HasCheckConstraint(
-                    "ck_economy_bounty_expiration_events_time",
-                    "\"RecordedAt\" >= \"ExpiresAt\"");
-            });
+            builder.ToTable("economy_events");
             builder.HasKey(row => row.Id);
-            builder.Property(row => row.Id).ValueGeneratedNever();
-            builder.HasIndex(row => row.BountyId).IsUnique();
-            builder.HasIndex(row => new { row.RecordedAt, row.Id });
-            builder.HasOne<BountyRow>().WithOne().HasForeignKey<BountyExpirationEventRow>(row => row.BountyId)
+            builder.Property(row => row.ProviderEventId).HasMaxLength(256);
+            builder.Property(row => row.ProviderDisputeReference).HasMaxLength(256);
+            builder.Property(row => row.RequestHash).HasMaxLength(128);
+            builder.Property(row => row.EvidenceHash).HasMaxLength(128);
+            builder.Property(row => row.EvidenceHashes).HasColumnType("jsonb");
+            builder.Property(row => row.KindText).HasMaxLength(100);
+            builder.Property(row => row.Reason).HasMaxLength(500);
+            builder.Property(row => row.ReauthenticationHash).HasMaxLength(128);
+            builder.Property(row => row.PreviousHash).HasMaxLength(128);
+            builder.Property(row => row.Hash).HasMaxLength(128);
+            builder.HasIndex(row => row.BountyId)
+                .IsUnique()
+                .HasFilter("\"StreamKind\" = 12")
+                .HasDatabaseName("ux_economy_events_bounty_expiration");
+            builder.HasIndex(row => new { row.OccurredAt, row.Id })
+                .HasFilter("\"StreamKind\" = 12")
+                .HasDatabaseName("ix_economy_events_bounty_expiration_recorded");
+            builder.HasOne<BountyRow>().WithMany().HasForeignKey(row => row.BountyId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }

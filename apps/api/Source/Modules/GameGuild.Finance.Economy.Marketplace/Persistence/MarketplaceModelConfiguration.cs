@@ -147,16 +147,6 @@ internal sealed class MarketplaceRefundDebtRow
     public DateTimeOffset RecordedAt { get; set; }
 }
 
-internal sealed class MarketplaceEventRow
-{
-    public Guid Id { get; set; }
-    public Guid TenantId { get; set; }
-    public Guid SettlementId { get; set; }
-    public long Sequence { get; set; }
-    public string EventKind { get; set; } = string.Empty;
-    public string EvidenceHash { get; set; } = string.Empty;
-    public DateTimeOffset OccurredAt { get; set; }
-}
 
 
 public sealed class MarketplaceModelConfiguration : IModelConfiguration
@@ -310,15 +300,39 @@ public sealed class MarketplaceModelConfiguration : IModelConfiguration
             builder.HasOne<MarketplaceSettlementRow>().WithMany().HasForeignKey(row => row.SettlementId).OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<MarketplaceEventRow>(builder =>
+        // #1092 Tier 2.1: economy_marketplace_events merged into the shared
+        // economy_events table (StreamKind = 8 = MarketplaceSettlement; the
+        // former EventKind is the row's KindText). The Marketplace module
+        // re-asserts the unified table with its column facets and the
+        // settlement binding of its rows, so contexts composing only this
+        // configuration (the PostgreSQL fixtures reuse the migrated template
+        // schema) address the unified ledger instead of the CLR-name
+        // convention table and type the jsonb column as the template does.
+        // The settlement stream keeps its dedupe index as a partial (declared
+        // with the unified registration in the Economy module and re-asserted
+        // here).
+        modelBuilder.Entity<EconomyEventRow>(builder =>
         {
-            builder.ToTable("economy_marketplace_events", table =>
-                table.HasCheckConstraint("ck_economy_marketplace_events_sequence", "\"Sequence\" > 0"));
+            builder.ToTable("economy_events");
             builder.HasKey(row => row.Id);
-            builder.Property(row => row.EventKind).HasMaxLength(100);
+            builder.Property(row => row.ProviderEventId).HasMaxLength(256);
+            builder.Property(row => row.ProviderDisputeReference).HasMaxLength(256);
+            builder.Property(row => row.RequestHash).HasMaxLength(128);
             builder.Property(row => row.EvidenceHash).HasMaxLength(128);
-            builder.HasIndex(row => new { row.SettlementId, row.Sequence }).IsUnique();
-            builder.HasOne<MarketplaceSettlementRow>().WithMany().HasForeignKey(row => row.SettlementId).OnDelete(DeleteBehavior.Restrict);
+            builder.Property(row => row.EvidenceHashes).HasColumnType("jsonb");
+            builder.Property(row => row.KindText).HasMaxLength(100);
+            builder.Property(row => row.Reason).HasMaxLength(500);
+            builder.Property(row => row.ReauthenticationHash).HasMaxLength(128);
+            builder.Property(row => row.PreviousHash).HasMaxLength(128);
+            builder.Property(row => row.Hash).HasMaxLength(128);
+            builder.HasIndex(row => new { row.SettlementId, row.Sequence })
+                .IsUnique()
+                .HasFilter("\"StreamKind\" = 8")
+                .HasDatabaseName("ux_economy_events_settlement_sequence");
+            builder.HasOne<MarketplaceSettlementRow>()
+                .WithMany()
+                .HasForeignKey(row => row.SettlementId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         // #1092 Tier 1.1: economy_marketplace_outbox merged into the shared

@@ -241,10 +241,10 @@ public sealed class DurableAdRewardCompletionService : IDurableAdRewardCompletio
         var sequence = 1;
         foreach (var percentage in playback.Milestones)
         {
-            _db.Set<AdRewardTimelineRow>().Add(new AdRewardTimelineRow
+            _db.Set<EconomyEventRow>().Add(new EconomyEventRow
             {
                 Id = Guid.NewGuid(),
-                TimelineKind = AdRewardTimelineKind.PlaybackMilestone,
+                StreamKind = EconomyEventStreamKind.AdRewardPlaybackMilestone,
                 SessionId = sessionId,
                 Sequence = sequence++,
                 Percentage = percentage,
@@ -343,13 +343,13 @@ public sealed class DurableAdRewardCompletionService : IDurableAdRewardCompletio
             Version = 1
         };
         _db.Set<AdRewardCompletionRow>().Add(row);
-        _db.Set<AdRewardTimelineRow>().Add(new AdRewardTimelineRow
+        _db.Set<EconomyEventRow>().Add(new EconomyEventRow
         {
             Id = Guid.NewGuid(),
-            TimelineKind = AdRewardTimelineKind.SessionEvent,
+            StreamKind = EconomyEventStreamKind.AdRewardSessionEvent,
             SessionId = session.Id,
             Sequence = 2,
-            State = sessionState,
+            Kind = (int)sessionState,
             EvidenceHash = receipt?.ReceiptHash ?? CompletionRequestHash(request, claims),
             OccurredAt = request.CompletedAt
         });

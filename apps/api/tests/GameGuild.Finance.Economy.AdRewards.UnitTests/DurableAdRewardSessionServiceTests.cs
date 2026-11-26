@@ -1,6 +1,7 @@
 using FluentAssertions;
 using GameGuild.Finance.Economy.AdRewards.Persistence;
 using GameGuild.Finance.Economy.Contracts;
+using GameGuild.Finance.Economy.Persistence;
 using GameGuild.TestSupport.Finance.Economy;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -32,8 +33,12 @@ public sealed class DurableAdRewardSessionServiceTests
         var row = await context.Set<AdRewardSessionRow>().SingleAsync();
         row.State.Should().Be(DurableAdRewardSessionState.Issued);
         row.Version.Should().Be(1);
-        (await context.Set<AdRewardTimelineRow>().SingleAsync()).State
-            .Should().Be(DurableAdRewardSessionState.Issued);
+        // #1092 Tier 2.1: session events are rows of the unified event ledger;
+        // the former State is the row's Kind.
+        var issued = await context.Set<EconomyEventRow>()
+            .SingleAsync(eventRow => eventRow.StreamKind == EconomyEventStreamKind.AdRewardSessionEvent);
+        ((DurableAdRewardSessionState)(issued.Kind ?? 0)).Should().Be(DurableAdRewardSessionState.Issued);
+        issued.Sequence.Should().Be(1);
 
         context.ChangeTracker.Clear();
         var duplicate = await service.StartAsync(request with { RequestedAt = Now.AddSeconds(1) });
@@ -45,7 +50,8 @@ public sealed class DurableAdRewardSessionServiceTests
         row = await context.Set<AdRewardSessionRow>().SingleAsync();
         row.Version.Should().Be(2);
         row.UpdatedAt.Should().Be(Now.AddSeconds(1));
-        (await context.Set<AdRewardTimelineRow>().CountAsync()).Should().Be(1);
+        (await context.Set<EconomyEventRow>()
+            .CountAsync(eventRow => eventRow.StreamKind == EconomyEventStreamKind.AdRewardSessionEvent)).Should().Be(1);
 
         await FluentActions.Awaiting(() => service.StartAsync(
                 request with { CreativeId = "different", RequestedAt = Now.AddSeconds(2) }).AsTask())

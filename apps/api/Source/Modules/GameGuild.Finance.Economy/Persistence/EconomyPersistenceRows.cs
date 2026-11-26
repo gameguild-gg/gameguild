@@ -87,16 +87,6 @@ internal sealed class EconomySourceStampRow
     public DateTimeOffset? ConfirmedAt { get; set; }
 }
 
-internal sealed class EconomySourceStampEventRow
-{
-    public Guid Id { get; set; }
-    public Guid SourceStampId { get; set; }
-    public long Sequence { get; set; }
-    public SourceConfirmationState State { get; set; }
-    public string EvidenceHash { get; set; } = string.Empty;
-    public DateTimeOffset OccurredAt { get; set; }
-}
-
 internal sealed class EconomyFundingClaimRow
 {
     public Guid SourceStampId { get; set; }
@@ -164,18 +154,6 @@ internal sealed class EconomyProviderDisputeRow
     public long Version { get; set; }
 }
 
-internal sealed class EconomyProviderDisputeEventRow
-{
-    public string ProviderEventId { get; set; } = string.Empty;
-    public string ProviderDisputeReference { get; set; } = string.Empty;
-    public Guid SourceStampId { get; set; }
-    public long ProviderSequence { get; set; }
-    public ProviderDisputeStatus Status { get; set; }
-    public long CumulativeDisputedHardUnits { get; set; }
-    public string RequestHash { get; set; } = string.Empty;
-    public DateTimeOffset OccurredAt { get; set; }
-}
-
 internal sealed class EconomyDisputeFragmentFreezeRow
 {
     public Guid Id { get; set; }
@@ -205,17 +183,6 @@ internal sealed class EconomyWalletDebtRow
     public long OutstandingHardUnits { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
     public long Version { get; set; }
-}
-
-internal sealed class EconomyWalletDebtEventRow
-{
-    public Guid Id { get; set; }
-    public Guid WalletId { get; set; }
-    public Guid SourceStampId { get; set; }
-    public long Sequence { get; set; }
-    public long DeltaHardUnits { get; set; }
-    public long OutstandingHardUnits { get; set; }
-    public DateTimeOffset OccurredAt { get; set; }
 }
 
 internal sealed class EconomyPostingGroupRow
@@ -525,17 +492,6 @@ internal sealed class EconomyHoldRow
     public DateTimeOffset? ReleasedAt { get; set; }
 }
 
-internal sealed class EconomyHoldEventRow
-{
-    public Guid Id { get; set; }
-    public Guid HoldId { get; set; }
-    public long Sequence { get; set; }
-    public HoldEventKind Kind { get; set; }
-    public Guid ActorId { get; set; }
-    public string EvidenceHash { get; set; } = string.Empty;
-    public DateTimeOffset OccurredAt { get; set; }
-}
-
 internal sealed class EconomyRiskReviewCaseRow
 {
     public Guid Id { get; set; }
@@ -549,19 +505,6 @@ internal sealed class EconomyRiskReviewCaseRow
     public string? Resolution { get; set; }
     public int RequiredApprovals { get; set; }
     public Guid? AppealOf { get; set; }
-}
-
-internal sealed class EconomyRiskReviewEventRow
-{
-    public Guid Id { get; set; }
-    public Guid RiskReviewCaseId { get; set; }
-    public long Sequence { get; set; }
-    public RiskReviewEventKind Kind { get; set; }
-    public Guid ActorId { get; set; }
-    public string EvidenceHashes { get; set; } = string.Empty;
-    public string? Resolution { get; set; }
-    public RiskManualDecisionCode? DecisionCode { get; set; }
-    public DateTimeOffset OccurredAt { get; set; }
 }
 
 internal sealed class EconomyRiskAuditEvidenceRow
@@ -712,17 +655,6 @@ internal sealed class EconomyComplianceHoldRow
     public string? ReleasePolicyEvidenceHash { get; set; }
     public Guid? ReleasedBy { get; set; }
     public DateTimeOffset? ReleasedAt { get; set; }
-}
-
-internal sealed class EconomyComplianceHoldEventRow
-{
-    public Guid Id { get; set; }
-    public Guid HoldId { get; set; }
-    public int Sequence { get; set; }
-    public string Kind { get; set; } = string.Empty;
-    public Guid ActorId { get; set; }
-    public string EvidenceHash { get; set; } = string.Empty;
-    public DateTimeOffset OccurredAt { get; set; }
 }
 
 internal sealed class EconomyCustodyObservationRow
@@ -962,20 +894,6 @@ internal sealed class EconomyLegacyCutoverRow
     public DateTimeOffset? RolledBackAt { get; set; }
     public long Epoch { get; set; }
     public long Version { get; set; }
-}
-
-internal sealed class EconomyLegacyCutoverAuditRow
-{
-    public Guid Id { get; set; }
-    public Guid TenantId { get; set; }
-    public Guid BatchId { get; set; }
-    public long Sequence { get; set; }
-    public EconomyLegacyCutoverState State { get; set; }
-    public Guid ActorId { get; set; }
-    public string Reason { get; set; } = string.Empty;
-    public string ReauthenticationHash { get; set; } = string.Empty;
-    public string EvidenceHash { get; set; } = string.Empty;
-    public DateTimeOffset RecordedAt { get; set; }
 }
 
 internal sealed class RegisteredPostingReceiptRow

@@ -72,7 +72,9 @@ public sealed class PostgreSqlLegacyEconomyShadowMigrationTests
         (await migration.ApproveCutoverAsync(new ApproveLegacyEconomyCutoverCommand(
             batchId, tenantId, secondApprover, "reauth-second", Now.AddMinutes(5))))
             .State.Should().Be(LegacyEconomyShadowState.CutoverActive);
-        var activationAudit = await context.Set<EconomyLegacyCutoverAuditRow>().AsNoTracking()
+        // #1092 Tier 2.1: cutover audit entries are rows of the unified event ledger.
+        var activationAudit = await context.Set<EconomyEventRow>().AsNoTracking()
+            .Where(row => row.StreamKind == EconomyEventStreamKind.LegacyCutover)
             .OrderBy(row => row.Sequence).ToArrayAsync();
         activationAudit.Select(row => row.ReauthenticationHash).Should().Equal(
             Hash("reauth-proposer"), Hash("reauth-first"), Hash("reauth-second"));
@@ -93,8 +95,9 @@ public sealed class PostgreSqlLegacyEconomyShadowMigrationTests
         legacy.Balance = 1m;
         await context.SaveChangesAsync();
         (await context.Set<UserWallet>().SingleAsync(row => row.Id == legacyWalletId)).Balance.Should().Be(1m);
-        (await context.Set<EconomyLegacyCutoverAuditRow>().AsNoTracking()
-            .SingleAsync(row => row.Sequence == 4)).ReauthenticationHash.Should().Be(Hash("reauth-rollback"));
+        (await context.Set<EconomyEventRow>().AsNoTracking()
+            .SingleAsync(row => row.StreamKind == EconomyEventStreamKind.LegacyCutover && row.Sequence == 4))
+            .ReauthenticationHash.Should().Be(Hash("reauth-rollback"));
     }
 
     [Fact]
@@ -229,12 +232,15 @@ public sealed class PostgreSqlLegacyEconomyShadowMigrationTests
         (await context.Set<EconomyLegacyShadowBatchRow>().CountAsync()).Should().Be(0);
         await using var connection = new NpgsqlConnection(database.ConnectionString);
         await connection.OpenAsync();
+        // #1092 Tier 2.1: the cutover audit columns moved to the unified event
+        // ledger; exactly one match means the ledger carries the column and the
+        // legacy table itself is gone.
         await using var command = new NpgsqlCommand("""
             SELECT count(*)
             FROM information_schema.columns
             WHERE table_schema = 'public'
-              AND table_name = 'economy_legacy_cutover_audit'
-              AND column_name = 'ReauthenticationHash';
+              AND ((table_name = 'economy_events' AND column_name = 'ReauthenticationHash')
+                   OR table_name = 'economy_legacy_cutover_audit');
             """, connection);
         Convert.ToInt64(await command.ExecuteScalarAsync()).Should().Be(1);
 

@@ -31,11 +31,11 @@ Posting status is decided at birth inside the writer transaction — there are n
 | `Duplicate` | idempotency key + request-hash replay inside the writer (`Migration:` idempotency block; `Core:/Ledger/MarketplaceLedgerGateway.cs:218-219`) | the original posting id is returned — callers treat as success |
 | `Rejected` | validation guards throw before write (`RegisteredPostingRejectedException`) | nothing persisted |
 
-Posting status is decided **inside** the writer transaction — there is no in-place transition between Accepted/Duplicate/Rejected; a group is born in its terminal status (idempotency replay returns the original posting id + `duplicate = true`, `Core:/Ledger/MarketplaceLedgerGateway.cs:218-219` pattern). Holds (`HoldStatus Active → Released/Consumed`, `EconomyEnums.cs:40-45`) are transitioned by the writer functions (refund drains release the seller refund hold: `economy_holds Status 3` + `economy_hold_events` row inside `post_marketplace_refund_v1`, `Migration:`).
+Posting status is decided **inside** the writer transaction — there is no in-place transition between Accepted/Duplicate/Rejected; a group is born in its terminal status (idempotency replay returns the original posting id + `duplicate = true`, `Core:/Ledger/MarketplaceLedgerGateway.cs:218-219` pattern). Holds (`HoldStatus Active → Released/Consumed`, `EconomyEnums.cs:40-45`) are transitioned by the writer functions (refund drains release the seller refund hold: `economy_holds Status 3` + a hold event row in `economy_events` (`StreamKind = 4`) inside `post_marketplace_refund_v1`, `Migration:`).
 
 ## 2. Funding source confirmation (top-up / provider leg)
 
-Source of truth: the static transition predicate `HardCoinFundingClaim.CanTransition` (`Core:/Funding/HardCoinFundingLifecycle.cs:240-252`), events appended with monotonic sequence + evidence hash chain (`:202-238`); persisted as `economy_source_stamps` + `economy_source_stamp_events`.
+Source of truth: the static transition predicate `HardCoinFundingClaim.CanTransition` (`Core:/Funding/HardCoinFundingLifecycle.cs:240-252`), events appended with monotonic sequence + evidence hash chain (`:202-238`); persisted as `economy_source_stamps` + their events in `economy_events` (`StreamKind = 1`).
 
 ```mermaid
 stateDiagram-v2
@@ -183,7 +183,7 @@ stateDiagram-v2
     BExp --> BRec : ReclaimAsync L300 - via prepare flip to Open
 ```
 
-Findings: the `Expired → Open` flip is guarded by `ExpiresAt <= reclaimedAt` (i.e. still past due) and an `UPDATE ... WHERE Status = Expired` compare-and-set (`DurableBountyExpirationWorkflow.cs:92-99`), so a concurrent expiration worker re-flagging cannot double-transition — the version columns plus the SQL guard serialize it. `Claimed`/`Reclaimed` are terminal; `economy_bounty_expiration_events` rows record every expiry (worker `:72-79`) — the event stream #1092 Tier-2.5 folds into the unified event ledger.
+Findings: the `Expired → Open` flip is guarded by `ExpiresAt <= reclaimedAt` (i.e. still past due) and an `UPDATE ... WHERE Status = Expired` compare-and-set (`DurableBountyExpirationWorkflow.cs:92-99`), so a concurrent expiration worker re-flagging cannot double-transition — the version columns plus the SQL guard serialize it. `Claimed`/`Reclaimed` are terminal; one `economy_events` row with `StreamKind = 12` per bounty records every expiry (worker `:72-79`) — the stream #1092 Tier-2.5 folded into the unified event ledger.
 
 ## 8. Ad-reward session and completion
 

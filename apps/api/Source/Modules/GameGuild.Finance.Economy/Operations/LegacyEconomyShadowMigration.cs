@@ -915,26 +915,27 @@ public sealed class PostgreSqlLegacyEconomyShadowMigration : ILegacyEconomyShado
         DateTimeOffset at,
         long sequence)
     {
-        _db.Set<EconomyLegacyCutoverAuditRow>().Add(new EconomyLegacyCutoverAuditRow
+        _db.Set<EconomyEventRow>().Add(new EconomyEventRow
         {
             Id = Guid.NewGuid(),
-            TenantId = cutover.TenantId,
+            StreamKind = EconomyEventStreamKind.LegacyCutover,
+            LegacyCutoverTenantId = cutover.TenantId,
             BatchId = cutover.BatchId,
             Sequence = sequence,
-            State = cutover.State,
+            Kind = (int)cutover.State,
             ActorId = actorId,
             Reason = reason,
             ReauthenticationHash = reauthenticationHash,
             EvidenceHash = Hash(string.Join('|', cutover.TenantId.ToString("N"), cutover.BatchId.ToString("N"),
                 sequence, (int)cutover.State, actorId.ToString("N"), reason, reauthenticationHash,
                 at.UtcTicks, cutover.Epoch)),
-            RecordedAt = at
+            OccurredAt = at
         });
     }
 
     private async ValueTask<long> NextAuditSequenceAsync(Guid tenantId, CancellationToken cancellationToken) =>
-        checked((await _db.Set<EconomyLegacyCutoverAuditRow>()
-            .Where(row => row.TenantId == tenantId)
+        checked((await _db.Set<EconomyEventRow>()
+            .Where(row => row.StreamKind == EconomyEventStreamKind.LegacyCutover && row.LegacyCutoverTenantId == tenantId)
             .MaxAsync(row => (long?)row.Sequence, cancellationToken) ?? 0) + 1);
 
     private static string CanonicalTransaction(WalletTransaction transaction) => string.Join('|',

@@ -36,11 +36,14 @@ public sealed class PostgreSqlAdminWithdrawalAuditIntegrityTests
             return run;
         }
 
+        // #1092 Tier 2.1: audit entries are rows of the unified event ledger.
         async Task InsertAsync(Guid runId, long sequence, string previousHash, string hash) =>
             await context.Database.ExecuteSqlInterpolatedAsync($"""
-                INSERT INTO public.economy_admin_withdrawal_audit_events
-                    ("TenantId", "RunId", "Sequence", "Kind", "ActorId", "Evidence", "OccurredAt", "PreviousHash", "Hash")
-                SELECT "TenantId", {runId}, {sequence}, {"integrity"}, {null}, {"evidence"}, {now}, {previousHash}, {hash}
+                INSERT INTO public.economy_events
+                    ("Id", "StreamKind", "TenantId", "RunId", "Sequence", "KindText", "ActorId", "Evidence", "OccurredAt",
+                     "PreviousHash", "Hash")
+                SELECT gen_random_uuid(), 11, "TenantId", {runId}, {sequence}, {"integrity"}, {null}, {"evidence"}, {now},
+                       {previousHash}, {hash}
                 FROM public.economy_operations
                 WHERE "OperationKind" = 2 AND "Id" = {runId};
                 """);
@@ -63,12 +66,12 @@ public sealed class PostgreSqlAdminWithdrawalAuditIntegrityTests
 
         await context.Database.ExecuteSqlRawAsync("""
             CREATE OR REPLACE FUNCTION economy_private.read_admin_withdrawal_audit_events_v1(p_run_id uuid)
-            RETURNS SETOF public.economy_admin_withdrawal_audit_events
+            RETURNS SETOF public.economy_events
             LANGUAGE sql STABLE SECURITY DEFINER
             SET search_path = pg_catalog, economy_private
             AS $function$
-                SELECT * FROM public.economy_admin_withdrawal_audit_events
-                WHERE "RunId" <> p_run_id
+                SELECT * FROM public.economy_events
+                WHERE "StreamKind" = 11 AND "RunId" <> p_run_id
                 ORDER BY "Sequence"
                 LIMIT 1
             $function$;

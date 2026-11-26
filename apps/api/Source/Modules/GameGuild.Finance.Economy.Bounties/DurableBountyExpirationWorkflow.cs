@@ -69,12 +69,16 @@ public sealed class PostgreSqlBountyExpirationWorkflow :
             {
                 bounty.Status = BountyStatus.Expired;
                 bounty.Version = checked(bounty.Version + 1);
-                _db.Set<BountyExpirationEventRow>().Add(new BountyExpirationEventRow
+                _db.Set<EconomyEventRow>().Add(new EconomyEventRow
                 {
                     Id = Guid.NewGuid(),
+                    StreamKind = EconomyEventStreamKind.BountyExpiration,
+                    // One expiration record per bounty: it is the first entry of
+                    // the bounty's stream in the unified ledger.
+                    Sequence = 1,
                     BountyId = bounty.Id,
                     ExpiresAt = bounty.ExpiresAt,
-                    RecordedAt = now,
+                    OccurredAt = now,
                     BountyVersion = bounty.Version
                 });
             }
