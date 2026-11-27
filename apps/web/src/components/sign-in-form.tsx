@@ -98,6 +98,23 @@ export function SignInForm({
         form.reset();
         router.replace({ pathname: "/sign-in/2fa", query: { redirectTo } });
       }
+      // #1298 J1: the password was accepted but the sign-in policy requires a
+      // verified email. It is an interrupt, not a credential error: send the
+      // visitor to verify the address, with no session until they do. The
+      // original target rides along so they sign in again to it afterwards.
+      if (
+        err instanceof Error &&
+        "type" in err &&
+        err.type === "EmailVerificationRequired"
+      ) {
+        form.reset();
+        const address =
+          "email" in err && typeof err.email === "string" ? err.email : email;
+        router.replace({
+          pathname: "/verify",
+          query: { email: address, signIn: "1", redirectTo },
+        });
+      }
       // error state is set by useAuth
     }
   }
@@ -201,7 +218,9 @@ export function SignInForm({
                 </FieldDescription>
               </Field>
               {error &&
-                !("type" in error && error.type === "MfaRequired") && (
+                !("type" in error &&
+                  (error.type === "MfaRequired" ||
+                    error.type === "EmailVerificationRequired")) && (
                   <FieldError>{error.message}</FieldError>
                 )}
               <Field>

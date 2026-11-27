@@ -9,6 +9,7 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { resolveEmailVerification } from '../../src/runtime/auth/claims.js';
+import { EmailVerificationRequiredError } from '../../src/runtime/auth/errors.js';
 import { CredentialsProvider } from '../../src/runtime/auth/providers/credentials.js';
 import { GoogleProvider } from '../../src/runtime/auth/providers/google.js';
 import { refreshAccessToken, toSession } from '../../src/runtime/auth/session.js';
@@ -17,11 +18,11 @@ import type { JWTPayload, ResolvedAuthConfig } from '../../src/runtime/auth/type
 const config: ResolvedAuthConfig = {
   providers: [],
   callbacks: {
-    jwt: async ({ token }) => token,
-    session: async ({ session }) => session,
-    signIn: async () => true,
-    redirect: async ({ url }) => url,
-    authorized: async () => true,
+    jwt: ({ token }) => token,
+    session: ({ session }) => session,
+    signIn: () => true,
+    redirect: ({ url }) => url,
+    authorized: () => true,
   },
   secret: 'test-secret-at-least-32-characters-long',
   apiUrl: 'http://localhost:8080',
@@ -146,9 +147,7 @@ describe('session user email verification', () => {
   });
 
   it('keeps the last known verdict when a token refresh response says nothing', async () => {
-    globalThis.fetch = vi.fn().mockResolvedValue(
-      Response.json({ accessToken: 'new-access-token', refreshToken: 'new-refresh-token', expiresIn: 3600 }),
-    );
+    globalThis.fetch = vi.fn().mockResolvedValue(Response.json({ accessToken: 'new-access-token', refreshToken: 'new-refresh-token', expiresIn: 3600 }));
 
     const refreshed = await refreshAccessToken(sessionToken(false), config);
 
@@ -161,17 +160,53 @@ describe('session user email verification', () => {
         accessToken: 'google-access',
         refreshToken: 'google-refresh',
         expiresIn: 3600,
-        userId: 'user-1',
+        userId: '11111111-1111-4111-8111-111111111111',
         email: 'user@gmail.com',
         user: { displayName: 'Google User', emailVerified: true },
       }),
     );
 
-    const result = await GoogleProvider({ clientId: 'id', clientSecret: 'secret' }).exchangeToken(
-      'google-id-token',
-      'http://localhost:5295',
-    );
+    const result = await GoogleProvider({ clientId: 'id', clientSecret: 'secret' }).exchangeToken('google-id-token', 'http://localhost:5295');
 
     expect(result.user.emailVerified).toBe(true);
+  });
+
+  it('turns the sign-in interrupt into a typed error that names the address, never a credential error', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue(
+      Response.json(
+        {
+          success: false,
+          message: 'Email verification required',
+          emailVerificationRequired: true,
+          userId: '11111111-1111-4111-8111-111111111111',
+          email: 'user@example.com',
+        },
+        { status: 200 },
+      ),
+    );
+
+    const promise = CredentialsProvider({ apiUrl: 'http://localhost:8080' }).authorize(
+      { email: 'typed@example.com', password: 'correct horse battery staple' },
+      undefined,
+    );
+
+    await expect(promise).rejects.toBeInstanceOf(EmailVerificationRequiredError);
+    await promise.catch((error: EmailVerificationRequiredError) => {
+      expect(error.email).toBe('user@example.com');
+      expect(error.userId).toBe('11111111-1111-4111-8111-111111111111');
+    });
+  });
+
+  it('serialises the interrupt with its type, so the route handler keeps it distinguishable', () => {
+    const error = new EmailVerificationRequiredError(undefined, { email: 'user@example.com', userId: 'u1' });
+
+    expect(error.type).toBe('EmailVerificationRequired');
+    expect(error.toJSON()).toEqual({
+      error: 'EmailVerificationRequired',
+      message: 'Email verification required',
+      status: 403,
+      userId: 'u1',
+      email: 'user@example.com',
+    });
   });
 });

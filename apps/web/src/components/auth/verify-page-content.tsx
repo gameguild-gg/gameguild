@@ -3,6 +3,7 @@
 import { useEffect, useState, useSyncExternalStore, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@game-guild/client/react";
+import { Link } from "@/i18n/navigation";
 import { recoverFromStaleServerAction } from "@/lib/auth/server-action-errors";
 import {
   MAX_VERIFICATION_TOKEN_LENGTH,
@@ -31,17 +32,32 @@ import { Input } from "@game-guild/ui/components/input";
 
 const subscribeToHydration = () => () => undefined;
 
+/**
+ * Why the visitor is on the page. Sign-up dispatched the verification email
+ * itself. A sign-in interrupted by the verification policy did not send one,
+ * and the visitor is not signed in until the address is verified. Any other
+ * entry is a return visit, typically from the reminder banner.
+ */
+export type VerifyPageOrigin = "sign-up" | "sign-in" | "returning";
+
 export type VerifyPageState =
   /** Waiting for the visitor to open the emailed link, or paste its token. */
-  | { kind: "pending"; email: string; fresh: boolean }
-  /** The token was consumed and the address is verified. */
-  | { kind: "verified"; email: string }
+  | { kind: "pending"; email: string; origin: VerifyPageOrigin }
+  /** The token was consumed and the address is verified. `signInAgain`: the
+   * sign-in that led here was interrupted, so the visitor has to sign in again. */
+  | { kind: "verified"; email: string; signInAgain: boolean }
   /** The token was invalid, expired or already used. */
   | { kind: "failed"; email: string };
 
 type Notice = { tone: "error" | "success"; text: string } | null;
 
 const CARD_CLASS = "border-white/10 bg-slate-900/85 text-white shadow-2xl shadow-sky-950/30 backdrop-blur";
+
+const PENDING_DESCRIPTION: Record<VerifyPageOrigin, "descriptionNew" | "descriptionSignIn" | "description"> = {
+  "sign-up": "descriptionNew",
+  "sign-in": "descriptionSignIn",
+  returning: "description",
+};
 
 /**
  * Email-verification page (#1298 J1).
@@ -50,7 +66,7 @@ const CARD_CLASS = "border-white/10 bg-slate-900/85 text-white shadow-2xl shadow
  * reached three ways. With `?token=` the server already consumed it before
  * rendering, so this component starts on the outcome. With `?email=` it is the
  * "check your inbox" interstitial: a paste-token fallback for clients that
- * strip links, and a resend button that mirrors the API's two-minute resend
+ * strip links, and a send button that mirrors the API's two-minute resend
  * window. With neither, the server bounces to /sign-in.
  */
 export function VerifyPageContent({
@@ -77,8 +93,10 @@ export function VerifyPageContent({
   // resend window. The number on screen is only rendered once hydrated, so
   // the server and the client never disagree about it.
   const [cooldownUntil, setCooldownUntil] = useState<number | null>(() =>
-    state.kind === "pending" && state.fresh ? Date.now() + VERIFICATION_RESEND_COOLDOWN_MS : null,
+    state.kind === "pending" && state.origin === "sign-up" ? Date.now() + VERIFICATION_RESEND_COOLDOWN_MS : null,
   );
+  // Whether an email was sent from this page: decides "Send" versus "Resend".
+  const [sentHere, setSentHere] = useState(false);
   const [now, setNow] = useState(() => Date.now());
   const counting = cooldownUntil !== null && cooldownUntil > now;
   const secondsLeft =
@@ -113,7 +131,11 @@ export function VerifyPageContent({
         setNotice({ tone: "error", text: t("tokenRejected") });
         return;
       }
-      setView({ kind: "verified", email: view.email });
+      setView({
+        kind: "verified",
+        email: view.email,
+        signInAgain: view.kind === "pending" && view.origin === "sign-in",
+      });
     } catch (error) {
       if (recoverFromStaleServerAction(error)) return;
       setNotice({ tone: "error", text: t("tokenRejected") });
@@ -140,8 +162,9 @@ export function VerifyPageContent({
         return;
       }
       setCooldownUntil(Date.now() + VERIFICATION_RESEND_COOLDOWN_MS);
+      setSentHere(true);
       setNotice({ tone: "success", text: t("resendSent") });
-      if (view.kind === "failed") setView({ kind: "pending", email, fresh: false });
+      if (view.kind === "failed") setView({ kind: "pending", email, origin: "returning" });
     } catch (error) {
       if (recoverFromStaleServerAction(error)) return;
       setNotice({ tone: "error", text: t("resendFailed") });
@@ -150,8 +173,13 @@ export function VerifyPageContent({
     }
   }
 
+  // An interrupted sign-in issued no session: the visitor signs in again,
+  // back to where they were heading.
   function continueTo() {
-    window.location.href = redirectTo;
+    window.location.href =
+      view.kind === "verified" && view.signInAgain
+        ? `/sign-in?redirectTo=${encodeURIComponent(redirectTo)}`
+        : redirectTo;
   }
 
   const verifying = busy === "verify";
@@ -164,7 +192,9 @@ export function VerifyPageContent({
           <CardTitle className="text-2xl">
             <h1>{t("verifiedTitle")}</h1>
           </CardTitle>
-          <CardDescription className="text-slate-300">{t("verifiedDescription")}</CardDescription>
+          <CardDescription className="text-slate-300">
+            {t(view.signInAgain ? "verifiedDescriptionSignIn" : "verifiedDescription")}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Button type="button" onClick={continueTo} data-testid="email-verification-continue">
@@ -184,7 +214,7 @@ export function VerifyPageContent({
         <CardDescription className="text-slate-300">
           {view.kind === "failed"
             ? t("failedDescription")
-            : t(view.fresh ? "descriptionNew" : "description", { email: view.email })}
+            : t(PENDING_DESCRIPTION[view.origin], { email: view.email })}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -257,14 +287,16 @@ export function VerifyPageContent({
                     ? t("sending")
                     : isHydrated && counting
                       ? t("resendCountdown", { seconds: secondsLeft })
-                      : t("resend")}
+                      : view.origin === "sign-up" || sentHere
+                        ? t("resend")
+                        : t("send")}
                 </Button>
               </form>
 
               <p className="text-xs text-slate-400">{t("passwordRecoveryNote")}</p>
 
               <div className="flex flex-col gap-2 text-center text-sm">
-                {view.fresh && (
+                {view.origin === "sign-up" && (
                   <Button
                     type="button"
                     variant="ghost"
@@ -287,6 +319,15 @@ export function VerifyPageContent({
                   >
                     {t("wrongEmail")}
                   </Button>
+                )}
+                {view.origin === "sign-in" && (
+                  <Link
+                    href="/sign-in"
+                    className="text-slate-400 underline-offset-4 hover:text-white"
+                    data-testid="email-verification-different-account"
+                  >
+                    {t("differentAccount")}
+                  </Link>
                 )}
               </div>
             </>

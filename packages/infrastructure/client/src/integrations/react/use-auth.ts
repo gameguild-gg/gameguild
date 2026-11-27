@@ -34,7 +34,7 @@
 import { useCallback, useState, useRef, useContext, useEffect } from 'react';
 import { assertSafeServiceUrl } from '../../runtime/security/safe-remote-url';
 import { SessionContext } from './session-provider';
-import { MfaRequiredError, parseMfaEnrollmentOffer, type MfaEnrollmentOffer } from '../../runtime/auth/errors';
+import { EmailVerificationRequiredError, MfaRequiredError, parseMfaEnrollmentOffer, type MfaEnrollmentOffer } from '../../runtime/auth/errors';
 
 const MFA_CHALLENGE_STORAGE_KEY = 'gg.auth.mfaChallenge';
 
@@ -46,6 +46,8 @@ interface AuthErrorResponse {
   mfaToken?: string;
   availableMethods?: string[];
   mfaEnrollment?: unknown;
+  userId?: string;
+  email?: string;
 }
 
 /** A pending first-factor challenge plus, for required-MFA subjects with no enrolled factor, the one-time enrollment offer. */
@@ -228,6 +230,14 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
             /* v8 ignore stop */
             setMfaChallenge(challenge);
             throw new MfaRequiredError(undefined, { mfaToken: errorData.mfaToken, availableMethods, mfaEnrollment: enrollment });
+          }
+          if (errorData.error === 'EmailVerificationRequired') {
+            // #1298 J1: an interrupt, not a failed sign-in. Keep its type so the
+            // form can send the visitor to verify instead of showing a credential error.
+            throw new EmailVerificationRequiredError(undefined, {
+              userId: typeof errorData.userId === 'string' ? errorData.userId : undefined,
+              email: typeof errorData.email === 'string' ? errorData.email : undefined,
+            });
           }
           throw new Error(errorData.message || errorData.detail || 'Sign-in failed');
         }

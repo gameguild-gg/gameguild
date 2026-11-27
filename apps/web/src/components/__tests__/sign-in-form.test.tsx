@@ -367,6 +367,60 @@ describe("SignInForm MFA", () => {
   });
 });
 
+describe("SignInForm email verification (#1298 J1)", () => {
+  beforeEach(() => {
+    mockAuth = createMockUseAuth();
+    mockRouter.replace.mockClear();
+  });
+
+  function interrupt(email?: string) {
+    const err = new Error("Email verification required") as Error & {
+      type?: string;
+      email?: string;
+    };
+    err.type = "EmailVerificationRequired";
+    if (email) err.email = email;
+    return err;
+  }
+
+  it("sends the visitor to verify the address the API named, keeping where they were heading", async () => {
+    mockAuth = createMockUseAuth({ signIn: vi.fn().mockRejectedValue(interrupt("member@example.com")) });
+    const { user } = renderWithUser(<SignInForm redirectTo="/dashboard" />);
+
+    await user.type(screen.getByLabelText("Email"), "member@example.com");
+    await user.type(screen.getByLabelText("Password"), "password123");
+    await user.click(screen.getByRole("button", { name: /sign in$/i }));
+
+    expect(mockRouter.replace).toHaveBeenCalledWith({
+      pathname: "/verify",
+      query: { email: "member@example.com", signIn: "1", redirectTo: "/dashboard" },
+    });
+  });
+
+  it("falls back to the typed address when the interrupt carries none", async () => {
+    mockAuth = createMockUseAuth({ signIn: vi.fn().mockRejectedValue(interrupt()) });
+    const { user } = renderWithUser(<SignInForm />);
+
+    await user.type(screen.getByLabelText("Email"), "typed@example.com");
+    await user.type(screen.getByLabelText("Password"), "password123");
+    await user.click(screen.getByRole("button", { name: /sign in$/i }));
+
+    expect(mockRouter.replace).toHaveBeenCalledWith({
+      pathname: "/verify",
+      query: { email: "typed@example.com", signIn: "1", redirectTo: "/" },
+    });
+  });
+
+  it("never shows the interrupt as a credential error", async () => {
+    // The hook keeps the typed error in its error state; the form must not print it.
+    mockAuth = createMockUseAuth({ error: interrupt("member@example.com") });
+
+    renderWithUser(<SignInForm />);
+
+    expect(screen.queryByText("Email verification required")).not.toBeInTheDocument();
+  });
+});
+
 describe('SignInForm providers slot composition', () => {
   let initializeMock: ReturnType<typeof vi.fn>;
   let renderButtonMock: ReturnType<typeof vi.fn>;

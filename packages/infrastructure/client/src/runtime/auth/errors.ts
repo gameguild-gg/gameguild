@@ -157,6 +157,34 @@ export class MfaRequiredError extends AuthError {
   }
 }
 
+/**
+ * Sign-in was interrupted by the email-verification policy (#1298 J1): the
+ * password was accepted, but the account's email is not verified, so no
+ * credentials were issued. Like `MfaRequiredError`, it is only reachable after
+ * a valid password proof, so it never says whether an unknown account exists.
+ */
+export class EmailVerificationRequiredError extends AuthError {
+  /** The account whose email has to be verified. */
+  readonly userId?: string;
+  /** The address to verify; the sign-in form sends the visitor to verify it. */
+  readonly email?: string;
+
+  constructor(message = 'Email verification required', options?: { userId?: string; email?: string }) {
+    super(message, { type: 'EmailVerificationRequired', status: 403 });
+    this.name = 'EmailVerificationRequiredError';
+    this.userId = options?.userId;
+    this.email = options?.email;
+  }
+
+  override toJSON(): ReturnType<AuthError['toJSON']> & { userId?: string; email?: string } {
+    return {
+      ...super.toJSON(),
+      userId: this.userId,
+      email: this.email,
+    };
+  }
+}
+
 // ─── Sign-up Errors ──────────────────────────────────────────────
 
 /**

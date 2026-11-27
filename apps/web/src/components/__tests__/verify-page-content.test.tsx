@@ -28,6 +28,21 @@ vi.mock('@game-guild/client/react', () => ({
   useAuth: () => mockAuth,
 }));
 
+vi.mock('@/i18n/navigation', () => ({
+  Link: ({
+    children,
+    href,
+    ...rest
+  }: {
+    children: React.ReactNode;
+    href: string;
+  }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
+  ),
+}));
+
 vi.mock('@/lib/auth/password-actions', () => ({
   verifyEmailAction: (...args: unknown[]) => mocks.verify(...args),
   resendVerificationEmailAction: (...args: unknown[]) => mocks.resend(...args),
@@ -48,10 +63,12 @@ const EMAIL = 'member@example.com';
 // literal of that length is what secret scanners look for.
 const TOKEN = 'token-'.padEnd(32, '0');
 const COOLDOWN_SECONDS = VERIFICATION_RESEND_COOLDOWN_MS / 1000;
-const PENDING: VerifyPageState = { kind: 'pending', email: EMAIL, fresh: false };
-const FRESH: VerifyPageState = { kind: 'pending', email: EMAIL, fresh: true };
+const PENDING: VerifyPageState = { kind: 'pending', email: EMAIL, origin: 'returning' };
+const FRESH: VerifyPageState = { kind: 'pending', email: EMAIL, origin: 'sign-up' };
+const INTERRUPTED: VerifyPageState = { kind: 'pending', email: EMAIL, origin: 'sign-in' };
 const FAILED: VerifyPageState = { kind: 'failed', email: '' };
-const VERIFIED: VerifyPageState = { kind: 'verified', email: EMAIL };
+const VERIFIED: VerifyPageState = { kind: 'verified', email: EMAIL, signInAgain: false };
+const VERIFIED_SIGN_IN: VerifyPageState = { kind: 'verified', email: EMAIL, signInAgain: true };
 
 const originalLocation = window.location;
 let locationHref: string | null = null;
@@ -174,7 +191,9 @@ describe('VerifyPageContent (email verification, #1298 J1)', () => {
       const { user } = renderContent(PENDING);
       const resend = screen.getByTestId('email-verification-resend');
 
+      // No email was sent on this visit yet, so the button offers the first one.
       expect(resend).toBeEnabled();
+      expect(resend).toHaveTextContent('emailVerification.send');
       await user.click(resend);
 
       expect(mocks.resend).toHaveBeenCalledWith(EMAIL);
@@ -252,6 +271,51 @@ describe('VerifyPageContent (email verification, #1298 J1)', () => {
       await user.click(screen.getByTestId('email-verification-sign-out'));
 
       expect(mockAuth.signOut).toHaveBeenCalledWith({ redirectTo: '/sign-up' });
+    });
+  });
+
+  describe('an interrupted sign-in', () => {
+    it('says sign-in is paused and offers to send the email, with no countdown to wait out', () => {
+      renderContent(INTERRUPTED);
+
+      expect(screen.getByText(`emailVerification.descriptionSignIn:{"email":"${EMAIL}"}`)).toBeInTheDocument();
+      const send = screen.getByTestId('email-verification-resend');
+      expect(send).toBeEnabled();
+      expect(send).toHaveTextContent('emailVerification.send');
+      expect(screen.queryByTestId('email-verification-skip')).not.toBeInTheDocument();
+      expect(screen.getByTestId('email-verification-different-account')).toHaveAttribute('href', '/sign-in');
+    });
+
+    it('calls the email a resend once one was sent from the page', async () => {
+      vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+      const { user } = renderContent(INTERRUPTED);
+
+      await user.click(screen.getByTestId('email-verification-resend'));
+
+      expect(mocks.resend).toHaveBeenCalledWith(EMAIL);
+      startAtCooldownEnd();
+      expect(screen.getByTestId('email-verification-resend')).toHaveTextContent('emailVerification.resend');
+    });
+
+    it('sends the visitor back to sign-in, to the original target, once the pasted token verifies', async () => {
+      const { user } = renderContent(INTERRUPTED, { redirectTo: '/workspace/learn' });
+      await user.type(screen.getByLabelText('emailVerification.tokenLabel'), TOKEN);
+      await user.click(screen.getByTestId('email-verification-submit'));
+
+      expect(screen.getByText('emailVerification.verifiedDescriptionSignIn')).toBeInTheDocument();
+      expect(screen.queryByText('emailVerification.verifiedDescription')).not.toBeInTheDocument();
+
+      await user.click(screen.getByTestId('email-verification-continue'));
+
+      expect(locationHref).toBe(`/sign-in?redirectTo=${encodeURIComponent('/workspace/learn')}`);
+    });
+
+    it('also returns to sign-in when the server already consumed the token', async () => {
+      const { user } = renderContent(VERIFIED_SIGN_IN, { redirectTo: '/feed' });
+
+      await user.click(screen.getByTestId('email-verification-continue'));
+
+      expect(locationHref).toBe(`/sign-in?redirectTo=${encodeURIComponent('/feed')}`);
     });
   });
 

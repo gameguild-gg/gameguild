@@ -300,7 +300,21 @@ public class LocalAuthService(
             var localSignInPolicy = localSignInPolicyOptions?.Value ?? new LocalSignInPolicyOptions();
             if (localSignInPolicy.RequiresVerifiedEmail(tenantAccessContext.TenantId) && !authenticatedUser.IsEmailVerified)
             {
-                throw new UnauthorizedAccessException(enumerationProtection.GetGenericErrorMessage("login"));
+                // #1298 J1: a structured interrupt, like the MFA one. The password was
+                // accepted, so telling this user to verify is not an account-existence
+                // oracle: an unknown account or a wrong password never reaches this point.
+                // No credentials are issued and no session is created.
+                logger.LogInformation(
+                    "Sign-in interrupted for user {UserId}: the sign-in policy requires a verified email",
+                    authenticatedUserId);
+                return new SignInResponse
+                {
+                    Success = false,
+                    Message = "Email verification required",
+                    EmailVerificationRequired = true,
+                    UserId = authenticatedUserId,
+                    Email = authenticatedUser.Email ?? string.Empty
+                };
             }
 
             // Optional password age / rotation policy (issue #1088): evaluated after the

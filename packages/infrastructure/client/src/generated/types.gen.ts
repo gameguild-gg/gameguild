@@ -14265,6 +14265,11 @@ identity provider for this sign-in. Null for non-federated flows. */
   availableTenants?: TenantInfo[] | null;
   /** User email */
   email?: string | null;
+  /** True when the password was accepted but the sign-in policy requires a verified
+email address and the account's is not. No credentials are issued. Like
+GameGuild.Identity.Authentication.SignInResponse.RequiresMfa, this is only reachable after a valid password proof,
+so it says nothing about whether an unknown account exists. */
+  emailVerificationRequired?: boolean;
   /** Backward compatible field: originally represented refresh token expiry (or conflated); prefer using AccessTokenExpiresAt / RefreshTokenExpiresAt. */
   expiresAt?: string;
   /** Expiration in seconds */
@@ -43575,6 +43580,7 @@ IdentityAuthenticationSignInOutputSchema = z.object({
     .nullable()
     .optional(),
   email: z.string().nullable().optional(),
+  emailVerificationRequired: z.boolean().optional(),
   expiresAt: z.string().datetime({ offset: true }).optional(),
   expiresIn: z.number().int().optional(),
   message: z.string().nullable().optional(),

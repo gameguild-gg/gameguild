@@ -65,6 +65,7 @@ public static class AuthenticationMappings
             RequiresMfa = domainResponse.RequiresMfa,
             MfaCompliancePending = domainResponse.MfaCompliancePending,
             MfaSessionId = domainResponse.MfaSessionId,
+            EmailVerificationRequired = domainResponse.EmailVerificationRequired,
             RequiresStepUp = domainResponse.RequiresStepUp,
             StepUpToken = domainResponse.StepUpToken,
             StepUpExpiresAt = domainResponse.StepUpExpiresAt,
