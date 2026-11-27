@@ -20,7 +20,14 @@
  */
 
 import type { CredentialsProviderConfig, ProviderResult, SessionUser } from '../types';
-import { AccountLockedError, AuthServiceUnavailableError, CredentialsSignInError, MfaRequiredError, parseMfaEnrollmentOffer } from '../errors';
+import {
+  AccountLockedError,
+  AuthServiceUnavailableError,
+  CredentialsSignInError,
+  EmailVerificationRequiredError,
+  MfaRequiredError,
+  parseMfaEnrollmentOffer,
+} from '../errors';
 import { resolveAuthPermissions, resolveAuthRoles, resolveEmailVerification } from '../claims';
 import { createClient } from '../../../client';
 import { AuthModule } from '../../../generated/modules/auth.gen';
@@ -169,6 +176,16 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
         const data: Record<string, unknown> = { ...legacyClaims, ...response.data };
         if (response.data.user && legacyClaims.user !== null && typeof legacyClaims.user === 'object') {
           data.user = { ...legacyClaims.user, ...response.data.user };
+        }
+
+        // #1298 J1: the sign-in policy requires a verified email and this account's
+        // is not. The password was accepted, so this is an interrupt to be routed
+        // to the verification page — never a credential error.
+        if (data.emailVerificationRequired === true) {
+          throw new EmailVerificationRequiredError(undefined, {
+            userId: typeof data.userId === 'string' ? data.userId : undefined,
+            email: typeof data.email === 'string' ? data.email : (completingMfa ? '' : email) || undefined,
+          });
         }
 
         // Check for MFA requirement

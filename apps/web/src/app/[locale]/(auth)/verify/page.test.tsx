@@ -96,19 +96,28 @@ describe('verify page (email verification, #1298 J1)', () => {
       expect(mocks.verifyEmailToken).not.toHaveBeenCalled();
       expect(content()).toHaveAttribute(
         'data-state',
-        JSON.stringify({ kind: 'verified', email: 'member@example.com' }),
+        JSON.stringify({ kind: 'verified', email: 'member@example.com', signInAgain: false }),
+      );
+    });
+
+    it('keeps the interrupted sign-in in mind when the address says the verification already happened', async () => {
+      await renderPage({ verified: '1', signIn: '1', email: 'member@example.com' });
+
+      expect(content()).toHaveAttribute(
+        'data-state',
+        JSON.stringify({ kind: 'verified', email: 'member@example.com', signInAgain: true }),
       );
     });
   });
 
   describe('the interstitial', () => {
-    it('is the pending state for an address, fresh when sign-up sent the visitor', async () => {
+    it('is the pending state for an address, from sign-up when sign-up sent the visitor', async () => {
       await renderPage({ email: ' member@example.com ', new: '1', redirectTo: '/workspace' });
 
       expect(mocks.verifyEmailToken).not.toHaveBeenCalled();
       expect(content()).toHaveAttribute(
         'data-state',
-        JSON.stringify({ kind: 'pending', email: 'member@example.com', fresh: true }),
+        JSON.stringify({ kind: 'pending', email: 'member@example.com', origin: 'sign-up' }),
       );
       expect(content()).toHaveAttribute('data-redirect', '/workspace');
       expect(content()).toHaveAttribute('data-signed-in', 'false');
@@ -122,14 +131,34 @@ describe('verify page (email verification, #1298 J1)', () => {
       expect(content()).toHaveAttribute('data-signed-in', 'true');
     });
 
-    it('is not fresh without the new flag and defaults the exit to the feed', async () => {
+    it('is a return visit without the new flag and defaults the exit to the feed', async () => {
       await renderPage({ email: 'member@example.com' });
 
       expect(content()).toHaveAttribute(
         'data-state',
-        JSON.stringify({ kind: 'pending', email: 'member@example.com', fresh: false }),
+        JSON.stringify({ kind: 'pending', email: 'member@example.com', origin: 'returning' }),
       );
       expect(content()).toHaveAttribute('data-redirect', '/feed');
+    });
+
+    it('is an interrupted sign-in when the sign-in form sent the visitor', async () => {
+      await renderPage({ email: 'member@example.com', signIn: '1', redirectTo: '/workspace/learn' });
+
+      expect(mocks.verifyEmailToken).not.toHaveBeenCalled();
+      expect(content()).toHaveAttribute(
+        'data-state',
+        JSON.stringify({ kind: 'pending', email: 'member@example.com', origin: 'sign-in' }),
+      );
+      expect(content()).toHaveAttribute('data-redirect', '/workspace/learn');
+    });
+
+    it('takes sign-up over an interrupted sign-in when both flags arrive', async () => {
+      await renderPage({ email: 'member@example.com', new: '1', signIn: '1' });
+
+      expect(content()).toHaveAttribute(
+        'data-state',
+        JSON.stringify({ kind: 'pending', email: 'member@example.com', origin: 'sign-up' }),
+      );
     });
 
     it('bounces to sign-in without a token or an address', async () => {

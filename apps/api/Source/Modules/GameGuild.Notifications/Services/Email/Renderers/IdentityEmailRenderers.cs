@@ -90,9 +90,9 @@ public sealed class EmailVerificationRenderer(
         var recipientName = string.IsNullOrWhiteSpace(meta.UserName) ? meta.Email : meta.UserName;
 
         var plain =
-            $"Hi {recipientName},\n\nPlease verify your GameGuild email address by visiting:\n{verificationLink}\n\nIf you did not request this, you can ignore this email.";
+            $"Hi {recipientName},\n\nPlease verify your GameGuild email address by visiting:\n{verificationLink}\n\nIf the link does not work, copy this verification token and paste it on the verification page:\n{meta.Token}\n\nIf you did not request this, you can ignore this email.";
         var html =
-            $"<p>Hi {WebUtility.HtmlEncode(recipientName)},</p><p>Please verify your GameGuild email address by visiting the link below:</p><p><a href=\"{WebUtility.HtmlEncode(verificationLink)}\">Verify your email address</a></p><p>If you did not request this, you can ignore this email.</p>";
+            $"<p>Hi {WebUtility.HtmlEncode(recipientName)},</p><p>Please verify your GameGuild email address by visiting the link below:</p><p><a href=\"{WebUtility.HtmlEncode(verificationLink)}\">Verify your email address</a></p><p>If the link does not work, copy this verification token and paste it on the verification page:</p><p><code>{WebUtility.HtmlEncode(meta.Token)}</code></p><p>If you did not request this, you can ignore this email.</p>";
 
         var (finalPlain, finalHtml) = MergeFooter(plain, html, footerService.Build(notification));
         var message = new EmailMessage(string.Empty, "Verify your GameGuild email address", finalPlain, finalHtml, recipientName);

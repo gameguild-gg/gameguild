@@ -35,9 +35,13 @@ export default async function Page({
   } else if (query?.verified === '1') {
     // Where a successful verification lands (above). It only re-renders the
     // success message; it changes nothing on its own.
-    state = { kind: 'verified', email };
+    state = { kind: 'verified', email, signInAgain: query?.signIn === '1' };
   } else if (email) {
-    state = { kind: 'pending', email, fresh: query?.new === '1' };
+    // Sign-up sends the visitor here with `new`, an interrupted sign-in with
+    // `signIn`; anything else is a return visit.
+    const origin =
+      query?.new === '1' ? 'sign-up' : query?.signIn === '1' ? 'sign-in' : 'returning';
+    state = { kind: 'pending', email, origin };
   } else {
     redirect('/sign-in');
   }

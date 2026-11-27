@@ -137,6 +137,14 @@ public class SignInResponse
     public string? MfaSessionId { get; set; }
 
     /// <summary>
+    ///     True when the password was accepted but the sign-in policy requires a verified
+    ///     email address and the account's is not. No credentials are issued. Like
+    ///     <see cref="RequiresMfa"/>, this is only reachable after a valid password proof,
+    ///     so it says nothing about whether an unknown account exists.
+    /// </summary>
+    public bool EmailVerificationRequired { get; set; }
+
+    /// <summary>
     ///     Whether step-up authentication is required due to high-risk login
     /// </summary>
     public bool RequiresStepUp { get; set; }

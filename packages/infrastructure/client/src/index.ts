@@ -96,6 +96,7 @@ export {
   CredentialsSignInError,
   AccountLockedError,
   MfaRequiredError,
+  EmailVerificationRequiredError,
   parseMfaEnrollmentOffer,
   type MfaEnrollmentOffer,
   SignUpError,

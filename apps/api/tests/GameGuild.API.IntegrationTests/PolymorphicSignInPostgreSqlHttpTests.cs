@@ -593,9 +593,61 @@ public sealed class PolymorphicSignInPostgreSqlHttpTests(ApiPostgreSqlFixture fi
         }
         else
         {
-            await AssertGenericDenialAsync(factory, response);
+            // #1298 J1: the password was accepted, so the sign-in is interrupted
+            // with a structured answer instead of the generic denial. The flag
+            // is only ever set on this path — see the anti-oracle test below.
+            await AssertVerificationInterruptAsync(response, account);
             await AssertNoIssuedCredentialsAsync(factory, account.User.Id);
+            // #1298 J1: the password was right, so the interrupt must not move the
+            // account towards lockout. This request returns normally, so its
+            // transaction commits and a recorded failure would be visible here;
+            // FailedAttemptQuerySeesAFailureOnceOneIsWritten is the control.
+            Assert.False(await HasRecordedFailureAsync(factory, account.User.Email));
         }
+    }
+
+    [Theory]
+    [InlineData(false, "wrong-password")]
+    [InlineData(true, "wrong-password")]
+    [InlineData(false, "missing-account")]
+    [InlineData(true, "missing-account")]
+    public async Task EmailVerificationInterruptIsUnreachableWithoutAValidPassword(bool localEndpoint, string scenario)
+    {
+        var settings = new Dictionary<string, string?>
+        {
+            ["Authentication:LocalSignIn:RequireEmailVerification"] = "true"
+        };
+        using var factory = CreateFactory(sourceAddress: EmailPolicySourceAddress(), signInPolicy: settings);
+        var account = await SeedAsync(factory, verifiedEmail: false);
+        var identifier = scenario == "missing-account"
+            ? (await SeedAsync(factory, persist: false, verifiedEmail: false)).User.Email
+            : account.User.Email;
+        using var client = factory.CreateClient();
+        using var response = localEndpoint
+            ? await client.PostAsJsonAsync(LocalSignInEndpoint(), new { email = identifier, password = SyntheticPassword(), account.TenantId })
+            : await client.PostAsJsonAsync(Endpoint, new { credential = identifier, credentialType = CredentialType.Email, password = SyntheticPassword(), account.TenantId });
+
+        await AssertGenericDenialAsync(factory, response);
+        Assert.DoesNotContain("emailVerificationRequired", await response.Content.ReadAsStringAsync(), StringComparison.OrdinalIgnoreCase);
+        await AssertNoIssuedCredentialsAsync(factory, account.User.Id);
+    }
+
+    [Fact]
+    public async Task FailedAttemptQuerySeesAFailureOnceOneIsWritten()
+    {
+        // Control for the interrupt test's negative check: the same query does find a
+        // failed attempt once one exists. The failure is written here directly rather
+        // than through a denied sign-in, whose own record is rolled back with the
+        // request (#1406).
+        using var factory = CreateFactory(sourceAddress: EmailPolicySourceAddress());
+        var account = await SeedAsync(factory);
+        Assert.False(await HasRecordedFailureAsync(factory, account.User.Email));
+        using (var scope = factory.Services.CreateScope())
+        {
+            await scope.ServiceProvider.GetRequiredService<IAuthAttemptService>()
+                .RecordFailedAttemptAsync(account.User.Email, account.User.Id, "192.0.2.1", "test", "InvalidCredentials", TimeSpan.Zero);
+        }
+        Assert.True(await HasRecordedFailureAsync(factory, account.User.Email));
     }
 
     private static IPAddress EmailPolicySourceAddress()
@@ -617,6 +669,28 @@ public sealed class PolymorphicSignInPostgreSqlHttpTests(ApiPostgreSqlFixture fi
         Assert.False(await db.Set<UserSession>().AnyAsync(value => value.UserId == userId));
         Assert.False(await db.Set<RefreshToken>().AnyAsync(value => value.UserId == userId));
         Assert.False(await db.Set<SignInMfaChallenge>().AnyAsync(value => value.SubjectId == userId));
+    }
+
+    private static async Task<bool> HasRecordedFailureAsync(WebApplicationFactory<Program> factory, string email)
+    {
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        return await db.Set<AuthenticationAttempt>().AnyAsync(value => value.Email == email && !value.IsSuccessful);
+    }
+
+    private static async Task AssertVerificationInterruptAsync(HttpResponseMessage response, Account account)
+    {
+        using var payload = await ReadAsync(response, HttpStatusCode.OK);
+        var body = payload.RootElement;
+        Assert.False(body.GetProperty("success").GetBoolean());
+        Assert.True(body.GetProperty("emailVerificationRequired").GetBoolean());
+        Assert.Equal(account.User.Id, body.GetProperty("userId").GetGuid());
+        Assert.Equal(account.User.Email, body.GetProperty("email").GetString());
+        // The contract always carries the token fields; an interrupt leaves them empty,
+        // exactly like a pending MFA response.
+        Assert.Equal(string.Empty, body.GetProperty("accessToken").GetString());
+        Assert.Equal(string.Empty, body.GetProperty("refreshToken").GetString());
+        Assert.Equal(Guid.Empty, body.GetProperty("sessionId").GetGuid());
     }
 
     private WebApplicationFactory<Program> CreateFactory(RiskLevel level = RiskLevel.Low, ConcurrentQueue<AuthenticationAttemptContext>? attempts = null, IPAddress? sourceAddress = null, Dictionary<string, string?>? signInPolicy = null)

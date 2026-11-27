@@ -1,9 +1,8 @@
 # J1 — Email Verification: Design Proposal
 
-Status: **Phase 1 (web) implemented** — the route chain, the token page, the
-sign-up interstitial and the session flag are in the code. The sign-in
-interrupt (the one API change) is still a proposal; see "Delivery status" at
-the end.
+Status: **Phase 1 implemented** — the route chain, the token page, the sign-up
+interstitial, the session flag and the sign-in interrupt (the one API change) are in
+the code. Turning the policy on is an operator decision; see "Open questions".
 Issue: #1298 item J1. Companions: [#1197](https://github.com/gameguild-gg/gameguild/issues/1197)
 (API-side resend cooldown), #1124 (account-recovery guard for never-verified addresses),
 [Journey 1](../ui/journeys/01-sign-up-email-verification-first-sign-in.md) (the audit that
@@ -331,12 +330,27 @@ Where the implementation differs from the proposal above, and why:
 - **A refused token is one message.** The page shows a fixed sentence for every refusal
   rather than the API's reason.
 
+**Phase 1, sign-in interrupt — implemented.**
+
+| Piece | Where | Notes |
+| --- | --- | --- |
+| Structured gate | `LocalAuthService`, `SignInResponse.EmailVerificationRequired` | The policy check returns a response with the flag and no credentials instead of the generic denial. The mapping carries the flag. |
+| Typed interrupt in the client | `EmailVerificationRequiredError`, the credentials provider, `useAuth` | The provider and the hook throw the typed error; the route handler keeps it distinguishable through its `toJSON`. |
+| Sign-in form | `components/sign-in-form.tsx` | Routes to `/verify?email=…&signIn=1&redirectTo=…`; the interrupt is never rendered as a credential error. |
+| Verify page, sign-in origin | `components/auth/verify-page-content.tsx` | An interrupted sign-in sends no email, so the page offers to send one ("Send", not "Resend"), has no skip, and after verifying continues to sign-in, back to the original target. |
+| Email copy | `IdentityEmailRenderers.cs` | The raw token on its own line, for clients that strip links. |
+
+Enumeration posture is unchanged in substance: the flag is only reachable after a valid
+password. The integration test that pinned the generic denial now pins the interrupt, and a
+new anti-oracle theory checks that a wrong password or an unknown account still gets the
+identical generic denial with the policy on. An interrupted sign-in leaves no failed
+attempt behind (it does not count towards lockout), no session, no refresh token and no
+MFA challenge; the integration tests assert each of these.
+
+The generated client has to be regenerated through the real pipeline for this to work: its
+response schema strips unknown keys, so until then the flag never reaches the provider.
+
 **Not delivered yet:**
 
-- **The sign-in interrupt** — `emailVerificationRequired` on `SignInResponse` and the
-  structured gate in `LocalAuthService`. It only matters once the policy is enabled
-  (rollout phases 2 and 3) and needs the generated client to be regenerated through the real
-  pipeline, so it ships separately.
-- **The email copy** — the raw token line for clients that strip links.
 - **The F3/F4 cleanup** of the two raw wrappers in `lib/auth/password-actions.ts`, already
   tracked in the api-contract matrix.

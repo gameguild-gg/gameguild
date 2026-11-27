@@ -61,6 +61,7 @@ export {
   AccountLockedError,
   AuthServiceUnavailableError,
   MfaRequiredError,
+  EmailVerificationRequiredError,
   parseMfaEnrollmentOffer,
   type MfaEnrollmentOffer,
   SignUpError,

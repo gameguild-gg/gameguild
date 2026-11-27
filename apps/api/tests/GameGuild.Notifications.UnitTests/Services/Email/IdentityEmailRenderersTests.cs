@@ -86,6 +86,21 @@ public sealed class IdentityEmailRenderersTests
     }
 
     [Fact]
+    public async Task EmailVerification_Also_Shows_The_Raw_Token_For_Clients_That_Strip_Links()
+    {
+        var renderer = new EmailVerificationRenderer(CreateFooterService(), CreateConfiguration(), MetadataProtector);
+        var notification = CreateNotification(
+            NotificationType.EmailVerification,
+            Metadata(new { token = "a1b2c3", email = "user@example.com", userName = "Alice" }));
+
+        var message = await renderer.RenderAsync(notification);
+
+        // #1298 J1: the token is pasted on the verification page when the link cannot be opened.
+        message!.PlainTextContent.Should().Contain("copy this verification token and paste it on the verification page:\na1b2c3");
+        message.HtmlContent.Should().Contain("<code>a1b2c3</code>");
+    }
+
+    [Fact]
     public async Task EmailVerification_Is_Transactional_And_Has_No_Footer()
     {
         var renderer = new EmailVerificationRenderer(CreateFooterService(), CreateConfiguration(), MetadataProtector);
