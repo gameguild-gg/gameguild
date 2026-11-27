@@ -22,9 +22,14 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
   // reachable with a live session (the form's Continue button performs the exit).
   const forwarded = (await headers()).get('x-gameguild-path') ?? '';
   const onMfaCompletion = forwarded.startsWith('/sign-in/2fa');
+  // Email-verification exception (#1298 J1): sign-up finalizes the session
+  // and then sends the new account to /verify, so an unverified user must be
+  // able to stay on that page with a live session. Scoped to the forwarded
+  // path itself, exactly like the 2FA exemption above.
+  const onEmailVerification = forwarded === '/verify' || forwarded.startsWith('/verify?');
 
   const session = await auth();
-  if (session && !onMfaCompletion) {
+  if (session && !onMfaCompletion && !onEmailVerification) {
     const queryStart = forwarded.indexOf('?');
     const params = new URLSearchParams(queryStart >= 0 ? forwarded.slice(queryStart) : '');
     let callbackUrl = resolveAllowedAuthRedirect(

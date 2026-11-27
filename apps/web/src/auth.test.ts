@@ -173,6 +173,52 @@ describe("request-bound authentication readers", () => {
     });
   });
 
+  describe("jwt callback (session update, #1298 J1)", () => {
+    const token = {
+      user: { id: "u1", email: "member@example.com", emailVerified: false },
+      accessToken: "access-token",
+      refreshToken: "refresh-token",
+      accessTokenExpires: 1,
+      tenantId: "tenant-1",
+    };
+
+    const jwtFor = async (params: {
+      trigger?: "signIn" | "signUp" | "update";
+      session?: { user?: unknown; tenantId?: string };
+    }) => {
+      const { authConfig } = await import("./auth");
+      const callbacks = authConfig.callbacks as {
+        jwt: (params: {
+          token: typeof token;
+          trigger?: "signIn" | "signUp" | "update";
+          session?: { user?: unknown; tenantId?: string };
+        }) => typeof token | Promise<typeof token>;
+      };
+      return callbacks.jwt({ token, ...params });
+    };
+
+    it("merges the user handed to update() into the session token, so a change is not dropped", async () => {
+      const updated = await jwtFor({
+        trigger: "update",
+        session: { user: { ...token.user, emailVerified: true } },
+      });
+
+      expect(updated).toEqual({ ...token, user: { ...token.user, emailVerified: true } });
+    });
+
+    it("leaves the user alone when an update carries no user, such as a tenant switch", async () => {
+      const updated = await jwtFor({ trigger: "update", session: { tenantId: "tenant-2" } });
+
+      expect(updated).toBe(token);
+    });
+
+    it("is a pass-through for every other trigger", async () => {
+      for (const trigger of ["signIn", "signUp"] as const) {
+        expect(await jwtFor({ trigger, session: { user: { id: "someone-else" } } })).toBe(token);
+      }
+    });
+  });
+
   it("a request without a cookie remains anonymous", async () => {
     state.cookie = undefined;
     const authModule = await import("./auth");

@@ -1,4 +1,5 @@
 import { auth, authConfig, readSessionUnCached } from '@/auth';
+import { EmailVerificationBanner } from '@/components/auth/email-verification-banner';
 import { GitHubStarPrompt } from '@/components/community/github-star-prompt';
 import { fetchRepositoryStarCount } from '@/lib/community/github-star-prompt';
 import { WorkspaceShell } from '@/components/console/workspace-shell';
@@ -119,6 +120,11 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
       <ThemeSyncInitializer />
       <AccessibilitySyncInitializer />
       <EditorPreferencesSyncInitializer />
+      {/* #1298 J1: the session carries the backend's email-verified verdict;
+          an account without a verified address gets a dismissible reminder. */}
+      {session.user.emailVerified === false && session.user.email && (
+        <EmailVerificationBanner email={session.user.email} />
+      )}
       {mfaCompliancePending && (
         <TwoFactorNudgeBanner twoFactorEnabled={false} enforcement="required" />
       )}

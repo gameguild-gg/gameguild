@@ -95,6 +95,32 @@ describe('(auth) layout authenticated redirect (issue #864)', () => {
     expect(mocks.redirect).not.toHaveBeenCalled();
   });
 
+  it('keeps an authenticated user on /verify so a fresh sign-up can verify its email (#1298 J1)', async () => {
+    mocks.auth.mockResolvedValue({ user: { id: 'u1' } });
+    gameguildPath('/verify?email=member%40example.com&new=1');
+
+    const ui = await Layout({
+      children: <div data-testid="email-verification">check your inbox</div>,
+      params: Promise.resolve({ locale: 'en-US' }),
+    } as never);
+    render(ui);
+
+    expect(screen.getByTestId('email-verification')).toBeInTheDocument();
+    expect(mocks.redirect).not.toHaveBeenCalled();
+  });
+
+  it('scopes that exemption to the /verify path itself, not to its name in a query', async () => {
+    mocks.auth.mockResolvedValue({ user: { id: 'u1' } });
+    gameguildPath('/sign-in?callbackUrl=/verify');
+
+    await expect(
+      Layout({
+        children: <div />,
+        params: Promise.resolve({ locale: 'en-US' }),
+      } as never),
+    ).rejects.toThrow('redirect:/en-US/verify');
+  });
+
   it('falls back to the locale feed when no path was forwarded', async () => {
     mocks.auth.mockResolvedValue({ user: { id: 'u1' } });
     gameguildPath(null);

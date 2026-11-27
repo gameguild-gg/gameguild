@@ -1,6 +1,9 @@
 # J1 — Email Verification: Design Proposal
 
-Status: proposed (docs-only; no code in this PR).
+Status: **Phase 1 (web) implemented** — the route chain, the token page, the
+sign-up interstitial and the session flag are in the code. The sign-in
+interrupt (the one API change) is still a proposal; see "Delivery status" at
+the end.
 Issue: #1298 item J1. Companions: [#1197](https://github.com/gameguild-gg/gameguild/issues/1197)
 (API-side resend cooldown), #1124 (account-recovery guard for never-verified addresses),
 [Journey 1](../ui/journeys/01-sign-up-email-verification-first-sign-in.md) (the audit that
@@ -298,3 +301,42 @@ Web handling (`credentials.ts:128-166` pattern): catch the flag like `MfaRequire
 6. **`App:BaseUrl` provenance** — confirm each environment's value today; if unset anywhere
    non-dev, every mailed link 404s (silent today because nobody clicks a link that is the
    only path to a page nobody reaches).
+
+## Delivery status
+
+**Phase 1, web slice — implemented.**
+
+| Piece | Where | Notes |
+| --- | --- | --- |
+| `/verify-email` redirect | `app/[locale]/verify-email/page.tsx` | Outside the `(auth)` group, so the authenticated bounce cannot swallow it. Forwards only the token, capped at 256 characters. |
+| Token-capable `/verify` | `app/[locale]/(auth)/verify/page.tsx`, `components/auth/verify-page-content.tsx` | The server consumes the token before rendering. The 6-digit `InputOTPForm` is removed; its only consumer was this page. |
+| Sign-up interstitial | `components/signup-form.tsx`, `(auth)/layout.tsx` | `useAuth().signUp` honours `redirectTo`; the layout exempts the forwarded `/verify` path only. |
+| Session flag | `packages/infrastructure/client` `SessionUser.emailVerified` | Present only when the backend reported a boolean; carried by every provider and by the token refresh. |
+| Reminder banner | `components/auth/email-verification-banner.tsx` | Mounted by the `(dashboards)` and `(social)` layouts; dismissal lasts for the browser session. |
+| Session update after verifying | `lib/auth/email-verification-session.ts`, `auth.ts` `jwt` callback | `update()` hands its data to the `jwt` callback; the default one returns the token untouched, so the web config now merges the user on the `update` trigger. |
+
+Where the implementation differs from the proposal above, and why:
+
+- **The failed-link state asks for the email address.** The verify endpoint returns the
+  address only on success, so an expired or used link carries none; the page offers an
+  address field and "Send a new link" instead of a Resend button with nothing to send to.
+- **The resend cooldown is mirrored, not learned.** `POST /v1/auth/email:send-verification`
+  answers a resend inside the two-minute window with the same generic success as a delivered
+  one (enumeration safety), so there is no server error to treat as authoritative. The page
+  runs its own two-minute countdown after sign-up and after every resend.
+- **A verified link lands on a token-free address.** Once the token is consumed, the
+  server redirects to `/verify?verified=1`, so the token is gone from the address bar at
+  the first paint and a reload never replays it into the failure state. That parameter only
+  re-renders the success message; it changes nothing. A pasted token never reaches the URL.
+- **A refused token is one message.** The page shows a fixed sentence for every refusal
+  rather than the API's reason.
+
+**Not delivered yet:**
+
+- **The sign-in interrupt** — `emailVerificationRequired` on `SignInResponse` and the
+  structured gate in `LocalAuthService`. It only matters once the policy is enabled
+  (rollout phases 2 and 3) and needs the generated client to be regenerated through the real
+  pipeline, so it ships separately.
+- **The email copy** — the raw token line for clients that strip links.
+- **The F3/F4 cleanup** of the two raw wrappers in `lib/auth/password-actions.ts`, already
+  tracked in the api-contract matrix.

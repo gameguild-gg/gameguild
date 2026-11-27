@@ -108,6 +108,36 @@
     },
     "backToSignIn": "Back to sign in"
   },
+  "emailVerification": {
+    "title": "Check your inbox",
+    "description": "We sent a verification link to {email}. Open it to verify your address.",
+    "descriptionNew": "Your account is ready. We sent a verification link to {email} — open it to verify your address.",
+    "tokenLabel": "Verification token",
+    "tokenDescription": "Can't open the link? Copy the token from the email and paste it here.",
+    "tokenRejected": "That token didn't work. It may have expired or already been used — request a new email.",
+    "verify": "Verify",
+    "verifying": "Verifying…",
+    "resend": "Resend email",
+    "resendCountdown": "Resend available in {seconds}s",
+    "resendSent": "We sent a new verification email.",
+    "resendFailed": "We couldn't send the email. Please try again in a moment.",
+    "sending": "Sending…",
+    "passwordRecoveryNote": "Verifying your email is required to reset your password.",
+    "skip": "Skip for now",
+    "wrongEmail": "Wrong email address? Sign out",
+    "verifiedTitle": "Your email is verified",
+    "verifiedDescription": "You're all set.",
+    "continue": "Continue",
+    "failedTitle": "This verification link didn't work",
+    "failedDescription": "Verification links work once and expire after 24 hours. Enter your email to get a new one.",
+    "emailLabel": "Email address",
+    "requestNew": "Send a new link",
+    "banner": {
+      "title": "Verify your email — we sent a link to {email}. Verifying lets you reset your password.",
+      "action": "Verify now",
+      "dismiss": "Dismiss email verification reminder"
+    }
+  },
   "settings": {
     "accountTitle": "Account settings",
     "accountDescription": "Manage how you sign in to GameGuild.",
