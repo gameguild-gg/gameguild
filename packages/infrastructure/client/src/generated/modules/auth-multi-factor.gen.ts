@@ -176,12 +176,12 @@ export class AuthMultiFactorModule {
    * Completes email MFA setup by verifying the code sent to the account's address, enrolling the verified address as an email factor.
    */
   async postAuthMfaEmailComplete(
-    body: Types.IdentityAuthenticationCompleteMfaSetupInput,
+    body: Types.IdentityAuthenticationCompleteEmailMfaSetupInput,
   ): Promise<Result<Types.IdentityAuthenticationMfaSuccessOutput, ApiError>> {
     const url = '/v1/auth/mfa/email:complete';
 
     // Validate request body
-    const validatedBody = safeParse(Types.IdentityAuthenticationCompleteMfaSetupInputSchema, body, 'request');
+    const validatedBody = safeParse(Types.IdentityAuthenticationCompleteEmailMfaSetupInputSchema, body, 'request');
 
     const result = await this.client.request({
       method: 'POST',

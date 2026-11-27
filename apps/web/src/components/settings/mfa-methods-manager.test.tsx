@@ -1,13 +1,15 @@
 import '@testing-library/jest-dom/vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   startTotpEnrollment: vi.fn(),
   completeTotpEnrollment: vi.fn(),
   startSmsEnrollment: vi.fn(),
   completeSmsEnrollment: vi.fn(),
+  startEmailEnrollment: vi.fn(),
+  completeEmailEnrollment: vi.fn(),
   regenerateBackupCodes: vi.fn(),
   disableMfa: vi.fn(),
   toastSuccess: vi.fn(),
@@ -19,6 +21,8 @@ vi.mock('@/lib/auth/mfa-actions', () => ({
   completeTotpEnrollmentAction: mocks.completeTotpEnrollment,
   startSmsEnrollmentAction: mocks.startSmsEnrollment,
   completeSmsEnrollmentAction: mocks.completeSmsEnrollment,
+  startEmailEnrollmentAction: mocks.startEmailEnrollment,
+  completeEmailEnrollmentAction: mocks.completeEmailEnrollment,
   regenerateBackupCodesAction: mocks.regenerateBackupCodes,
   disableMfaAction: mocks.disableMfa,
 }));
@@ -26,10 +30,15 @@ vi.mock('@/lib/auth/mfa-actions', () => ({
 vi.mock('next-intl', () => ({
   useTranslations: (namespace: string) => (key: string, values?: Record<string, unknown>) => {
     let message = `${namespace}.${key}`;
-    for (const [name, value] of Object.entries(values ?? {})) {
+    const entries = Object.entries(values ?? {});
+    for (const [name, value] of entries) {
       message = message.replace(`{${name}}`, String(value));
     }
-    return message;
+    // The key stands in for the real copy, which carries a {placeholder} the key lacks:
+    // append the values, so a test can still tell that the component passed them.
+    return entries.length > 0 && !message.includes('{')
+      ? [message, ...entries.map(([, value]) => String(value))].join(' ')
+      : message;
   },
 }));
 
@@ -47,6 +56,8 @@ function makeData(overrides?: {
   totpEnabled?: boolean;
   smsEnabled?: boolean;
   smsAvailable?: boolean;
+  emailEnabled?: boolean;
+  emailAvailable?: boolean;
   remainingCount?: number;
 }) {
   return {
@@ -77,6 +88,14 @@ function makeData(overrides?: {
           isEnabled: overrides?.smsEnabled ?? false,
           isAvailable: overrides?.smsAvailable ?? false,
           priority: 2,
+        },
+        {
+          method: 'Email' as const,
+          name: 'Email',
+          description: 'Receive verification codes at your account email',
+          isEnabled: overrides?.emailEnabled ?? false,
+          isAvailable: overrides?.emailAvailable ?? true,
+          priority: 3,
         },
         {
           method: 'BackupCode' as const,
@@ -265,5 +284,211 @@ describe('MfaMethodsManager (settings/security, issue #244)', () => {
     await waitFor(() => {
       expect(mocks.toastError).toHaveBeenCalledWith('Password verification failed');
     });
+  });
+});
+
+describe('MfaMethodsManager — email codes and the first recovery set (issue #1298 J2)', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('offers email codes only once another factor is enrolled, and says why', () => {
+    // The web sign-in challenge does not offer email codes yet, so an email-only account
+    // could not sign in: email is an additional factor, never the first one.
+    const alone = render(<MfaMethodsManager data={makeData({ totpEnabled: false, isEnabled: false })} />);
+    expect(screen.queryByTestId('mfa-email-start')).not.toBeInTheDocument();
+    expect(screen.getByTestId('mfa-email-prerequisite')).toHaveTextContent('settings.security.mfa.email.prerequisite');
+    alone.unmount();
+
+    render(<MfaMethodsManager data={makeData({ totpEnabled: false, smsEnabled: true, smsAvailable: true })} />);
+    expect(screen.getByTestId('mfa-email-start')).toBeInTheDocument();
+    expect(screen.queryByTestId('mfa-email-prerequisite')).not.toBeInTheDocument();
+  });
+
+  it('does not offer email codes the platform does not provide, or that are already enrolled', () => {
+    const unavailable = render(<MfaMethodsManager data={makeData({ emailAvailable: false })} />);
+    expect(screen.queryByTestId('mfa-email-start')).not.toBeInTheDocument();
+    unavailable.unmount();
+
+    render(<MfaMethodsManager data={makeData({ emailEnabled: true })} />);
+    expect(screen.queryByTestId('mfa-email-start')).not.toBeInTheDocument();
+  });
+
+  it('enrolls email codes with the code mailed to the account', async () => {
+    const user = userEvent.setup();
+    mocks.startEmailEnrollment.mockResolvedValue({
+      success: true, status: 'success', emailSetup: { emailMasked: 'j***@example.com', expiresInSeconds: 600 },
+    });
+    mocks.completeEmailEnrollment.mockResolvedValue({ success: true, status: 'success' });
+    render(<MfaMethodsManager data={makeData()} />);
+
+    await user.click(screen.getByTestId('mfa-email-start'));
+
+    await screen.findByTestId('mfa-email-panel');
+    expect(screen.getByTestId('mfa-email-destination')).toHaveTextContent(
+      'settings.security.mfa.email.sentTo j***@example.com',
+    );
+    expect(mocks.startEmailEnrollment).toHaveBeenCalledTimes(1);
+
+    await user.type(screen.getByLabelText('settings.security.mfa.email.codeLabel'), '123456');
+    await user.click(screen.getByTestId('mfa-email-complete'));
+
+    await waitFor(() => {
+      expect(mocks.completeEmailEnrollment).toHaveBeenCalledWith('123456');
+    });
+    await waitFor(() => {
+      expect(screen.queryByTestId('mfa-email-panel')).not.toBeInTheDocument();
+    });
+    expect(mocks.toastSuccess).toHaveBeenCalledWith('settings.security.mfa.email.completed');
+  });
+
+  it('names no address when the server returns none', async () => {
+    const user = userEvent.setup();
+    mocks.startEmailEnrollment.mockResolvedValue({
+      success: true, status: 'success', emailSetup: { emailMasked: null, expiresInSeconds: 600 },
+    });
+    render(<MfaMethodsManager data={makeData()} />);
+
+    await user.click(screen.getByTestId('mfa-email-start'));
+
+    await screen.findByTestId('mfa-email-panel');
+    expect(screen.getByTestId('mfa-email-destination')).toHaveTextContent(
+      /^settings\.security\.mfa\.email\.sent$/,
+    );
+  });
+
+  it('keeps the panel open and shows the server reason when the code is refused', async () => {
+    const user = userEvent.setup();
+    mocks.startEmailEnrollment.mockResolvedValue({
+      success: true, status: 'success', emailSetup: { emailMasked: 'j***@example.com', expiresInSeconds: 600 },
+    });
+    mocks.completeEmailEnrollment.mockResolvedValue({ success: false, status: 'error', message: 'Invalid or expired email code' });
+    render(<MfaMethodsManager data={makeData()} />);
+    await user.click(screen.getByTestId('mfa-email-start'));
+    await screen.findByTestId('mfa-email-panel');
+
+    await user.type(screen.getByLabelText('settings.security.mfa.email.codeLabel'), '000000');
+    await user.click(screen.getByTestId('mfa-email-complete'));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Invalid or expired email code');
+    });
+    expect(screen.getByTestId('mfa-email-panel')).toBeInTheDocument();
+  });
+
+  it('falls back to its own copy when the server gives no reason', async () => {
+    const user = userEvent.setup();
+    mocks.startEmailEnrollment.mockResolvedValue({
+      success: true, status: 'success', emailSetup: { emailMasked: 'j***@example.com', expiresInSeconds: 600 },
+    });
+    mocks.completeEmailEnrollment.mockResolvedValue({ success: false, status: 'error' });
+    render(<MfaMethodsManager data={makeData()} />);
+    await user.click(screen.getByTestId('mfa-email-start'));
+    await screen.findByTestId('mfa-email-panel');
+
+    await user.type(screen.getByLabelText('settings.security.mfa.email.codeLabel'), '000000');
+    await user.click(screen.getByTestId('mfa-email-complete'));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('settings.security.mfa.email.invalidCode');
+    });
+  });
+
+  it('throttles resend for a minute, and puts the minute back when the server refuses a resend', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    mocks.startEmailEnrollment.mockResolvedValue({
+      success: true, status: 'success', emailSetup: { emailMasked: 'j***@example.com', expiresInSeconds: 600 },
+    });
+    render(<MfaMethodsManager data={makeData()} />);
+    await user.click(screen.getByTestId('mfa-email-start'));
+    await screen.findByTestId('mfa-email-panel');
+
+    // A code just went out: a resend waits out the server's minute.
+    const resend = screen.getByTestId('mfa-email-resend');
+    expect(resend).toBeDisabled();
+    expect(resend).toHaveTextContent(/^settings\.security\.mfa\.email\.resendCountdown (60|59)$/);
+
+    act(() => {
+      vi.advanceTimersByTime(61_000);
+    });
+    expect(screen.getByTestId('mfa-email-resend')).toBeEnabled();
+    expect(screen.getByTestId('mfa-email-resend')).toHaveTextContent(
+      /^settings\.security\.mfa\.email\.resend$/,
+    );
+
+    // The server's throttle is the authority: a refused resend restarts the countdown.
+    const refusal = 'A verification code was sent recently. Wait before requesting another.';
+    mocks.startEmailEnrollment.mockResolvedValue({ success: false, status: 'error', message: refusal });
+    await user.click(screen.getByTestId('mfa-email-resend'));
+
+    await waitFor(() => {
+      expect(mocks.startEmailEnrollment).toHaveBeenCalledTimes(2);
+    });
+    await waitFor(() => {
+      expect(screen.getByTestId('mfa-email-resend')).toBeDisabled();
+    });
+    expect(mocks.toastError).toHaveBeenCalledWith(refusal);
+  });
+
+  it('closes the email panel without enrolling when cancelled', async () => {
+    const user = userEvent.setup();
+    mocks.startEmailEnrollment.mockResolvedValue({
+      success: true, status: 'success', emailSetup: { emailMasked: 'j***@example.com', expiresInSeconds: 600 },
+    });
+    mocks.completeEmailEnrollment.mockClear();
+    render(<MfaMethodsManager data={makeData()} />);
+    await user.click(screen.getByTestId('mfa-email-start'));
+    await screen.findByTestId('mfa-email-panel');
+
+    await user.click(screen.getByRole('button', { name: 'settings.security.mfa.methods.cancel' }));
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('mfa-email-panel')).not.toBeInTheDocument();
+    });
+    expect(mocks.completeEmailEnrollment).not.toHaveBeenCalled();
+    expect(screen.getByTestId('mfa-email-start')).toBeInTheDocument();
+  });
+
+  it('shows the first recovery set once the authenticator is verified, and only then', async () => {
+    const user = userEvent.setup();
+    mocks.startTotpEnrollment.mockResolvedValue({
+      success: true, status: 'success',
+      setup: { secretKey: 'JBSWY3DPEHPK3PXP', qrCodeUri: '', backupCodes: ['AAAA-BBBB', 'CCCC-DDDD'] },
+    });
+    mocks.completeTotpEnrollment.mockResolvedValue({ success: true, status: 'success' });
+    render(<MfaMethodsManager data={makeData({ totpEnabled: false, isEnabled: false, remainingCount: 0 })} />);
+
+    await user.click(screen.getByTestId('mfa-totp-start'));
+    await screen.findByTestId('mfa-totp-secret');
+    // Issued with the setup (issue #1195), but not shown before the factor is verified.
+    expect(screen.queryByTestId('mfa-recovery-codes')).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('settings.security.mfa.totp.codeLabel'), '123456');
+    await user.click(screen.getByRole('button', { name: 'settings.security.mfa.totp.complete' }));
+
+    const codes = await screen.findByTestId('mfa-recovery-codes');
+    expect(codes).toHaveTextContent('settings.security.mfa.recovery.firstSetTitle');
+    expect(codes).toHaveTextContent('AAAA-BBBB');
+    expect(codes).toHaveTextContent('CCCC-DDDD');
+
+    // Shown exactly once: dismissed, and there is nothing left to show them from.
+    await user.click(screen.getByTestId('mfa-recovery-codes-dismiss'));
+    expect(screen.queryByTestId('mfa-recovery-codes')).not.toBeInTheDocument();
+  });
+
+  it('treats a regenerated set with no codes as a failure, not an empty success', async () => {
+    const user = userEvent.setup();
+    mocks.regenerateBackupCodes.mockResolvedValue({ success: false, status: 'error', emptySet: true });
+    render(<MfaMethodsManager data={makeData()} />);
+
+    await user.click(screen.getByTestId('mfa-recovery-regenerate'));
+    await user.type(screen.getByLabelText('settings.security.mfa.recovery.passwordLabel'), crypto.randomUUID());
+    await user.click(screen.getByTestId('mfa-recovery-confirm'));
+
+    await waitFor(() => {
+      expect(mocks.toastError).toHaveBeenCalledWith('settings.security.mfa.recovery.notRegenerated');
+    });
+    expect(screen.queryByTestId('mfa-recovery-codes')).not.toBeInTheDocument();
   });
 });

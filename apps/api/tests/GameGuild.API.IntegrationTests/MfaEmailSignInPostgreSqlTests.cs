@@ -1,3 +1,6 @@
+using System.Buffers.Binary;
+using System.Collections;
+using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Net;
 using System.Net.Http.Json;
@@ -100,6 +103,52 @@ public sealed class MfaEmailSignInPostgreSqlTests(ApiPostgreSqlFixture fixture)
         Assert.NotNull(challenge.ConsumedAt);
         Assert.Equal(MfaMethod.Email, challenge.VerificationMethod);
         Assert.Equal(1, delivery.Count);
+    }
+
+    [Fact]
+    public async Task EmailEnrollmentCompletesOverHttpWithTheMailedCodeAlone()
+    {
+        // Settings enrollment (issue #1298 J2): email is added to an account that already
+        // has a factor — the service needs an MFA configuration to enroll into — and its
+        // completion contract carries the mailed code alone.
+        var delivery = new EmailDelivery();
+        using var factory = CreateFactory(delivery);
+        var subject = await SeedAsync(factory, emailEnrolled: false);
+        using var client = factory.CreateClient();
+
+        // The account is protected by an authenticator, so sign-in pauses for its code.
+        using var firstFactor = await client.PostAsJsonAsync("/v1/auth/sign-in", new { subject.Email, subject.Password, subject.TenantId });
+        using var firstFactorBody = JsonDocument.Parse(await firstFactor.Content.ReadAsStringAsync());
+        var pending = firstFactorBody.RootElement;
+        AssertPendingWithoutCredentials(pending);
+        var authenticatorCode = ComputeTotpCode(subject.TotpSecret!, factory.Services.GetRequiredService<MfaOptions>().TotpTimeStepSeconds);
+        using var authenticated = await client.PostAsJsonAsync("/v1/auth/mfa/sign-in/complete", new
+        {
+            mfaToken = pending.GetProperty("mfaToken").GetString(), code = authenticatorCode, method = "Totp"
+        });
+        using var authenticatedBody = JsonDocument.Parse(await authenticated.Content.ReadAsStringAsync());
+        var accessToken = authenticatedBody.RootElement.GetProperty("accessToken").GetString();
+        Assert.False(string.IsNullOrEmpty(accessToken));
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+        using var setup = await client.PostAsync("/v1/auth/mfa/email:setup", null);
+        Assert.Equal(HttpStatusCode.OK, setup.StatusCode);
+        Assert.Equal(subject.UserId, delivery.LastUserId);
+        Assert.NotNull(delivery.LastCode);
+        using var setupBody = JsonDocument.Parse(await setup.Content.ReadAsStringAsync());
+        Assert.False(string.IsNullOrEmpty(setupBody.RootElement.GetProperty("emailMasked").GetString()));
+        Assert.True(setupBody.RootElement.GetProperty("expiresInSeconds").GetInt32() > 0);
+
+        using var completed = await client.PostAsJsonAsync("/v1/auth/mfa/email:complete", new { code = delivery.LastCode });
+        Assert.Equal(HttpStatusCode.OK, completed.StatusCode);
+
+        using var verify = factory.Services.CreateScope();
+        var database = verify.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        var configuration = await database.Set<UserMfaConfiguration>().AsNoTracking().SingleAsync(row => row.UserId == subject.UserId);
+        Assert.Equal(subject.Email, configuration.EmailMfaAddress);
+        Assert.True(configuration.IsEnabled);
+        // An additional factor: the authenticator stays enrolled beside it.
+        Assert.False(string.IsNullOrEmpty(configuration.TotpSecretKey));
     }
 
     [Fact]
@@ -240,7 +289,32 @@ public sealed class MfaEmailSignInPostgreSqlTests(ApiPostgreSqlFixture fixture)
             EmailMfaAddress = emailEnrolled ? user.Email : null,
             TotpSecretKey = emailEnrolled ? null : provider.GetRequiredService<IEncryptionService>().Encrypt(secret) });
         await database.SaveChangesAsync();
-        return new EmailSubject(user.Id, tenantId, user.Email, password);
+        return new EmailSubject(user.Id, tenantId, user.Email, password, emailEnrolled ? null : secret);
+    }
+
+    private static string ComputeTotpCode(string base32Secret, int timeStepSeconds)
+    {
+        const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+        var normalized = base32Secret.ToUpperInvariant().Replace(" ", "").Replace("-", "");
+        var bits = new BitArray(normalized.Length * 5);
+        var bitIndex = 0;
+        foreach (var character in normalized)
+        {
+            var value = alphabet.IndexOf(character);
+            Assert.True(value >= 0, "The enrollment secret is not valid Base32.");
+            for (var shift = 4; shift >= 0; shift--) { bits[bitIndex++] = (value >> shift & 1) == 1; }
+        }
+        var key = new byte[bitIndex / 8];
+        for (var index = 0; index < key.Length; index++)
+        {
+            for (var bit = 0; bit < 8; bit++) { if (bits[index * 8 + bit]) { key[index] |= (byte)(1 << 7 - bit); } }
+        }
+        var message = new byte[8];
+        BinaryPrimitives.WriteInt64BigEndian(message, DateTimeOffset.UtcNow.ToUnixTimeSeconds() / timeStepSeconds);
+        var digest = HMACSHA1.HashData(key, message);
+        var offset = digest[^1] & 0x0F;
+        var truncated = BinaryPrimitives.ReadUInt32BigEndian(digest.AsSpan(offset, 4)) & 0x7FFFFFFF;
+        return (truncated % 1000000).ToString("D6", CultureInfo.InvariantCulture);
     }
 
     private static void AssertPendingWithoutCredentials(JsonElement result)
@@ -251,7 +325,7 @@ public sealed class MfaEmailSignInPostgreSqlTests(ApiPostgreSqlFixture fixture)
         Assert.True(string.IsNullOrEmpty(result.GetProperty("refreshToken").GetString()));
     }
 
-    private sealed record EmailSubject(Guid UserId, Guid TenantId, string Email, string Password);
+    private sealed record EmailSubject(Guid UserId, Guid TenantId, string Email, string Password, string? TotpSecret);
 
     private sealed class EmailDelivery
     {

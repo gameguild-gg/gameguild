@@ -20594,7 +20594,7 @@ export const postAuthMfaEmailChallengeEndpoint = {
  * Completes email MFA setup by verifying the code sent to the account's address, enrolling the verified address as an email factor.
  */
 export interface PostAuthMfaEmailCompleteInput {
-  body: Types.IdentityAuthenticationCompleteMfaSetupInput;
+  body: Types.IdentityAuthenticationCompleteEmailMfaSetupInput;
 }
 export type PostAuthMfaEmailCompleteOutput = Types.IdentityAuthenticationMfaSuccessOutput;
 export const postAuthMfaEmailCompleteEndpoint = {

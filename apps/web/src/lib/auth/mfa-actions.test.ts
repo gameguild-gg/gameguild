@@ -5,6 +5,8 @@ const mocks = vi.hoisted(() => ({
   getAuthMfaMethods: vi.fn(),
   getAuthMfaBackupCodes: vi.fn(),
   regenerate: vi.fn(),
+  emailSetup: vi.fn(),
+  emailComplete: vi.fn(),
   revalidatePath: vi.fn(),
 }));
 
@@ -20,11 +22,14 @@ vi.mock('@game-guild/client', () => ({
       getAuthMfaMethods = mocks.getAuthMfaMethods;
       getAuthMfaBackupCodes = mocks.getAuthMfaBackupCodes;
       postAuthMfaBackupCodesRegenerate = mocks.regenerate;
+      postAuthMfaEmailSetup = mocks.emailSetup;
+      postAuthMfaEmailComplete = mocks.emailComplete;
     },
   },
 }));
 
-const { loadMfaData, regenerateBackupCodesAction } = await import('./mfa-actions');
+const { completeEmailEnrollmentAction, loadMfaData, regenerateBackupCodesAction, startEmailEnrollmentAction } =
+  await import('./mfa-actions');
 
 const CONFIGURATION = { isEnabled: true } as never;
 const METHODS = { methods: [] } as never;
@@ -44,6 +49,45 @@ describe('backup-code password re-verification transport', () => {
     const result = await regenerateBackupCodesAction(crypto.randomUUID());
     expect(result).toMatchObject({ success: false });
     expect(result.codes).toBeUndefined();
+  });
+
+  it('reports a set with no codes as a failure instead of an empty success (issue #1298 J2)', async () => {
+    mocks.regenerate.mockResolvedValueOnce({ ok: true, data: { codes: [] } });
+    const result = await regenerateBackupCodesAction(crypto.randomUUID());
+    expect(result).toMatchObject({ success: false, status: 'error', emptySet: true });
+    expect(result.codes).toBeUndefined();
+  });
+});
+
+describe('email-codes enrollment transport (issue #1298 J2)', () => {
+  it('starts enrollment with no request body: the server resolves the address', async () => {
+    mocks.emailSetup.mockResolvedValueOnce({ ok: true, data: { emailMasked: 'j***@example.com', expiresInSeconds: 600 } });
+    const result = await startEmailEnrollmentAction();
+    expect(mocks.emailSetup).toHaveBeenCalledWith();
+    expect(result).toMatchObject({
+      success: true,
+      status: 'success',
+      emailSetup: { emailMasked: 'j***@example.com', expiresInSeconds: 600 },
+    });
+  });
+
+  it('carries the server reason when the code is throttled', async () => {
+    mocks.emailSetup.mockResolvedValueOnce({
+      ok: false,
+      error: { status: 400, message: 'A verification code was sent recently. Wait before requesting another.' },
+    });
+    const result = await startEmailEnrollmentAction();
+    expect(result).toMatchObject({ success: false, status: 'error', emailSetup: undefined });
+    expect(result.message).toBe('A verification code was sent recently. Wait before requesting another.');
+  });
+
+  it('completes enrollment with the mailed code alone, then refreshes the security page', async () => {
+    mocks.revalidatePath.mockClear();
+    mocks.emailComplete.mockResolvedValueOnce({ ok: true, data: { message: 'Email MFA setup completed successfully' } });
+    const result = await completeEmailEnrollmentAction('123456');
+    expect(mocks.emailComplete).toHaveBeenCalledWith({ code: '123456' });
+    expect(mocks.revalidatePath).toHaveBeenCalledWith('/workspace/settings/security');
+    expect(result).toEqual({ success: true, status: 'success', message: undefined });
   });
 });
 

@@ -13103,6 +13103,11 @@ export interface IdentityAuthenticationCompleteAccountRecoveryResetInput {
   resetToken: string | null;
 }
 
+/** Completes email-codes enrollment with its one-time mailed proof, without an authenticator secret. */
+export interface IdentityAuthenticationCompleteEmailMfaSetupInput {
+  code: string;
+}
+
 /** Request to complete MFA setup */
 export interface IdentityAuthenticationCompleteMfaSetupInput {
   code: string;
@@ -29099,6 +29104,7 @@ export let IdentityAuthenticationCleanupKeysInputSchema: z.ZodType<IdentityAuthe
 export let IdentityAuthenticationCleanupResultSchema: z.ZodType<IdentityAuthenticationCleanupResult>;
 export let IdentityAuthenticationClientCredentialsTokenOutputSchema: z.ZodType<IdentityAuthenticationClientCredentialsTokenOutput>;
 export let IdentityAuthenticationCompleteAccountRecoveryResetInputSchema: z.ZodType<IdentityAuthenticationCompleteAccountRecoveryResetInput>;
+export let IdentityAuthenticationCompleteEmailMfaSetupInputSchema: z.ZodType<IdentityAuthenticationCompleteEmailMfaSetupInput>;
 export let IdentityAuthenticationCompleteMfaSetupInputSchema: z.ZodType<IdentityAuthenticationCompleteMfaSetupInput>;
 export let IdentityAuthenticationCompleteMfaSignInInputSchema: z.ZodType<IdentityAuthenticationCompleteMfaSignInInput>;
 export let IdentityAuthenticationCompletePasskeyApprovalInputSchema: z.ZodType<IdentityAuthenticationCompletePasskeyApprovalInput>;
@@ -42621,6 +42627,11 @@ IdentityAuthenticationCompleteAccountRecoveryResetInputSchema = z.object({
   confirmPassword: z.string().nullable(),
   newPassword: z.string().nullable(),
   resetToken: z.string().nullable(),
+});
+
+/** Zod schema for IdentityAuthenticationCompleteEmailMfaSetupInput. Completes email-codes enrollment with its one-time mailed proof, without an authenticator secret. */
+IdentityAuthenticationCompleteEmailMfaSetupInputSchema = z.object({
+  code: z.string().min(1).max(64),
 });
 
 /** Zod schema for IdentityAuthenticationCompleteMfaSetupInput. Request to complete MFA setup */

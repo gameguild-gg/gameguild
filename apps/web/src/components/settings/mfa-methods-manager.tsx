@@ -1,14 +1,17 @@
 'use client';
 
 import {
+  completeEmailEnrollmentAction,
   completeSmsEnrollmentAction,
   completeTotpEnrollmentAction,
   disableMfaAction,
   regenerateBackupCodesAction,
+  startEmailEnrollmentAction,
   startSmsEnrollmentAction,
   startTotpEnrollmentAction,
   type MfaPageData,
 } from '@/lib/auth/mfa-actions';
+import { BackupCodesReveal } from '@/components/auth/backup-codes-reveal';
 import { Badge } from '@game-guild/ui/components/badge';
 import { Button } from '@game-guild/ui/components/button';
 import {
@@ -30,22 +33,30 @@ import {
 } from '@game-guild/ui/components/alert-dialog';
 import { Input } from '@game-guild/ui/components/input';
 import { Label } from '@game-guild/ui/components/label';
-import { KeyRound, MessageSquare, ShieldCheck, Smartphone } from 'lucide-react';
+import { KeyRound, Mail, MessageSquare, ShieldCheck, Smartphone } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import * as React from 'react';
 import { toast } from 'sonner';
 
 /**
  * MFA method-management surface (settings/security, issue #244): enrolled-method list with
- * add flows for the authenticator app and SMS, recovery-code status with one-time
- * regenerate view, and password-verified disable. All mutations go through server actions
+ * add flows for the authenticator app, SMS and email codes, recovery-code status with the
+ * one-time reveal, and password-verified disable. All mutations go through server actions
  * (mfa-actions.ts); revalidatePath refreshes the server-rendered data after each action.
  */
 
 type MethodState =
   | { kind: 'idle' }
-  | { kind: 'totp-active'; secretKey: string; qrCodeUri: string }
-  | { kind: 'sms-active'; maskedPhone: string };
+  /** `backupCodes`: the first recovery set, issued with the setup and revealed once (issue #1298 J2). */
+  | { kind: 'totp-active'; secretKey: string; qrCodeUri: string; backupCodes: readonly string[] }
+  | { kind: 'sms-active'; maskedPhone: string }
+  | { kind: 'email-active'; maskedEmail: string; expiresInSeconds: number };
+
+/** Where a revealed set came from; decides the reveal's copy. */
+type FreshCodes = { codes: readonly string[]; source: 'issued' | 'regenerated' };
+
+/** The server throttles email codes to one a minute; the panel's countdown mirrors it. */
+const EMAIL_CODE_RESEND_COOLDOWN_MS = 60_000;
 
 export function MfaMethodsManager({ data }: { data: MfaPageData }) {
   const t = useTranslations('settings.security.mfa');
@@ -58,7 +69,10 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
   const [disableOpen, setDisableOpen] = React.useState(false);
   const [regenerateOpen, setRegenerateOpen] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
-  const [freshCodes, setFreshCodes] = React.useState<string[] | null>(null);
+  const [freshCodes, setFreshCodes] = React.useState<FreshCodes | null>(null);
+  const [emailError, setEmailError] = React.useState<string | null>(null);
+  const [emailCooldownUntil, setEmailCooldownUntil] = React.useState<number | null>(null);
+  const [now, setNow] = React.useState(() => Date.now());
 
   const configuration = data.configuration;
   const isEnabled = configuration?.isEnabled === true;
@@ -67,11 +81,99 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
 
   const totp = methods.find((m) => m.method === 'Totp');
   const sms = methods.find((m) => m.method === 'Sms');
+  const email = methods.find((m) => m.method === 'Email');
   const backupCode = methods.find((m) => m.method === 'BackupCode');
+
+  // Email codes are offered as an additional factor only. The web sign-in challenge does
+  // not offer them yet, so an account left with email as its sole factor could not sign in.
+  const anotherFactorEnrolled = totp?.isEnabled === true || sms?.isEnabled === true;
+  const emailUnenrolled = email?.isAvailable === true && email.isEnabled === false;
+  const canAddEmail = emailUnenrolled && anotherFactorEnrolled && methodState.kind !== 'email-active';
+
+  const emailCooldownActive = emailCooldownUntil !== null && emailCooldownUntil > now;
+  const emailSecondsLeft = emailCooldownUntil === null ? 0 : Math.max(0, Math.ceil((emailCooldownUntil - now) / 1000));
+
+  React.useEffect(() => {
+    if (!emailCooldownActive) {
+      return;
+    }
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [emailCooldownActive]);
 
   const reportFailure = (message?: string) => {
     toast.error(message ?? tShared('actionFailed'));
   };
+
+  function startEmailCooldown() {
+    setEmailCooldownUntil(Date.now() + EMAIL_CODE_RESEND_COOLDOWN_MS);
+    setNow(Date.now());
+  }
+
+  function closeEmailPanel() {
+    setMethodState({ kind: 'idle' });
+    setCode('');
+    setEmailError(null);
+    setEmailCooldownUntil(null);
+  }
+
+  async function handleStartEmail() {
+    setBusy(true);
+    try {
+      const result = await startEmailEnrollmentAction();
+      if (result.success && result.emailSetup) {
+        setMethodState({
+          kind: 'email-active',
+          maskedEmail: result.emailSetup.emailMasked ?? '',
+          expiresInSeconds: result.emailSetup.expiresInSeconds ?? 600,
+        });
+        setCode('');
+        setEmailError(null);
+        startEmailCooldown();
+        toast.success(t('email.sent'));
+      } else {
+        reportFailure(result.message ?? t('email.startFailed'));
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleResendEmail() {
+    setBusy(true);
+    try {
+      const result = await startEmailEnrollmentAction();
+      if (result.success) {
+        setEmailError(null);
+        startEmailCooldown();
+        toast.success(t('email.sent'));
+      } else {
+        // The server's throttle is the authority: a refused request restarts the countdown.
+        if (result.status === 'error') {
+          startEmailCooldown();
+        }
+        reportFailure(result.message ?? t('email.startFailed'));
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function handleCompleteEmail() {
+    setBusy(true);
+    try {
+      const result = await completeEmailEnrollmentAction(code);
+      if (result.success) {
+        closeEmailPanel();
+        toast.success(t('email.completed'));
+      } else {
+        // The panel stays open: the code may simply be wrong. The server's message says so.
+        setEmailError(result.message ?? t('email.invalidCode'));
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
 
   async function handleStartTotp() {
     setSmsPassword('');
@@ -79,7 +181,14 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
     try {
       const result = await startTotpEnrollmentAction();
       if (result.success && result.setup?.secretKey) {
-        setMethodState({ kind: 'totp-active', secretKey: result.setup.secretKey, qrCodeUri: result.setup.qrCodeUri ?? '' });
+        // The setup also issues the first recovery set (#1195). Keep it for the reveal
+        // once enrollment completes; it is not shown before the factor is verified.
+        setMethodState({
+          kind: 'totp-active',
+          secretKey: result.setup.secretKey,
+          qrCodeUri: result.setup.qrCodeUri ?? '',
+          backupCodes: result.setup.backupCodes ?? [],
+        });
         setCode('');
         toast.success(t('totp.started'));
       } else {
@@ -98,8 +207,12 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
     try {
       const result = await completeTotpEnrollmentAction(code, methodState.secretKey);
       if (result.success) {
+        const issued = methodState.backupCodes;
         setMethodState({ kind: 'idle' });
         setCode('');
+        if (issued.length > 0) {
+          setFreshCodes({ codes: issued, source: 'issued' });
+        }
         toast.success(t('totp.completed'));
       } else {
         reportFailure(result.message);
@@ -155,8 +268,11 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
       if (result.success) {
         setRegenerateOpen(false);
         setPassword('');
-        setFreshCodes(result.codes ?? []);
+        setFreshCodes({ codes: result.codes ?? [], source: 'regenerated' });
         toast.success(t('recovery.regenerated'));
+      } else if (result.emptySet) {
+        // An empty answer is a failure too (issue #1298 J2): never a success toast over an empty grid.
+        reportFailure(t('recovery.notRegenerated'));
       } else {
         reportFailure(result.message ?? t('recovery.wrongPassword'));
       }
@@ -213,6 +329,8 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
                     <KeyRound className="text-muted-foreground mt-0.5 size-5" aria-hidden />
                   ) : method.method === 'Sms' ? (
                     <MessageSquare className="text-muted-foreground mt-0.5 size-5" aria-hidden />
+                  ) : method.method === 'Email' ? (
+                    <Mail className="text-muted-foreground mt-0.5 size-5" aria-hidden />
                   ) : (
                     <Smartphone className="text-muted-foreground mt-0.5 size-5" aria-hidden />
                   )}
@@ -240,12 +358,28 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
                 {t('sms.start')}
               </Button>
             )}
+            {canAddEmail && (
+              <Button
+                variant="outline"
+                onClick={() => void handleStartEmail()}
+                disabled={busy}
+                data-testid="mfa-email-start"
+              >
+                {t('email.start')}
+              </Button>
+            )}
             {isEnabled && (
               <Button variant="destructive" onClick={() => setDisableOpen(true)} disabled={busy} data-testid="mfa-disable">
                 {t('disable.title')}
               </Button>
             )}
           </div>
+
+          {emailUnenrolled && !anotherFactorEnrolled && methodState.kind !== 'email-active' && (
+            <p className="text-muted-foreground text-xs" data-testid="mfa-email-prerequisite">
+              {t('email.prerequisite')}
+            </p>
+          )}
 
           {methodState.kind === 'totp-active' && (
             <div className="space-y-3 rounded-lg border p-4" data-testid="mfa-totp-panel">
@@ -327,6 +461,55 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
               ) : null}
             </div>
           )}
+
+          {methodState.kind === 'email-active' && (
+            <div className="space-y-3 rounded-lg border p-4" data-testid="mfa-email-panel">
+              <p className="text-sm" data-testid="mfa-email-destination">
+                {methodState.maskedEmail ? t('email.sentTo', { email: methodState.maskedEmail }) : t('email.sent')}
+              </p>
+              <p className="text-muted-foreground text-xs">
+                {t('email.expiresNote', { minutes: Math.max(1, Math.round(methodState.expiresInSeconds / 60)) })}
+              </p>
+              <div className="grid gap-2">
+                <Label htmlFor="mfa-email-code">{t('email.codeLabel')}</Label>
+                <Input
+                  id="mfa-email-code"
+                  value={code}
+                  onChange={(event) => setCode(event.target.value)}
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  placeholder="123456"
+                  aria-invalid={emailError ? true : undefined}
+                  aria-describedby={emailError ? 'mfa-email-error' : undefined}
+                />
+                {emailError && (
+                  <p id="mfa-email-error" role="alert" className="text-destructive text-sm">
+                    {emailError}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  onClick={() => void handleCompleteEmail()}
+                  disabled={busy || code.length < 6}
+                  data-testid="mfa-email-complete"
+                >
+                  {t('email.complete')}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => void handleResendEmail()}
+                  disabled={busy || emailCooldownActive}
+                  data-testid="mfa-email-resend"
+                >
+                  {emailCooldownActive ? t('email.resendCountdown', { seconds: emailSecondsLeft }) : t('email.resend')}
+                </Button>
+                <Button variant="ghost" onClick={closeEmailPanel} disabled={busy}>
+                  {t('methods.cancel')}
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -348,17 +531,17 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
           )}
 
           {freshCodes ? (
-            <div className="space-y-2 rounded-lg border p-4" data-testid="mfa-recovery-codes">
-              <p className="text-sm font-medium">{t('recovery.freshWarning')}</p>
-              <div className="grid grid-cols-2 gap-1 font-mono text-sm sm:grid-cols-3">
-                {freshCodes.map((recoveryCode) => (
-                  <span key={recoveryCode}>{recoveryCode}</span>
-                ))}
-              </div>
-              <Button variant="outline" onClick={() => setFreshCodes(null)}>
-                {t('recovery.hide')}
-              </Button>
-            </div>
+            <BackupCodesReveal
+              testId="mfa-recovery-codes"
+              codes={freshCodes.codes}
+              title={freshCodes.source === 'issued' ? t('recovery.firstSetTitle') : t('recovery.freshWarning')}
+              description={freshCodes.source === 'issued' ? t('recovery.firstSetDescription') : undefined}
+              copyLabel={t('recovery.copy')}
+              copiedLabel={t('recovery.copied')}
+              copyFailedLabel={t('recovery.copyFailed')}
+              dismissLabel={t('recovery.hide')}
+              onDismiss={() => setFreshCodes(null)}
+            />
           ) : (
             <Button variant="outline" onClick={() => setRegenerateOpen(true)} disabled={busy} data-testid="mfa-recovery-regenerate">
               {backupCode?.isEnabled ? t('recovery.regenerate') : t('recovery.generate')}
