@@ -47,16 +47,6 @@ public sealed class EconomyWalletBalanceProjectionRow
     public DateTimeOffset RebuiltAt { get; set; }
 }
 
-internal sealed class EconomyProjectionReconciliationEventRow
-{
-    public Guid Id { get; set; }
-    public Guid WalletId { get; set; }
-    public string PreviousHash { get; set; } = string.Empty;
-    public string RebuiltHash { get; set; } = string.Empty;
-    public long SourceJournalSequence { get; set; }
-    public DateTimeOffset DetectedAt { get; set; }
-}
-
 internal sealed class EconomyAccountRow
 {
     public Guid Id { get; set; }

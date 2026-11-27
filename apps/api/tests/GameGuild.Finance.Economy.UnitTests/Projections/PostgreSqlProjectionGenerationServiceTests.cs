@@ -32,7 +32,16 @@ public sealed class PostgreSqlProjectionGenerationServiceTests
         var fenced = await context.Set<EconomyWalletBalanceProjectionRow>().SingleAsync();
         fenced.AvailableHardToSpend.Should().Be(50);
         fenced.ReviewState.Should().Be(WalletReviewState.ReviewRequired);
-        (await context.Set<EconomyProjectionReconciliationEventRow>().CountAsync()).Should().Be(1);
+        // #1092 Tier 3: the reconciliation record is a row of the unified event
+        // ledger; PreviousHash is the hash the projection had before the rebuild.
+        var reconciliation = await context.Set<EconomyEventRow>()
+            .SingleAsync(row => row.StreamKind == EconomyEventStreamKind.ProjectionReconciliation);
+        var rebuiltHash = reconciliation.RebuiltHash;
+        reconciliation.ProjectionWalletId.Should().Be(walletId);
+        reconciliation.PreviousHash.Should().Be("inflated-live");
+        reconciliation.RebuiltHash.Should().MatchRegex("^[0-9a-f]{64}$").And.NotBe("inflated-live");
+        reconciliation.SourceJournalSequence.Should().Be(1);
+        reconciliation.OccurredAt.Should().Be(Now);
 
         var selfApproval = () => service.ApproveAndTryActivateAsync(
             generation.Generation, proposer, "reauth-proposer", Now.AddMinutes(1), CancellationToken.None).AsTask();
@@ -51,6 +60,9 @@ public sealed class PostgreSqlProjectionGenerationServiceTests
         active.AvailableHardToSpend.Should().Be(50);
         active.ReviewState.Should().Be(WalletReviewState.Healthy);
         active.SourceJournalSequence.Should().Be(1);
+        // The activated projection carries exactly the hash the
+        // reconciliation record reported as rebuilt.
+        active.ProjectionHash.Should().Be(rebuiltHash);
     }
 
     [Fact]

@@ -32,8 +32,10 @@ public sealed class EconomyProjectionRecoveryPostgreSqlMigrationTests
         initial.WasCorrupt.Should().BeFalse();
         initial.ReviewState.Should().Be(1);
         await AssertProjectionAsync(connection, reviewState: 1);
+        // #1092 Tier 3: the reconciliation record is a row of the unified event
+        // ledger (StreamKind = 13), written by the retargeted rebuild function.
         (await ScalarAsync<long>(connection,
-            "SELECT count(*) FROM public.economy_projection_reconciliation_events;")).Should().Be(0);
+            "SELECT count(*) FROM public.economy_events WHERE \"StreamKind\" = 13;")).Should().Be(0);
 
         await ExecuteAsync(connection, $"""
             UPDATE public.economy_wallet_balance_projections
@@ -46,18 +48,18 @@ public sealed class EconomyProjectionRecoveryPostgreSqlMigrationTests
         repaired.ReviewState.Should().Be(2);
         await AssertProjectionAsync(connection, reviewState: 2);
         (await ScalarAsync<long>(connection,
-            "SELECT count(*) FROM public.economy_projection_reconciliation_events;")).Should().Be(1);
+            "SELECT count(*) FROM public.economy_events WHERE \"StreamKind\" = 13;")).Should().Be(1);
         (await ScalarAsync<string>(connection,
-            "SELECT \"PreviousHash\" FROM public.economy_projection_reconciliation_events LIMIT 1;"))
+            "SELECT \"PreviousHash\" FROM public.economy_events WHERE \"StreamKind\" = 13 LIMIT 1;"))
             .Should().Be("corrupt");
 
         var immutableEvent = await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsync(
             connection,
-            "UPDATE public.economy_projection_reconciliation_events SET \"PreviousHash\" = 'rewritten';"));
+            "UPDATE public.economy_events SET \"PreviousHash\" = 'rewritten' WHERE \"StreamKind\" = 13;"));
         immutableEvent.SqlState.Should().Be(PostgresErrorCodes.InsufficientPrivilege);
 
         await ExecuteAsRoleAsync(connection, "gameguild_economy_runtime",
-            "SELECT count(*) FROM public.economy_projection_reconciliation_events;");
+            "SELECT count(*) FROM public.economy_events WHERE \"StreamKind\" = 13;");
 
         var runtimeUpdate = await Assert.ThrowsAsync<PostgresException>(() => ExecuteAsRoleAsync(
             connection,
@@ -82,7 +84,7 @@ public sealed class EconomyProjectionRecoveryPostgreSqlMigrationTests
         verified.ReviewState.Should().Be(1);
         await AssertProjectionAsync(connection, reviewState: 1);
         (await ScalarAsync<long>(connection,
-            "SELECT count(*) FROM public.economy_projection_reconciliation_events;")).Should().Be(1);
+            "SELECT count(*) FROM public.economy_events WHERE \"StreamKind\" = 13;")).Should().Be(1);
     }
 
     [DockerFact]
