@@ -14,7 +14,6 @@ public sealed class EconomyPersistenceModelTests
     [
         "ai_provider_cost_facts",
         "economy_accounts",
-        "economy_anchor_verifications",
         "economy_approvals",
         "economy_capability_policies",
         "economy_capability_receipts",
@@ -83,6 +82,7 @@ public sealed class EconomyPersistenceModelTests
         "ix_economy_fragment_root_ranges_root_epoch",
         "ix_economy_holds_wallet_status",
         "ix_economy_lot_lineage_edges_parent_lot",
+        "ix_economy_events_anchor_verification",
         "ix_economy_events_projection_wallet_detected",
         "ix_economy_self_service_transfer_intents_recipient_time",
         "ix_economy_wallet_balance_projections_review_state",
@@ -536,7 +536,8 @@ public sealed class EconomyPersistenceModelTests
                 ("RiskReviewCaseId", "economy_risk_review_cases", DeleteBehavior.Restrict),
                 ("ComplianceHoldId", "economy_compliance_holds", DeleteBehavior.Restrict),
                 ("LegacyCutoverTenantId", "economy_legacy_cutovers", DeleteBehavior.Restrict),
-                ("ProjectionWalletId", "economy_wallets", DeleteBehavior.Restrict)
+                ("ProjectionWalletId", "economy_wallets", DeleteBehavior.Restrict),
+                ("ExternalAnchorId", "economy_external_anchors", DeleteBehavior.Restrict)
             ]);
     }
 
@@ -574,7 +575,11 @@ public sealed class EconomyPersistenceModelTests
             [EconomyEventStreamKind.AdminWithdrawalAudit] = ["TenantId", "RunId", "KindText", "Evidence", "PreviousHash", "Hash"],
             [EconomyEventStreamKind.BountyExpiration] = ["BountyId", "ExpiresAt", "BountyVersion"],
             [EconomyEventStreamKind.ProjectionReconciliation] =
-                ["ProjectionWalletId", "PreviousHash", "RebuiltHash", "SourceJournalSequence"]
+                ["ProjectionWalletId", "PreviousHash", "RebuiltHash", "SourceJournalSequence"],
+            // The WORM object's hash is the stream's evidence hash and the end
+            // of its retention the row's ExpiresAt.
+            [EconomyEventStreamKind.AnchorVerification] =
+                ["ExternalAnchorId", "KeyId", "ObjectVersion", "ETag", "ExpiresAt", "EvidenceHash", "SignatureValid", "ObjectMatches"]
         };
         var optionalByKind = new Dictionary<EconomyEventStreamKind, string[]>
         {
@@ -624,9 +629,9 @@ public sealed class EconomyPersistenceModelTests
             .GetCheckConstraints()
             .ToDictionary(constraint => constraint.Name!, constraint => constraint.Sql!);
 
-        // Projection reconciliation records own no ordinal, so the sequence rule
-        // covers every other stream only.
-        constraints["ck_economy_events_sequence"].Should().Be("\"StreamKind\" = 13 OR \"Sequence\" > 0");
+        // Projection reconciliation and anchor verification records own no
+        // ordinal, so the sequence rule covers every other stream only.
+        constraints["ck_economy_events_sequence"].Should().Be("\"StreamKind\" IN (13, 14) OR \"Sequence\" > 0");
         // One clause per stream that had a value rule before the merge.
         foreach (var clause in new[]
                  {
@@ -679,6 +684,33 @@ public sealed class EconomyPersistenceModelTests
             "RebuiltHash",
             "SourceJournalSequence",
             "OccurredAt");
+    }
+
+    [Fact]
+    public void AnchorVerificationIsARecordOfTheEventLedger()
+    {
+        using var context = CreateContext();
+        var model = context.Model;
+
+        // #1092 Tier 3: the verification record is a row of the unified event
+        // ledger; VerifiedAt is the row's OccurredAt, RetainUntil its ExpiresAt
+        // and ObjectHash its EvidenceHash.
+        AssertProperties(
+            model,
+            "economy_events",
+            "ExternalAnchorId",
+            "KeyId",
+            "ObjectVersion",
+            "ETag",
+            "SignatureValid",
+            "ObjectMatches",
+            "ExpiresAt",
+            "EvidenceHash",
+            "OccurredAt");
+        model.GetEntityTypes()
+            .Single(entity => entity.GetTableName() == "economy_events").GetProperties()
+            .Where(property => property.Name is "KeyId" or "ObjectVersion" or "ETag")
+            .Should().OnlyContain(property => property.GetMaxLength() == 256);
     }
 
     [Fact]

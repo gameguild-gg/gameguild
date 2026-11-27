@@ -763,20 +763,6 @@ internal sealed class EconomyWalletProjectionGenerationRow
     public DateTimeOffset RebuiltAt { get; set; }
 }
 
-internal sealed class EconomyAnchorVerificationRow
-{
-    public Guid Id { get; set; }
-    public Guid ExternalAnchorId { get; set; }
-    public string KeyId { get; set; } = string.Empty;
-    public string ObjectVersion { get; set; } = string.Empty;
-    public string ETag { get; set; } = string.Empty;
-    public DateTimeOffset RetainUntil { get; set; }
-    public string ObjectHash { get; set; } = string.Empty;
-    public bool SignatureValid { get; set; }
-    public bool ObjectMatches { get; set; }
-    public DateTimeOffset VerifiedAt { get; set; }
-}
-
 internal sealed class EconomyWorkerLeaseRow
 {
     public string Name { get; set; } = string.Empty;

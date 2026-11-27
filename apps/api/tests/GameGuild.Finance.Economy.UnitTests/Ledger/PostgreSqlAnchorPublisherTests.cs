@@ -34,11 +34,13 @@ public sealed class PostgreSqlAnchorPublisherTests
         worm.Published.Should().ContainSingle();
         (await context.Set<EconomyExternalAnchorRow>().SingleAsync()).DispatchSnapshotHash
             .Should().Be("dispatch-snapshot");
-        var verification = await context.Set<EconomyAnchorVerificationRow>().SingleAsync();
+        var verification = await context.Set<EconomyEventRow>().SingleAsync();
+        verification.StreamKind.Should().Be(EconomyEventStreamKind.AnchorVerification);
+        verification.ExternalAnchorId.Should().Be(result!.AnchorId);
         verification.SignatureValid.Should().BeTrue();
         verification.ObjectMatches.Should().BeTrue();
         verification.ObjectVersion.Should().Be("version-1");
-        verification.RetainUntil.Should().BeAfter(Now);
+        verification.ExpiresAt.Should().BeAfter(Now);
     }
 
     [Fact]

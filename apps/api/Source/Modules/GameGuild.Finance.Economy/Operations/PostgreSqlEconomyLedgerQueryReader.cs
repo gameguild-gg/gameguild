@@ -76,12 +76,12 @@ public sealed class PostgreSqlEconomyLedgerQueryReader : IEconomyLedgerQueryRead
             return null;
         }
 
-        var latest = await _db.Set<EconomyAnchorVerificationRow>().AsNoTracking()
+        var latestRow = await AnchorVerifications
             .Where(item => item.ExternalAnchorId == anchorId)
-            .OrderByDescending(item => item.VerifiedAt)
+            .OrderByDescending(item => item.OccurredAt)
             .ThenBy(item => item.Id)
             .FirstOrDefaultAsync(cancellationToken);
-        return MapAnchor(row, latest);
+        return MapAnchor(row, EconomyAnchorVerificationRecord.FromOrNull(latestRow));
     }
 
     public async ValueTask<IReadOnlyList<EconomyAnchorVerificationOperationalStatus>> ReadAnchorVerificationsAsync(
@@ -95,12 +95,12 @@ public sealed class PostgreSqlEconomyLedgerQueryReader : IEconomyLedgerQueryRead
             return Array.Empty<EconomyAnchorVerificationOperationalStatus>();
         }
 
-        var rows = await _db.Set<EconomyAnchorVerificationRow>().AsNoTracking()
+        var rows = await AnchorVerifications
             .Where(item => item.ExternalAnchorId == anchorId)
-            .OrderBy(item => item.VerifiedAt)
+            .OrderBy(item => item.OccurredAt)
             .ThenBy(item => item.Id)
             .ToArrayAsync(cancellationToken);
-        return Array.AsReadOnly(rows.Select(MapAnchorVerification).ToArray());
+        return Array.AsReadOnly(rows.Select(EconomyAnchorVerificationRecord.From).Select(MapAnchorVerification).ToArray());
     }
 
     public async ValueTask<EconomyOperationalPage<EconomyProjectionGenerationOperationalDetails>> ListProjectionsAsync(
@@ -156,20 +156,26 @@ public sealed class PostgreSqlEconomyLedgerQueryReader : IEconomyLedgerQueryRead
             item.Id, item.ActorId, item.ReauthenticationHash, item.ApprovedAt)).ToArray());
     }
 
-    private async Task<IReadOnlyDictionary<Guid, EconomyAnchorVerificationRow>> ReadLatestAnchorVerificationsAsync(
+    // #1092 Tier 3: anchor verifications are the AnchorVerification stream
+    // of the unified event ledger, ordered by when each run happened.
+    private IQueryable<EconomyEventRow> AnchorVerifications => _db.Set<EconomyEventRow>().AsNoTracking()
+        .Where(row => row.StreamKind == EconomyEventStreamKind.AnchorVerification);
+
+    private async Task<IReadOnlyDictionary<Guid, EconomyAnchorVerificationRecord>> ReadLatestAnchorVerificationsAsync(
         Guid[] anchorIds, CancellationToken cancellationToken)
     {
         if (anchorIds.Length == 0)
         {
-            return new Dictionary<Guid, EconomyAnchorVerificationRow>();
+            return new Dictionary<Guid, EconomyAnchorVerificationRecord>();
         }
 
-        var rows = await _db.Set<EconomyAnchorVerificationRow>().AsNoTracking()
-            .Where(row => anchorIds.Contains(row.ExternalAnchorId))
-            .OrderByDescending(row => row.VerifiedAt)
+        var rows = await AnchorVerifications
+            .Where(row => anchorIds.Contains(row.ExternalAnchorId!.Value))
+            .OrderByDescending(row => row.OccurredAt)
             .ThenBy(row => row.Id)
             .ToArrayAsync(cancellationToken);
-        return rows.GroupBy(row => row.ExternalAnchorId).ToDictionary(group => group.Key, group => group.First());
+        return rows.GroupBy(row => row.ExternalAnchorId!.Value)
+            .ToDictionary(group => group.Key, group => EconomyAnchorVerificationRecord.From(group.First()));
     }
 
     private static EconomyJournalVerificationRunDetails MapVerification(EconomyJournalVerificationCheckpointRow row) =>
@@ -177,14 +183,14 @@ public sealed class PostgreSqlEconomyLedgerQueryReader : IEconomyLedgerQueryRead
             row.FailureCode, row.FencingToken, row.StartedAt, row.CompletedAt);
 
     private static EconomyAnchorOperationalDetails MapAnchor(
-        EconomyExternalAnchorRow row, EconomyAnchorVerificationRow? verification) => new(
+        EconomyExternalAnchorRow row, EconomyAnchorVerificationRecord? verification) => new(
         new EconomyAnchorOperationalStatus(
             row.Id, row.JournalSequence, row.JournalHash, row.Provider, row.AnchoredAt,
             verification?.SignatureValid ?? false, verification?.ObjectMatches ?? false,
             verification?.RetainUntil, verification?.VerifiedAt),
         row.DispatchSnapshotHash);
 
-    private static EconomyAnchorVerificationOperationalStatus MapAnchorVerification(EconomyAnchorVerificationRow row) =>
+    private static EconomyAnchorVerificationOperationalStatus MapAnchorVerification(EconomyAnchorVerificationRecord row) =>
         new(row.Id, row.KeyId, row.ObjectVersion, row.ETag, row.RetainUntil, row.ObjectHash,
             row.SignatureValid, row.ObjectMatches, row.VerifiedAt);
 

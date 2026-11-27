@@ -361,11 +361,12 @@ public sealed class PostgreSqlEconomyCapabilityControlPlaneStoreTests
             WormReference = "s3://worm", Provider = "s3-object-lock", ProviderReference = "object-version",
             AnchoredAt = Now
         });
-        context.Set<EconomyAnchorVerificationRow>().Add(new EconomyAnchorVerificationRow
+        context.Set<EconomyEventRow>().Add(new EconomyEventRow
         {
-            Id = Guid.NewGuid(), ExternalAnchorId = anchorId, KeyId = "kms-anchor", ObjectVersion = "v1",
-            ETag = "etag", RetainUntil = Now.AddYears(1), ObjectHash = "anchor-object-hash",
-            SignatureValid = true, ObjectMatches = true, VerifiedAt = Now
+            Id = Guid.NewGuid(), StreamKind = EconomyEventStreamKind.AnchorVerification,
+            ExternalAnchorId = anchorId, KeyId = "kms-anchor", ObjectVersion = "v1",
+            ETag = "etag", ExpiresAt = Now.AddYears(1), EvidenceHash = "anchor-object-hash",
+            SignatureValid = true, ObjectMatches = true, OccurredAt = Now
         });
         await context.SaveChangesAsync();
     }

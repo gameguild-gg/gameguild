@@ -50,9 +50,13 @@ public sealed class PostgreSqlAnchorVerificationServiceTests
 
         invalid.Failed.Should().Be(1);
         killSwitch.Reasons.Should().ContainSingle().Which.Should().Contain("anchor-object-or-signature-invalid");
-        var latest = await context.Set<EconomyAnchorVerificationRow>()
-            .OrderByDescending(row => row.VerifiedAt).FirstAsync();
-        latest.ObjectMatches.Should().BeFalse();
+        // Every run appends one record to the anchor's stream in the ledger.
+        var history = await context.Set<EconomyEventRow>()
+            .Where(row => row.StreamKind == EconomyEventStreamKind.AnchorVerification)
+            .OrderBy(row => row.OccurredAt).ToArrayAsync();
+        history.Select(row => row.OccurredAt).Should().Equal(Now, Now.AddMinutes(1), Now.AddMinutes(2));
+        history.Select(row => row.ObjectMatches).Should().Equal(true, true, false);
+        history.Select(row => row.Sequence).Should().OnlyContain(sequence => sequence == 0);
     }
 
     private static VerificationDbContext CreateContext(string connectionString) => new(

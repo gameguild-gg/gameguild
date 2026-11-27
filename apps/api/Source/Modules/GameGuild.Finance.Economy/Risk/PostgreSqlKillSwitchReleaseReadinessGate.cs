@@ -148,11 +148,18 @@ public sealed class PostgreSqlKillSwitchReleaseReadinessGate : IKillSwitchReleas
             return false;
         }
 
-        var anchorVerification = await _db.Set<EconomyAnchorVerificationRow>().AsNoTracking()
-            .Where(row => row.ExternalAnchorId == anchor.Id)
-            .OrderByDescending(row => row.VerifiedAt)
+        var anchorVerificationRow = await _db.Set<EconomyEventRow>().AsNoTracking()
+            .Where(row => row.StreamKind == EconomyEventStreamKind.AnchorVerification &&
+                          row.ExternalAnchorId == anchor.Id)
+            .OrderByDescending(row => row.OccurredAt)
             .FirstOrDefaultAsync(cancellationToken);
-        if (anchorVerification is null || !anchorVerification.SignatureValid ||
+        if (anchorVerificationRow is null)
+        {
+            return false;
+        }
+
+        var anchorVerification = EconomyAnchorVerificationRecord.From(anchorVerificationRow);
+        if (!anchorVerification.SignatureValid ||
             !anchorVerification.ObjectMatches || anchorVerification.RetainUntil <= now ||
             anchorVerification.VerifiedAt > now ||
             anchorVerification.VerifiedAt.Add(MaximumAnchorAge) <= now ||

@@ -100,12 +100,13 @@ public sealed class PostgreSqlEconomyOperationsReaderTests
             WormReference = "worm/ref", Provider = "s3-object-lock", ProviderReference = "version-1",
             AnchoredAt = Now.AddMinutes(-2)
         });
-        context.Set<EconomyAnchorVerificationRow>().Add(new EconomyAnchorVerificationRow
+        context.Set<EconomyEventRow>().Add(new EconomyEventRow
         {
-            Id = Guid.NewGuid(), ExternalAnchorId = anchorId, KeyId = "kms-key",
-            ObjectVersion = "version-1", ETag = "etag", RetainUntil = Now.AddYears(1),
-            ObjectHash = "object-hash", SignatureValid = true, ObjectMatches = true,
-            VerifiedAt = Now.AddMinutes(-1)
+            Id = Guid.NewGuid(), StreamKind = EconomyEventStreamKind.AnchorVerification,
+            ExternalAnchorId = anchorId, KeyId = "kms-key",
+            ObjectVersion = "version-1", ETag = "etag", ExpiresAt = Now.AddYears(1),
+            EvidenceHash = "object-hash", SignatureValid = true, ObjectMatches = true,
+            OccurredAt = Now.AddMinutes(-1)
         });
         context.Set<EconomyReserveHeadRow>().Add(new EconomyReserveHeadRow
         {
