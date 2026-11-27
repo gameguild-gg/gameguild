@@ -55,6 +55,25 @@ test("overlapping groups are rejected before any test process starts", () => {
   assert.throws(() => integrationTestFilter(copy, "api-integration-5"), /disjoint/u);
 });
 
+test("every partition list agrees with the filter", () => {
+  // A new partition is easy to add here and miss elsewhere: #1411 added a fifth and the
+  // regression gate still accepted four by range, so its shard exited before any test ran.
+  const root = new URL("../../../", import.meta.url);
+  const read = (file) => readFileSync(new URL(file, root), "utf8");
+  const known = [...shards].sort();
+  for (const [file, pattern] of [
+    [".github/workflows/pr-verify.yml", /shard: \[([^\]]+)\]/u],
+    ["scripts/ci/run-affected-dotnet-tests.sh", /partitions=\(([^)]*api-integration-1[^)]*)\)/u],
+  ]) {
+    const listed = [...read(file).match(pattern)[1].matchAll(/api-integration-\d/gu)].map((match) => match[0]).sort();
+    assert.deepEqual(listed, known, `${file} must name every integration partition`);
+  }
+  const gate = read("scripts/ci/verify-economy.sh");
+  const range = /api-integration-\[(\d)-(\d)\]/u.exec(gate);
+  assert.ok(range, "the regression gate must accept integration partitions by range");
+  assert.equal(range[2], String(shards.length), "the regression gate must accept the last integration partition");
+});
+
 test("missing, empty and unknown groups cannot silently drop tests", () => {
   for (const mutate of [
     (copy) => { delete copy["api-integration-1"]; },

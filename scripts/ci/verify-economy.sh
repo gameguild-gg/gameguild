@@ -187,7 +187,7 @@ case "$gate_profile" in
 esac
 
 case "$regression_shard" in
-  all|api-integration|api-integration-[1-4]|api-unit|remaining|remaining-[1-2]) ;;
+  all|api-integration|api-integration-[1-5]|api-unit|remaining|remaining-[1-2]) ;;
   *)
     printf 'Unknown Economy regression shard: %s\n' "$regression_shard" >&2
     exit 2
