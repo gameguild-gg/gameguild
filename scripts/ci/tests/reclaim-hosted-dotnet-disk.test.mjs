@@ -118,7 +118,7 @@ test('regression shards prepare hosted disk before dependencies and retain all r
   assert.ok(prepare >= 0 && prepare < regression.indexOf('uses: ./.github/actions/setup-node-workspace'));
   assert.ok(prepare < regression.indexOf('uses: ./.github/actions/setup-dotnet'));
   assert.match(regression, /fail-fast: false/);
-  assert.match(regression, /shard: \[api-integration-1, api-integration-2, api-integration-3, api-integration-4, api-unit, remaining-1, remaining-2\]/);
+  assert.match(regression, /shard: \[api-integration-1, api-integration-2, api-integration-3, api-integration-4, api-integration-5, api-unit, remaining-1, remaining-2\]/);
   assert.match(regression, /ECONOMY_GATE_PROFILE: regression/);
   assert.match(regression, /run: bash scripts\/ci\/verify-economy\.sh/);
   assert.doesNotMatch(regression, /continue-on-error: true|SKIP_DOCKER_TESTS/);

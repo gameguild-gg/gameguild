@@ -682,7 +682,7 @@ jobs:
       # Keep every shard's evidence when another shard fails.
       fail-fast: false
       matrix:
-        shard: [api-integration-1, api-integration-2, api-integration-3, api-integration-4, api-unit, remaining-1, remaining-2]
+        shard: [api-integration-1, api-integration-2, api-integration-3, api-integration-4, api-integration-5, api-unit, remaining-1, remaining-2]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:

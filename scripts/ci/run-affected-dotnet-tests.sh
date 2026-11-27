@@ -145,7 +145,8 @@ for project in "${projects[@]}"; do
     # The monolithic hosted run reached 14 GiB RSS and paged during HTTP
     # cancellation. Use the same exhaustive partition as the regression gate,
     # releasing each testhost before starting the next. No cases are excluded.
-    partitions=(api-integration-1 api-integration-2 api-integration-3 api-integration-4)
+    # The complement was split once more when it outgrew a 16 GB runner (#1410).
+    partitions=(api-integration-1 api-integration-2 api-integration-3 api-integration-4 api-integration-5)
     cp "$script_dir/economy-integration-shards.json" "$results/integration-partition.json"
   fi
   for partition in "${partitions[@]}"; do
