@@ -288,11 +288,15 @@ public sealed class PostgreSqlProjectionGenerationService : IEconomyProjectionGe
                 continue;
             }
 
-            _db.Set<EconomyProjectionReconciliationEventRow>().Add(new EconomyProjectionReconciliationEventRow
+            // #1092 Tier 3: the reconciliation record is a row of the unified
+            // event ledger; DetectedAt is the row's OccurredAt. The stream has
+            // no ordinal, so Sequence stays 0.
+            _db.Set<EconomyEventRow>().Add(new EconomyEventRow
             {
-                Id = Guid.NewGuid(), WalletId = snapshot.WalletId, PreviousHash = current.ProjectionHash,
+                Id = Guid.NewGuid(), StreamKind = EconomyEventStreamKind.ProjectionReconciliation,
+                ProjectionWalletId = snapshot.WalletId, PreviousHash = current.ProjectionHash,
                 RebuiltHash = snapshot.ProjectionHash, SourceJournalSequence = snapshot.SourceJournalSequence,
-                DetectedAt = detectedAt
+                OccurredAt = detectedAt
             });
             current.AvailableHardToSpend = Math.Min(current.AvailableHardToSpend, snapshot.AvailableHardToSpend);
             current.AvailableSoftToSpend = Math.Min(current.AvailableSoftToSpend, snapshot.AvailableSoftToSpend);

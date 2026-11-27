@@ -50,7 +50,6 @@ public sealed class EconomyPersistenceModelTests
         "economy_policy_versions",
         "economy_posting_groups",
         "economy_projection_generations",
-        "economy_projection_reconciliation_events",
         "economy_protected_change_cooldowns",
         "economy_provider_disputes",
         "economy_provider_events",
@@ -84,7 +83,7 @@ public sealed class EconomyPersistenceModelTests
         "ix_economy_fragment_root_ranges_root_epoch",
         "ix_economy_holds_wallet_status",
         "ix_economy_lot_lineage_edges_parent_lot",
-        "ix_economy_projection_reconciliation_events_wallet_detected",
+        "ix_economy_events_projection_wallet_detected",
         "ix_economy_self_service_transfer_intents_recipient_time",
         "ix_economy_wallet_balance_projections_review_state",
         "ix_economy_credit_lots_root_source",
@@ -225,7 +224,6 @@ public sealed class EconomyPersistenceModelTests
             "ck_economy_posting_groups_reserve_authorization",
             "ck_economy_posting_groups_source_requirement",
             "ck_economy_posting_groups_template_state",
-            "ck_economy_projection_events_sequence_nonnegative",
             "ck_economy_provider_disputes_amount_partition",
             "ck_economy_provider_disputes_lifecycle",
             "ck_economy_provider_disputes_sequence_positive",
@@ -537,7 +535,8 @@ public sealed class EconomyPersistenceModelTests
                 ("HoldId", "economy_holds", DeleteBehavior.Restrict),
                 ("RiskReviewCaseId", "economy_risk_review_cases", DeleteBehavior.Restrict),
                 ("ComplianceHoldId", "economy_compliance_holds", DeleteBehavior.Restrict),
-                ("LegacyCutoverTenantId", "economy_legacy_cutovers", DeleteBehavior.Restrict)
+                ("LegacyCutoverTenantId", "economy_legacy_cutovers", DeleteBehavior.Restrict),
+                ("ProjectionWalletId", "economy_wallets", DeleteBehavior.Restrict)
             ]);
     }
 
@@ -573,7 +572,9 @@ public sealed class EconomyPersistenceModelTests
             [EconomyEventStreamKind.AdRewardSessionEvent] = ["SessionId", "Kind", "EvidenceHash"],
             [EconomyEventStreamKind.AdRewardPlaybackMilestone] = ["SessionId", "Percentage", "EvidenceHash"],
             [EconomyEventStreamKind.AdminWithdrawalAudit] = ["TenantId", "RunId", "KindText", "Evidence", "PreviousHash", "Hash"],
-            [EconomyEventStreamKind.BountyExpiration] = ["BountyId", "ExpiresAt", "BountyVersion"]
+            [EconomyEventStreamKind.BountyExpiration] = ["BountyId", "ExpiresAt", "BountyVersion"],
+            [EconomyEventStreamKind.ProjectionReconciliation] =
+                ["ProjectionWalletId", "PreviousHash", "RebuiltHash", "SourceJournalSequence"]
         };
         var optionalByKind = new Dictionary<EconomyEventStreamKind, string[]>
         {
@@ -623,7 +624,9 @@ public sealed class EconomyPersistenceModelTests
             .GetCheckConstraints()
             .ToDictionary(constraint => constraint.Name!, constraint => constraint.Sql!);
 
-        constraints["ck_economy_events_sequence"].Should().Be("\"Sequence\" > 0");
+        // Projection reconciliation records own no ordinal, so the sequence rule
+        // covers every other stream only.
+        constraints["ck_economy_events_sequence"].Should().Be("\"StreamKind\" = 13 OR \"Sequence\" > 0");
         // One clause per stream that had a value rule before the merge.
         foreach (var clause in new[]
                  {
@@ -632,7 +635,8 @@ public sealed class EconomyPersistenceModelTests
                      "(\"StreamKind\" <> 7 OR \"Kind\" BETWEEN 1 AND 4)",
                      "(\"StreamKind\" <> 9 OR \"Kind\" BETWEEN 1 AND 7)",
                      "(\"StreamKind\" <> 10 OR \"Percentage\" BETWEEN 0 AND 100)",
-                     "(\"StreamKind\" <> 12 OR (\"BountyVersion\" > 1 AND \"OccurredAt\" >= \"ExpiresAt\"))"
+                     "(\"StreamKind\" <> 12 OR (\"BountyVersion\" > 1 AND \"OccurredAt\" >= \"ExpiresAt\"))",
+                     "(\"StreamKind\" <> 13 OR \"SourceJournalSequence\" >= 0)"
                  })
         {
             constraints["ck_economy_events_values"].Should().Contain(clause);
@@ -665,15 +669,16 @@ public sealed class EconomyPersistenceModelTests
             "SourceJournalSequence",
             "ProjectionHash",
             "RebuiltAt");
+        // #1092 Tier 3: the reconciliation record is a row of the unified event
+        // ledger; DetectedAt is the row's OccurredAt.
         AssertProperties(
             model,
-            "economy_projection_reconciliation_events",
-            "Id",
-            "WalletId",
+            "economy_events",
+            "ProjectionWalletId",
             "PreviousHash",
             "RebuiltHash",
             "SourceJournalSequence",
-            "DetectedAt");
+            "OccurredAt");
     }
 
     [Fact]

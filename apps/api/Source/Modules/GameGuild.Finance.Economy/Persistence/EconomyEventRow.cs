@@ -65,11 +65,18 @@ public enum EconomyEventStreamKind
     ///     <c>economy_bounty_expiration_events</c>, Tier 2.5) —
     ///     one row per bounty.</summary>
     BountyExpiration = 12,
+
+    /// <summary>Wallet projection reconciliation (formerly
+    ///     <c>economy_projection_reconciliation_events</c>, Tier 3) —
+    ///     appended by the projection rebuild function when it finds a
+    ///     corrupt projection.</summary>
+    ProjectionReconciliation = 13,
 }
 
 /// <summary>
-///     Unified Economy event ledger (#1092 Tier 2.1 and 2.5: eleven
-///     event and audit streams merged behind
+///     Unified Economy event ledger (#1092 Tier 2.1 and 2.5, plus the
+///     Tier 3 projection reconciliation stream: twelve event and audit
+///     streams merged behind
 ///     <see cref="EconomyEventStreamKind"/>). Every stream keeps its
 ///     former ordering and replay guarantees as kind-filtered partial
 ///     unique indexes. Reads must carry the kind predicate together
@@ -196,4 +203,16 @@ public sealed class EconomyEventRow
     /// <summary>Bounty version the expiration was recorded against
     ///     (kind 12 only).</summary>
     public long? BountyVersion { get; set; }
+
+    /// <summary>Wallet projection a reconciliation repaired (kind 13
+    ///     only).</summary>
+    public Guid? ProjectionWalletId { get; set; }
+
+    /// <summary>Hash the projection was rebuilt to (kind 13 only; the
+    ///     hash it had before is <see cref="PreviousHash"/>).</summary>
+    public string? RebuiltHash { get; set; }
+
+    /// <summary>Journal sequence the projection was rebuilt to (kind 13
+    ///     only).</summary>
+    public long? SourceJournalSequence { get; set; }
 }
