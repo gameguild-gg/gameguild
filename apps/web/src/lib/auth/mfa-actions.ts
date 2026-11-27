@@ -59,7 +59,7 @@ export interface MfaActionResult {
   message?: string;
 }
 
-/** Result of starting an enrollment: provisioning data (TOTP) or delivery metadata (SMS). */
+/** Result of starting an enrollment: provisioning data (TOTP), delivery metadata (SMS) or the destination (email). */
 export interface MfaEnrollmentStartResult extends MfaActionResult {
   setup?: IdentityAuthenticationMfaSetupOutput;
   smsSetup?: {
@@ -67,11 +67,18 @@ export interface MfaEnrollmentStartResult extends MfaActionResult {
     phoneNumberMasked?: string | null;
     expiresInSeconds?: number;
   };
+  emailSetup?: {
+    message?: string | null;
+    emailMasked?: string | null;
+    expiresInSeconds?: number;
+  };
 }
 
 /** Result of regenerating recovery codes: the fresh codes, shown exactly once. */
 export interface MfaBackupCodesResult extends MfaActionResult {
   codes?: string[];
+  /** The server answered without a single code: a failure, never an empty success (issue #1298 J2). */
+  emptySet?: boolean;
 }
 
 function statusFromError(error: { status?: number } | undefined): MfaActionStatus {
@@ -86,9 +93,11 @@ function statusFromError(error: { status?: number } | undefined): MfaActionStatu
 }
 
 function resultFrom(success: boolean, error?: { status?: number }, message?: string): MfaActionResult {
+  // The server's reason travels with a failure too (issue #1298 J2): it is what tells a
+  // wrong code from a throttled resend, which the panels render differently.
   return success
     ? { success: true, status: 'success', message }
-    : { success: false, status: statusFromError(error) };
+    : { success: false, status: statusFromError(error), message };
 }
 
 function errorMessage(error?: { message?: string; detail?: string }): string | undefined {
@@ -217,7 +226,9 @@ export async function completeSmsEnrollmentAction(code: string): Promise<MfaActi
 /**
  * Regenerates the recovery (backup) codes after re-verifying the account password
  * (issue #1153 — the server refuses to rotate recovery codes on a bearer token alone);
- * the fresh set is shown exactly once.
+ * the fresh set is shown exactly once. An empty set is a failure (issue #1298 J2): the
+ * server already refuses to issue one, so an empty answer here must never read as
+ * "regenerated" over an empty grid.
  */
 export async function regenerateBackupCodesAction(password: string): Promise<MfaBackupCodesResult> {
   const mfaModule = new GeneratedApi.AuthMultiFactorModule(getApiClient());
@@ -228,7 +239,41 @@ export async function regenerateBackupCodesAction(password: string): Promise<Mfa
     return { ...resultFrom(false, result.error, errorMessage(result.error)), codes: undefined };
   }
 
-  return { success: true, status: 'success', codes: result.data?.codes ?? [] };
+  const codes = result.data?.codes;
+  if (!codes || codes.length === 0) {
+    return { success: false, status: 'error', codes: undefined, emptySet: true };
+  }
+
+  return { success: true, status: 'success', codes };
+}
+
+/**
+ * Starts email-codes enrollment (issue #1298 J2): the server resolves the account's own
+ * address and sends a six-digit code to it. Called again to resend; the server's
+ * sixty-second throttle is the authority.
+ */
+export async function startEmailEnrollmentAction(): Promise<MfaEnrollmentStartResult> {
+  const mfaModule = new GeneratedApi.AuthMultiFactorModule(getApiClient());
+  const result = await mfaModule.postAuthMfaEmailSetup();
+
+  if (!result.ok) {
+    return { ...resultFrom(false, result.error, errorMessage(result.error)), emailSetup: undefined };
+  }
+
+  return { success: true, status: 'success', emailSetup: result.data ?? undefined };
+}
+
+/** Completes email-codes enrollment by verifying the code sent to the account's address. */
+export async function completeEmailEnrollmentAction(code: string): Promise<MfaActionResult> {
+  const mfaModule = new GeneratedApi.AuthMultiFactorModule(getApiClient());
+  const result = await mfaModule.postAuthMfaEmailComplete({ code });
+  revalidatePath(SETTINGS_SECURITY_PATH);
+
+  if (!result.ok) {
+    return resultFrom(false, result.error, errorMessage(result.error));
+  }
+
+  return resultFrom(true);
 }
 
 /** Disables MFA after re-verifying the account password (server enforces password proof). */

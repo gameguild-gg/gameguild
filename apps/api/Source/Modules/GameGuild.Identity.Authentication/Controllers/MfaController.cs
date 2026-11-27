@@ -334,7 +334,7 @@ public sealed class MfaController(
     [ProducesResponseType<MfaSuccessResponse>(StatusCodes.Status200OK)]
     [ProducesResponseType<MfaErrorResponse>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> CompleteEmailSetup([FromBody] CompleteMfaSetupRequest body, CancellationToken ct)
+    public async Task<IActionResult> CompleteEmailSetup([FromBody] CompleteEmailMfaSetupRequest body, CancellationToken ct)
     {
         ArgumentNullException.ThrowIfNull(body);
         var userId = GetCurrentUserId();

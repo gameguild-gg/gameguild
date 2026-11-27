@@ -85,6 +85,31 @@ describe('Error Transformation', () => {
       expect(error.code).toBe('RATE_LIMITED');
       expect(error.status).toBe(429);
     });
+
+    it('should surface a bare error body as the message, as the MFA endpoints answer', async () => {
+      const response = new Response(JSON.stringify({ error: 'Invalid or expired email code' }), {
+        status: 400,
+        statusText: 'Bad Request',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const error = await createApiError(response);
+
+      expect(error.message).toBe('Invalid or expired email code');
+      expect(error.status).toBe(400);
+    });
+
+    it('should still prefer ProblemDetails fields over a bare error body', async () => {
+      const response = new Response(JSON.stringify({ title: 'Conflict', error: 'ignored' }), {
+        status: 400,
+        statusText: 'Bad Request',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const error = await createApiError(response);
+
+      expect(error.message).toBe('Conflict');
+    });
   });
 
   describe('createNetworkError', () => {

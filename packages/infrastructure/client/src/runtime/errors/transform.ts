@@ -15,6 +15,8 @@ interface ProblemDetails {
   status?: number;
   detail?: string;
   message?: string;
+  /** A bare `{ error: "..." }` body, as the MFA endpoints answer instead of ProblemDetails. */
+  error?: string;
   instance?: string;
   traceId?: string;
   errors?: Record<string, string[]>;
@@ -35,7 +37,13 @@ export async function createApiError(response: Response): Promise<ApiError> {
   }
 
   const code = statusToErrorCode(status, body);
-  const message = body?.title || body?.detail || (typeof body?.message === 'string' ? body.message : '') || response.statusText || 'Unknown error';
+  const message =
+    body?.title ||
+    body?.detail ||
+    (typeof body?.message === 'string' ? body.message : '') ||
+    (typeof body?.error === 'string' ? body.error : '') ||
+    response.statusText ||
+    'Unknown error';
 
   const error: ApiError = {
     name: 'ApiError',
