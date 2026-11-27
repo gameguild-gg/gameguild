@@ -2,6 +2,7 @@ using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace GameGuild.Identity.Authentication;
@@ -16,7 +17,8 @@ public class AuthAttemptService(
     IUserEnumerationProtectionService enumerationProtection,
     ILogger<AuthAttemptService> logger,
     IGeolocationProvider? geolocationProvider = null,
-    IAuthenticationAuditEventSink? auditEventSink = null
+    IAuthenticationAuditEventSink? auditEventSink = null,
+    IServiceScopeFactory? serviceScopeFactory = null
 ) : IAuthAttemptService
 {
     private const int MaxLoggedFailureReasonLength = 256;
@@ -80,7 +82,22 @@ public class AuthAttemptService(
 
         try
         {
-            await authenticationAttemptRepository.CreateAsync(attempt).ConfigureAwait(false);
+            // A denied sign-in ends in an exception, and the command pipeline rolls its
+            // transaction back — with everything written on the request's context. The
+            // failure record has to outlive that rollback: lockout, the source-IP throttle
+            // and the CAPTCHA threshold all count these rows (issue #1406). A scope of its
+            // own owns a context with no ambient transaction, so this insert commits alone.
+            // A successful attempt stays on the request's context, inside its transaction.
+            if (serviceScopeFactory is null)
+            {
+                await authenticationAttemptRepository.CreateAsync(attempt).ConfigureAwait(false);
+            }
+            else
+            {
+                await using var scope = serviceScopeFactory.CreateAsyncScope();
+                await scope.ServiceProvider.GetRequiredService<IAuthenticationAttemptRepository>()
+                    .CreateAsync(attempt).ConfigureAwait(false);
+            }
         }
         catch (Exception ex)
         {

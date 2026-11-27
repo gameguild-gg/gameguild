@@ -117,6 +117,12 @@ public sealed class ApiPostgreSqlFixture : IAsyncLifetime
                     ["Database:GrantRuntimeRoleAfterMigrations"] = "false",
                     ["Database:RunStartupInitialization"] = "false",
                     ["Authentication:RefreshTokenCleanup:Enabled"] = "false",
+                    // Failed sign-ins are recorded for real (issue #1406), and every test client
+                    // without an address shares the "Unknown" source IP in this suite's one
+                    // database. Unrelated tests must not add up towards one another's per-IP
+                    // throttle, whatever order or shard they run in; tests that exercise the
+                    // throttle install their own AuthenticationSecurityOptions.
+                    ["AuthenticationSecurity:MaxAttemptsPerIpPerHour"] = "1000",
                     ["POSTGRES_HOST"] = connection.Host,
                     ["POSTGRES_PORT"] = connection.Port.ToString(),
                     ["POSTGRES_DB"] = connection.Database,
