@@ -71,12 +71,18 @@ public enum EconomyEventStreamKind
     ///     appended by the projection rebuild function when it finds a
     ///     corrupt projection.</summary>
     ProjectionReconciliation = 13,
+
+    /// <summary>External anchor verification (formerly
+    ///     <c>economy_anchor_verifications</c>, Tier 3) — one record per
+    ///     verification run, appended by the anchor publisher and the
+    ///     anchor verification service. Ordered by when it happened.</summary>
+    AnchorVerification = 14,
 }
 
 /// <summary>
 ///     Unified Economy event ledger (#1092 Tier 2.1 and 2.5, plus the
-///     Tier 3 projection reconciliation stream: twelve event and audit
-///     streams merged behind
+///     Tier 3 projection reconciliation and anchor verification streams:
+///     fourteen event and audit streams merged behind
 ///     <see cref="EconomyEventStreamKind"/>). Every stream keeps its
 ///     former ordering and replay guarantees as kind-filtered partial
 ///     unique indexes. Reads must carry the kind predicate together
@@ -102,6 +108,9 @@ public sealed class EconomyEventRow
 
     public Guid? ActorId { get; set; }
 
+    /// <summary>Single evidence hash (kinds 1, 4, 6, 8, 9 and 10); for
+    ///     an anchor verification (kind 14) the hash of the WORM object
+    ///     read back.</summary>
     public string? EvidenceHash { get; set; }
 
     public DateTimeOffset OccurredAt { get; set; }
@@ -197,7 +206,9 @@ public sealed class EconomyEventRow
     /// <summary>Expired bounty (kind 12 only).</summary>
     public Guid? BountyId { get; set; }
 
-    /// <summary>Expiry that triggered the record (kind 12 only).</summary>
+    /// <summary>Expiry that triggered the record (kind 12 only); for an
+    ///     anchor verification (kind 14) the end of the WORM object's
+    ///     retention.</summary>
     public DateTimeOffset? ExpiresAt { get; set; }
 
     /// <summary>Bounty version the expiration was recorded against
@@ -215,4 +226,27 @@ public sealed class EconomyEventRow
     /// <summary>Journal sequence the projection was rebuilt to (kind 13
     ///     only).</summary>
     public long? SourceJournalSequence { get; set; }
+
+    /// <summary>External anchor a verification was run against (kind 14
+    ///     only). The record's own key is <see cref="Id"/>.</summary>
+    public Guid? ExternalAnchorId { get; set; }
+
+    /// <summary>Key that signed the anchored object (kind 14 only).</summary>
+    public string? KeyId { get; set; }
+
+    /// <summary>Version of the WORM object that was read back (kind 14
+    ///     only).</summary>
+    public string? ObjectVersion { get; set; }
+
+    /// <summary>Entity tag of the WORM object that was read back (kind 14
+    ///     only).</summary>
+    public string? ETag { get; set; }
+
+    /// <summary>Whether the anchor's signature verified (kind 14
+    ///     only).</summary>
+    public bool? SignatureValid { get; set; }
+
+    /// <summary>Whether the WORM object matches the anchor (kind 14
+    ///     only).</summary>
+    public bool? ObjectMatches { get; set; }
 }

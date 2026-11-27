@@ -26,19 +26,7 @@ public sealed class PostgreSqlEconomyLedgerQueryReaderTests
         context.Set<EconomyJournalVerificationCheckpointRow>().AddRange(verificationRows);
         context.Set<EconomyExternalAnchorRow>().AddRange(anchorRows);
         context.Set<EconomyProjectionGenerationRow>().AddRange(projectionRows);
-        context.Set<EconomyAnchorVerificationRow>().Add(new EconomyAnchorVerificationRow
-        {
-            Id = Guid.NewGuid(),
-            ExternalAnchorId = anchorRows[1].Id,
-            KeyId = "kms-key",
-            ObjectVersion = "version-2",
-            ETag = "etag",
-            RetainUntil = Now.AddYears(1),
-            ObjectHash = "object-hash",
-            SignatureValid = true,
-            ObjectMatches = true,
-            VerifiedAt = Now
-        });
+        context.Set<EconomyEventRow>().Add(VerificationEvent(anchorRows[1].Id, Now, objectMatches: true));
         context.Set<EconomyApprovalRow>().Add(new EconomyApprovalRow
         {
             Id = Guid.NewGuid(),
@@ -81,12 +69,7 @@ public sealed class PostgreSqlEconomyLedgerQueryReaderTests
         context.Set<EconomyJournalVerificationCheckpointRow>().Add(verification);
         context.Set<EconomyExternalAnchorRow>().Add(anchor);
         context.Set<EconomyProjectionGenerationRow>().Add(projection);
-        context.Set<EconomyAnchorVerificationRow>().Add(new EconomyAnchorVerificationRow
-        {
-            Id = Guid.NewGuid(), ExternalAnchorId = anchor.Id, KeyId = "kms-key",
-            ObjectVersion = "version-1", ETag = "etag", RetainUntil = Now.AddYears(1),
-            ObjectHash = "object-hash", SignatureValid = true, ObjectMatches = true, VerifiedAt = Now
-        });
+        context.Set<EconomyEventRow>().Add(VerificationEvent(anchor.Id, Now, objectMatches: true));
         context.Set<EconomyApprovalRow>().Add(new EconomyApprovalRow
         {
             Id = Guid.NewGuid(), ApprovalKind = EconomyApprovalKind.ProjectionGeneration, Generation = 1, ActorId = approver,
@@ -156,6 +139,72 @@ public sealed class PostgreSqlEconomyLedgerQueryReaderTests
                 TenantId, 0, default).AsTask())
             .Should().ThrowAsync<ArgumentOutOfRangeException>();
     }
+
+    [Fact]
+    public async Task AnchorVerificationHistoryKeepsEveryRunWithItsOwnRecord()
+    {
+        await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("ledger_anchor_verification_history");
+        await using var context = CreateContext(database.ConnectionString);
+        await context.Database.EnsureCreatedAsync();
+        var anchor = Anchor(1);
+        var firstRun = VerificationEvent(anchor.Id, Now, objectMatches: true);
+        var secondRun = VerificationEvent(anchor.Id, Now.AddMinutes(5), objectMatches: false);
+        context.Set<EconomyExternalAnchorRow>().Add(anchor);
+        context.Set<EconomyEventRow>().AddRange(firstRun, secondRun);
+        await context.SaveChangesAsync();
+        var reader = new PostgreSqlEconomyLedgerQueryReader(context);
+
+        var history = await reader.ReadAnchorVerificationsAsync(TenantId, anchor.Id, default);
+        var summary = (await reader.FindAnchorAsync(TenantId, anchor.Id, default))!.Summary;
+
+        history.Select(item => item.Id).Should().Equal(firstRun.Id, secondRun.Id);
+        history[0].ObjectMatches.Should().BeTrue();
+        history[1].ObjectMatches.Should().BeFalse();
+        history[1].KeyId.Should().Be("kms-key");
+        history[1].ObjectVersion.Should().Be("version-1");
+        history[1].ETag.Should().Be("etag");
+        history[1].ObjectHash.Should().Be("object-hash");
+        history[1].SignatureValid.Should().BeTrue();
+        history[1].RetainUntil.Should().Be(Now.AddYears(1));
+        history[1].VerifiedAt.Should().Be(Now.AddMinutes(5));
+        summary.ObjectMatches.Should().BeFalse();
+        summary.VerifiedAt.Should().Be(Now.AddMinutes(5));
+    }
+
+    [Fact]
+    public async Task AnchorWithoutAnyVerificationReadsAsUnverified()
+    {
+        await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("ledger_anchor_unverified");
+        await using var context = CreateContext(database.ConnectionString);
+        await context.Database.EnsureCreatedAsync();
+        var anchor = Anchor(1);
+        context.Set<EconomyExternalAnchorRow>().Add(anchor);
+        await context.SaveChangesAsync();
+        var reader = new PostgreSqlEconomyLedgerQueryReader(context);
+
+        var summary = (await reader.FindAnchorAsync(TenantId, anchor.Id, default))!.Summary;
+
+        summary.SignatureValid.Should().BeFalse();
+        summary.ObjectMatches.Should().BeFalse();
+        summary.RetainUntil.Should().BeNull();
+        summary.VerifiedAt.Should().BeNull();
+        (await reader.ReadAnchorVerificationsAsync(TenantId, anchor.Id, default)).Should().BeEmpty();
+    }
+
+    private static EconomyEventRow VerificationEvent(Guid anchorId, DateTimeOffset verifiedAt, bool objectMatches) => new()
+    {
+        Id = Guid.NewGuid(),
+        StreamKind = EconomyEventStreamKind.AnchorVerification,
+        ExternalAnchorId = anchorId,
+        KeyId = "kms-key",
+        ObjectVersion = "version-1",
+        ETag = "etag",
+        ExpiresAt = Now.AddYears(1),
+        EvidenceHash = "object-hash",
+        SignatureValid = true,
+        ObjectMatches = objectMatches,
+        OccurredAt = verifiedAt
+    };
 
     private static EconomyJournalVerificationCheckpointRow Verification(int sequence) => new()
     {

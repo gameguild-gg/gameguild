@@ -110,6 +110,20 @@ public sealed class PostgreSqlKillSwitchReleaseReadinessGateTests
     }
 
     [Fact]
+    public async Task AnchorWithoutAnyVerificationRecordIsNotReady()
+    {
+        await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("kill_release_unverified_anchor");
+        await using var context = CreateContext(database.ConnectionString);
+        await context.Database.EnsureCreatedAsync();
+        await SeedHealthyControlPlaneAsync(context, includePolicy: true, includeAnchorVerification: false);
+        var gate = CreateGate(context);
+
+        (await gate.IsReadyAsync(
+                EconomyKillSwitchScope.ForCapability(TenantId, EconomyValueMovementCapability.PayoutExecution),
+                CancellationToken.None)).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task EveryInvalidReadinessPredicateFailsClosed()
     {
         await using var database = await EconomyPostgreSqlTestDatabase.CreateAsync("kill_release_predicates");
@@ -140,10 +154,13 @@ public sealed class PostgreSqlKillSwitchReleaseReadinessGateTests
         await AssertFailsClosedAsync(context, gate, scope);
         custody.VarianceUsdNanos = 0;
 
-        var anchor = await context.Set<EconomyAnchorVerificationRow>().SingleAsync();
-        anchor.ObjectMatches = false;
+        // Verifications are append-only ledger records: a later run that
+        // finds the object mismatched makes the anchor fail closed until a
+        // later run passes again.
+        var anchorId = (await context.Set<EconomyExternalAnchorRow>().SingleAsync()).Id;
+        context.Set<EconomyEventRow>().Add(AnchorVerification(anchorId, objectMatches: false, Now.AddMinutes(-3)));
         await AssertFailsClosedAsync(context, gate, scope);
-        anchor.ObjectMatches = true;
+        context.Set<EconomyEventRow>().Add(AnchorVerification(anchorId, objectMatches: true, Now.AddMinutes(-2)));
 
         var policy = await context.Set<EconomyCapabilityPolicyRow>().SingleAsync();
         policy.Signature = "invalid";
@@ -152,7 +169,18 @@ public sealed class PostgreSqlKillSwitchReleaseReadinessGateTests
         await context.SaveChangesAsync();
 
         (await gate.IsReadyAsync(scope, CancellationToken.None)).Should().BeTrue();
+        (await context.Set<EconomyEventRow>().CountAsync(row =>
+            row.StreamKind == EconomyEventStreamKind.AnchorVerification)).Should().Be(3);
     }
+
+    private static EconomyEventRow AnchorVerification(Guid anchorId, bool objectMatches, DateTimeOffset verifiedAt) =>
+        new()
+        {
+            Id = Guid.NewGuid(), StreamKind = EconomyEventStreamKind.AnchorVerification,
+            ExternalAnchorId = anchorId, KeyId = "kms-anchor", ObjectVersion = "v1", ETag = "etag",
+            ExpiresAt = Now.AddYears(1), EvidenceHash = "object-hash", SignatureValid = true,
+            ObjectMatches = objectMatches, OccurredAt = verifiedAt
+        };
 
     private static async Task AssertFailsClosedAsync(
         ReadinessDbContext context,
@@ -168,7 +196,10 @@ public sealed class PostgreSqlKillSwitchReleaseReadinessGateTests
         StubPolicyVerifier? verifier = null) =>
         new(context, verifier ?? new StubPolicyVerifier(), new FixedTimeProvider(Now));
 
-    private static async Task SeedHealthyControlPlaneAsync(ReadinessDbContext context, bool includePolicy)
+    private static async Task SeedHealthyControlPlaneAsync(
+        ReadinessDbContext context,
+        bool includePolicy,
+        bool includeAnchorVerification = true)
     {
         context.Set<EconomyChainHeadRow>().Update(new EconomyChainHeadRow
         {
@@ -221,12 +252,11 @@ public sealed class PostgreSqlKillSwitchReleaseReadinessGateTests
             Signature = "anchor-signature", WormReference = "s3://worm/anchor",
             Provider = "s3-object-lock", ProviderReference = "v1", AnchoredAt = Now
         });
-        context.Set<EconomyAnchorVerificationRow>().Add(new EconomyAnchorVerificationRow
+        if (includeAnchorVerification)
         {
-            Id = Guid.NewGuid(), ExternalAnchorId = anchorId, KeyId = "kms-anchor",
-            ObjectVersion = "v1", ETag = "etag", RetainUntil = Now.AddYears(1),
-            ObjectHash = "object-hash", SignatureValid = true, ObjectMatches = true, VerifiedAt = Now
-        });
+            context.Set<EconomyEventRow>().Add(AnchorVerification(anchorId, objectMatches: true, Now.AddMinutes(-4)));
+        }
+
         if (includePolicy)
         {
             context.Set<EconomyCapabilityPolicyRow>().Add(new EconomyCapabilityPolicyRow

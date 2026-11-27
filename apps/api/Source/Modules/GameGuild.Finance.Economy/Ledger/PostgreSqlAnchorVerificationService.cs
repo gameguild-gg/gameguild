@@ -49,17 +49,19 @@ public sealed class PostgreSqlAnchorVerificationService : IEconomyAnchorVerifica
         var failed = 0;
         foreach (var anchor in anchors)
         {
-            var previous = await _db.Set<EconomyAnchorVerificationRow>().AsNoTracking()
-                .Where(row => row.ExternalAnchorId == anchor.Id)
-                .OrderByDescending(row => row.VerifiedAt)
+            var previousRow = await _db.Set<EconomyEventRow>().AsNoTracking()
+                .Where(row => row.StreamKind == EconomyEventStreamKind.AnchorVerification &&
+                              row.ExternalAnchorId == anchor.Id)
+                .OrderByDescending(row => row.OccurredAt)
                 .FirstOrDefaultAsync(cancellationToken);
-            if (previous is null)
+            if (previousRow is null)
             {
                 failed++;
                 await ActivateKillSwitchAsync(anchor, "missing-verification-metadata", verifiedAt, cancellationToken);
                 continue;
             }
 
+            var previous = EconomyAnchorVerificationRecord.From(previousRow);
             WormAnchorReadBack? readBack = null;
             var signatureValid = false;
             var objectMatches = false;
@@ -94,18 +96,22 @@ public sealed class PostgreSqlAnchorVerificationService : IEconomyAnchorVerifica
                 signatureValid = false;
             }
 
-            _db.Set<EconomyAnchorVerificationRow>().Add(new EconomyAnchorVerificationRow
+            // #1092 Tier 3: each run appends the anchor's verification record
+            // to the unified event ledger; the stream is ordered by time.
+            _db.Set<EconomyEventRow>().Add(new EconomyEventRow
             {
                 Id = Guid.NewGuid(),
+                StreamKind = EconomyEventStreamKind.AnchorVerification,
+                Sequence = 0,
                 ExternalAnchorId = anchor.Id,
                 KeyId = keyId,
                 ObjectVersion = readBack?.ObjectVersion ?? previous.ObjectVersion,
                 ETag = readBack?.ETag ?? previous.ETag,
-                RetainUntil = readBack?.RetainUntil ?? previous.RetainUntil,
-                ObjectHash = readBack?.ObjectHash ?? previous.ObjectHash,
+                ExpiresAt = readBack?.RetainUntil ?? previous.RetainUntil,
+                EvidenceHash = readBack?.ObjectHash ?? previous.ObjectHash,
                 SignatureValid = signatureValid,
                 ObjectMatches = objectMatches,
-                VerifiedAt = verifiedAt
+                OccurredAt = verifiedAt
             });
             await _db.SaveChangesAsync(cancellationToken);
             if (signatureValid && objectMatches)

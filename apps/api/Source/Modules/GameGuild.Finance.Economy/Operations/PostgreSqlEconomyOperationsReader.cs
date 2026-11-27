@@ -133,13 +133,15 @@ public sealed class PostgreSqlEconomyOperationsReader : IEconomyOperationsReader
             .OrderByDescending(row => row.JournalSequence)
             .ThenByDescending(row => row.AnchoredAt)
             .FirstOrDefaultAsync(cancellationToken);
-        EconomyAnchorVerificationRow? anchorVerification = null;
+        EconomyAnchorVerificationRecord? anchorVerification = null;
         if (anchor is not null)
         {
-            anchorVerification = await _db.Set<EconomyAnchorVerificationRow>().AsNoTracking()
-                .Where(row => row.ExternalAnchorId == anchor.Id)
-                .OrderByDescending(row => row.VerifiedAt)
+            var latest = await _db.Set<EconomyEventRow>().AsNoTracking()
+                .Where(row => row.StreamKind == EconomyEventStreamKind.AnchorVerification &&
+                              row.ExternalAnchorId == anchor.Id)
+                .OrderByDescending(row => row.OccurredAt)
                 .FirstOrDefaultAsync(cancellationToken);
+            anchorVerification = EconomyAnchorVerificationRecord.FromOrNull(latest);
         }
         var reserveHeads = await _db.Set<EconomyReserveHeadRow>().AsNoTracking()
             .Where(row => row.IsActive)

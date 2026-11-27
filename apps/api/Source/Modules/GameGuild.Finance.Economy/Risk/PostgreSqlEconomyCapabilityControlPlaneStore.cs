@@ -127,13 +127,15 @@ public sealed class PostgreSqlEconomyCapabilityControlPlaneStore : IEconomyCapab
                 .Where(row => row.JournalSequence == chainHead.Sequence && row.JournalHash == chainHead.Hash)
                 .OrderByDescending(row => row.AnchoredAt)
                 .FirstOrDefaultAsync(cancellationToken);
-        var anchorVerification = anchor is null
+        var anchorVerificationRow = anchor is null
             ? null
-            : await _db.Set<EconomyAnchorVerificationRow>()
+            : await _db.Set<EconomyEventRow>()
                 .AsNoTracking()
-                .Where(row => row.ExternalAnchorId == anchor.Id)
-                .OrderByDescending(row => row.VerifiedAt)
+                .Where(row => row.StreamKind == EconomyEventStreamKind.AnchorVerification &&
+                              row.ExternalAnchorId == anchor.Id)
+                .OrderByDescending(row => row.OccurredAt)
                 .FirstOrDefaultAsync(cancellationToken);
+        var anchorVerification = EconomyAnchorVerificationRecord.FromOrNull(anchorVerificationRow);
         var anchorValid = anchorVerification is not null &&
                           anchorVerification.SignatureValid &&
                           anchorVerification.ObjectMatches &&

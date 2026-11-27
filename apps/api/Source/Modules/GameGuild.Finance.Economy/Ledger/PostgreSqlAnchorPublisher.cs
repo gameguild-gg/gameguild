@@ -121,18 +121,22 @@ public sealed class PostgreSqlEconomyAnchorPublisher : IEconomyAnchorPublisher
             AnchoredAt = now
         };
         _db.Set<EconomyExternalAnchorRow>().Add(row);
-        _db.Set<EconomyAnchorVerificationRow>().Add(new EconomyAnchorVerificationRow
+        // #1092 Tier 3: the publication's read-back is the first verification
+        // record of the anchor, in the unified event ledger.
+        _db.Set<EconomyEventRow>().Add(new EconomyEventRow
         {
             Id = Guid.NewGuid(),
+            StreamKind = EconomyEventStreamKind.AnchorVerification,
+            Sequence = 0,
             ExternalAnchorId = anchorId,
             KeyId = signature.KeyId,
             ObjectVersion = publication.ObjectVersion,
             ETag = publication.ETag,
-            RetainUntil = publication.RetainUntil,
-            ObjectHash = publication.ObjectHash,
+            ExpiresAt = publication.RetainUntil,
+            EvidenceHash = publication.ObjectHash,
             SignatureValid = true,
             ObjectMatches = true,
-            VerifiedAt = now
+            OccurredAt = now
         });
         await _db.SaveChangesAsync(cancellationToken);
         return new EconomyAnchorPublicationResult(

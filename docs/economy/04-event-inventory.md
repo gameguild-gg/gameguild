@@ -67,7 +67,8 @@ same migration without adding a statement to any writer. The kind-shape check
 (`ck_economy_events_stream_shape`) forces every column of every other stream to
 NULL on a row, and the `deny_immutable_event_mutation` trigger rejects UPDATE
 and DELETE for exactly the streams whose tables did: 1, 4, 5, 7, 11 and —
-since Tier 3 folded it in — 13.
+since Tier 3 folded it in — 13. Kind 14 is deliberately left out: its table
+had no such trigger.
 
 | StreamKind | Stream (former table) | Parent aggregate | Written at | Read at |
 |---|-------|------------------|-----------|---------|
@@ -83,6 +84,7 @@ since Tier 3 folded it in — 13.
 | 11 | admin withdrawal audit events (`economy_admin_withdrawal_audit_events`) | treasury run | every run transition (`Treasury:/DurableAdminWithdrawalWorkflow.cs` `audit.Append` calls) | hash-chain verified `Audit` view (`DurableAdminWithdrawalApplicationService.cs:312-317`) — **the one stream with chain columns (`PreviousHash`/`Hash`)**, which #1092 flagged as the possible exception to the unified table; the chain columns stayed on the ledger row, unique per `(RunId, Sequence)` and on `Hash` |
 | 12 | bounty expiration events (`economy_bounty_expiration_events`) | bounty | worker (`Bounties:/DurableBountyExpirationWorkflow.cs`) | one row per bounty: the first entry of the bounty's stream, where `RecordedAt` is the row's `OccurredAt` |
 | 13 | projection reconciliation events (`economy_projection_reconciliation_events`, folded in by Tier 3) | wallet projection | `rebuild_wallet_projection_v1` when it finds a corrupt projection (`Migration:`), and the rebuild orchestration (`Core:/Projections/PostgreSqlProjectionGenerationService.cs`) | none — the record is evidence of the repair; `PreviousHash` is the hash the projection had, `RebuiltHash` the hash it was rebuilt to, and `DetectedAt` is the row's `OccurredAt` |
+| 14 | anchor verification events (`economy_anchor_verifications`, folded in by Tier 3) | external anchor | the anchor publisher when it publishes and reads back an anchor (`Core:/Ledger/PostgreSqlAnchorPublisher.cs`), and the anchor verification service, once per anchor per run (`Core:/Ledger/PostgreSqlAnchorVerificationService.cs`) | the ledger administration endpoints — an anchor's summary takes its newest record and its verification history lists every record; the readiness gate, the capability control-plane store and the operations summary take the newest. **Not 1:1**: one record per run, so the stream is a history, ordered by `OccurredAt` with no `Sequence`. `RetainUntil` is the row's `ExpiresAt` and `ObjectHash` its `EvidenceHash` |
 
 Two legacy keys were not `Id` and are not read back through it: provider
 dispute events were keyed by `ProviderEventId` (kept as a column, unique per
