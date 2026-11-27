@@ -79,6 +79,12 @@ const result = GameGuildAuth({
       if (!isProtectedPath(new URL(request.url).pathname)) return true;
       return !!auth;
     },
+    // update() hands the caller's session data to this callback; the default
+    // one returns the token untouched, so the change would be dropped.
+    jwt: ({ token, trigger, session }) =>
+      trigger === "update" && session?.user
+        ? { ...token, user: { ...token.user, ...session.user } }
+        : token,
   },
   apiUrl,
   secret:

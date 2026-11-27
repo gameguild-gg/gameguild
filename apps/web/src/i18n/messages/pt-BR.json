@@ -108,6 +108,36 @@
     },
     "backToSignIn": "Voltar para o login"
   },
+  "emailVerification": {
+    "title": "Confira sua caixa de entrada",
+    "description": "Enviamos um link de verificação para {email}. Abra-o para verificar seu endereço.",
+    "descriptionNew": "Sua conta está pronta. Enviamos um link de verificação para {email} — abra-o para verificar seu endereço.",
+    "tokenLabel": "Token de verificação",
+    "tokenDescription": "Não consegue abrir o link? Copie o token do e-mail e cole aqui.",
+    "tokenRejected": "Esse token não funcionou. Pode ter expirado ou já ter sido usado — peça um novo e-mail.",
+    "verify": "Verificar",
+    "verifying": "Verificando…",
+    "resend": "Reenviar e-mail",
+    "resendCountdown": "Novo envio em {seconds}s",
+    "resendSent": "Enviamos um novo e-mail de verificação.",
+    "resendFailed": "Não foi possível enviar o e-mail. Tente novamente em instantes.",
+    "sending": "Enviando…",
+    "passwordRecoveryNote": "Verificar seu e-mail é necessário para redefinir sua senha.",
+    "skip": "Por enquanto, não",
+    "wrongEmail": "E-mail errado? Sair da conta",
+    "verifiedTitle": "Seu e-mail foi verificado",
+    "verifiedDescription": "Tudo certo.",
+    "continue": "Continuar",
+    "failedTitle": "Este link de verificação não funcionou",
+    "failedDescription": "Os links de verificação funcionam uma única vez e expiram após 24 horas. Informe seu e-mail para receber um novo.",
+    "emailLabel": "Endereço de e-mail",
+    "requestNew": "Enviar um novo link",
+    "banner": {
+      "title": "Verifique seu e-mail — enviamos um link para {email}. Verificar permite redefinir sua senha.",
+      "action": "Verificar agora",
+      "dismiss": "Dispensar lembrete de verificação de e-mail"
+    }
+  },
   "settings": {
     "accountTitle": "Configurações da conta",
     "accountDescription": "Gerencie as formas de entrar no GameGuild.",

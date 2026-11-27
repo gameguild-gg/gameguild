@@ -11,7 +11,7 @@
 import type { JWTPayload, Session, ProviderResult, ResolvedAuthConfig } from './types';
 import { encodeJWT, decodeJWT } from './jwt';
 import { TokenRefreshError } from './errors';
-import { resolveAuthPermissions, resolveAuthRoles } from './claims';
+import { resolveAuthPermissions, resolveAuthRoles, resolveEmailVerification } from './claims';
 
 /** Threshold before access token expiry to trigger refresh (30 seconds) */
 const REFRESH_THRESHOLD_MS = 30_000;
@@ -78,6 +78,7 @@ export function toSession(token: JWTPayload): Session {
       image: token.user.image,
       roles: token.user.roles,
       permissions: token.user.permissions,
+      ...(token.user.emailVerified === undefined ? {} : { emailVerified: token.user.emailVerified }),
     },
     expires: new Date(token.exp ? token.exp * 1000 : Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     tenantId: token.tenantId,
@@ -181,6 +182,7 @@ async function executeRefreshAccessToken(token: JWTPayload, config: ResolvedAuth
                 : token.user.image,
           roles: resolveAuthRoles(data, refreshedUser),
           permissions: resolveAuthPermissions(data, refreshedUser),
+          ...resolveEmailVerification(refreshedUser),
         }
       : {
           ...token.user,

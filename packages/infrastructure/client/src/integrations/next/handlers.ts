@@ -21,7 +21,7 @@ import { SessionStore, CsrfStore, resolveCookieOptions, type CookieSerializeOpti
 import { createJWTPayload, processSession, encodeSession, toSession } from '../../runtime/auth/session';
 import { createCSRFToken, validateCSRFToken } from '../../runtime/auth/csrf';
 import { decodeJWT } from '../../runtime/auth/jwt';
-import { resolveAuthPermissions, resolveAuthRoles } from '../../runtime/auth/claims';
+import { resolveAuthPermissions, resolveAuthRoles, resolveEmailVerification } from '../../runtime/auth/claims';
 import { AuthError, CredentialsSignInError, ProviderNotFoundError, CSRFError, SignUpError, AuthServiceUnavailableError } from '../../runtime/auth/errors';
 import { registerAccount } from '../../runtime/auth/sign-up';
 import { signOutServerSession } from '../../runtime/auth/sign-out';
@@ -216,6 +216,7 @@ export function parseBackendAuthResponse(data: Record<string, unknown>, fallback
       image: (backendUser?.profilePictureUrl as string) || null,
       roles: resolveAuthRoles(data, backendUser),
       permissions: resolveAuthPermissions(data, backendUser),
+      ...resolveEmailVerification(backendUser),
     },
     sessionId: data.sessionId as string | undefined,
     tenantId: data.tenantId as string | undefined,

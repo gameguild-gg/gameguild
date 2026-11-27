@@ -1,4 +1,5 @@
 import { auth } from '@/auth';
+import { EmailVerificationBanner } from '@/components/auth/email-verification-banner';
 import { SocialAppShell } from '@/components/feed/social-app-shell';
 import { AppShellHeaderMenu } from '@/components/app/app-shell-header-menu';
 import { AccessibilitySyncInitializer } from '@/components/settings/accessibility-sync-initializer';
@@ -57,6 +58,11 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
       <ThemeSyncInitializer />
       <AccessibilitySyncInitializer />
       <EditorPreferencesSyncInitializer />
+      {/* #1298 J1: same reminder as the dashboards layout, for the social
+          roots a signed-in user lands on. */}
+      {session.user.emailVerified === false && session.user.email && (
+        <EmailVerificationBanner email={session.user.email} />
+      )}
       {children}
     </SocialAppShell>
   );

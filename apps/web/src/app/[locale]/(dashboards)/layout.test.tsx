@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render } from '@testing-library/react';
+import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -44,6 +44,11 @@ vi.mock('@/components/settings/editor-preferences-sync-initializer', () => ({
 }));
 vi.mock('@/components/settings/two-factor-nudge-banner', () => ({
   TwoFactorNudgeBanner: () => null,
+}));
+vi.mock('@/components/auth/email-verification-banner', () => ({
+  EmailVerificationBanner: ({ email }: { email: string }) => (
+    <div data-testid="email-verification-banner" data-email={email} />
+  ),
 }));
 vi.mock('@/components/community/github-star-prompt', () => ({
   GitHubStarPrompt: () => null,
@@ -212,5 +217,47 @@ describe('dashboard layout session-cookie retry (issue #864 post-MFA flash)', ()
       href: { pathname: '/sign-in', query: { callbackUrl: '/workspace' } },
       locale: 'en-US',
     });
+  });
+});
+
+describe('dashboard layout email-verification reminder (#1298 J1)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.headers.mockResolvedValue(new Headers());
+    mocks.getDashboardNotificationSummary.mockResolvedValue({});
+    mocks.getDashboardContexts.mockResolvedValue({ capabilities: [], contexts: [] });
+    mocks.getMfaStatus.mockResolvedValue({ ok: true, data: { isEnabled: true } });
+    mocks.fetchRepositoryStarCount.mockResolvedValue(null);
+  });
+
+  afterEach(cleanup);
+
+  async function renderDashboard(user: Record<string, unknown>) {
+    mocks.auth.mockResolvedValue({ user });
+    const ui = await Layout({
+      children: <div data-testid="dashboard-page">content</div>,
+      params: Promise.resolve({ locale: 'en-US' }),
+    } as never);
+    return render(ui);
+  }
+
+  it('reminds a signed-in user whose email the backend reports as unverified', async () => {
+    await renderDashboard({ id: 'u1', email: 'member@example.com', emailVerified: false });
+
+    expect(screen.getByTestId('email-verification-banner')).toHaveAttribute(
+      'data-email',
+      'member@example.com',
+    );
+    expect(screen.getByTestId('dashboard-page')).toBeInTheDocument();
+  });
+
+  it.each([
+    ['already verified', { id: 'u1', email: 'member@example.com', emailVerified: true }],
+    ['silent about the verdict', { id: 'u1', email: 'member@example.com' }],
+    ['an account without an email address', { id: 'u1', email: null, emailVerified: false }],
+  ])('shows no reminder for %s', async (_label, user) => {
+    await renderDashboard(user);
+
+    expect(screen.queryByTestId('email-verification-banner')).not.toBeInTheDocument();
   });
 });

@@ -1,3 +1,5 @@
+import type { SessionUser } from './types';
+
 const ROLE_CLAIM_URIS = [
   'roles',
   'role',
@@ -74,4 +76,13 @@ export function resolveAuthRoles(data: Record<string, unknown>, backendUser?: Re
 
 export function resolveAuthPermissions(data: Record<string, unknown>, backendUser?: Record<string, unknown>): string[] | undefined {
   return firstClaimValue(data, backendUser, PERMISSION_CLAIM_URIS);
+}
+
+/**
+ * The backend's email-verification verdict for the session user. The key is
+ * present only when the backend reported it as a boolean, so a session built
+ * from a response that does not carry it is unchanged.
+ */
+export function resolveEmailVerification(backendUser?: Record<string, unknown>): Pick<SessionUser, 'emailVerified'> {
+  return typeof backendUser?.emailVerified === 'boolean' ? { emailVerified: backendUser.emailVerified } : {};
 }

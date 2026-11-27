@@ -9,6 +9,7 @@ import {
   clearGuestSession,
   loadGuestSession,
 } from "@/lib/auth/guest-session"
+import { emailVerificationPath } from "@/lib/auth/email-verification"
 import { Button } from "@game-guild/ui/components/button"
 import {
   Card,
@@ -98,13 +99,17 @@ export function SignupForm({
         : undefined
 
     try {
+      // #1298 J1: sign-up already dispatches the verification email. The new
+      // account lands on the verification page instead of the authenticated
+      // home, carrying the address the email went to and where the visitor
+      // was heading; nothing is required — the page can be skipped.
       await signUp({
         username: email.split("@")[0],
         email,
         password,
         firstName: name.split(" ")[0],
         lastName: name.split(" ").slice(1).join(" ") || undefined,
-        redirectTo,
+        redirectTo: emailVerificationPath(email, redirectTo),
         turnstileToken,
         ...(guestAccessToken ? { guestAccessToken } : {}),
       } as Parameters<typeof signUp>[0])

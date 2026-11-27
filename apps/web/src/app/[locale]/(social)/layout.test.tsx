@@ -23,6 +23,11 @@ vi.mock('@/components/settings/accessibility-sync-initializer', () => ({
 vi.mock('@/components/settings/editor-preferences-sync-initializer', () => ({
   EditorPreferencesSyncInitializer: () => null,
 }));
+vi.mock('@/components/auth/email-verification-banner', () => ({
+  EmailVerificationBanner: ({ email }: { email: string }) => (
+    <div data-testid="email-verification-banner" data-email={email} />
+  ),
+}));
 vi.mock('@/components/feed/social-app-shell', () => ({
   SocialAppShell: ({
     children,
@@ -145,5 +150,43 @@ describe('social layout notifications streaming', () => {
       href: { pathname: '/sign-in', query: { callbackUrl: '/feed' } },
       locale: 'en',
     });
+  });
+});
+
+describe('social layout email-verification reminder (#1298 J1)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getSummary.mockResolvedValue({ items: [], unreadCount: 0 });
+  });
+  afterEach(cleanup);
+
+  async function renderSocial(user: Record<string, unknown>) {
+    mocks.auth.mockResolvedValue({ user });
+    const ui = await Layout({
+      children: <div data-testid="feed-page">feed</div>,
+      params: Promise.resolve({ locale: 'en' }),
+    } as never);
+    return render(ui);
+  }
+
+  it('reminds a signed-in user whose email the backend reports as unverified', async () => {
+    await renderSocial({ id: 'user-1', email: 'ada@example.com', emailVerified: false });
+
+    expect(screen.getByTestId('email-verification-banner')).toHaveAttribute(
+      'data-email',
+      'ada@example.com',
+    );
+    expect(screen.getByTestId('feed-page')).toBeInTheDocument();
+  });
+
+  it('shows no reminder for a verified address, or one the backend is silent about', async () => {
+    await renderSocial({ id: 'user-1', email: 'ada@example.com', emailVerified: true });
+    let banner = screen.queryByTestId('email-verification-banner');
+    expect(banner).not.toBeInTheDocument();
+    cleanup();
+
+    await renderSocial({ id: 'user-1', email: 'ada@example.com' });
+    banner = screen.queryByTestId('email-verification-banner');
+    expect(banner).not.toBeInTheDocument();
   });
 });

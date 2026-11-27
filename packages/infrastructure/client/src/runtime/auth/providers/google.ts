@@ -21,7 +21,7 @@
 
 import type { OAuthProviderConfig, ProviderResult, SessionUser } from '../types';
 import { OAuthError, parseErrorBody, extractErrorMessage } from '../errors';
-import { resolveAuthPermissions, resolveAuthRoles } from '../claims';
+import { resolveAuthPermissions, resolveAuthRoles, resolveEmailVerification } from '../claims';
 
 /**
  * Options for the Google provider
@@ -102,6 +102,7 @@ export function GoogleProvider(
         image: (backendUser?.profilePictureUrl as string) || null,
         roles: resolveAuthRoles(data, backendUser),
         permissions: resolveAuthPermissions(data, backendUser),
+        ...resolveEmailVerification(backendUser),
       };
 
       return {

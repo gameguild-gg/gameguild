@@ -23,7 +23,7 @@
 
 import type { OAuthProviderConfig, ProviderResult, SessionUser } from '../types';
 import { OAuthError, parseErrorBody, extractErrorMessage } from '../errors';
-import { resolveAuthPermissions, resolveAuthRoles } from '../claims';
+import { resolveAuthPermissions, resolveAuthRoles, resolveEmailVerification } from '../claims';
 import { assertSafeServiceUrl } from '../../security/safe-remote-url';
 
 /**
@@ -132,6 +132,7 @@ export function GitHubProvider(options: GitHubProviderOptions): OAuthProviderCon
         image: (backendUser?.profilePictureUrl as string) || null,
         roles: resolveAuthRoles(data, backendUser),
         permissions: resolveAuthPermissions(data, backendUser),
+        ...resolveEmailVerification(backendUser),
         /* v8 ignore stop */
       };
 

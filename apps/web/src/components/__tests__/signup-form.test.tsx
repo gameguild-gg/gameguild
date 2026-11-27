@@ -215,9 +215,33 @@ describe('SignupForm', () => {
       password: '12345678',
       firstName: 'Jo',
       lastName: 'Do',
-      redirectTo: '/',
+      // #1298 J1: the new account lands on the verification page.
+      redirectTo: '/verify?email=jo%40e.co&new=1&redirectTo=%2F',
       turnstileToken: null,
     });
+  }, 10000);
+
+  it('sends the new account to verify its email, remembering where the visitor was heading', async () => {
+    const { user } = renderWithUser(<SignupForm redirectTo="/workspace/learn?tab=courses" />);
+
+    await user.type(screen.getByLabelText('Full Name'), 'Jo Do');
+    await user.type(screen.getByLabelText('Email'), 'jo@e.co');
+    await user.type(screen.getByLabelText('Password'), '12345678');
+    await user.type(screen.getByLabelText('Confirm Password'), '12345678');
+    await user.click(screen.getByRole('button', { name: /create account$/i }));
+
+    expect(mockAuth.signUp).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: 'jo@e.co',
+        redirectTo:
+          '/verify?email=jo%40e.co&new=1&redirectTo=%2Fworkspace%2Flearn%3Ftab%3Dcourses',
+      }),
+    );
+    // The sign-in link keeps pointing at the original target.
+    expect(screen.getByText('Sign in')).toHaveAttribute(
+      'href',
+      '/en-US/sign-in?redirectTo=%2Fworkspace%2Flearn%3Ftab%3Dcourses',
+    );
   }, 10000);
 
   it('derives username from email prefix', async () => {
@@ -419,7 +443,7 @@ describe('SignupForm guest upgrade', () => {
       password: '12345678',
       firstName: 'Jo',
       lastName: 'Do',
-      redirectTo: '/',
+      redirectTo: '/verify?email=jo%40e.co&new=1&redirectTo=%2F',
       turnstileToken: null,
     });
   }, 10000);

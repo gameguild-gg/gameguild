@@ -21,7 +21,7 @@
 
 import type { CredentialsProviderConfig, ProviderResult, SessionUser } from '../types';
 import { AccountLockedError, AuthServiceUnavailableError, CredentialsSignInError, MfaRequiredError, parseMfaEnrollmentOffer } from '../errors';
-import { resolveAuthPermissions, resolveAuthRoles } from '../claims';
+import { resolveAuthPermissions, resolveAuthRoles, resolveEmailVerification } from '../claims';
 import { createClient } from '../../../client';
 import { AuthModule } from '../../../generated/modules/auth.gen';
 import { postAuthSignInEndpoint } from '../../../generated/endpoints.gen';
@@ -203,6 +203,7 @@ export function CredentialsProvider(options: CredentialsProviderOptions = {}): C
           image: (backendUser?.profilePictureUrl as string) || null,
           roles: resolveAuthRoles(data, backendUser),
           permissions: resolveAuthPermissions(data, backendUser),
+          ...resolveEmailVerification(backendUser),
         };
 
         if (!user.id.trim() || typeof data.refreshToken !== 'string' || !data.refreshToken.trim()) {

@@ -99,6 +99,11 @@ export interface SessionUser {
   roles?: string[];
   /** Granted permission strings (e.g. ['content:read', 'content:write']) */
   permissions?: string[];
+  /**
+   * Whether the backend reports the account's email as verified. Absent when
+   * the sign-in response did not say.
+   */
+  emailVerified?: boolean;
 }
 
 /**
