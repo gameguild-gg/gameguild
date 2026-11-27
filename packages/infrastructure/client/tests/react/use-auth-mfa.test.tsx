@@ -31,6 +31,36 @@ describe('browser MFA state', () => {
     next.unmount();
   });
 
+  it('carries the subject of the challenge, persisted with it, so the 2FA page can ask for an email code (#1298 J2)', async () => {
+    const backend = vi
+      .fn()
+      .mockResolvedValueOnce(json({ csrfToken: 'first-csrf' }))
+      .mockResolvedValueOnce(json({ error: 'MfaRequired', mfaToken: token, availableMethods: ['Email'], userId: 'subject-1' }, 403));
+    vi.stubGlobal('fetch', backend);
+    const { result, unmount } = renderHook(() => useAuth());
+    let thrown: unknown;
+    await act(async () => {
+      thrown = await result.current.signIn('credentials', { email: 'a@example.com', password: 'pw', redirect: false }).then(
+        () => undefined,
+        (error: unknown) => error,
+      );
+    });
+    expect((thrown as MfaRequiredError).userId).toBe('subject-1');
+    expect(result.current.mfaChallenge).toEqual({ mfaToken: token, availableMethods: ['Email'], userId: 'subject-1' });
+    unmount();
+
+    const next = renderHook(() => useAuth());
+    expect(next.result.current.mfaChallenge?.userId).toBe('subject-1');
+    next.unmount();
+  });
+
+  it('leaves an older persisted challenge without a subject as it is', () => {
+    sessionStorage.setItem('gg.auth.mfaChallenge', JSON.stringify({ mfaToken: token, availableMethods: ['TOTP'], userId: 42 }));
+    const { result, unmount } = renderHook(() => useAuth());
+    expect(result.current.mfaChallenge).toEqual({ mfaToken: token, availableMethods: ['TOTP'] });
+    unmount();
+  });
+
   it('clears persisted challenge after a successful MFA sign-in', async () => {
     sessionStorage.setItem('gg.auth.mfaChallenge', JSON.stringify({ mfaToken: token, availableMethods: ['TOTP'] }));
     vi.stubGlobal(

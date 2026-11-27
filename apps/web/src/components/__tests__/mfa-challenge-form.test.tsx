@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   createMockUseAuth,
@@ -11,6 +12,7 @@ let mockAuth: MockUseAuthReturn;
 let mockLocationHref: (url: string) => void;
 const originalLocation = window.location;
 const mockCompleteMfaEnrollment = vi.fn<(...args: unknown[]) => Promise<unknown>>();
+const mockRequestEmailChallenge = vi.fn<(...args: unknown[]) => Promise<unknown>>();
 
 vi.mock('@game-guild/client/react', () => ({
   useAuth: () => mockAuth,
@@ -18,6 +20,7 @@ vi.mock('@game-guild/client/react', () => ({
 
 vi.mock('@/lib/auth/mfa-sign-in-actions', () => ({
   completeMfaEnrollmentAction: (...args: unknown[]) => mockCompleteMfaEnrollment(...args),
+  requestEmailMfaChallengeAction: (...args: unknown[]) => mockRequestEmailChallenge(...args),
 }));
 
 vi.mock('next-intl', () => ({
@@ -223,5 +226,126 @@ describe('MfaChallengeForm', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('signIn.mfa.copyFailed');
     expect(screen.getByTestId('mfa-enrollment-secret')).toHaveTextContent(enrollmentChallenge.mfaEnrollment.secretKey);
     expect(screen.queryByText('signIn.mfa.copied')).not.toBeInTheDocument();
+  });
+});
+
+describe('MfaChallengeForm — email codes at sign-in (issue #1298 J2)', () => {
+  const emailChallenge = { mfaToken: 'x'.repeat(43), availableMethods: ['Totp', 'Email'], userId: 'subject-1' };
+
+  beforeEach(() => {
+    mockAuth = createMockUseAuth();
+    mockLocationHref = vi.fn();
+    Object.defineProperty(window, 'location', {
+      value: {
+        ...originalLocation,
+        set href(url: string) {
+          mockLocationHref(url);
+        },
+      },
+      writable: true,
+      configurable: true,
+    });
+  });
+
+  afterEach(() => {
+    cleanup();
+    (window as unknown as { location: Location }).location = originalLocation;
+    vi.clearAllMocks();
+    vi.useRealTimers();
+  });
+
+  it('offers the email method and mails a code to the enrolled address on request', async () => {
+    mockAuth.mfaChallenge = emailChallenge;
+    mockRequestEmailChallenge.mockResolvedValue({
+      success: true, status: 'success', emailMasked: 'j***@example.com', expiresInSeconds: 600,
+    });
+    const { user } = renderWithUser(<MfaChallengeForm redirectTo="/workspace" />);
+
+    expect(screen.getByRole('option', { name: 'signIn.mfa.methodEmail' })).toBeInTheDocument();
+    await user.selectOptions(screen.getByLabelText('signIn.mfa.methodLabel'), 'Email');
+    await user.click(screen.getByTestId('mfa-email-send'));
+
+    await waitFor(() => {
+      expect(mockRequestEmailChallenge).toHaveBeenCalledWith('subject-1');
+    });
+    expect(screen.getByTestId('mfa-email-sent')).toHaveTextContent('signIn.mfa.emailSentTo');
+    // A code just went out: the button waits out the API's minute.
+    expect(screen.getByTestId('mfa-email-send')).toBeDisabled();
+
+    await user.type(screen.getByLabelText('signIn.mfa.codeLabel'), '123456');
+    await user.click(screen.getByRole('button', { name: 'signIn.mfa.submit' }));
+
+    await waitFor(() => {
+      expect(mockAuth.signIn).toHaveBeenCalledWith('credentials', {
+        mfaToken: emailChallenge.mfaToken,
+        method: 'Email',
+        code: '123456',
+        redirectTo: '/workspace',
+      });
+    });
+  });
+
+  it('signs an email-only challenge in as Email, without offering the authenticator', async () => {
+    mockAuth.mfaChallenge = { mfaToken: 'x'.repeat(43), availableMethods: ['Email'], userId: 'subject-1' };
+    const { user } = renderWithUser(<MfaChallengeForm />);
+
+    expect(screen.queryByRole('option', { name: 'signIn.mfa.methodTotp' })).not.toBeInTheDocument();
+    expect(screen.getByLabelText('signIn.mfa.codeLabel')).toHaveAttribute('maxlength', '6');
+
+    await user.type(screen.getByLabelText('signIn.mfa.codeLabel'), '654321');
+    await user.click(screen.getByRole('button', { name: 'signIn.mfa.submit' }));
+
+    await waitFor(() => {
+      expect(mockAuth.signIn).toHaveBeenCalledWith('credentials', expect.objectContaining({ method: 'Email', code: '654321' }));
+    });
+  });
+
+  it('does not offer the email method when the challenge carries no subject', () => {
+    // A challenge stored before its subject was carried cannot ask for an email code.
+    mockAuth.mfaChallenge = { mfaToken: 'x'.repeat(43), availableMethods: ['Totp', 'Email'] };
+    render(<MfaChallengeForm />);
+
+    // Email drops out, so only the authenticator is left and the selector is hidden.
+    expect(screen.queryByLabelText('signIn.mfa.methodLabel')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('mfa-email-send')).not.toBeInTheDocument();
+  });
+
+  it('shows the API reason and puts the minute back when a code is refused', async () => {
+    mockAuth.mfaChallenge = emailChallenge;
+    const refusal = 'A verification code was sent recently. Wait before requesting another.';
+    mockRequestEmailChallenge.mockResolvedValue({ success: false, status: 'error', message: refusal });
+    const { user } = renderWithUser(<MfaChallengeForm />);
+
+    await user.selectOptions(screen.getByLabelText('signIn.mfa.methodLabel'), 'Email');
+    await user.click(screen.getByTestId('mfa-email-send'));
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent(refusal);
+    });
+    expect(screen.getByTestId('mfa-email-send')).toBeDisabled();
+    expect(screen.queryByTestId('mfa-email-sent')).not.toBeInTheDocument();
+  });
+
+  it('lets a new code be requested once the minute has passed', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    mockAuth.mfaChallenge = emailChallenge;
+    mockRequestEmailChallenge.mockResolvedValue({
+      success: true, status: 'success', emailMasked: 'j***@example.com', expiresInSeconds: 600,
+    });
+    render(<MfaChallengeForm />);
+
+    await user.selectOptions(screen.getByLabelText('signIn.mfa.methodLabel'), 'Email');
+    await user.click(screen.getByTestId('mfa-email-send'));
+    await waitFor(() => {
+      expect(screen.getByTestId('mfa-email-send')).toBeDisabled();
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(61_000);
+    });
+
+    expect(screen.getByTestId('mfa-email-send')).toBeEnabled();
+    expect(screen.getByTestId('mfa-email-send')).toHaveTextContent('signIn.mfa.emailResend');
   });
 });

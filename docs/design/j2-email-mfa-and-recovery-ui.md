@@ -1,6 +1,6 @@
 # J2 — Email-MFA Settings + MFA Account Recovery UI: Design Proposal
 
-Status: **Phase 1 implemented** (email-MFA settings, the first recovery set); phases 2–4 pending. Re-audited against `develop` (`70e5e9944d`) before phase 1 was built — see "Delivery status" at the end: GAP-1 and GAP-2 had already landed, and one contract could not be called as designed.
+Status: **Phases 1 and 2 implemented** (email-MFA settings, the first recovery set, and email codes at sign-in); phases 3–4 pending. Re-audited against `develop` (`70e5e9944d`) before phase 1 was built — see "Delivery status" at the end: GAP-1 and GAP-2 had already landed, and one contract could not be called as designed.
 Issue: #1298 item J2. Implementation tracker for the email-code repurpose: [#1380](https://github.com/gameguild-gg/gameguild/issues/1380)
 (owner decision on #1236 — email-code retired as a sign-in method by PR #1379, repurposed as
 the step-up channel; this design absorbs that decision as its Part D). Companions:
@@ -537,8 +537,8 @@ above predates:
 
 - **GAP-1 and GAP-2 are already on `develop`** (`c560932265`): the sign-in completion
   accepts an Email proof, and `MfaRequiredError` carries the `userId` and `email` the
-  pending response returns. What is still missing for an email-only account is the web
-  side of it: the 2FA page does not offer the Email challenge.
+  pending response returns. What was still missing for an email-only account was the web
+  side of it — the 2FA page did not offer the Email challenge. Phase 2 delivers that.
 - **`email:complete` could not be called as designed.** It reused the authenticator's
   request model, whose `SecretKey` is required, so a client had to send a secret that the
   handler ignores. Phase 1 gives the endpoint its own request model,
@@ -549,13 +549,23 @@ above predates:
 | Piece | Where | Notes |
 | --- | --- | --- |
 | Email enrollment | `components/settings/mfa-methods-manager.tsx`, `lib/auth/mfa-actions.ts` | Start (the server resolves the account's address) → enter the mailed code → verify. Resend waits out a minute; a resend the server refuses puts the minute back, so the server's throttle stays the authority. A refused code keeps the panel open and shows the server's reason. |
-| Email as an additional factor only | same | **Deviation from the design.** Part A asked for a warning when Email would be the only factor. Phase 1 withholds the button until an authenticator or SMS is enrolled, and says why: until the 2FA page offers the Email challenge, an email-only account cannot sign in, and a warning does not prevent that. It is one condition, and it goes away with the 2FA work. |
+| Email as an additional factor only | same | **Deviation from the design.** Part A asked for a warning when Email would be the only factor. The button is withheld until an authenticator or SMS is enrolled, and the page says why. Two reasons held at first: the enrollment service attaches the address to an existing MFA configuration, and an email-only account could not sign in from the web. Phase 2 removes the second; the first remains, and so does the rule. |
 | First recovery set | same | The setup's `backupCodes` are kept and revealed once `completeTotpEnrollmentAction` succeeds, under the same "shown exactly once" contract as the sign-in enrollment screen. |
 | Empty regenerated set | `lib/auth/mfa-actions.ts` | The action marks it `emptySet`; the manager reports a failure instead of a success toast over an empty grid. |
 | One-time reveal | `components/auth/backup-codes-reveal.tsx` | Shared by both settings reveals, with a copy button that never claims a copy the browser refused. The 2FA page keeps its own full-page reveal for now. |
 | Server reasons | `lib/auth/mfa-actions.ts`; client `createApiError` | Two latent defects fixed on the way. `resultFrom` accepted a message and dropped it on failure, and the client never read the `error` field the MFA endpoints answer with. Together, every MFA failure reached the UI as a generic message. |
 | `email:complete` contract | `DTOs/CompleteEmailMfaSetupRequest.cs` | See above. The client is regenerated through the real pipeline. |
 
-Not delivered yet: the 2FA page's Email challenge (which lifts the additional-factor rule
-above), Part C (the recovery journey), Part D (the email step-up channel, GAP-3; the
-email change, GAP-4).
+### Phase 2 — email codes at sign-in — implemented
+
+| Piece | Where | Notes |
+| --- | --- | --- |
+| Method selector | `components/auth/mfa-challenge-form.tsx` | Offers the authenticator app, recovery codes and email codes as the pending challenge allows, instead of assuming the authenticator and showing a selector only when a recovery code was possible. For an email-only account, email is selected by default and the authenticator is not offered. |
+| Email code on request | same; `lib/auth/mfa-sign-in-actions.ts` | Choosing email shows "Send a code to my email". The code goes to the enrolled address and the page names it, masked. A resend waits out the API's minute, and a resend the API refuses puts the minute back — the API's throttle stays the authority. The sign-in then completes with `method: Email`. |
+| The challenge carries its subject | client `useAuth` (`MfaChallenge.userId`) | Persisted with the challenge in `sessionStorage`, because the email challenge endpoint is addressed by it. Post-password-proof data only. A challenge stored before the field existed does not offer email; "start again" refreshes it. |
+
+Enumeration is unchanged: the endpoint is anonymous but needs a subject that only a valid
+password produces, and its answers stay generic.
+
+Not delivered yet: Part C (the recovery journey), Part D (the email step-up channel,
+GAP-3; the email change, GAP-4).

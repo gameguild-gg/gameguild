@@ -55,6 +55,9 @@ export interface MfaChallenge {
   mfaToken: string;
   availableMethods: string[];
   mfaEnrollment?: MfaEnrollmentOffer;
+  /** The subject of the pending challenge; the email challenge endpoint is addressed by it
+   *  (issue #1298 J2). Post-password-proof data only: it never reaches an unknown account. */
+  userId?: string;
 }
 
 function readStoredMfaChallenge(): UseAuthReturn['mfaChallenge'] {
@@ -63,13 +66,14 @@ function readStoredMfaChallenge(): UseAuthReturn['mfaChallenge'] {
   try {
     const raw = window.sessionStorage.getItem(MFA_CHALLENGE_STORAGE_KEY);
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as { mfaToken?: unknown; availableMethods?: unknown; mfaEnrollment?: unknown };
+    const parsed = JSON.parse(raw) as { mfaToken?: unknown; availableMethods?: unknown; mfaEnrollment?: unknown; userId?: unknown };
     if (typeof parsed.mfaToken !== 'string' || !Array.isArray(parsed.availableMethods)) return null;
     const enrollment = parseMfaEnrollmentOffer(parsed.mfaEnrollment);
     return {
       mfaToken: parsed.mfaToken,
       availableMethods: parsed.availableMethods.filter((m): m is string => typeof m === 'string'),
       ...(enrollment ? { mfaEnrollment: enrollment } : {}),
+      ...(typeof parsed.userId === 'string' ? { userId: parsed.userId } : {}),
     };
   } catch {
     return null;
@@ -220,7 +224,13 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
               ? errorData.availableMethods.filter((m: unknown): m is string => typeof m === 'string')
               : [];
             const enrollment = parseMfaEnrollmentOffer(errorData.mfaEnrollment);
-            const challenge: MfaChallenge = { mfaToken: errorData.mfaToken, availableMethods, ...(enrollment ? { mfaEnrollment: enrollment } : {}) };
+            const userId = typeof errorData.userId === 'string' ? errorData.userId : undefined;
+            const challenge: MfaChallenge = {
+              mfaToken: errorData.mfaToken,
+              availableMethods,
+              ...(enrollment ? { mfaEnrollment: enrollment } : {}),
+              ...(userId ? { userId } : {}),
+            };
             /* v8 ignore start */
             try {
               window.sessionStorage.setItem(MFA_CHALLENGE_STORAGE_KEY, JSON.stringify(challenge));
@@ -229,7 +239,7 @@ export function useAuth(options?: AuthActionOptions): UseAuthReturn {
             }
             /* v8 ignore stop */
             setMfaChallenge(challenge);
-            throw new MfaRequiredError(undefined, { mfaToken: errorData.mfaToken, availableMethods, mfaEnrollment: enrollment });
+            throw new MfaRequiredError(undefined, { mfaToken: errorData.mfaToken, availableMethods, mfaEnrollment: enrollment, userId });
           }
           if (errorData.error === 'EmailVerificationRequired') {
             // #1298 J1: an interrupt, not a failed sign-in. Keep its type so the
