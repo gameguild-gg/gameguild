@@ -1,4 +1,5 @@
 using FluentAssertions;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
@@ -128,6 +129,91 @@ public sealed class AuthAttemptServiceSuccessPathTests
                 auditEvent.UserId == userId &&
                 auditEvent.IpAddress == "198.51.100.2"),
             It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RecordFailedAttemptAsync_ShouldPersistThroughAScopeOfItsOwn()
+    {
+        // Issue #1406: a denied sign-in ends in an exception and the command pipeline rolls
+        // the request's transaction back. The failure record must be written on a context
+        // that is not part of it, or lockout never counts real failures.
+        var requestRepository = new Mock<IAuthenticationAttemptRepository>();
+        var ownRepository = new Mock<IAuthenticationAttemptRepository>();
+        AuthenticationAttempt? captured = null;
+        ownRepository
+            .Setup(x => x.CreateAsync(It.IsAny<AuthenticationAttempt>(), It.IsAny<CancellationToken>()))
+            .Callback<AuthenticationAttempt, CancellationToken>((attempt, _) => captured = attempt)
+            .ReturnsAsync((AuthenticationAttempt attempt, CancellationToken _) => attempt);
+        var serviceProvider = new Mock<IServiceProvider>();
+        serviceProvider.Setup(x => x.GetService(typeof(IAuthenticationAttemptRepository))).Returns(ownRepository.Object);
+        var scope = new Mock<IServiceScope>();
+        scope.SetupGet(x => x.ServiceProvider).Returns(serviceProvider.Object);
+        var scopeFactory = new Mock<IServiceScopeFactory>();
+        // CreateAsyncScope is an extension method over this; the service ends up here.
+        scopeFactory.Setup(x => x.CreateScope()).Returns(scope.Object);
+
+        var sut = new AuthAttemptService(
+            requestRepository.Object,
+            Mock.Of<IUserEnumerationProtectionService>(),
+            NullLogger<AuthAttemptService>.Instance,
+            serviceScopeFactory: scopeFactory.Object);
+        var userId = Guid.NewGuid();
+
+        await sut.RecordFailedAttemptAsync(
+            "user@example.com", userId, "198.51.100.3", "UnitTestAgent", "InvalidCredentials", TimeSpan.FromMilliseconds(5));
+
+        captured.Should().NotBeNull();
+        captured!.IsSuccessful.Should().BeFalse();
+        captured.FailureReason.Should().Be("InvalidCredentials");
+        captured.UserId.Should().Be(userId);
+        ownRepository.Verify(x => x.CreateAsync(It.IsAny<AuthenticationAttempt>(), It.IsAny<CancellationToken>()), Times.Once);
+        requestRepository.Verify(x => x.CreateAsync(It.IsAny<AuthenticationAttempt>(), It.IsAny<CancellationToken>()), Times.Never);
+        scopeFactory.Verify(x => x.CreateScope(), Times.Once);
+    }
+
+    [Fact]
+    public async Task RecordFailedAttemptAsync_ShouldStillForwardAuditWhenItsOwnScopeCannotPersist()
+    {
+        var auditEventSink = new Mock<IAuthenticationAuditEventSink>();
+        var scopeFactory = new Mock<IServiceScopeFactory>();
+        scopeFactory.Setup(x => x.CreateScope()).Throws(new InvalidOperationException("No scope"));
+
+        var sut = new AuthAttemptService(
+            new Mock<IAuthenticationAttemptRepository>().Object,
+            Mock.Of<IUserEnumerationProtectionService>(),
+            NullLogger<AuthAttemptService>.Instance,
+            auditEventSink: auditEventSink.Object,
+            serviceScopeFactory: scopeFactory.Object);
+
+        await sut.RecordFailedAttemptAsync("user@example.com", null, "198.51.100.4", null, "InvalidCredentials", TimeSpan.Zero);
+
+        auditEventSink.Verify(x => x.RecordAsync(
+            It.Is<AuthenticationAuditEvent>(auditEvent => auditEvent.ActionType == "Authentication.Failed"),
+            It.IsAny<CancellationToken>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task RecordSuccessfulAttemptAsync_ShouldStayOnTheRequestContext()
+    {
+        // A successful attempt belongs to the sign-in's own transaction: if that sign-in
+        // is rolled back, so is its record.
+        var requestRepository = new Mock<IAuthenticationAttemptRepository>();
+        requestRepository
+            .Setup(x => x.CreateAsync(It.IsAny<AuthenticationAttempt>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync((AuthenticationAttempt attempt, CancellationToken _) => attempt);
+        var scopeFactory = new Mock<IServiceScopeFactory>(MockBehavior.Strict);
+
+        var sut = new AuthAttemptService(
+            requestRepository.Object,
+            Mock.Of<IUserEnumerationProtectionService>(),
+            NullLogger<AuthAttemptService>.Instance,
+            serviceScopeFactory: scopeFactory.Object);
+
+        await sut.RecordSuccessfulAttemptAsync("user@example.com", Guid.NewGuid(), "198.51.100.5", "UnitTestAgent", TimeSpan.Zero);
+
+        requestRepository.Verify(x => x.CreateAsync(
+            It.Is<AuthenticationAttempt>(attempt => attempt.IsSuccessful), It.IsAny<CancellationToken>()), Times.Once);
+        scopeFactory.Verify(x => x.CreateScope(), Times.Never);
     }
 
     [Fact]
