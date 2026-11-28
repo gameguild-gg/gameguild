@@ -293,8 +293,8 @@ describe('MfaMethodsManager — email codes and the first recovery set (issue #1
   });
 
   it('offers email codes only once another factor is enrolled, and says why', () => {
-    // The web sign-in challenge does not offer email codes yet, so an email-only account
-    // could not sign in: email is an additional factor, never the first one.
+    // The enrollment service attaches the address to an existing MFA configuration:
+    // email is an additional factor, never the first one.
     const alone = render(<MfaMethodsManager data={makeData({ totpEnabled: false, isEnabled: false })} />);
     expect(screen.queryByTestId('mfa-email-start')).not.toBeInTheDocument();
     expect(screen.getByTestId('mfa-email-prerequisite')).toHaveTextContent('settings.security.mfa.email.prerequisite');
@@ -429,6 +429,34 @@ describe('MfaMethodsManager — email codes and the first recovery set (issue #1
       expect(screen.getByTestId('mfa-email-resend')).toBeDisabled();
     });
     expect(mocks.toastError).toHaveBeenCalledWith(refusal);
+  });
+
+  it('refreshes the masked address and the lifetime when a resend succeeds', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    mocks.startEmailEnrollment.mockResolvedValue({
+      success: true, status: 'success', emailSetup: { emailMasked: 'j***@example.com', expiresInSeconds: 600 },
+    });
+    render(<MfaMethodsManager data={makeData()} />);
+    await user.click(screen.getByTestId('mfa-email-start'));
+    await screen.findByTestId('mfa-email-panel');
+
+    act(() => {
+      vi.advanceTimersByTime(61_000);
+    });
+    mocks.startEmailEnrollment.mockResolvedValue({
+      success: true, status: 'success', emailSetup: { emailMasked: 'j***@new.example.com', expiresInSeconds: 300 },
+    });
+    await user.click(screen.getByTestId('mfa-email-resend'));
+
+    await waitFor(() => {
+      expect(mocks.startEmailEnrollment).toHaveBeenCalledTimes(2);
+    });
+    // A fresh code carries fresh facts: where it went, and for how long it is valid.
+    expect(screen.getByTestId('mfa-email-destination')).toHaveTextContent(
+      'settings.security.mfa.email.sentTo j***@new.example.com',
+    );
+    expect(screen.getByTestId('mfa-email-panel')).toHaveTextContent('settings.security.mfa.email.expiresNote 5');
   });
 
   it('closes the email panel without enrolling when cancelled', async () => {

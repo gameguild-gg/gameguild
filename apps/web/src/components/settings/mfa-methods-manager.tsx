@@ -84,8 +84,8 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
   const email = methods.find((m) => m.method === 'Email');
   const backupCode = methods.find((m) => m.method === 'BackupCode');
 
-  // Email codes are offered as an additional factor only. The web sign-in challenge does
-  // not offer them yet, so an account left with email as its sole factor could not sign in.
+  // Email codes are enrolled into an existing MFA configuration: the enrollment service
+  // has nothing to attach the address to until another factor has been set up.
   const anotherFactorEnrolled = totp?.isEnabled === true || sms?.isEnabled === true;
   const emailUnenrolled = email?.isAvailable === true && email.isEnabled === false;
   const canAddEmail = emailUnenrolled && anotherFactorEnrolled && methodState.kind !== 'email-active';
@@ -144,6 +144,14 @@ export function MfaMethodsManager({ data }: { data: MfaPageData }) {
     try {
       const result = await startEmailEnrollmentAction();
       if (result.success) {
+        // A fresh code carries fresh facts: the address it went to and its lifetime.
+        if (methodState.kind === 'email-active' && result.emailSetup) {
+          setMethodState({
+            kind: 'email-active',
+            maskedEmail: result.emailSetup.emailMasked ?? methodState.maskedEmail,
+            expiresInSeconds: result.emailSetup.expiresInSeconds ?? methodState.expiresInSeconds,
+          });
+        }
         setEmailError(null);
         startEmailCooldown();
         toast.success(t('email.sent'));

@@ -1,12 +1,12 @@
 "use client";
 
-import { type FormEvent, useState, useSyncExternalStore } from "react";
+import { type FormEvent, useEffect, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { QRCodeSVG } from "qrcode.react";
 import { Check, Copy } from "lucide-react";
 import { useAuth } from "@game-guild/client/react";
 import { recoverFromStaleServerAction } from "@/lib/auth/server-action-errors";
-import { completeMfaEnrollmentAction } from "@/lib/auth/mfa-sign-in-actions";
+import { completeMfaEnrollmentAction, requestEmailMfaChallengeAction } from "@/lib/auth/mfa-sign-in-actions";
 import { Link } from "@/i18n/navigation";
 import { Button } from "@game-guild/ui/components/button";
 import {
@@ -26,6 +26,9 @@ import { Input } from "@game-guild/ui/components/input";
 
 const subscribeToHydration = () => () => undefined;
 
+/** The API mails at most one email code a minute per subject; the button mirrors it. */
+const EMAIL_CODE_RESEND_COOLDOWN_MS = 60_000;
+
 /**
  * MFA challenge form for the dedicated /sign-in/2fa route. The challenge
  * (mfaToken, availableMethods, optional mfaEnrollment) is persisted by useAuth
@@ -35,6 +38,9 @@ const subscribeToHydration = () => () => undefined;
  * A challenge carrying mfaEnrollment renders the first-time authenticator
  * setup (QR + setup key + fixed TOTP code) and, after completion, the fresh
  * recovery codes exactly once before continuing to the redirect target.
+ *
+ * Email codes (issue #1298 J2) are mailed on request to the enrolled address,
+ * addressed by the subject of the pending challenge, then typed like any code.
  */
 export function MfaChallengeForm({
   className,
@@ -50,6 +56,12 @@ export function MfaChallengeForm({
   const [backupCodes, setBackupCodes] = useState<string[] | null>(null);
   const [copied, setCopied] = useState<"secret" | "codes" | null>(null);
   const [copyError, setCopyError] = useState<string | null>(null);
+  const [method, setMethod] = useState("Totp");
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailMasked, setEmailMasked] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailCooldownUntil, setEmailCooldownUntil] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
   const isHydrated = useSyncExternalStore(
     subscribeToHydration,
     () => true,
@@ -58,6 +70,54 @@ export function MfaChallengeForm({
 
   const enrollment = mfaChallenge?.mfaEnrollment;
   const isEnrollment = enrollment != null;
+
+  const offered = isEnrollment ? [] : (mfaChallenge?.availableMethods ?? []);
+  const offers = (name: string) => offered.some((item) => item.toLowerCase() === name.toLowerCase());
+  // The authenticator stays the default unless the challenge rules it out.
+  const totpOffered = offered.length === 0 || offers("Totp");
+  // A challenge stored before its subject was carried cannot ask for an email code.
+  const emailOffered = offers("Email") && Boolean(mfaChallenge?.userId);
+  const backupCodeOffered = offers("BackupCode");
+  const emailSelected = emailOffered && (method === "Email" || !totpOffered);
+  const selectedMethod = emailSelected ? "Email" : method;
+  const emailCooldownActive = emailCooldownUntil !== null && emailCooldownUntil > now;
+  const emailSecondsLeft =
+    emailCooldownUntil === null ? 0 : Math.max(0, Math.ceil((emailCooldownUntil - now) / 1000));
+
+  useEffect(() => {
+    if (!emailCooldownActive) return;
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [emailCooldownActive]);
+
+  function startEmailCooldown() {
+    setEmailCooldownUntil(Date.now() + EMAIL_CODE_RESEND_COOLDOWN_MS);
+    setNow(Date.now());
+  }
+
+  async function handleSendEmailCode() {
+    if (!mfaChallenge?.userId) return;
+    setSendingEmail(true);
+    setEmailError(null);
+    try {
+      const result = await requestEmailMfaChallengeAction(mfaChallenge.userId);
+      if (result.success) {
+        setEmailMasked(result.emailMasked || null);
+        startEmailCooldown();
+      } else {
+        // The API's throttle is the authority: a refused request puts the minute back.
+        if (result.status === "error") {
+          startEmailCooldown();
+        }
+        setEmailError(result.message ?? t("emailSendFailed"));
+      }
+    } catch (sendError) {
+      if (recoverFromStaleServerAction(sendError)) return;
+      setEmailError(t("emailSendFailed"));
+    } finally {
+      setSendingEmail(false);
+    }
+  }
 
   async function copyText(text: string, kind: "secret" | "codes") {
     setCopied(null);
@@ -118,7 +178,7 @@ export function MfaChallengeForm({
     try {
       await signIn("credentials", {
         mfaToken: mfaChallenge.mfaToken,
-        method: data.get("method") || "Totp",
+        method: selectedMethod,
         code,
         redirectTo,
       });
@@ -278,21 +338,45 @@ export function MfaChallengeForm({
                   </div>
                 </Field>
               )}
-              {!isEnrollment && mfaChallenge.availableMethods.includes("BackupCode") && (
+              {(backupCodeOffered || emailOffered) && (
                 <Field>
                   <FieldLabel htmlFor="mfa-method">
                     {t("methodLabel")}
                   </FieldLabel>
                   <select
                     id="mfa-method"
-                    name="method"
-                    defaultValue="Totp"
+                    value={selectedMethod}
+                    onChange={(event) => setMethod(event.target.value)}
                     disabled={isLoading}
                     className="h-10 rounded border border-white/10 bg-slate-900 px-3"
                   >
-                    <option value="Totp">{t("methodTotp")}</option>
-                    <option value="BackupCode">{t("methodBackupCode")}</option>
+                    {totpOffered && <option value="Totp">{t("methodTotp")}</option>}
+                    {emailOffered && <option value="Email">{t("methodEmail")}</option>}
+                    {backupCodeOffered && <option value="BackupCode">{t("methodBackupCode")}</option>}
                   </select>
+                </Field>
+              )}
+              {emailSelected && (
+                <Field>
+                  {emailMasked && (
+                    <p role="status" className="text-sm text-slate-200" data-testid="mfa-email-sent">
+                      {t("emailSentTo", { email: emailMasked })}
+                    </p>
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-white/10 text-slate-200 hover:bg-white/10 hover:text-white"
+                    disabled={sendingEmail || emailCooldownActive}
+                    onClick={() => void handleSendEmailCode()}
+                    data-testid="mfa-email-send"
+                  >
+                    {emailCooldownActive
+                      ? t("emailResendCountdown", { seconds: emailSecondsLeft })
+                      : emailMasked
+                        ? t("emailResend")
+                        : t("emailSend")}
+                  </Button>
                 </Field>
               )}
               <Field>
@@ -301,16 +385,17 @@ export function MfaChallengeForm({
                   id="mfa-code"
                   name="code"
                   autoComplete="one-time-code"
-                  inputMode={isEnrollment ? "numeric" : undefined}
-                  maxLength={isEnrollment ? 6 : undefined}
+                  inputMode={isEnrollment || emailSelected ? "numeric" : undefined}
+                  maxLength={isEnrollment || emailSelected ? 6 : undefined}
                   required
                   disabled={submitting}
-                  className="h-10 border-white/10 bg-white/5 text-white"
+                  className="h-10 border border-white/10 bg-white/5 text-white"
                 />
               </Field>
               {isEnrollment && enrollError && (
                 <FieldError>{enrollError}</FieldError>
               )}
+              {emailError && <FieldError>{emailError}</FieldError>}
               {copyError && <FieldError>{copyError}</FieldError>}
               {error &&
                 !isEnrollment &&
