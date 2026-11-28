@@ -73,13 +73,18 @@ export function MfaChallengeForm({
 
   const offered = isEnrollment ? [] : (mfaChallenge?.availableMethods ?? []);
   const offers = (name: string) => offered.some((item) => item.toLowerCase() === name.toLowerCase());
-  // The authenticator stays the default unless the challenge rules it out.
-  const totpOffered = offered.length === 0 || offers("Totp");
-  // A challenge stored before its subject was carried cannot ask for an email code.
-  const emailOffered = offers("Email") && Boolean(mfaChallenge?.userId);
-  const backupCodeOffered = offers("BackupCode");
-  const emailSelected = emailOffered && (method === "Email" || !totpOffered);
-  const selectedMethod = emailSelected ? "Email" : method;
+  // The methods the selector can show, in display order. The authenticator stays the
+  // default unless the challenge rules it out; a challenge stored before its subject was
+  // carried cannot ask for an email code.
+  const selectable = [
+    (offered.length === 0 || offers("Totp")) && "Totp",
+    offers("Email") && Boolean(mfaChallenge?.userId) && "Email",
+    offers("BackupCode") && "BackupCode",
+  ].filter((entry): entry is string => typeof entry === "string");
+  // The posted method is always one the challenge offers, whatever the selector last held:
+  // a recovery-code-only challenge must not post the authenticator it does not have.
+  const selectedMethod = selectable.includes(method) ? method : (selectable[0] ?? "Totp");
+  const emailSelected = selectedMethod === "Email";
   const emailCooldownActive = emailCooldownUntil !== null && emailCooldownUntil > now;
   const emailSecondsLeft =
     emailCooldownUntil === null ? 0 : Math.max(0, Math.ceil((emailCooldownUntil - now) / 1000));
@@ -338,7 +343,7 @@ export function MfaChallengeForm({
                   </div>
                 </Field>
               )}
-              {(backupCodeOffered || emailOffered) && (
+              {(selectable.includes("BackupCode") || selectable.includes("Email")) && (
                 <Field>
                   <FieldLabel htmlFor="mfa-method">
                     {t("methodLabel")}
@@ -350,9 +355,9 @@ export function MfaChallengeForm({
                     disabled={isLoading}
                     className="h-10 rounded border border-white/10 bg-slate-900 px-3"
                   >
-                    {totpOffered && <option value="Totp">{t("methodTotp")}</option>}
-                    {emailOffered && <option value="Email">{t("methodEmail")}</option>}
-                    {backupCodeOffered && <option value="BackupCode">{t("methodBackupCode")}</option>}
+                    {selectable.includes("Totp") && <option value="Totp">{t("methodTotp")}</option>}
+                    {selectable.includes("Email") && <option value="Email">{t("methodEmail")}</option>}
+                    {selectable.includes("BackupCode") && <option value="BackupCode">{t("methodBackupCode")}</option>}
                   </select>
                 </Field>
               )}
