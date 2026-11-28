@@ -300,6 +300,26 @@ describe('MfaChallengeForm — email codes at sign-in (issue #1298 J2)', () => {
     });
   });
 
+  it('signs a recovery-code-only challenge in with the recovery code, not the authenticator it lacks', async () => {
+    // A challenge can offer a recovery code without the authenticator. The posted method
+    // has to be one the challenge offers, whatever the selector last held (#1412).
+    mockAuth.mfaChallenge = { mfaToken: 'x'.repeat(43), availableMethods: ['BackupCode'], userId: 'subject-1' };
+    const { user } = renderWithUser(<MfaChallengeForm />);
+
+    expect(screen.queryByRole('option', { name: 'signIn.mfa.methodTotp' })).not.toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'signIn.mfa.methodBackupCode' })).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText('signIn.mfa.codeLabel'), 'recovery-code');
+    await user.click(screen.getByRole('button', { name: 'signIn.mfa.submit' }));
+
+    await waitFor(() => {
+      expect(mockAuth.signIn).toHaveBeenCalledWith(
+        'credentials',
+        expect.objectContaining({ method: 'BackupCode', code: 'recovery-code' }),
+      );
+    });
+  });
+
   it('does not offer the email method when the challenge carries no subject', () => {
     // A challenge stored before its subject was carried cannot ask for an email code.
     mockAuth.mfaChallenge = { mfaToken: 'x'.repeat(43), availableMethods: ['Totp', 'Email'] };
