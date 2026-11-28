@@ -72,7 +72,7 @@ Families (aligned with `01-user-flows.md`):
 |---|---|---|---|
 | 6.1 | Spoofing | Caller fakes the risk decision | decisions are server-issued rows with deterministic ids + replay binding (`Risk:/PostgreSqlEconomyProtectedOperationRiskDecisionIssuer.cs:115-126, 307-322`) |
 | 6.2 | Tampering | Gate made fail-open | fail-closed by construction: absent/stale/unsigned → `ComplianceUnavailable`/`ComplianceStale` deny (`:82-87`); conversions throw on missing Allow (`Risk:/ExternalRiskEvidence.cs:67-71`) |
-| 6.3 | Repudiation | Money moved with no AML trace | every decision writes `economy_risk_audit_evidence` rows incl. the financial-crime evidence hash (`:272-305`) — the *absence* of evidence is itself audited (`04-event-inventory.md` §4) |
+| 6.3 | Repudiation | Money moved with no AML trace | every decision writes risk-audit-evidence rows to `economy_events` (`StreamKind = 15`) incl. the financial-crime evidence hash (`:272-305`) — the *absence* of evidence is itself audited (`04-event-inventory.md` §4) |
 | 6.4 | DoS | Evidence-check storms | `Serializable` per decision — **residual**: no caching of fresh evidence (every operation re-reads the ledger) |
 | 6.5 | Elevation | Bypass the gate for a capability | gates are per-capability opt-in (`Risk:/EconomyRiskComposition.cs:36-64`) — **residual (policy)**: any capability *not* wired through the issuer (none known for value movement; the economy package documents the rail) would be an AML bypass; keep the writer-monopoly invariant |
 | 6.6 | Availability | Legitimate commerce blocked | **structural (by FC1)**: enabling value movement denies everyone on the AML leg — deliberate fail-closed, but it must be a *decision*, not a surprise (`06-gaps.md` FC1 rollout trap) |

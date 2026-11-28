@@ -159,12 +159,16 @@ public sealed class PostgreSqlProviderEvidencePostingAuthorityIssuer :
                     ExpiresAt = request.ExpiresAt,
                     Status = RiskCounterReservationStatus.Reserved
                 });
-                _db.Set<EconomyRiskAuditEvidenceRow>().Add(new EconomyRiskAuditEvidenceRow
+                // #1092 Tier 3: the decision's evidence is a record of the event
+                // ledger (kind 15) with no ordinal; the decision records each
+                // evidence hash once.
+                _db.Set<EconomyEventRow>().Add(new EconomyEventRow
                 {
                     Id = DeterministicGuid(
                         request.TenantId, operationFingerprint, request.TemplateKind, "provider-risk-audit"),
+                    StreamKind = EconomyEventStreamKind.RiskAuditEvidence,
                     RiskDecisionId = riskDecisionId,
-                    EventKind = "provider-terminal-evidence-authorized",
+                    KindText = "provider-terminal-evidence-authorized",
                     OperationFingerprint = operationFingerprint,
                     EvidenceHash = evidenceHash,
                     Payload = JsonSerializer.Serialize(new
@@ -177,7 +181,7 @@ public sealed class PostgreSqlProviderEvidencePostingAuthorityIssuer :
                         request.KillSwitchEpoch,
                         providerReferenceHash
                     }),
-                    RecordedAt = request.IssuedAt
+                    OccurredAt = request.IssuedAt
                 });
                 await _db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
             }

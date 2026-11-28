@@ -57,7 +57,7 @@ public sealed class TreasuryModelConfiguration : IModelConfiguration
         // facets and the run binding of its audit entries, so contexts
         // composing only this configuration (the PostgreSQL fixtures reuse the
         // migrated template schema) address the unified ledger instead of the
-        // CLR-name convention table and type the jsonb column as the template
+        // CLR-name convention table and type the jsonb columns as the template
         // does. The per-run sequence uniqueness and the unique chain hash are
         // the partial indexes declared with the unified registration in the
         // Economy module and re-asserted here.
@@ -70,6 +70,7 @@ public sealed class TreasuryModelConfiguration : IModelConfiguration
             builder.Property(row => row.RequestHash).HasMaxLength(128);
             builder.Property(row => row.EvidenceHash).HasMaxLength(128);
             builder.Property(row => row.EvidenceHashes).HasColumnType("jsonb");
+            builder.Property(row => row.Payload).HasColumnType("jsonb");
             builder.Property(row => row.KindText).HasMaxLength(100);
             builder.Property(row => row.Reason).HasMaxLength(500);
             builder.Property(row => row.ReauthenticationHash).HasMaxLength(128);

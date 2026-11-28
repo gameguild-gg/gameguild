@@ -75,8 +75,11 @@ public sealed class PostgreSqlHardToSoftConversionGatewayTests
         issued.SourceRoots.Should().Equal(root);
         (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_fragment_reservations WHERE \"OperationId\" = '{operation}' AND \"RootSourceStampId\" = '{root}' AND \"Purpose\" = 3;")).Should().Be(1);
         (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_risk_counter_reservations WHERE \"RiskDecisionId\" = '{issued.Id}' AND \"AmountUnits\" = 10;")).Should().Be(1);
-        (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_risk_audit_evidence WHERE \"RiskDecisionId\" = '{issued.Id}';")).Should().Be(3);
-        (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_risk_audit_evidence WHERE \"RiskDecisionId\" = '{issued.Id}' AND \"EvidenceHash\" = 'signed-policy-hash' AND \"Payload\"->>'kind' = 'signed-capability-policy' AND \"Payload\"->>'jurisdictionCode' = 'BRA';")).Should().Be(1);
+        // The decision's audit evidence is a record of the event ledger
+        // (#1092 Tier 3, StreamKind = 15): one per external item plus the
+        // control-plane record.
+        (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_events WHERE \"StreamKind\" = 15 AND \"RiskDecisionId\" = '{issued.Id}';")).Should().Be(3);
+        (await ScalarAsync<long>(connection, $"SELECT count(*) FROM public.economy_events WHERE \"StreamKind\" = 15 AND \"RiskDecisionId\" = '{issued.Id}' AND \"EvidenceHash\" = 'signed-policy-hash' AND \"Payload\"->>'kind' = 'signed-capability-policy' AND \"Payload\"->>'jurisdictionCode' = 'BRA';")).Should().Be(1);
 
         var replay = await issuer.IssueAsync(request, CancellationToken.None);
         replay.Id.Should().Be(issued.Id);

@@ -224,6 +224,7 @@ public sealed class AdRewardsModelConfiguration : IModelConfiguration
             builder.Property(row => row.RequestHash).HasMaxLength(128);
             builder.Property(row => row.EvidenceHash).HasMaxLength(128);
             builder.Property(row => row.EvidenceHashes).HasColumnType("jsonb");
+            builder.Property(row => row.Payload).HasColumnType("jsonb");
             builder.Property(row => row.KindText).HasMaxLength(100);
             builder.Property(row => row.Reason).HasMaxLength(500);
             builder.Property(row => row.ReauthenticationHash).HasMaxLength(128);

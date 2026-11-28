@@ -1,5 +1,7 @@
+using System.Reflection;
 using System.Text.RegularExpressions;
 using FluentAssertions;
+using GameGuild.API.Database;
 using GameGuild.Finance.Economy.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -57,7 +59,6 @@ public sealed class EconomyPersistenceModelTests
         "economy_reserve_asset_allocations",
         "economy_reserve_heads",
         "economy_reserve_proposals",
-        "economy_risk_audit_evidence",
         "economy_risk_counter_reservations",
         "economy_risk_counters",
         "economy_risk_decisions",
@@ -125,7 +126,6 @@ public sealed class EconomyPersistenceModelTests
         "ux_economy_reserve_heads_authorization_epoch",
         "ux_economy_reserve_proposals_version",
         "ux_economy_protected_change_cooldowns_subject_kind_version",
-        "ux_economy_risk_audit_evidence_decision_hash",
         "ux_economy_risk_counter_reservations_decision_counter",
         "ux_economy_risk_counters_scope_window",
         "ux_economy_unit_consumptions_risk_decision",
@@ -143,6 +143,7 @@ public sealed class EconomyPersistenceModelTests
         "ux_economy_top_up_intents_provider_object",
         "ux_economy_events_debt_sequence",
         "ux_economy_events_provider_event",
+        "ux_economy_events_risk_evidence",
         "ux_economy_events_compliance_hold_sequence",
         "ux_economy_events_compliance_hold_kind_actor",
         "ux_economy_events_legacy_cutover_sequence",
@@ -511,6 +512,8 @@ public sealed class EconomyPersistenceModelTests
         AssertUniqueIndex(model, "economy_events", "ux_economy_events_admin_withdrawal_sequence", "RunId", "Sequence");
         AssertUniqueIndex(model, "economy_events", "ux_economy_events_admin_withdrawal_hash", "Hash");
         AssertUniqueIndex(model, "economy_events", "ux_economy_events_bounty_expiration", "BountyId");
+        // A risk decision records each evidence hash once (#1092 Tier 3).
+        AssertUniqueIndex(model, "economy_events", "ux_economy_events_risk_evidence", "RiskDecisionId", "EvidenceHash");
 
         // No unique index may compare rows across two event families.
         ledger.GetIndexes().Where(index => index.IsUnique)
@@ -521,6 +524,7 @@ public sealed class EconomyPersistenceModelTests
         AssertFilteredUniqueIndex(ledger, "ux_economy_events_ad_reward_milestone_sequence", "\"StreamKind\" = 10", "SessionId", "Sequence");
         AssertFilteredUniqueIndex(ledger, "ux_economy_events_bounty_expiration", "\"StreamKind\" = 12", "BountyId");
         AssertFilteredUniqueIndex(ledger, "ux_economy_events_provider_event", "\"StreamKind\" = 2", "ProviderEventId");
+        AssertFilteredUniqueIndex(ledger, "ux_economy_events_risk_evidence", "\"StreamKind\" = 15", "RiskDecisionId", "EvidenceHash");
 
         ledger.GetForeignKeys()
             .Select(foreignKey => (
@@ -537,7 +541,8 @@ public sealed class EconomyPersistenceModelTests
                 ("ComplianceHoldId", "economy_compliance_holds", DeleteBehavior.Restrict),
                 ("LegacyCutoverTenantId", "economy_legacy_cutovers", DeleteBehavior.Restrict),
                 ("ProjectionWalletId", "economy_wallets", DeleteBehavior.Restrict),
-                ("ExternalAnchorId", "economy_external_anchors", DeleteBehavior.Restrict)
+                ("ExternalAnchorId", "economy_external_anchors", DeleteBehavior.Restrict),
+                ("RiskDecisionId", "economy_risk_decisions", DeleteBehavior.Restrict)
             ]);
     }
 
@@ -579,7 +584,12 @@ public sealed class EconomyPersistenceModelTests
             // The WORM object's hash is the stream's evidence hash and the end
             // of its retention the row's ExpiresAt.
             [EconomyEventStreamKind.AnchorVerification] =
-                ["ExternalAnchorId", "KeyId", "ObjectVersion", "ETag", "ExpiresAt", "EvidenceHash", "SignatureValid", "ObjectMatches"]
+                ["ExternalAnchorId", "KeyId", "ObjectVersion", "ETag", "ExpiresAt", "EvidenceHash", "SignatureValid", "ObjectMatches"],
+            // The former table's EventKind and RecordedAt are the row's
+            // KindText and OccurredAt. The stream's full shape lives in its
+            // own constraint, composed into each kind's rule below.
+            [EconomyEventStreamKind.RiskAuditEvidence] =
+                ["RiskDecisionId", "OperationFingerprint", "KindText", "EvidenceHash", "Payload"]
         };
         var optionalByKind = new Dictionary<EconomyEventStreamKind, string[]>
         {
@@ -592,13 +602,30 @@ public sealed class EconomyPersistenceModelTests
         var branches = shape.Split([") OR ("], StringSplitOptions.None);
         branches.Should().HaveCount(requiredByKind.Count);
 
+        // Risk audit evidence (#1092 Tier 3) is pinned by two constraints: its
+        // short branch above names the subject, and the evidence constraint
+        // holds the stream's full shape plus the rule that its three columns
+        // stay empty for every other stream. Each kind's rule is composed
+        // from both, so the checks below still cover every column exactly once.
+        var evidenceShape = ledger.GetCheckConstraints()
+            .Single(constraint => constraint.Name == "ck_economy_events_risk_evidence_shape")
+            .Sql;
+        var evidenceClauses = evidenceShape.Split([") OR ("], StringSplitOptions.None);
+        evidenceClauses.Should().HaveCount(2);
+        evidenceClauses[0].Should().StartWith("(\"StreamKind\" = 15 AND ");
+        var evidenceStaysEmpty = evidenceClauses[1].TrimEnd(')');
+        evidenceStaysEmpty.Should().Be(
+            "\"StreamKind\" <> 15 AND \"RiskDecisionId\" IS NULL AND \"OperationFingerprint\" IS NULL AND \"Payload\" IS NULL",
+            "the evidence columns belong to stream 15 alone");
+
         foreach (var (kind, required) in requiredByKind)
         {
             var optional = optionalByKind.GetValueOrDefault(kind) ?? [];
             var branch = branches.Single(candidate =>
                 candidate.StartsWith($"(\"StreamKind\" = {(int)kind} AND ", StringComparison.Ordinal) ||
                 candidate.StartsWith($"\"StreamKind\" = {(int)kind} AND ", StringComparison.Ordinal));
-            var mentioned = Regex.Matches(branch, "\"([A-Za-z]+)\" IS (NOT )?NULL")
+            var rule = (int)kind == 15 ? evidenceClauses[0] : $"{branch} AND {evidenceStaysEmpty}";
+            var mentioned = Regex.Matches(rule, "\"([A-Za-z]+)\" IS (NOT )?NULL")
                 .Select(match => (Column: match.Groups[1].Value, Required: match.Groups[2].Length > 0))
                 .ToArray();
             var because = $"stream {(int)kind} must constrain every stream column exactly once";
@@ -629,9 +656,10 @@ public sealed class EconomyPersistenceModelTests
             .GetCheckConstraints()
             .ToDictionary(constraint => constraint.Name!, constraint => constraint.Sql!);
 
-        // Projection reconciliation and anchor verification records own no
-        // ordinal, so the sequence rule covers every other stream only.
-        constraints["ck_economy_events_sequence"].Should().Be("\"StreamKind\" IN (13, 14) OR \"Sequence\" > 0");
+        // Projection reconciliation, anchor verification and risk audit
+        // evidence records own no ordinal, so the sequence rule covers every
+        // other stream only.
+        constraints["ck_economy_events_sequence"].Should().Be("\"StreamKind\" IN (13, 14, 15) OR \"Sequence\" > 0");
         // One clause per stream that had a value rule before the merge.
         foreach (var clause in new[]
                  {
@@ -711,6 +739,89 @@ public sealed class EconomyPersistenceModelTests
             .Single(entity => entity.GetTableName() == "economy_events").GetProperties()
             .Where(property => property.Name is "KeyId" or "ObjectVersion" or "ETag")
             .Should().OnlyContain(property => property.GetMaxLength() == 256);
+    }
+
+    [Fact]
+    public void RiskAuditEvidenceIsARecordOfTheEventLedger()
+    {
+        using var context = CreateContext();
+        var model = context.Model;
+
+        // #1092 Tier 3: the evidence item is a row of the unified event ledger;
+        // the former table's EventKind and RecordedAt are the row's KindText and
+        // OccurredAt. Nothing in product code reads the stream back yet — it is
+        // audit — so the record is pinned by its columns alone.
+        AssertProperties(
+            model,
+            "economy_events",
+            "RiskDecisionId",
+            "OperationFingerprint",
+            "KindText",
+            "EvidenceHash",
+            "Payload",
+            "OccurredAt");
+        var ledger = model.GetEntityTypes().Single(entity => entity.GetTableName() == "economy_events");
+        ledger.GetProperties().Single(property => property.Name == "OperationFingerprint").GetMaxLength().Should().Be(128);
+        ledger.GetProperties().Single(property => property.Name == "Payload").GetColumnType().Should().Be("jsonb");
+        model.GetEntityTypes().Should().NotContain(entity => entity.GetTableName() == "economy_risk_audit_evidence");
+    }
+
+    [Fact]
+    public void EveryModuleLocalLedgerModelTypesTheJsonbColumnsAsTheUnifiedModelDoes()
+    {
+        // Creating the unified model loads every module assembly.
+        using var unifiedContext = new ApplicationDbContext(
+            new DbContextOptionsBuilder<ApplicationDbContext>()
+                .UseNpgsql("Host=localhost;Database=model;Username=model;Password=model")
+                .Options);
+        var jsonbColumns = unifiedContext.Model
+            .GetEntityTypes().Single(entity => entity.GetTableName() == "economy_events")
+            .GetProperties()
+            .Where(property => property.GetColumnType() == "jsonb")
+            .Select(property => property.Name)
+            .ToArray();
+        jsonbColumns.Should().Contain(["EvidenceHashes", "Payload"]);
+
+        // The PostgreSQL fixtures of the modules that append to the ledger
+        // compose that module's configuration alone. Such a model falls back
+        // to the conventions for every column facet its module does not
+        // re-assert, and a string is text by convention — which PostgreSQL
+        // refuses to put in a jsonb column, so the first append would fail.
+        var moduleModels = ReferencedGameGuildAssemblies()
+            .Where(assembly => assembly.GetName().Name!.StartsWith("GameGuild.Finance.Economy", StringComparison.Ordinal))
+            .SelectMany(assembly =>
+            {
+                try
+                {
+                    return assembly.GetTypes();
+                }
+                catch (ReflectionTypeLoadException exception)
+                {
+                    return exception.Types.OfType<Type>();
+                }
+            })
+            .Where(type => type is { IsClass: true, IsAbstract: false }
+                           && typeof(IModelConfiguration).IsAssignableFrom(type)
+                           && type != typeof(EconomyModelConfiguration)
+                           && type.GetConstructor(Type.EmptyTypes) is not null)
+            .Select(type => new { Configuration = type, Ledger = LedgerOf(type) })
+            .Where(entry => entry.Ledger is not null)
+            .ToArray();
+
+        moduleModels.Select(entry => entry.Configuration.Name).Should().BeEquivalentTo(
+            "AdRewardsModelConfiguration",
+            "BountiesModelConfiguration",
+            "MarketplaceModelConfiguration",
+            "TreasuryModelConfiguration");
+
+        foreach (var entry in moduleModels)
+        {
+            entry.Ledger!.GetProperties()
+                .Where(property => jsonbColumns.Contains(property.Name))
+                .Select(property => (property.Name, property.GetColumnType()))
+                .Should().OnlyContain(column => column.Item2 == "jsonb",
+                    because: $"{entry.Configuration.Name} composes the ledger on its own, and a jsonb column typed any other way refuses every row that model appends");
+        }
     }
 
     [Fact]
@@ -872,5 +983,58 @@ public sealed class EconomyPersistenceModelTests
     {
         protected override void OnModelCreating(ModelBuilder modelBuilder) =>
             new EconomyModelConfiguration().Configure(modelBuilder);
+    }
+
+    private static IReadOnlyEntityType? LedgerOf(Type configurationType)
+    {
+        using var moduleContext = new ModuleContext(
+            (IModelConfiguration)Activator.CreateInstance(configurationType)!);
+        return moduleContext.Model.GetEntityTypes().SingleOrDefault(entity => entity.GetTableName() == "economy_events");
+    }
+
+    // Every module the API composes, reached through the API's own references
+    // so the result never depends on what a test happened to load first.
+    private static Assembly[] ReferencedGameGuildAssemblies()
+    {
+        var seen = new Dictionary<string, Assembly>(StringComparer.Ordinal);
+        var pending = new Queue<AssemblyName>(typeof(ApplicationDbContext).Assembly.GetReferencedAssemblies());
+        while (pending.Count > 0)
+        {
+            var name = pending.Dequeue();
+            if (!name.Name!.StartsWith("GameGuild", StringComparison.Ordinal) || seen.ContainsKey(name.Name))
+            {
+                continue;
+            }
+
+            var assembly = Assembly.Load(name);
+            seen[name.Name] = assembly;
+            foreach (var reference in assembly.GetReferencedAssemblies())
+            {
+                pending.Enqueue(reference);
+            }
+        }
+
+        return seen.Values.ToArray();
+    }
+
+    // A context that knows one module's configuration and nothing else, as the
+    // modules' own PostgreSQL fixtures are composed. A context type has one
+    // cached model, so the cache key is the configuration.
+    private sealed class ModuleContext(IModelConfiguration configuration) : DbContext
+    {
+        internal Type ConfigurationType { get; } = configuration.GetType();
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder
+            .UseNpgsql("Host=localhost;Database=model;Username=model;Password=model")
+            .ReplaceService<IModelCacheKeyFactory, ModuleModelCacheKeyFactory>();
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder) =>
+            configuration.Configure(modelBuilder);
+    }
+
+    private sealed class ModuleModelCacheKeyFactory : IModelCacheKeyFactory
+    {
+        public object Create(DbContext context, bool designTime) =>
+            context is ModuleContext moduleContext ? moduleContext.ConfigurationType : context.GetType();
     }
 }

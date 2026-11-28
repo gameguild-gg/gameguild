@@ -48,8 +48,12 @@ public sealed class PostgreSqlProviderEvidencePostingAuthorityIssuerTests
             .Should().Be(request.Amount.Units);
         (await context.Set<EconomyRiskCounterReservationRow>().AsNoTracking().SingleAsync()).RiskDecisionId
             .Should().Be(decision.Id);
-        (await context.Set<EconomyRiskAuditEvidenceRow>().AsNoTracking().SingleAsync()).EvidenceHash
-            .Should().Be(request.EvidenceHash);
+        // The evidence is a row of the ledger, pointing at the decision it backs.
+        var evidence = await context.Set<EconomyEventRow>().AsNoTracking()
+            .SingleAsync(row => row.StreamKind == EconomyEventStreamKind.RiskAuditEvidence);
+        evidence.EvidenceHash.Should().Be(request.EvidenceHash);
+        evidence.RiskDecisionId.Should().Be(decision.Id);
+        evidence.KindText.Should().Be("provider-terminal-evidence-authorized");
 
         await issuer.ConsumeAsync(first, Now.AddMinutes(1));
         var consumed = await context.Set<EconomyRiskCounterReservationRow>().AsNoTracking().SingleAsync();

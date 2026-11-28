@@ -44,7 +44,7 @@ The three wired commands participate in the platform's use-case event pipeline (
 
 ## 4. Audit logging (structured, best-effort)
 
-The economy protected-operation path records every risk decision with the financial-crime evidence hash in `economy_risk_audit_evidence` rows (`Risk:/PostgreSqlEconomyProtectedOperationRiskDecisionIssuer.cs:272-305`, event kind `external-risk-evidence`) — so denials caused by missing AML evidence leave a durable trace with the `financial-crime-evidence-unavailable` evidence hash input. This is currently the **only** place the AML leg of a money decision is observable in production, because it logs the absence.
+The economy protected-operation path records every risk decision with the financial-crime evidence hash in rows of the ledger's risk-audit-evidence stream (`economy_events`, `StreamKind = 15` — the former `economy_risk_audit_evidence` table; `Risk:/PostgreSqlEconomyProtectedOperationRiskDecisionIssuer.cs:272-305`, kind `external-risk-evidence`) — so denials caused by missing AML evidence leave a durable trace with the `financial-crime-evidence-unavailable` evidence hash input. This is currently the **only** place the AML leg of a money decision is observable in production, because it logs the absence.
 
 ## 5. Retry / DLQ posture
 
