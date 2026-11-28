@@ -67,8 +67,8 @@ same migration without adding a statement to any writer. The kind-shape check
 (`ck_economy_events_stream_shape`) forces every column of every other stream to
 NULL on a row, and the `deny_immutable_event_mutation` trigger rejects UPDATE
 and DELETE for exactly the streams whose tables did: 1, 4, 5, 7, 11 and —
-since Tier 3 folded it in — 13. Kind 14 is deliberately left out: its table
-had no such trigger.
+since Tier 3 folded them in — 13 and 15. Kind 14 is deliberately left out: its
+table had no such trigger.
 
 | StreamKind | Stream (former table) | Parent aggregate | Written at | Read at |
 |---|-------|------------------|-----------|---------|
@@ -85,12 +85,17 @@ had no such trigger.
 | 12 | bounty expiration events (`economy_bounty_expiration_events`) | bounty | worker (`Bounties:/DurableBountyExpirationWorkflow.cs`) | one row per bounty: the first entry of the bounty's stream, where `RecordedAt` is the row's `OccurredAt` |
 | 13 | projection reconciliation events (`economy_projection_reconciliation_events`, folded in by Tier 3) | wallet projection | `rebuild_wallet_projection_v1` when it finds a corrupt projection (`Migration:`), and the rebuild orchestration (`Core:/Projections/PostgreSqlProjectionGenerationService.cs`) | none — the record is evidence of the repair; `PreviousHash` is the hash the projection had, `RebuiltHash` the hash it was rebuilt to, and `DetectedAt` is the row's `OccurredAt` |
 | 14 | anchor verification events (`economy_anchor_verifications`, folded in by Tier 3) | external anchor | the anchor publisher when it publishes and reads back an anchor (`Core:/Ledger/PostgreSqlAnchorPublisher.cs`), and the anchor verification service, once per anchor per run (`Core:/Ledger/PostgreSqlAnchorVerificationService.cs`) | the ledger administration endpoints — an anchor's summary takes its newest record and its verification history lists every record; the readiness gate, the capability control-plane store and the operations summary take the newest. **Not 1:1**: one record per run, so the stream is a history, ordered by `OccurredAt` with no `Sequence`. `RetainUntil` is the row's `ExpiresAt` and `ObjectHash` its `EvidenceHash` |
+| 15 | risk audit evidence (`economy_risk_audit_evidence`, folded in by Tier 3) | risk decision | the four registered-posting writer functions, once per authorized posting (`post_registered_posting_v1`, `_v2`, `post_registered_aggregate_component_v1` and `post_registered_posting_before_risk_aggregation_v1`, `Migration:`); the self-service hard-to-soft decision function, one record per external evidence item (`Migration:`); the protected-operation risk decision issuer (`Core:/Risk/PostgreSqlEconomyProtectedOperationRiskDecisionIssuer.cs`); and the provider evidence posting authority issuer (`Core:/Ledger/PostgreSqlProviderEvidencePostingAuthorityIssuer.cs`) | none in product code — the record is evidence. `KindText` is the former `EventKind` (`posting-authorized`, `external-risk-evidence`, `protected-operation-control-plane` or `provider-terminal-evidence-authorized`), `OperationFingerprint` and `EvidenceHash` are kept as columns, `Payload` is the jsonb body and `RecordedAt` the row's `OccurredAt`. Unique per `(RiskDecisionId, EvidenceHash)`, ordered by `OccurredAt` with no sequence |
 
 Two legacy keys were not `Id` and are not read back through it: provider
 dispute events were keyed by `ProviderEventId` (kept as a column, unique per
 kind) and admin withdrawal audit entries by `(RunId, Sequence)` (kept as the
-kind's unique stream); both received fresh ledger ids. `economy_risk_audit_evidence`
-(Tier-3.3) carries the same shape and is the next candidate to fold in.
+kind's unique stream); both received fresh ledger ids. The Tier-3 kinds (13,
+14 and 15) keep their ids. Kind 15 (risk audit evidence,
+`20261128112714_ConsolidateEconomyTier3RiskAuditEvidence`) has seven writers:
+five functions in `economy_private` — four posting functions and the
+self-service decision function — append to the ledger directly, and two C#
+issuers append through the context.
 
 ## 4. Delivery posture summary
 

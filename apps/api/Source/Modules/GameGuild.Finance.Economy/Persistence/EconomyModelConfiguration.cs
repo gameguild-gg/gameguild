@@ -128,10 +128,10 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             builder.ToTable("economy_events", table =>
             {
                 // Only streams that own an ordinal carry one: projection
-                // reconciliation records (kind 13) and anchor verification
-                // records (kind 14) are ordered by when they happened and
-                // have no sequence.
-                table.HasCheckConstraint("ck_economy_events_sequence", "\"StreamKind\" IN (13, 14) OR \"Sequence\" > 0");
+                // reconciliation records (kind 13), anchor verification
+                // records (kind 14) and risk audit evidence (kind 15) are
+                // ordered by when they happened and have no sequence.
+                table.HasCheckConstraint("ck_economy_events_sequence", "\"StreamKind\" IN (13, 14, 15) OR \"Sequence\" > 0");
                 table.HasCheckConstraint(
                     "ck_economy_events_values",
                     "(\"StreamKind\" <> 2 OR \"CumulativeDisputedHardUnits\" > 0) AND " +
@@ -192,7 +192,18 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                     // the WORM object read back and ExpiresAt the end of its
                     // retention.
                     "(\"StreamKind\" = 14 AND \"ExternalAnchorId\" IS NOT NULL AND \"EvidenceHash\" IS NOT NULL AND \"ExpiresAt\" IS NOT NULL AND \"KeyId\" IS NOT NULL AND \"ObjectVersion\" IS NOT NULL AND \"ETag\" IS NOT NULL AND \"SignatureValid\" IS NOT NULL AND \"ObjectMatches\" IS NOT NULL AND " +
-                    "\"TenantId\" IS NULL AND \"Kind\" IS NULL AND \"KindText\" IS NULL AND \"ActorId\" IS NULL AND \"SourceStampId\" IS NULL AND \"ProviderEventId\" IS NULL AND \"ProviderDisputeReference\" IS NULL AND \"Status\" IS NULL AND \"CumulativeDisputedHardUnits\" IS NULL AND \"RequestHash\" IS NULL AND \"DebtWalletId\" IS NULL AND \"DeltaHardUnits\" IS NULL AND \"OutstandingHardUnits\" IS NULL AND \"HoldId\" IS NULL AND \"RiskReviewCaseId\" IS NULL AND \"EvidenceHashes\" IS NULL AND \"Resolution\" IS NULL AND \"DecisionCode\" IS NULL AND \"ComplianceHoldId\" IS NULL AND \"LegacyCutoverTenantId\" IS NULL AND \"BatchId\" IS NULL AND \"Reason\" IS NULL AND \"ReauthenticationHash\" IS NULL AND \"SettlementId\" IS NULL AND \"SessionId\" IS NULL AND \"Percentage\" IS NULL AND \"RunId\" IS NULL AND \"Evidence\" IS NULL AND \"PreviousHash\" IS NULL AND \"Hash\" IS NULL AND \"BountyId\" IS NULL AND \"BountyVersion\" IS NULL AND \"ProjectionWalletId\" IS NULL AND \"RebuiltHash\" IS NULL AND \"SourceJournalSequence\" IS NULL)");
+                    "\"TenantId\" IS NULL AND \"Kind\" IS NULL AND \"KindText\" IS NULL AND \"ActorId\" IS NULL AND \"SourceStampId\" IS NULL AND \"ProviderEventId\" IS NULL AND \"ProviderDisputeReference\" IS NULL AND \"Status\" IS NULL AND \"CumulativeDisputedHardUnits\" IS NULL AND \"RequestHash\" IS NULL AND \"DebtWalletId\" IS NULL AND \"DeltaHardUnits\" IS NULL AND \"OutstandingHardUnits\" IS NULL AND \"HoldId\" IS NULL AND \"RiskReviewCaseId\" IS NULL AND \"EvidenceHashes\" IS NULL AND \"Resolution\" IS NULL AND \"DecisionCode\" IS NULL AND \"ComplianceHoldId\" IS NULL AND \"LegacyCutoverTenantId\" IS NULL AND \"BatchId\" IS NULL AND \"Reason\" IS NULL AND \"ReauthenticationHash\" IS NULL AND \"SettlementId\" IS NULL AND \"SessionId\" IS NULL AND \"Percentage\" IS NULL AND \"RunId\" IS NULL AND \"Evidence\" IS NULL AND \"PreviousHash\" IS NULL AND \"Hash\" IS NULL AND \"BountyId\" IS NULL AND \"BountyVersion\" IS NULL AND \"ProjectionWalletId\" IS NULL AND \"RebuiltHash\" IS NULL AND \"SourceJournalSequence\" IS NULL) OR " +
+                    // 15 — risk audit evidence (formerly economy_risk_audit_evidence):
+                    // one record per evidence item of a risk decision. The branch
+                    // only names its subject; the full shape, and the rule that the
+                    // three evidence columns stay empty for every other stream, live
+                    // in ck_economy_events_risk_evidence_shape below.
+                    "(\"StreamKind\" = 15 AND \"RiskDecisionId\" IS NOT NULL)");
+                table.HasCheckConstraint(
+                    "ck_economy_events_risk_evidence_shape",
+                    "(\"StreamKind\" = 15 AND \"RiskDecisionId\" IS NOT NULL AND \"OperationFingerprint\" IS NOT NULL AND \"KindText\" IS NOT NULL AND \"EvidenceHash\" IS NOT NULL AND \"Payload\" IS NOT NULL AND \"Sequence\" = 0 AND " +
+                    "\"TenantId\" IS NULL AND \"Kind\" IS NULL AND \"ActorId\" IS NULL AND \"SourceStampId\" IS NULL AND \"ProviderEventId\" IS NULL AND \"ProviderDisputeReference\" IS NULL AND \"Status\" IS NULL AND \"CumulativeDisputedHardUnits\" IS NULL AND \"RequestHash\" IS NULL AND \"DebtWalletId\" IS NULL AND \"DeltaHardUnits\" IS NULL AND \"OutstandingHardUnits\" IS NULL AND \"HoldId\" IS NULL AND \"RiskReviewCaseId\" IS NULL AND \"EvidenceHashes\" IS NULL AND \"Resolution\" IS NULL AND \"DecisionCode\" IS NULL AND \"ComplianceHoldId\" IS NULL AND \"LegacyCutoverTenantId\" IS NULL AND \"BatchId\" IS NULL AND \"Reason\" IS NULL AND \"ReauthenticationHash\" IS NULL AND \"SettlementId\" IS NULL AND \"SessionId\" IS NULL AND \"Percentage\" IS NULL AND \"RunId\" IS NULL AND \"Evidence\" IS NULL AND \"PreviousHash\" IS NULL AND \"Hash\" IS NULL AND \"BountyId\" IS NULL AND \"ExpiresAt\" IS NULL AND \"BountyVersion\" IS NULL AND \"ProjectionWalletId\" IS NULL AND \"RebuiltHash\" IS NULL AND \"SourceJournalSequence\" IS NULL AND \"ETag\" IS NULL AND \"ExternalAnchorId\" IS NULL AND \"KeyId\" IS NULL AND \"ObjectVersion\" IS NULL AND \"SignatureValid\" IS NULL AND \"ObjectMatches\" IS NULL) OR " +
+                    "(\"StreamKind\" <> 15 AND \"RiskDecisionId\" IS NULL AND \"OperationFingerprint\" IS NULL AND \"Payload\" IS NULL)");
             });
             builder.HasKey(row => row.Id);
             builder.Property(row => row.Id).ValueGeneratedNever();
@@ -210,6 +221,8 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             builder.Property(row => row.Hash).HasMaxLength(128);
             builder.Property(row => row.KeyId).HasMaxLength(256);
             builder.Property(row => row.ObjectVersion).HasMaxLength(256);
+            builder.Property(row => row.OperationFingerprint).HasMaxLength(128);
+            builder.Property(row => row.Payload).HasColumnType("jsonb");
             builder.Property(row => row.ETag).HasMaxLength(256);
 
             builder.HasIndex(row => new { row.SourceStampId, row.Sequence })
@@ -292,6 +305,12 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             builder.HasIndex(row => new { row.ExternalAnchorId, row.OccurredAt })
                 .HasFilter("\"StreamKind\" = 14")
                 .HasDatabaseName("ix_economy_events_anchor_verification");
+            // The evidence table's own uniqueness, kept for its stream: a
+            // decision records each evidence hash once.
+            builder.HasIndex(row => new { row.RiskDecisionId, row.EvidenceHash })
+                .IsUnique()
+                .HasFilter("\"StreamKind\" = 15")
+                .HasDatabaseName("ux_economy_events_risk_evidence");
 
             builder.HasOne<EconomySourceStampRow>()
                 .WithMany()
@@ -328,6 +347,10 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             builder.HasOne<EconomyExternalAnchorRow>()
                 .WithMany()
                 .HasForeignKey(row => row.ExternalAnchorId)
+                .OnDelete(DeleteBehavior.Restrict);
+            builder.HasOne<EconomyRiskDecisionRow>()
+                .WithMany()
+                .HasForeignKey(row => row.RiskDecisionId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }
@@ -1307,22 +1330,8 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
         // economy_risk_review_events merged into economy_events (#1092 Tier 2.1,
         // StreamKind = 5) — see the EconomyEventRow configuration above.
 
-        modelBuilder.Entity<EconomyRiskAuditEvidenceRow>(builder =>
-        {
-            builder.ToTable("economy_risk_audit_evidence");
-            builder.HasKey(row => row.Id);
-            builder.Property(row => row.EventKind).HasMaxLength(100);
-            builder.Property(row => row.OperationFingerprint).HasMaxLength(128);
-            builder.Property(row => row.EvidenceHash).HasMaxLength(128);
-            builder.Property(row => row.Payload).HasColumnType("jsonb");
-            builder.HasIndex(row => new { row.RiskDecisionId, row.EvidenceHash })
-                .IsUnique()
-                .HasDatabaseName("ux_economy_risk_audit_evidence_decision_hash");
-            builder.HasOne<EconomyRiskDecisionRow>()
-                .WithMany()
-                .HasForeignKey(row => row.RiskDecisionId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
+        // economy_risk_audit_evidence merged into economy_events (#1092 Tier 3,
+        // StreamKind = 15) — see the EconomyEventRow configuration above.
 
         modelBuilder.Entity<EconomyTopUpIntentRow>(builder =>
         {

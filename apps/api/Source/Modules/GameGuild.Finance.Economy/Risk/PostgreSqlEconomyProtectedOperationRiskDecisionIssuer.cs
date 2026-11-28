@@ -277,32 +277,51 @@ public sealed class PostgreSqlEconomyProtectedOperationRiskDecisionIssuer :
         EntityRiskCluster cluster,
         IReadOnlyList<ExternalRiskEvidence> evidence)
     {
-        var rows = evidence.Select(item => new EconomyRiskAuditEvidenceRow
-        {
-            Id = Guid.NewGuid(), RiskDecisionId = decision.Id, EventKind = "external-risk-evidence",
-            OperationFingerprint = request.OperationFingerprint, EvidenceHash = item.EvidenceHash,
-            Payload = JsonSerializer.Serialize(item), RecordedAt = request.Intent.RequestedAt
-        }).Append(new EconomyRiskAuditEvidenceRow
-        {
-            Id = Guid.NewGuid(), RiskDecisionId = decision.Id, EventKind = "protected-operation-control-plane",
-            OperationFingerprint = request.OperationFingerprint,
-            EvidenceHash = EconomyProtectedRiskDecisionIssuerSupport.Hash(string.Join('|',
-                request.JurisdictionEvidenceHash, policy.PayloadHash, reserve.EvidenceHash, cluster.EvidenceHash)),
-            Payload = JsonSerializer.Serialize(new
-            {
-                request.JurisdictionCode,
-                jurisdictionEvidenceHash = request.JurisdictionEvidenceHash,
-                policyVersion = policy.Version,
-                policy.PayloadHash,
-                reserveVersion = reserve.Version,
-                reserve.AuthorizationEpoch,
-                cluster.Version,
-                cluster.EvidenceHash
-            }),
-            RecordedAt = request.Intent.RequestedAt
-        });
-        _db.Set<EconomyRiskAuditEvidenceRow>().AddRange(rows);
+        var rows = evidence.Select(item => AuditEvidenceRecord(
+                decision.Id, request.OperationFingerprint, "external-risk-evidence", item.EvidenceHash,
+                JsonSerializer.Serialize(item), request.Intent.RequestedAt))
+            .Append(AuditEvidenceRecord(
+                decision.Id, request.OperationFingerprint, "protected-operation-control-plane",
+                EconomyProtectedRiskDecisionIssuerSupport.Hash(string.Join('|',
+                    request.JurisdictionEvidenceHash, policy.PayloadHash, reserve.EvidenceHash, cluster.EvidenceHash)),
+                JsonSerializer.Serialize(new
+                {
+                    request.JurisdictionCode,
+                    jurisdictionEvidenceHash = request.JurisdictionEvidenceHash,
+                    policyVersion = policy.Version,
+                    policy.PayloadHash,
+                    reserveVersion = reserve.Version,
+                    reserve.AuthorizationEpoch,
+                    cluster.Version,
+                    cluster.EvidenceHash
+                }),
+                request.Intent.RequestedAt));
+        _db.Set<EconomyEventRow>().AddRange(rows);
     }
+
+    /// <summary>
+    ///     One audit evidence item of a risk decision, as a record of the event
+    ///     ledger (#1092 Tier 3, <see cref="EconomyEventStreamKind.RiskAuditEvidence"/>).
+    ///     The stream has no ordinal: it is read back by when each item happened,
+    ///     and a decision records each evidence hash once.
+    /// </summary>
+    private static EconomyEventRow AuditEvidenceRecord(
+        Guid riskDecisionId,
+        string operationFingerprint,
+        string eventKind,
+        string evidenceHash,
+        string payload,
+        DateTimeOffset recordedAt) => new()
+    {
+        Id = Guid.NewGuid(),
+        StreamKind = EconomyEventStreamKind.RiskAuditEvidence,
+        RiskDecisionId = riskDecisionId,
+        KindText = eventKind,
+        OperationFingerprint = operationFingerprint,
+        EvidenceHash = evidenceHash,
+        Payload = payload,
+        OccurredAt = recordedAt
+    };
 
     internal static void EnsureReplay(
         EconomyRiskDecisionRow existing,

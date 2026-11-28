@@ -148,15 +148,16 @@ public sealed class EconomyEventLedgerMigrationTests
         await ExecuteAsync(connection, ExpirationRow(Guid.NewGuid(), bountyId, legacy: false));
         await ExecuteAsync(connection, AuditChain(runId, Now, legacy: false));
 
-        // One trigger for the six formerly immutable streams: source stamp,
-        // funding hold, risk review, legacy cutover, admin withdrawal audit and,
-        // since Tier 3 folded it in, projection reconciliation.
+        // One trigger for the seven formerly immutable streams: source stamp,
+        // funding hold, risk review, legacy cutover, admin withdrawal audit
+        // and, since Tier 3 folded them in, projection reconciliation and risk
+        // audit evidence.
         var trigger = Regex.Replace(await ScalarAsync<string>(connection, """
             SELECT pg_get_triggerdef(t.oid) FROM pg_trigger t JOIN pg_class c ON c.oid=t.tgrelid
             WHERE c.relname = 'economy_events' AND NOT t.tgisinternal;
             """), @"\s+", "");
         trigger.Should().Contain("BEFOREDELETEORUPDATEONpublic.economy_events");
-        trigger.Should().Contain("WHEN((old.\"StreamKind\"=ANY(ARRAY[1,4,5,7,11,13])))");
+        trigger.Should().Contain("WHEN((old.\"StreamKind\"=ANY(ARRAY[1,4,5,7,11,13,15])))");
 
         (await FailsAsync(connection, LedgerMutation("UPDATE", "SET \"Evidence\" = 'rewritten'", 11, runId, bountyId)))
             .Should().Be(("42501", "immutable economy relation economy_events rejects UPDATE"));

@@ -77,13 +77,20 @@ public enum EconomyEventStreamKind
     ///     verification run, appended by the anchor publisher and the
     ///     anchor verification service. Ordered by when it happened.</summary>
     AnchorVerification = 14,
+
+    /// <summary>Risk audit evidence (formerly
+    ///     <c>economy_risk_audit_evidence</c>, Tier 3) — one record per
+    ///     evidence item of a risk decision, appended by the posting
+    ///     functions and by the risk decision issuers. Ordered by when it
+    ///     happened; a decision records each evidence hash once.</summary>
+    RiskAuditEvidence = 15,
 }
 
 /// <summary>
 ///     Unified Economy event ledger (#1092 Tier 2.1 and 2.5, plus the
-///     Tier 3 projection reconciliation and anchor verification streams:
-///     fourteen event and audit streams merged behind
-///     <see cref="EconomyEventStreamKind"/>). Every stream keeps its
+///     Tier 3 projection reconciliation, anchor verification and risk
+///     audit evidence streams: fifteen event and audit streams merged
+///     behind <see cref="EconomyEventStreamKind"/>). Every stream keeps its
 ///     former ordering and replay guarantees as kind-filtered partial
 ///     unique indexes. Reads must carry the kind predicate together
 ///     with the kind-exclusive subject column; the kind-shape check
@@ -249,4 +256,17 @@ public sealed class EconomyEventRow
     /// <summary>Whether the WORM object matches the anchor (kind 14
     ///     only).</summary>
     public bool? ObjectMatches { get; set; }
+
+    /// <summary>Risk decision the evidence was recorded against (kind 15
+    ///     only). The record's own key is <see cref="Id"/>.</summary>
+    public Guid? RiskDecisionId { get; set; }
+
+    /// <summary>Fingerprint of the operation the decision was taken for
+    ///     (kind 15 only).</summary>
+    public string? OperationFingerprint { get; set; }
+
+    /// <summary>The evidence itself, as JSON (kind 15 only); its digest is
+    ///     <see cref="EvidenceHash"/> and the event's kind
+    ///     <see cref="KindText"/>.</summary>
+    public string? Payload { get; set; }
 }

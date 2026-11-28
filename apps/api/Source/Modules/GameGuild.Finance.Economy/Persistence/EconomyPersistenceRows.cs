@@ -497,17 +497,6 @@ internal sealed class EconomyRiskReviewCaseRow
     public Guid? AppealOf { get; set; }
 }
 
-internal sealed class EconomyRiskAuditEvidenceRow
-{
-    public Guid Id { get; set; }
-    public Guid RiskDecisionId { get; set; }
-    public string EventKind { get; set; } = string.Empty;
-    public string OperationFingerprint { get; set; } = string.Empty;
-    public string EvidenceHash { get; set; } = string.Empty;
-    public string Payload { get; set; } = string.Empty;
-    public DateTimeOffset RecordedAt { get; set; }
-}
-
 internal sealed class EconomyCapabilityPolicyRow
 {
     public Guid Id { get; set; }
