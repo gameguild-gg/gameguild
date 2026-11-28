@@ -96,10 +96,12 @@ public sealed class PostgreSqlMarketplaceWriterTests
         refund.Sequence.Should().BeGreaterThan(settlement.Sequence);
         refund.Duplicate.Should().BeFalse();
 
+        // The refund's shortfalls are rows of the event ledger (#1092 Tier 3,
+        // StreamKind = 16), appended by the refund function.
         (await ScalarAsync<long>(connection, $"""
-            SELECT COALESCE(sum("AmountUnits"), 0)
-            FROM public.economy_marketplace_refund_debts
-            WHERE "RefundId" = '{ids.Refund}' AND "ResponsibleWalletId" = '{ids.SellerWallet}';
+            SELECT COALESCE(sum("DebtAmountUnits"), 0)
+            FROM public.economy_events
+            WHERE "StreamKind" = 16 AND "RefundId" = '{ids.Refund}' AND "ResponsibleWalletId" = '{ids.SellerWallet}';
             """)).Should().Be(90);
         (await ScalarAsync<long>(connection, $"""
             SELECT COALESCE(sum(lot."AmountUnits"), 0)

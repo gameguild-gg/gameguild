@@ -589,7 +589,14 @@ public sealed class EconomyPersistenceModelTests
             // KindText and OccurredAt. The stream's full shape lives in its
             // own constraint, composed into each kind's rule below.
             [EconomyEventStreamKind.RiskAuditEvidence] =
-                ["RiskDecisionId", "OperationFingerprint", "KindText", "EvidenceHash", "Payload"]
+                ["RiskDecisionId", "OperationFingerprint", "KindText", "EvidenceHash", "Payload"],
+            // A marketplace refund's shortfall (formerly
+            // economy_marketplace_refund_debts): the refund, its settlement and
+            // tenant, the responsible wallet, the currency and the amount, and
+            // the refund's reason hash as the evidence. The stream's full shape
+            // lives in its own constraint, like kind 15's.
+            [EconomyEventStreamKind.MarketplaceRefundShortfall] =
+                ["TenantId", "RefundId", "SettlementId", "ResponsibleWalletId", "DebtCurrency", "DebtAmountUnits", "EvidenceHash"]
         };
         var optionalByKind = new Dictionary<EconomyEventStreamKind, string[]>
         {
@@ -602,21 +609,27 @@ public sealed class EconomyPersistenceModelTests
         var branches = shape.Split([") OR ("], StringSplitOptions.None);
         branches.Should().HaveCount(requiredByKind.Count);
 
-        // Risk audit evidence (#1092 Tier 3) is pinned by two constraints: its
-        // short branch above names the subject, and the evidence constraint
-        // holds the stream's full shape plus the rule that its three columns
-        // stay empty for every other stream. Each kind's rule is composed
-        // from both, so the checks below still cover every column exactly once.
-        var evidenceShape = ledger.GetCheckConstraints()
-            .Single(constraint => constraint.Name == "ck_economy_events_risk_evidence_shape")
-            .Sql;
-        var evidenceClauses = evidenceShape.Split([") OR ("], StringSplitOptions.None);
-        evidenceClauses.Should().HaveCount(2);
-        evidenceClauses[0].Should().StartWith("(\"StreamKind\" = 15 AND ");
-        var evidenceStaysEmpty = evidenceClauses[1].TrimEnd(')');
-        evidenceStaysEmpty.Should().Be(
-            "\"StreamKind\" <> 15 AND \"RiskDecisionId\" IS NULL AND \"OperationFingerprint\" IS NULL AND \"Payload\" IS NULL",
-            "the evidence columns belong to stream 15 alone");
+        // Kinds 15 and 16 are each pinned by two constraints: the short branch
+        // above names the subject, and a dedicated constraint holds the
+        // stream's full shape plus the rule that its columns stay empty for
+        // every other stream. Kind 16's clause was written after kind 15's and
+        // already names every other column; kind 15's predates kind 16's
+        // columns, so its rule also takes kind 16's "stays empty" clause.
+        var dedicated = new[]
+        {
+            (Kind: 15, Name: "ck_economy_events_risk_evidence_shape",
+                StaysEmpty: "\"StreamKind\" <> 15 AND \"RiskDecisionId\" IS NULL AND \"OperationFingerprint\" IS NULL AND \"Payload\" IS NULL"),
+            (Kind: 16, Name: "ck_economy_events_refund_shortfall_shape",
+                StaysEmpty: "\"StreamKind\" <> 16 AND \"RefundId\" IS NULL AND \"ResponsibleWalletId\" IS NULL AND \"DebtCurrency\" IS NULL AND \"DebtAmountUnits\" IS NULL")
+        }.Select(entry =>
+        {
+            var clauses = ledger.GetCheckConstraints().Single(constraint => constraint.Name == entry.Name)
+                .Sql.Split([") OR ("], StringSplitOptions.None);
+            clauses.Should().HaveCount(2);
+            clauses[0].Should().StartWith($"(\"StreamKind\" = {entry.Kind} AND ");
+            clauses[1].TrimEnd(')').Should().Be(entry.StaysEmpty, $"these columns belong to stream {entry.Kind} alone");
+            return (entry.Kind, Own: clauses[0], StaysEmpty: clauses[1].TrimEnd(')'));
+        }).ToArray();
 
         foreach (var (kind, required) in requiredByKind)
         {
@@ -624,7 +637,12 @@ public sealed class EconomyPersistenceModelTests
             var branch = branches.Single(candidate =>
                 candidate.StartsWith($"(\"StreamKind\" = {(int)kind} AND ", StringComparison.Ordinal) ||
                 candidate.StartsWith($"\"StreamKind\" = {(int)kind} AND ", StringComparison.Ordinal));
-            var rule = (int)kind == 15 ? evidenceClauses[0] : $"{branch} AND {evidenceStaysEmpty}";
+            var own = dedicated.SingleOrDefault(entry => entry.Kind == (int)kind);
+            var rule = own == default
+                ? $"{branch} AND {string.Join(" AND ", dedicated.Select(entry => entry.StaysEmpty))}"
+                : own.Kind == 15
+                    ? $"{own.Own} AND {dedicated.Single(entry => entry.Kind == 16).StaysEmpty}"
+                    : own.Own;
             var mentioned = Regex.Matches(rule, "\"([A-Za-z]+)\" IS (NOT )?NULL")
                 .Select(match => (Column: match.Groups[1].Value, Required: match.Groups[2].Length > 0))
                 .ToArray();
@@ -657,9 +675,10 @@ public sealed class EconomyPersistenceModelTests
             .ToDictionary(constraint => constraint.Name!, constraint => constraint.Sql!);
 
         // Projection reconciliation, anchor verification and risk audit
-        // evidence records own no ordinal, so the sequence rule covers every
-        // other stream only.
-        constraints["ck_economy_events_sequence"].Should().Be("\"StreamKind\" IN (13, 14, 15) OR \"Sequence\" > 0");
+        // evidence records own no ordinal, and neither does a marketplace
+        // refund shortfall: all are ordered by when they happened, so the
+        // sequence rule covers every other stream only.
+        constraints["ck_economy_events_sequence"].Should().Be("\"StreamKind\" IN (13, 14, 15, 16) OR \"Sequence\" > 0");
         // One clause per stream that had a value rule before the merge.
         foreach (var clause in new[]
                  {
@@ -669,7 +688,8 @@ public sealed class EconomyPersistenceModelTests
                      "(\"StreamKind\" <> 9 OR \"Kind\" BETWEEN 1 AND 7)",
                      "(\"StreamKind\" <> 10 OR \"Percentage\" BETWEEN 0 AND 100)",
                      "(\"StreamKind\" <> 12 OR (\"BountyVersion\" > 1 AND \"OccurredAt\" >= \"ExpiresAt\"))",
-                     "(\"StreamKind\" <> 13 OR \"SourceJournalSequence\" >= 0)"
+                     "(\"StreamKind\" <> 13 OR \"SourceJournalSequence\" >= 0)",
+                     "(\"StreamKind\" <> 16 OR \"DebtAmountUnits\" > 0)"
                  })
         {
             constraints["ck_economy_events_values"].Should().Contain(clause);
@@ -764,6 +784,33 @@ public sealed class EconomyPersistenceModelTests
         ledger.GetProperties().Single(property => property.Name == "OperationFingerprint").GetMaxLength().Should().Be(128);
         ledger.GetProperties().Single(property => property.Name == "Payload").GetColumnType().Should().Be("jsonb");
         model.GetEntityTypes().Should().NotContain(entity => entity.GetTableName() == "economy_risk_audit_evidence");
+    }
+
+    [Fact]
+    public void MarketplaceRefundShortfallsAreRecordsOfTheEventLedger()
+    {
+        using var context = CreateContext();
+        var model = context.Model;
+
+        // #1092 Tier 3: a refund's shortfall is a row of the unified event
+        // ledger; the former table's RecordedAt is the row's OccurredAt and
+        // its Currency an integer. The refund binding and the stream's two
+        // indexes are declared by the Marketplace module, which owns refunds.
+        AssertProperties(
+            model,
+            "economy_events",
+            "RefundId",
+            "ResponsibleWalletId",
+            "DebtCurrency",
+            "DebtAmountUnits",
+            "SettlementId",
+            "TenantId",
+            "EvidenceHash",
+            "OccurredAt");
+        var ledger = model.GetEntityTypes().Single(entity => entity.GetTableName() == "economy_events");
+        ledger.GetProperties().Single(property => property.Name == "DebtCurrency").GetColumnType().Should().Be("integer");
+        ledger.GetProperties().Single(property => property.Name == "DebtAmountUnits").GetColumnType().Should().Be("bigint");
+        model.GetEntityTypes().Should().NotContain(entity => entity.GetTableName() == "economy_marketplace_refund_debts");
     }
 
     [Fact]

@@ -2,6 +2,7 @@ using FluentAssertions;
 using GameGuild.Finance.Economy.Contracts;
 using GameGuild.Finance.Economy.Ledger;
 using GameGuild.Finance.Economy.Marketplace.Persistence;
+using GameGuild.Finance.Economy.Persistence;
 using GameGuild.Finance.Economy.Risk;
 using GameGuild.Identity.Context.Actors;
 using Microsoft.EntityFrameworkCore;
@@ -830,17 +831,20 @@ public sealed class DurableMarketplaceServicesTests
             }
             if (AddDebt)
             {
-                context.Add(new MarketplaceRefundDebtRow
+                // The refund writer records a shortfall in the event ledger
+                // (#1092 Tier 3, StreamKind = MarketplaceRefundShortfall).
+                context.Add(new EconomyEventRow
                 {
                     Id = Guid.NewGuid(),
+                    StreamKind = EconomyEventStreamKind.MarketplaceRefundShortfall,
                     TenantId = request.Authority.TenantId,
                     RefundId = request.RefundId,
                     SettlementId = request.SettlementId,
                     ResponsibleWalletId = settlement.SellerWalletId,
-                    Currency = request.Legs[0].Currency,
-                    AmountUnits = 10,
+                    DebtCurrency = (int)request.Legs[0].Currency,
+                    DebtAmountUnits = 10,
                     EvidenceHash = "debt-evidence",
-                    RecordedAt = request.RefundedAt
+                    OccurredAt = request.RefundedAt
                 });
             }
 

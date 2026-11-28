@@ -84,12 +84,19 @@ public enum EconomyEventStreamKind
     ///     functions and by the risk decision issuers. Ordered by when it
     ///     happened; a decision records each evidence hash once.</summary>
     RiskAuditEvidence = 15,
+
+    /// <summary>Marketplace refund shortfall (formerly
+    ///     <c>economy_marketplace_refund_debts</c>, Tier 3) — one record per
+    ///     responsible wallet and currency a refund left short, appended by
+    ///     the marketplace refund writer. Ordered by when it happened.</summary>
+    MarketplaceRefundShortfall = 16,
 }
 
 /// <summary>
 ///     Unified Economy event ledger (#1092 Tier 2.1 and 2.5, plus the
-///     Tier 3 projection reconciliation, anchor verification and risk
-///     audit evidence streams: fifteen event and audit streams merged
+///     Tier 3 projection reconciliation, anchor verification, risk audit
+///     evidence and marketplace refund shortfall streams: sixteen event and
+///     audit streams merged
 ///     behind <see cref="EconomyEventStreamKind"/>). Every stream keeps its
 ///     former ordering and replay guarantees as kind-filtered partial
 ///     unique indexes. Reads must carry the kind predicate together
@@ -104,7 +111,7 @@ public sealed class EconomyEventRow
     /// <summary>Order of the event inside its parent's stream.</summary>
     public long Sequence { get; set; }
 
-    /// <summary>Tenant (kinds 8 and 11 only).</summary>
+    /// <summary>Tenant (kinds 8, 11 and 16 only).</summary>
     public Guid? TenantId { get; set; }
 
     /// <summary>Integer kind or state (kinds 1, 4, 5, 7 and 9 only).</summary>
@@ -115,9 +122,11 @@ public sealed class EconomyEventRow
 
     public Guid? ActorId { get; set; }
 
-    /// <summary>Single evidence hash (kinds 1, 4, 6, 8, 9 and 10); for
-    ///     an anchor verification (kind 14) the hash of the WORM object
-    ///     read back.</summary>
+    /// <summary>Single evidence hash (kinds 1, 4, 6, 8, 9, 10, 15 and 16) —
+    ///     for an anchor verification (kind 14) the hash of the WORM object
+    ///     read back; for risk audit evidence (kind 15) the evidence item's
+    ///     digest; for a refund shortfall (kind 16) the refund's reason
+    ///     hash.</summary>
     public string? EvidenceHash { get; set; }
 
     public DateTimeOffset OccurredAt { get; set; }
@@ -185,8 +194,8 @@ public sealed class EconomyEventRow
     ///     (kind 7 only).</summary>
     public string? ReauthenticationHash { get; set; }
 
-    /// <summary>Marketplace settlement an event belongs to
-    ///     (kind 8 only).</summary>
+    /// <summary>Marketplace settlement an event belongs to (kinds 8 and
+    ///     16).</summary>
     public Guid? SettlementId { get; set; }
 
     /// <summary>Ad-reward session an event belongs to (kinds 9 and
@@ -269,4 +278,20 @@ public sealed class EconomyEventRow
     ///     <see cref="EvidenceHash"/> and the event's kind
     ///     <see cref="KindText"/>.</summary>
     public string? Payload { get; set; }
+
+    /// <summary>Marketplace refund a shortfall was left by (kind 16 only).
+    ///     The record's own key is <see cref="Id"/>.</summary>
+    public Guid? RefundId { get; set; }
+
+    /// <summary>Wallet left short by the refund (kind 16 only) — the
+    ///     seller that could not cover it.</summary>
+    public Guid? ResponsibleWalletId { get; set; }
+
+    /// <summary>Currency the shortfall is in (kind 16 only) — a
+    ///     <c>CurrencyCode</c> value.</summary>
+    public int? DebtCurrency { get; set; }
+
+    /// <summary>Units the responsible wallet still owes (kind 16 only;
+    ///     always positive).</summary>
+    public long? DebtAmountUnits { get; set; }
 }
