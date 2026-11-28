@@ -21,7 +21,6 @@ public sealed class MarketplacePersistenceModelTests
             "economy_marketplace_funding_fragments",
             "economy_marketplace_settlement_credits",
             "economy_marketplace_refunds",
-            "economy_marketplace_refund_debts",
             "economy_events",
             "economy_outbox");
 
@@ -60,6 +59,20 @@ public sealed class MarketplacePersistenceModelTests
         ledger.GetIndexes().Should().Contain(index => index.IsUnique && index.GetFilter() == "\"StreamKind\" = 8" &&
             index.Properties.Select(property => property.Name)
                 .SequenceEqual(new[] { "SettlementId", "Sequence" }));
+        // #1092 Tier 3: a refund's shortfalls are rows of the ledger too
+        // (StreamKind = 16), each bound to its refund, listed by refund and
+        // by tenant, responsible wallet and time.
+        ledger.FindProperty("Payload")!.GetColumnType().Should().Be("jsonb");
+        ledger.GetForeignKeys().Should().Contain(foreignKey =>
+            foreignKey.Properties.Select(property => property.Name).SequenceEqual(new[] { "RefundId" }) &&
+            foreignKey.PrincipalEntityType.GetTableName() == "economy_marketplace_refunds" &&
+            foreignKey.DeleteBehavior == DeleteBehavior.Restrict);
+        ledger.GetIndexes().Should().Contain(index => !index.IsUnique && index.GetFilter() == "\"StreamKind\" = 16" &&
+            index.Properties.Select(property => property.Name)
+                .SequenceEqual(new[] { "RefundId", "OccurredAt" }));
+        ledger.GetIndexes().Should().Contain(index => !index.IsUnique && index.GetFilter() == "\"StreamKind\" = 16" &&
+            index.Properties.Select(property => property.Name)
+                .SequenceEqual(new[] { "TenantId", "ResponsibleWalletId", "OccurredAt" }));
     }
 
     [Fact]

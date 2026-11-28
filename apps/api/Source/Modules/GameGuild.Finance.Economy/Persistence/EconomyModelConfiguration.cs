@@ -129,9 +129,10 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
             {
                 // Only streams that own an ordinal carry one: projection
                 // reconciliation records (kind 13), anchor verification
-                // records (kind 14) and risk audit evidence (kind 15) are
-                // ordered by when they happened and have no sequence.
-                table.HasCheckConstraint("ck_economy_events_sequence", "\"StreamKind\" IN (13, 14, 15) OR \"Sequence\" > 0");
+                // records (kind 14), risk audit evidence (kind 15) and
+                // marketplace refund shortfalls (kind 16) are ordered by when
+                // they happened and have no sequence.
+                table.HasCheckConstraint("ck_economy_events_sequence", "\"StreamKind\" IN (13, 14, 15, 16) OR \"Sequence\" > 0");
                 table.HasCheckConstraint(
                     "ck_economy_events_values",
                     "(\"StreamKind\" <> 2 OR \"CumulativeDisputedHardUnits\" > 0) AND " +
@@ -139,7 +140,8 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                     "(\"StreamKind\" <> 7 OR \"Kind\" BETWEEN 1 AND 4) AND " +
                     "(\"StreamKind\" <> 9 OR \"Kind\" BETWEEN 1 AND 7) AND " +
                     "(\"StreamKind\" <> 10 OR \"Percentage\" BETWEEN 0 AND 100) AND " +
-                    "(\"StreamKind\" <> 12 OR (\"BountyVersion\" > 1 AND \"OccurredAt\" >= \"ExpiresAt\")) AND (\"StreamKind\" <> 13 OR \"SourceJournalSequence\" >= 0)");
+                    "(\"StreamKind\" <> 12 OR (\"BountyVersion\" > 1 AND \"OccurredAt\" >= \"ExpiresAt\")) AND (\"StreamKind\" <> 13 OR \"SourceJournalSequence\" >= 0) AND " +
+                    "(\"StreamKind\" <> 16 OR \"DebtAmountUnits\" > 0)");
                 table.HasCheckConstraint(
                     "ck_economy_events_stream_shape",
                     // 1 — source stamp: state in Kind, single evidence hash.
@@ -198,12 +200,24 @@ public sealed class EconomyModelConfiguration : IModelConfiguration
                     // only names its subject; the full shape, and the rule that the
                     // three evidence columns stay empty for every other stream, live
                     // in ck_economy_events_risk_evidence_shape below.
-                    "(\"StreamKind\" = 15 AND \"RiskDecisionId\" IS NOT NULL)");
+                    "(\"StreamKind\" = 15 AND \"RiskDecisionId\" IS NOT NULL) OR " +
+                    // 16 — marketplace refund shortfall (formerly
+                    // economy_marketplace_refund_debts): one record per
+                    // responsible wallet and currency a refund left short.
+                    // The branch only names its subject, like 15; the full
+                    // shape lives in ck_economy_events_refund_shortfall_shape
+                    // below.
+                    "(\"StreamKind\" = 16 AND \"RefundId\" IS NOT NULL)");
                 table.HasCheckConstraint(
                     "ck_economy_events_risk_evidence_shape",
                     "(\"StreamKind\" = 15 AND \"RiskDecisionId\" IS NOT NULL AND \"OperationFingerprint\" IS NOT NULL AND \"KindText\" IS NOT NULL AND \"EvidenceHash\" IS NOT NULL AND \"Payload\" IS NOT NULL AND \"Sequence\" = 0 AND " +
                     "\"TenantId\" IS NULL AND \"Kind\" IS NULL AND \"ActorId\" IS NULL AND \"SourceStampId\" IS NULL AND \"ProviderEventId\" IS NULL AND \"ProviderDisputeReference\" IS NULL AND \"Status\" IS NULL AND \"CumulativeDisputedHardUnits\" IS NULL AND \"RequestHash\" IS NULL AND \"DebtWalletId\" IS NULL AND \"DeltaHardUnits\" IS NULL AND \"OutstandingHardUnits\" IS NULL AND \"HoldId\" IS NULL AND \"RiskReviewCaseId\" IS NULL AND \"EvidenceHashes\" IS NULL AND \"Resolution\" IS NULL AND \"DecisionCode\" IS NULL AND \"ComplianceHoldId\" IS NULL AND \"LegacyCutoverTenantId\" IS NULL AND \"BatchId\" IS NULL AND \"Reason\" IS NULL AND \"ReauthenticationHash\" IS NULL AND \"SettlementId\" IS NULL AND \"SessionId\" IS NULL AND \"Percentage\" IS NULL AND \"RunId\" IS NULL AND \"Evidence\" IS NULL AND \"PreviousHash\" IS NULL AND \"Hash\" IS NULL AND \"BountyId\" IS NULL AND \"ExpiresAt\" IS NULL AND \"BountyVersion\" IS NULL AND \"ProjectionWalletId\" IS NULL AND \"RebuiltHash\" IS NULL AND \"SourceJournalSequence\" IS NULL AND \"ETag\" IS NULL AND \"ExternalAnchorId\" IS NULL AND \"KeyId\" IS NULL AND \"ObjectVersion\" IS NULL AND \"SignatureValid\" IS NULL AND \"ObjectMatches\" IS NULL) OR " +
                     "(\"StreamKind\" <> 15 AND \"RiskDecisionId\" IS NULL AND \"OperationFingerprint\" IS NULL AND \"Payload\" IS NULL)");
+                table.HasCheckConstraint(
+                    "ck_economy_events_refund_shortfall_shape",
+                    "(\"StreamKind\" = 16 AND \"RefundId\" IS NOT NULL AND \"SettlementId\" IS NOT NULL AND \"TenantId\" IS NOT NULL AND \"ResponsibleWalletId\" IS NOT NULL AND \"DebtCurrency\" IS NOT NULL AND \"DebtAmountUnits\" IS NOT NULL AND \"EvidenceHash\" IS NOT NULL AND \"Sequence\" = 0 AND " +
+                    "\"Kind\" IS NULL AND \"KindText\" IS NULL AND \"ActorId\" IS NULL AND \"SourceStampId\" IS NULL AND \"ProviderEventId\" IS NULL AND \"ProviderDisputeReference\" IS NULL AND \"Status\" IS NULL AND \"CumulativeDisputedHardUnits\" IS NULL AND \"RequestHash\" IS NULL AND \"DebtWalletId\" IS NULL AND \"DeltaHardUnits\" IS NULL AND \"OutstandingHardUnits\" IS NULL AND \"HoldId\" IS NULL AND \"RiskReviewCaseId\" IS NULL AND \"EvidenceHashes\" IS NULL AND \"Resolution\" IS NULL AND \"DecisionCode\" IS NULL AND \"ComplianceHoldId\" IS NULL AND \"LegacyCutoverTenantId\" IS NULL AND \"BatchId\" IS NULL AND \"Reason\" IS NULL AND \"ReauthenticationHash\" IS NULL AND \"SessionId\" IS NULL AND \"Percentage\" IS NULL AND \"RunId\" IS NULL AND \"Evidence\" IS NULL AND \"PreviousHash\" IS NULL AND \"Hash\" IS NULL AND \"BountyId\" IS NULL AND \"ExpiresAt\" IS NULL AND \"BountyVersion\" IS NULL AND \"ProjectionWalletId\" IS NULL AND \"RebuiltHash\" IS NULL AND \"SourceJournalSequence\" IS NULL AND \"ETag\" IS NULL AND \"ExternalAnchorId\" IS NULL AND \"KeyId\" IS NULL AND \"ObjectVersion\" IS NULL AND \"SignatureValid\" IS NULL AND \"ObjectMatches\" IS NULL AND \"RiskDecisionId\" IS NULL AND \"OperationFingerprint\" IS NULL AND \"Payload\" IS NULL) OR " +
+                    "(\"StreamKind\" <> 16 AND \"RefundId\" IS NULL AND \"ResponsibleWalletId\" IS NULL AND \"DebtCurrency\" IS NULL AND \"DebtAmountUnits\" IS NULL)");
             });
             builder.HasKey(row => row.Id);
             builder.Property(row => row.Id).ValueGeneratedNever();

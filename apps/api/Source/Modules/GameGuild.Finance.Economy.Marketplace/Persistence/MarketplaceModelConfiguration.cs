@@ -134,18 +134,8 @@ internal sealed class MarketplaceRefundRow
     public DateTimeOffset RefundedAt { get; set; }
 }
 
-internal sealed class MarketplaceRefundDebtRow
-{
-    public Guid Id { get; set; }
-    public Guid TenantId { get; set; }
-    public Guid RefundId { get; set; }
-    public Guid SettlementId { get; set; }
-    public Guid ResponsibleWalletId { get; set; }
-    public CurrencyCode Currency { get; set; }
-    public long AmountUnits { get; set; }
-    public string EvidenceHash { get; set; } = string.Empty;
-    public DateTimeOffset RecordedAt { get; set; }
-}
+// MarketplaceRefundDebtRow (economy_marketplace_refund_debts) was retired by
+// #1092 Tier 3: the record is StreamKind = 16 of economy_events.
 
 
 
@@ -289,16 +279,9 @@ public sealed class MarketplaceModelConfiguration : IModelConfiguration
         // economy_marketplace_refund_legs merged into economy_marketplace_value_legs
         // (#1092 Tier 1.6) — see the MarketplaceValueLegRow configuration above.
 
-        modelBuilder.Entity<MarketplaceRefundDebtRow>(builder =>
-        {
-            builder.ToTable("economy_marketplace_refund_debts", table =>
-                table.HasCheckConstraint("ck_economy_marketplace_refund_debts_amount", "\"AmountUnits\" > 0"));
-            builder.HasKey(row => row.Id);
-            builder.Property(row => row.EvidenceHash).HasMaxLength(128);
-            builder.HasIndex(row => new { row.TenantId, row.ResponsibleWalletId, row.RecordedAt });
-            builder.HasOne<MarketplaceRefundRow>().WithMany().HasForeignKey(row => row.RefundId).OnDelete(DeleteBehavior.Restrict);
-            builder.HasOne<MarketplaceSettlementRow>().WithMany().HasForeignKey(row => row.SettlementId).OnDelete(DeleteBehavior.Restrict);
-        });
+        // economy_marketplace_refund_debts merged into the shared economy_events
+        // table (#1092 Tier 3, StreamKind = 16 = MarketplaceRefundShortfall) —
+        // see the ledger configuration below.
 
         // #1092 Tier 2.1: economy_marketplace_events merged into the shared
         // economy_events table (StreamKind = 8 = MarketplaceSettlement; the
@@ -307,7 +290,7 @@ public sealed class MarketplaceModelConfiguration : IModelConfiguration
         // settlement binding of its rows, so contexts composing only this
         // configuration (the PostgreSQL fixtures reuse the migrated template
         // schema) address the unified ledger instead of the CLR-name
-        // convention table and type the jsonb column as the template does.
+        // convention table and type the jsonb columns as the template does.
         // The settlement stream keeps its dedupe index as a partial (declared
         // with the unified registration in the Economy module and re-asserted
         // here).
@@ -333,6 +316,22 @@ public sealed class MarketplaceModelConfiguration : IModelConfiguration
             builder.HasOne<MarketplaceSettlementRow>()
                 .WithMany()
                 .HasForeignKey(row => row.SettlementId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // #1092 Tier 3: the refund-shortfall stream (kind 16) — one
+            // record per refund, responsible wallet and currency, ordered by
+            // when it happened, with the refund's reason hash as its
+            // evidence. A refund lists its shortfalls; a tenant lists a
+            // wallet's. Nothing is unique but the row's own id.
+            builder.HasIndex(row => new { row.RefundId, row.OccurredAt })
+                .HasFilter("\"StreamKind\" = 16")
+                .HasDatabaseName("ix_economy_events_refund_shortfall_refund");
+            builder.HasIndex(row => new { row.TenantId, row.ResponsibleWalletId, row.OccurredAt })
+                .HasFilter("\"StreamKind\" = 16")
+                .HasDatabaseName("ix_economy_events_refund_shortfall_wallet");
+            builder.HasOne<MarketplaceRefundRow>()
+                .WithMany()
+                .HasForeignKey(row => row.RefundId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 

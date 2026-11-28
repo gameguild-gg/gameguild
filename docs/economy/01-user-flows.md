@@ -226,7 +226,7 @@ flowchart TD
 | 1 | Deterministic identities | settlement/posting/entitlement ids derived from order/settlement (`DurableMarketplaceSettlementService.cs:148-150,321-325`; refund `:199-200`) | replay-safe, cross-request stable |
 | 2 | Order line-item drift vs settlement snapshot | `RequireOrderAsync` re-check (`PostgreSqlMarketplaceOutboxProcessor.cs:281-296`) | outbox retries until Commerce converges |
 | 3 | Entitlement grant rejected by Commerce | throw (`:230-234`) | outbox row fails, lease released, retried — no attempt cap (see [`07-gaps.md`](07-gaps.md) N3) |
-| 4 | Seller already spent proceeds when refund arrives | refund function consumes credits, then records `economy_marketplace_refund_debts` rows for the shortfall | buyer restored in full; seller wallet goes liable — debt tracked, **no automated collection** |
+| 4 | Seller already spent proceeds when refund arrives | refund function consumes credits, then records the shortfall in the event ledger (`StreamKind = 16`) | buyer restored in full; seller wallet goes liable — debt tracked, **no automated collection** |
 | 5 | Zero-value refund leg computed | `.Where(leg => leg.Units > 0)` (`DurableMarketplaceRefundService.cs:186-191`) | rejected with "does not produce a positive refundable amount" |
 
 ## 8. Bounty lifecycle (escrow core)

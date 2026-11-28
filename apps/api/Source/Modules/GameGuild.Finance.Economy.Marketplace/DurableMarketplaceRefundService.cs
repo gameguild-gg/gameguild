@@ -267,13 +267,20 @@ public sealed class DurableMarketplaceRefundService : IDurableMarketplaceRefundS
             .OrderBy(row => row.Currency)
             .Select(row => new CoinAmount(row.Currency, row.Units))
             .ToArrayAsync(cancellationToken);
-        var debts = await _db.Set<MarketplaceRefundDebtRow>()
+        // The refund's shortfalls are rows of the event ledger (#1092 Tier 3,
+        // StreamKind = MarketplaceRefundShortfall); the refund writer appends
+        // them in the same posting that appends the refund.
+        var debts = await _db.Set<EconomyEventRow>()
             .AsNoTracking()
-            .Where(row => row.RefundId == refund.Id)
-            .OrderBy(row => row.Currency)
+            .Where(row => row.StreamKind == EconomyEventStreamKind.MarketplaceRefundShortfall &&
+                          row.RefundId == refund.Id)
+            .OrderBy(row => row.DebtCurrency)
             .ThenBy(row => row.ResponsibleWalletId)
             .Select(row => new DurableMarketplaceRefundDebt(
-                new WalletId(row.ResponsibleWalletId), row.Currency, row.AmountUnits, row.EvidenceHash))
+                new WalletId(row.ResponsibleWalletId!.Value),
+                (CurrencyCode)row.DebtCurrency!.Value,
+                row.DebtAmountUnits!.Value,
+                row.EvidenceHash!))
             .ToArrayAsync(cancellationToken);
         return new DurableMarketplaceRefundResult(
             refund.Id,
