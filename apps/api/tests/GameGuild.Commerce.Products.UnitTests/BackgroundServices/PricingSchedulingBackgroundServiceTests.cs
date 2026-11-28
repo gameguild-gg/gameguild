@@ -105,8 +105,10 @@ public sealed class PricingSchedulingBackgroundServiceTests
         var (provider, sweep) = BuildHost();
         using var _ = provider;
 
+        var failingPassRan = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         sweep
             .Setup(s => s.RunSchedulingSweepAsync(It.IsAny<DateTime?>(), It.IsAny<CancellationToken>()))
+            .Callback(() => failingPassRan.TrySetResult())
             .ThrowsAsync(new InvalidOperationException("database unavailable"));
 
         var worker = new PricingSchedulingBackgroundService(
@@ -121,8 +123,14 @@ public sealed class PricingSchedulingBackgroundServiceTests
         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
         await worker.StartAsync(cts.Token);
 
-        // The failing pass must not crash the host; give the loop a moment to keep running.
-        await Task.Delay(TimeSpan.FromMilliseconds(250));
+        // The failing pass must not crash the host. Wait for the loop to have run it
+        // before stopping, rather than guessing with a delay: .NET 10 schedules the whole
+        // of ExecuteAsync on the thread pool, and under a starved one a fixed wait can run
+        // out first, so the stop cancels the still-unscheduled body and the task ends
+        // cancelled instead of cleanly.
+        var firstPass = await Task.WhenAny(failingPassRan.Task, Task.Delay(TimeSpan.FromSeconds(5)));
+        firstPass.Should().Be(failingPassRan.Task, "the first tick runs one scheduling pass immediately");
+
         await worker.StopAsync(CancellationToken.None);
         await (worker.ExecuteTask ?? Task.CompletedTask);
 
