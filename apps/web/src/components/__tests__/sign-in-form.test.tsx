@@ -92,6 +92,11 @@ describe('SignInForm', () => {
       '/magic-link?redirectTo=%2F'
     );
     expect(screen.queryByText('Sign in with an email code')).not.toBeInTheDocument();
+    // The way out for someone who lost every second factor (#1298 J2).
+    expect(screen.getByText('Lost your second factor?')).toHaveAttribute(
+      'href',
+      '/auth/mfa-recovery'
+    );
     // Terms of Service / Privacy Policy moved to the shared (auth) layout footer.
   });
 

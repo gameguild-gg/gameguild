@@ -28,8 +28,17 @@ vi.mock('next-intl', () => ({
 }));
 
 vi.mock('@/i18n/navigation', () => ({
-  Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
+  Link: ({
+    children,
+    href,
+    ...rest
+  }: {
+    children: React.ReactNode;
+    href: string;
+  }) => (
+    <a href={href} {...rest}>
+      {children}
+    </a>
   ),
 }));
 
@@ -231,6 +240,18 @@ describe('MfaChallengeForm', () => {
 
 describe('MfaChallengeForm — email codes at sign-in (issue #1298 J2)', () => {
   const emailChallenge = { mfaToken: 'x'.repeat(43), availableMethods: ['Totp', 'Email'], userId: 'subject-1' };
+
+  it('links to the lost-second-factor recovery, but not in the middle of a first enrollment', () => {
+    mockAuth.mfaChallenge = challenge;
+    const { unmount } = render(<MfaChallengeForm />);
+    expect(screen.getByTestId('mfa-recovery-link')).toHaveAttribute('href', '/auth/mfa-recovery');
+    expect(screen.getByTestId('mfa-recovery-link')).toHaveTextContent('signIn.mfa.lostFactor');
+    unmount();
+
+    mockAuth.mfaChallenge = enrollmentChallenge;
+    render(<MfaChallengeForm />);
+    expect(screen.queryByTestId('mfa-recovery-link')).not.toBeInTheDocument();
+  });
 
   beforeEach(() => {
     mockAuth = createMockUseAuth();

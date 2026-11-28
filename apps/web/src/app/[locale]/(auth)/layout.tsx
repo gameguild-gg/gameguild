@@ -27,9 +27,13 @@ export default async function Layout({ children, params }: LayoutProps<'/[locale
   // able to stay on that page with a live session. Scoped to the forwarded
   // path itself, exactly like the 2FA exemption above.
   const onEmailVerification = forwarded === '/verify' || forwarded.startsWith('/verify?');
+  // Lost-second-factor exception (#1298 J2): an owner who is still signed in on a
+  // surviving device must be able to reach the recovery page and cancel a recovery
+  // someone started on their account.
+  const onMfaRecovery = forwarded === '/auth/mfa-recovery' || forwarded.startsWith('/auth/mfa-recovery?');
 
   const session = await auth();
-  if (session && !onMfaCompletion && !onEmailVerification) {
+  if (session && !onMfaCompletion && !onEmailVerification && !onMfaRecovery) {
     const queryStart = forwarded.indexOf('?');
     const params = new URLSearchParams(queryStart >= 0 ? forwarded.slice(queryStart) : '');
     let callbackUrl = resolveAllowedAuthRedirect(

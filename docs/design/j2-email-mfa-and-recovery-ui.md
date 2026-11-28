@@ -1,6 +1,6 @@
 # J2 — Email-MFA Settings + MFA Account Recovery UI: Design Proposal
 
-Status: **Phases 1 and 2 implemented** (email-MFA settings, the first recovery set, and email codes at sign-in); phases 3–4 pending. Re-audited against `develop` (`70e5e9944d`) before phase 1 was built — see "Delivery status" at the end: GAP-1 and GAP-2 had already landed, and one contract could not be called as designed.
+Status: **Parts A, B and C implemented** — email-MFA settings, the first recovery set, email codes at sign-in, and the lost-second-factor recovery journey. Part D (the email code's second life) is pending. Re-audited against `develop` (`70e5e9944d`) before the first phase was built — see "Delivery status" at the end: GAP-1 and GAP-2 had already landed, and one contract could not be called as designed.
 Issue: #1298 item J2. Implementation tracker for the email-code repurpose: [#1380](https://github.com/gameguild-gg/gameguild/issues/1380)
 (owner decision on #1236 — email-code retired as a sign-in method by PR #1379, repurposed as
 the step-up channel; this design absorbs that decision as its Part D). Companions:
@@ -567,5 +567,30 @@ above predates:
 Enumeration is unchanged: the endpoint is anonymous but needs a subject that only a valid
 password produces, and its answers stay generic.
 
-Not delivered yet: Part C (the recovery journey), Part D (the email step-up channel,
-GAP-3; the email change, GAP-4).
+A follow-up (#1413) corrected the selector: when a challenge offers a recovery code without
+the authenticator, the form had gone on posting the authenticator as the method. The posted
+method is now always one the challenge offers.
+
+### Part C — the lost-second-factor recovery journey — implemented
+
+| Piece | Where | Notes |
+| --- | --- | --- |
+| The route | `app/[locale]/(auth)/auth/mfa-recovery/page.tsx` | Mounted at the literal path the recovery emails already build, so no email copy changed and no shim was needed. Each email lands with its stage chosen by its token, and the token is used before anything renders. |
+| Stage machine | `components/auth/mfa-recovery-content.tsx` | Request → confirmation → confirm, with the cooling-off wait in between. The countdown is seeded from the API's own `retryAfterSeconds` and measured against a deadline. |
+| Server actions | `lib/auth/mfa-recovery-actions.ts` | The API's ceremony consumed as it is. The "continue" endpoint answers a valid request still cooling off with HTTP 425; the client keeps that body on the error, so the page reads the remaining wait. |
+| Entry points | the 2FA page, below "start again"; the sign-in page, under "Forgot your password?" | Someone who lost every factor reaches the 2FA page after their password; that is the natural way out. |
+| Owner cancel | same component | Offered only with a live session. The `(auth)` layout exempts the route, so an owner who is still signed in on a surviving device can reach it. |
+| Shared anonymous client | `lib/auth/anonymous-api.ts` | No bearer, the visitor's address forwarded when a trusted edge provides it; the emailed sign-in code uses it too. |
+
+Three things the design called for, as built:
+
+- **One generic denial.** An unknown, expired, consumed or cancelled token reads the same.
+- **Transient failures never borrow the denial's words.** When the API cannot be reached, the
+  token is kept and the page offers a retry, because the token is still good.
+- **Spent tokens leave the address bar.** A used request token lands on `?sent=1`, a used
+  confirmation token on `?confirmed=1`, so a reload never replays either. The cooling-off
+  stage keeps `?token=` on purpose: it is what lets the page continue once the wait is over.
+
+Not delivered yet: Part D (the email step-up channel, GAP-3; the email change, GAP-4), and
+the design's open questions 3–5 (a recovery-status read, the recovery email's cancel copy,
+and a route alias).

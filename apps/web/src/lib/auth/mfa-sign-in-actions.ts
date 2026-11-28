@@ -10,9 +10,9 @@
  * query strings, JWT claims, or cookies.
  */
 
-import { createClient, createMfaEnrollmentCompleteAction, GeneratedApi, type ApiError, type MfaEnrollmentCompleteResult } from '@game-guild/client';
+import { createMfaEnrollmentCompleteAction, GeneratedApi, type MfaEnrollmentCompleteResult } from '@game-guild/client';
 import { authConfig } from '@/auth';
-import { forwardedIpHeaders } from '@/lib/server/forwarded-headers';
+import { createAnonymousApiClient, isUnreachable } from '@/lib/auth/anonymous-api';
 
 const completeMfaEnrollment = createMfaEnrollmentCompleteAction(authConfig);
 
@@ -32,11 +32,6 @@ export interface MfaEmailChallengeResult {
   expiresInSeconds?: number;
 }
 
-function failureMessage(error: ApiError, fallback: string): string {
-  if (error.status === 0 || error.status >= 500 || error.code === 'PARSE_ERROR') return fallback;
-  return error.detail || error.message || fallback;
-}
-
 /**
  * Asks the API to mail a fresh sign-in code to the enrolled address (issue #1298 J2). The
  * endpoint is anonymous and addressed by the subject of a pending first factor, which the
@@ -48,26 +43,16 @@ export async function requestEmailMfaChallengeAction(userId: string): Promise<Mf
     return { success: false, status: 'error', message: 'No pending sign-in challenge.' };
   }
 
-  const forwardedHeaders = await forwardedIpHeaders();
-  const mfaModule = new GeneratedApi.AuthMultiFactorModule(
-    createClient({
-      baseUrl: process.env.API_URL || process.env.NEXT_PUBLIC_API_URL || '',
-      autoRefresh: false,
-      timeout: 5_000,
-      devtools: { enabled: false },
-      interceptors: [
-        {
-          onRequest(request) {
-            return Promise.resolve({ ...request, headers: { ...request.headers, ...forwardedHeaders } });
-          },
-        },
-      ],
-    }),
-  );
+  const mfaModule = new GeneratedApi.AuthMultiFactorModule(await createAnonymousApiClient());
   const result = await mfaModule.postAuthMfaEmailChallenge({ userId });
 
   if (!result.ok) {
-    return { success: false, status: 'error', message: failureMessage(result.error, 'We could not send an email code.') };
+    const fallback = 'We could not send an email code.';
+    return {
+      success: false,
+      status: 'error',
+      message: isUnreachable(result.error) ? fallback : result.error.detail || result.error.message || fallback,
+    };
   }
 
   return {

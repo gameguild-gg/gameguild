@@ -109,6 +109,36 @@ describe('(auth) layout authenticated redirect (issue #864)', () => {
     expect(mocks.redirect).not.toHaveBeenCalled();
   });
 
+  it('keeps an authenticated owner on /auth/mfa-recovery so they can cancel a recovery (#1298 J2)', async () => {
+    mocks.auth.mockResolvedValue({ user: { id: 'u1' } });
+
+    for (const path of ['/auth/mfa-recovery', '/auth/mfa-recovery?token=request-token']) {
+      gameguildPath(path);
+
+      const ui = await Layout({
+        children: <div data-testid="mfa-recovery-page">recover your account</div>,
+        params: Promise.resolve({ locale: 'en-US' }),
+      } as never);
+      const { unmount } = render(ui);
+
+      expect(screen.getByTestId('mfa-recovery-page')).toBeInTheDocument();
+      expect(mocks.redirect).not.toHaveBeenCalled();
+      unmount();
+    }
+  });
+
+  it('scopes the recovery exemption to the path itself, not to its name in a query', async () => {
+    mocks.auth.mockResolvedValue({ user: { id: 'u1' } });
+    gameguildPath('/sign-in?callbackUrl=%2Fauth%2Fmfa-recovery');
+
+    await expect(
+      Layout({
+        children: <div>sign in</div>,
+        params: Promise.resolve({ locale: 'en-US' }),
+      } as never),
+    ).rejects.toThrow('redirect:/en-US/auth/mfa-recovery');
+  });
+
   it('scopes that exemption to the /verify path itself, not to its name in a query', async () => {
     mocks.auth.mockResolvedValue({ user: { id: 'u1' } });
     gameguildPath('/sign-in?callbackUrl=/verify');
