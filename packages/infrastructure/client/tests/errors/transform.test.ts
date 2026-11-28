@@ -110,6 +110,19 @@ describe('Error Transformation', () => {
 
       expect(error.message).toBe('Conflict');
     });
+
+    it('should preserve the cooling-off payload of a 425 so the caller can read the remaining wait', async () => {
+      const response = new Response(JSON.stringify({ success: false, message: 'Too early', retryAfterSeconds: 4200 }), {
+        status: 425,
+        statusText: 'Too Early',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const error = await createApiError(response);
+
+      expect(error.status).toBe(425);
+      expect(error.metadata?.body).toEqual({ success: false, message: 'Too early', retryAfterSeconds: 4200 });
+    });
   });
 
   describe('createNetworkError', () => {

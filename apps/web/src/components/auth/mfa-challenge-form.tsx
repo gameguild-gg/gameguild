@@ -419,6 +419,15 @@ export function MfaChallengeForm({
               >
                 {t("startAgain")}
               </Button>
+              {!isEnrollment && (
+                <Link
+                  href="/auth/mfa-recovery"
+                  className="text-center text-sm text-sky-200 underline-offset-4 hover:underline"
+                  data-testid="mfa-recovery-link"
+                >
+                  {t("lostFactor")}
+                </Link>
+              )}
             </FieldGroup>
           </form>
         </CardContent>

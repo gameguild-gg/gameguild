@@ -196,6 +196,14 @@ export function SignInForm({
                 >
                   Forgot your password?
                 </Link>
+                <Link
+                  href="/auth/mfa-recovery"
+                  className="ml-auto w-fit text-sm text-sky-200 underline-offset-4 hover:underline"
+                  tabIndex={-1}
+                  data-testid="sign-in-mfa-recovery-link"
+                >
+                  Lost your second factor?
+                </Link>
               </Field>
               <Field>
                 <label

@@ -59,6 +59,12 @@ export async function createApiError(response: Response): Promise<ApiError> {
     return { ...error, metadata: { stepUp: body } };
   }
 
+  // Preserve the cooling-off payload: the MFA recovery "continue" endpoint answers HTTP 425
+  // with the remaining wait, which is the only thing a caller can act on.
+  if (status === 425 && body) {
+    return { ...error, metadata: { body } };
+  }
+
   // Add field errors for validation errors
   if (code === 'VALIDATION_ERROR' && body?.errors) {
     return {
